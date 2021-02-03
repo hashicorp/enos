@@ -8,7 +8,7 @@ resource "aws_kms_alias" "enos_key_alias" {
   target_key_id = aws_kms_key.enos_key.key_id
 }
 
-# Stubbed out, we should store these someplace durable
+# Replace these with base64encode(file(something))
 resource "aws_kms_ciphertext" "enos_vault_license" {
   key_id    = aws_kms_key.enos_key.key_id
   plaintext = "this is a fake license"

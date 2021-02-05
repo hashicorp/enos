@@ -28,6 +28,7 @@ output "kms_key_arn" {
 output "kms_key_alias" {
   value = aws_kms_alias.enos_key_alias.name
 }
+
 output "vault_license" {
   value     = data.aws_kms_secrets.enos.plaintext["vault_license"]
   sensitive = true
@@ -37,4 +38,3 @@ output "consul_license" {
   value     = data.aws_kms_secrets.enos.plaintext["consul_license"]
   sensitive = true
 }
-

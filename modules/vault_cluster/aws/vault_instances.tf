@@ -8,7 +8,7 @@ resource "aws_instance" "vault_instance" {
   tags = merge(
     var.common_tags,
     {
-      Name = "${local.name_suffix}-vault"
+      Name = "${local.name_suffix}-vault-${count.index}"
     },
   )
 }

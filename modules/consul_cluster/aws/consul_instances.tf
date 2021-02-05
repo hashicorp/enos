@@ -8,7 +8,7 @@ resource "aws_instance" "consul_instance" {
   tags = merge(
     var.common_tags,
     {
-      Name = "${local.name_suffix}-consul"
+      Name = "${local.name_suffix}-consul-${count.index}"
     },
   )
 }

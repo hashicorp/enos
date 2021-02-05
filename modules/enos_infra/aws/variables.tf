@@ -10,3 +10,23 @@ variable "vpc_cidr" {
   description = "CIDR for the VPC"
 }
 
+variable "project_name" {
+  description = "Name of the project."
+  type        = string
+  default     = "qti-enos"
+}
+
+variable "environment" {
+  description = "Name of the environment."
+  type        = string
+  default     = "dev"
+}
+
+variable "common_tags" {
+  description = "Tags to set for all resources"
+  type        = map(string)
+  default = {
+    project_name = "qti-enos"
+    environment  = "dev"
+  }
+}

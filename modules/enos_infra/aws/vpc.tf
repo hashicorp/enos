@@ -1,8 +1,11 @@
 resource "aws_vpc" "enos_vpc" {
   cidr_block = var.vpc_cidr
-  tags = {
-    "Name" = var.vpc_name
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = var.vpc_name
+    },
+  )
 }
 
 resource "aws_subnet" "enos_subnet" {
@@ -12,16 +15,22 @@ resource "aws_subnet" "enos_subnet" {
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[count.index]
 
-  tags = {
-    "Name" = "${var.vpc_name}_subnet_${count.index}"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = "${var.vpc_name}_subnet_${count.index}"
+    },
+  )
 }
 
 resource "aws_internet_gateway" "enos_gw" {
   vpc_id = aws_vpc.enos_vpc.id
-  tags = {
-    "Name" = "${var.vpc_name}_gw"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = "${var.vpc_name}_gw"
+    },
+  )
 }
 
 resource "aws_route_table" "enos_route" {
@@ -31,9 +40,12 @@ resource "aws_route_table" "enos_route" {
     gateway_id = aws_internet_gateway.enos_gw.id
   }
 
-  tags = {
-    "Name" = "${var.vpc_name}_route"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = "${var.vpc_name}_route"
+    },
+  )
 }
 
 resource "aws_route_table_association" "enos_crta" {
@@ -59,7 +71,10 @@ resource "aws_security_group" "enos_default_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    "Name" = "${var.vpc_name}_default_sg"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = "${var.vpc_name}_default_sg"
+    },
+  )
 }

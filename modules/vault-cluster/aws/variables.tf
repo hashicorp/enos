@@ -37,7 +37,7 @@ variable "key_name" {
   default     = "qti-aws-keypair"
 }
 
-variable "instances_per_subnet" {
+variable "instance_count" {
   description = "Number of EC2 instances in each subnet"
   type        = number
   default     = 3

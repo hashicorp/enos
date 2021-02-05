@@ -58,9 +58,9 @@ resource "aws_security_group" "enos_default_sg" {
   vpc_id = aws_vpc.enos_vpc.id
 
   ingress {
-    description = "allow ssh from any IP"
-    from_port   = 22
-    to_port     = 22
+    description = "allow traffic from all IPs"
+    from_port   = 0
+    to_port     = 0
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

@@ -4,7 +4,7 @@ resource "aws_instance" "vault_instance" {
   instance_type   = var.instance_type
   security_groups = [aws_security_group.enos_vault_sg.id]
   subnet_id       = module.enos_infra.vpc_subnet_ids[count.index]
-  key_name        = var.key_name
+  key_name        = module.enos_infra.enos_aws_keypair
   tags = merge(
     var.common_tags,
     {

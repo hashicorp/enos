@@ -38,3 +38,8 @@ output "consul_license" {
   value     = data.aws_kms_secrets.enos.plaintext["consul_license"]
   sensitive = true
 }
+
+output "enos_aws_keypair" {
+  description = "Enos AWS Key-pair"
+  value       = aws_key_pair.enos_aws_keypair.key_name
+}

@@ -31,12 +31,6 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
-variable "key_name" {
-  description = "Enos AWS Key-pair"
-  type        = string
-  default     = "qti-aws-keypair"
-}
-
 variable "instance_count" {
   description = "Number of EC2 instances in each subnet"
   type        = number

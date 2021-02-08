@@ -34,3 +34,4 @@ resource "aws_instance" "vault" {
 * `kms_key_alias` - Alias used for above key
 * `vault_license` - License file stored in KMS, encrypted with `kms_key_id`
 * `consul_license` - License file stored in KMS, encrypted with `kms_key_id`
+* `enos_aws_keypair` - Enos AWS KeyPair used to ssh to enos AWS instances

@@ -9,7 +9,7 @@ terraform {
     organization = "hashicorp-qti"
 
     workspaces {
-      prefix = "enos-modules-"
+      name = "enos-modules-dev"
     }
   }
 }

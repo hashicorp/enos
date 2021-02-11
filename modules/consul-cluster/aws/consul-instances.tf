@@ -1,9 +1,9 @@
 resource "aws_instance" "consul_instance" {
   count           = var.instance_count
-  ami             = module.enos_infra.ubuntu_ami_id
+  ami             = var.ubuntu_ami_id
   instance_type   = var.instance_type
-  security_groups = [aws_security_group.enos_consul_sg.id]
-  subnet_id       = module.enos_infra.vpc_subnet_ids[count.index]
+  vpc_security_group_ids = [aws_security_group.enos_consul_sg.id]
+  subnet_id       = var.vpc_subnet_ids[count.index]
   key_name        = var.ssh_aws_keypair
   tags = merge(
     var.common_tags,

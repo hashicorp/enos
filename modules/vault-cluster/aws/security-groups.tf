@@ -1,7 +1,7 @@
 resource "aws_security_group" "enos_vault_sg" {
   name        = "${local.name_suffix}-vault-sg"
   description = "SSH and Vault Traffic"
-  vpc_id      = module.enos_infra.vpc_id
+  vpc_id      = var.vpc_id
 
   # SSH
   ingress {

@@ -19,20 +19,33 @@ provider "aws" {
   region = var.aws_region
 }
 
+module "enos_infra" {
+  source       = "./modules/enos-infra/aws"
+  project_name = var.project_name
+  environment  = var.environment
+  common_tags  = var.common_tags
+}
+
 module "consul_cluster" {
   source = "./modules/consul-cluster/aws"
 
-  project_name = var.project_name
-  environment = var.environment
-  common_tags = var.common_tags
+  project_name    = var.project_name
+  environment     = var.environment
+  common_tags     = var.common_tags
   ssh_aws_keypair = var.ssh_aws_keypair
+  ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
+  vpc_subnet_ids  = module.enos_infra.vpc_subnet_ids
+  vpc_id          = module.enos_infra.vpc_id
 }
 
 module "vault_cluster" {
   source = "./modules/vault-cluster/aws"
 
-  project_name = var.project_name
-  environment = var.environment
-  common_tags = var.common_tags
+  project_name    = var.project_name
+  environment     = var.environment
+  common_tags     = var.common_tags
   ssh_aws_keypair = var.ssh_aws_keypair
+  ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
+  vpc_subnet_ids  = module.enos_infra.vpc_subnet_ids
+  vpc_id          = module.enos_infra.vpc_id
 }

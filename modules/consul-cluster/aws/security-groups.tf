@@ -1,7 +1,7 @@
 resource "aws_security_group" "enos_consul_sg" {
   name        = "${local.name_suffix}-consul-sg"
   description = "SSH and Consul Traffic"
-  vpc_id      = module.enos_infra.vpc_id
+  vpc_id      = var.vpc_id
 
   # SSH
   ingress {

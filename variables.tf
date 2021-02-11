@@ -19,9 +19,10 @@ variable "environment" {
 variable "common_tags" {
   description = "Tags to set for all resources"
   type        = map(string)
-  default      = {
-  "Project Name" : "qti-enos",
-"Environment" : "dev" }
+  default = {
+    "Project Name" : "qti-enos",
+    "Environment" : "dev"
+  }
 }
 
 variable "ssh_aws_keypair" {

@@ -34,7 +34,6 @@ module "consul_cluster" {
   common_tags     = var.common_tags
   ssh_aws_keypair = var.ssh_aws_keypair
   ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
-  vpc_subnet_ids  = module.enos_infra.vpc_subnet_ids
   vpc_id          = module.enos_infra.vpc_id
 }
 
@@ -46,6 +45,5 @@ module "vault_cluster" {
   common_tags     = var.common_tags
   ssh_aws_keypair = var.ssh_aws_keypair
   ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
-  vpc_subnet_ids  = module.enos_infra.vpc_subnet_ids
   vpc_id          = module.enos_infra.vpc_id
 }

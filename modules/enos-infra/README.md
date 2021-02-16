@@ -4,7 +4,28 @@ The enos_infra module is a module that creates a base infrastructure required by
 # Example Usage
 ```
 module "enos_infra" {
-  source = "github.com/hashicorp/enos-modules/modules/enos_infra/aws"
+  source       = "./modules/enos-infra/aws"
+  project_name = var.project_name
+  environment  = var.environment
+  common_tags  = var.common_tags
+}
+
+data "aws_vpc" "infra" {
+  id = var.vpc_id
+}
+
+data "aws_subnet_ids" "infra" {
+  vpc_id = var.vpc_id
+}
+
+data "aws_subnet" "infra" {
+  for_each = data.aws_subnet_ids.infra.ids
+  id       = each.value
+}
+
+
+locals {
+  infra_subnet_blocks = [for s in data.aws_subnet.infra : s.cidr_block]
 }
 
 resource "aws_instance" "vault" {
@@ -14,8 +35,7 @@ resource "aws_instance" "vault" {
 
   key_name               = var.ssh_key_name
   # Lists, easy to use with `count.index`
-  subnet_id              = module.enos_infra.vpc_subnet_ids[0]
-  availability_zone      = module.enos_infra.availability_zone_names[0]
+  subnet_id              = local.infra_subnet_blocks[count.index]
 ```  
 # Inputs
 

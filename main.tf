@@ -27,7 +27,8 @@ module "enos_infra" {
 }
 
 module "consul_cluster" {
-  source = "./modules/consul-cluster/aws"
+  source     = "./modules/consul-cluster/aws"
+  depends_on = [module.enos_infra]
 
   project_name    = var.project_name
   environment     = var.environment
@@ -35,10 +36,12 @@ module "consul_cluster" {
   ssh_aws_keypair = var.ssh_aws_keypair
   ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
   vpc_id          = module.enos_infra.vpc_id
+  kms_key_arn     = module.enos_infra.kms_key_arn
 }
 
 module "vault_cluster" {
-  source = "./modules/vault-cluster/aws"
+  source     = "./modules/vault-cluster/aws"
+  depends_on = [module.enos_infra]
 
   project_name    = var.project_name
   environment     = var.environment

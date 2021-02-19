@@ -6,14 +6,6 @@ output "vpc_id" {
   value = aws_vpc.enos_vpc.id
 }
 
-output "vpc_cidr" {
-  value = var.vpc_cidr
-}
-
-output "vpc_subnet_ids" {
-  value = aws_subnet.enos_subnet.*.id
-}
-
 output "ubuntu_ami_id" {
   value = data.aws_ami.ubuntu.id
 }

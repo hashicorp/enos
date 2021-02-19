@@ -32,15 +32,10 @@ variable "ssh_aws_keypair" {
 
 variable "ubuntu_ami_id" {
   description = "Ubuntu LTS AMI from enos-infra"
-  type = string
-}
-
-variable "vpc_subnet_ids" {
-  description = "List of VPC Subnets from enos-infra"
-  type = list
+  type        = string
 }
 
 variable "vpc_id" {
   description = "VPC ID from enos-infra"
-  type = string
+  type        = string
 }

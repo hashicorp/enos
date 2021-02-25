@@ -29,8 +29,3 @@ output "vault_license" {
   value     = data.aws_kms_secrets.enos.plaintext["vault_license"]
   sensitive = true
 }
-
-output "consul_license" {
-  value     = data.aws_kms_secrets.enos.plaintext["consul_license"]
-  sensitive = true
-}

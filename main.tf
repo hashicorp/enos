@@ -37,6 +37,7 @@ module "consul_cluster" {
   ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
   vpc_id          = module.enos_infra.vpc_id
   kms_key_arn     = module.enos_infra.kms_key_arn
+  consul_license  = file("${path.root}/consul.hclic")
 }
 
 module "vault_cluster" {

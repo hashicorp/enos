@@ -12,7 +12,8 @@ resource "aws_security_group" "consul_sg" {
   }
 
   ingress {
-    cidr_blocks      = ["50.248.238.101/32", join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)]
+    #TODO: source IP + join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)
+    cidr_blocks      = ["0.0.0.0/0"]
     description      = "value"
     from_port        = 8200
     to_port          = 8600
@@ -24,7 +25,8 @@ resource "aws_security_group" "consul_sg" {
   }
 
   ingress {
-    cidr_blocks      = ["50.248.238.101/32", join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)]
+    #TODO: source IP + join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)
+    cidr_blocks      = ["0.0.0.0/0"]
     description      = "value"
     from_port        = 8200
     to_port          = 8600
@@ -34,6 +36,7 @@ resource "aws_security_group" "consul_sg" {
     self             = null
     security_groups  = []
   }
+  
   egress {
     from_port   = 0
     to_port     = 0

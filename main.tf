@@ -50,4 +50,7 @@ module "vault_cluster" {
   ssh_aws_keypair = var.ssh_aws_keypair
   ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
   vpc_id          = module.enos_infra.vpc_id
+  kms_key_arn     = module.enos_infra.kms_key_arn
+  consul_ips      = module.consul_cluster.instance_private_ips
+  vault_license   = file("${path.root}/vault.hclic")
 }

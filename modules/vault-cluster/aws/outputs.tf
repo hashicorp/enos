@@ -12,3 +12,7 @@ output "instance_private_ips" {
   description = "Private IPs of Vault instances"
   value       = aws_instance.vault_instance.*.private_ip
 }
+
+output "key_id" {
+  value = data.aws_kms_key.kms_key.id
+}

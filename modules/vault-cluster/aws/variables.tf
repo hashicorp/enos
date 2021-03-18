@@ -16,7 +16,7 @@ variable "common_tags" {
 variable "instance_type" {
   description = "EC2 Instance"
   type        = string
-  default     = "t3.micro"
+  default     = "t2.micro"
 }
 
 variable "instance_count" {
@@ -38,4 +38,26 @@ variable "ubuntu_ami_id" {
 variable "vpc_id" {
   description = "VPC ID from enos-infra"
   type        = string
+}
+
+variable "package_url" {
+  type        = string
+  default     = "https://releases.hashicorp.com/vault/1.6.2+ent/vault_1.6.2+ent_linux_amd64.zip"
+  description = "(optional) describe your variable"
+}
+
+variable "consul_ips" {
+  type        = list(any)
+  description = "(optional) describe your variable"
+}
+
+variable "vault_license" {
+  type        = string
+  sensitive   = true
+  description = "vault license"
+}
+
+variable "kms_key_arn" {
+  type        = string
+  description = "ARN of KMS Key from enos-infra"
 }

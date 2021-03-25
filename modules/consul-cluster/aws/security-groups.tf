@@ -1,3 +1,5 @@
+data "enos_environment" "current" { }
+
 resource "aws_security_group" "consul_sg" {
   name        = "${local.name_suffix}-consul-sg"
   description = "SSH and Consul Traffic"
@@ -8,7 +10,7 @@ resource "aws_security_group" "consul_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${data.enos_environment.current.public_ip_address}/32"]
   }
 
   ingress {
@@ -36,7 +38,7 @@ resource "aws_security_group" "consul_sg" {
     self             = null
     security_groups  = []
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0

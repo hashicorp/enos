@@ -19,6 +19,12 @@ variable "instance_type" {
   default     = "t2.micro"
 }
 
+variable "availability_zone" {
+  description = "The availability zone to use for instances"
+  type        = string
+  default     = ""
+}
+
 variable "instance_count" {
   description = "Number of EC2 instances in each subnet"
   type        = number
@@ -55,5 +61,4 @@ variable "package_url" {
   description = "URL of Consul ZIP package to install"
   type        = string
   default     = "https://releases.hashicorp.com/consul/1.9.3+ent/consul_1.9.3+ent_linux_amd64.zip"
-
 }

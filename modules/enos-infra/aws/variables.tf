@@ -4,6 +4,12 @@ variable "vpc_name" {
   description = "Descriptive name of the VPC"
 }
 
+variable "availability_zone" {
+  description = "AWS availability zone"
+  type        = string
+  default     = ""
+}
+
 variable "vpc_cidr" {
   type        = string
   default     = "10.13.0.0/16"

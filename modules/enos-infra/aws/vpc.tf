@@ -13,7 +13,7 @@ resource "aws_subnet" "enos_subnet" {
   count                   = length(data.aws_availability_zones.available.names)
   cidr_block              = "10.13.${10 + count.index}.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  availability_zone       = var.availability_zone != "" ? var.availability_zone : data.aws_availability_zones.available.names[count.index]
 
   tags = merge(
     var.common_tags,

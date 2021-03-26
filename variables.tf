@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "aws_availability_zone" {
+  description = "AWS availability zone"
+  type        = string
+  default     = ""
+}
+
 variable "project_name" {
   description = "Name of the project."
   type        = string

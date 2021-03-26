@@ -29,6 +29,10 @@ crash.log
 .terraformrc
 terraform.rc
 
+# Don't include keys and licenses
+consul.hclic
+*.pem
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 

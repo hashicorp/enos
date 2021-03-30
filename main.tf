@@ -3,9 +3,8 @@ terraform {
     aws = {
       source = "hashicorp/aws"
     }
-
-   enos = {
-      version = "~> 0.1"
+    enos = {
+      version = "0.1.0"
       source  = "hashicorp.com/qti/enos"
     }
   }
@@ -25,8 +24,8 @@ provider "enos" {
     ssh = {
       # You can also override any of the transport settings from the environment,
       # e.g.: ENOS_TRANSPORT_PRIVATE_KEY_PATH=/path/to/key.pem
-      user = "ubuntu"
-      private_key_path = "./qti-aws-keypair.pem"
+      user             = "ubuntu"
+      private_key_path = "${path.root}/qti-aws-keypair.pem"
     }
   }
 }
@@ -37,7 +36,7 @@ provider "aws" {
 }
 
 module "enos_infra" {
-  source            = "./modules/enos-infra/aws"
+  source = "./modules/enos-infra/aws"
 
   project_name      = var.project_name
   environment       = var.environment
@@ -60,9 +59,14 @@ module "consul_cluster" {
   consul_license    = file("${path.root}/consul.hclic")
 }
 
+// Depend on consul_cluster while we use consul as backend for our scenarios
+// Remove or update this dependency when you change the backend
 module "vault_cluster" {
-  source     = "./modules/vault-cluster/aws"
-  depends_on = [module.enos_infra]
+  source = "./modules/vault-cluster/aws"
+  depends_on = [
+    module.enos_infra,
+    module.consul_cluster,
+  ]
 
   project_name    = var.project_name
   environment     = var.environment

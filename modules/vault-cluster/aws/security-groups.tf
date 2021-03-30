@@ -8,7 +8,7 @@ resource "aws_security_group" "enos_vault_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${data.enos_environment.localhost.public_ip_address}/32", join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)]
   }
 
   # Vault API traffic
@@ -16,7 +16,7 @@ resource "aws_security_group" "enos_vault_sg" {
     from_port   = 8200
     to_port     = 8200
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${data.enos_environment.localhost.public_ip_address}/32", join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)]
   }
 
   # Vault cluster traffic
@@ -24,7 +24,7 @@ resource "aws_security_group" "enos_vault_sg" {
     from_port   = 8201
     to_port     = 8201
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${data.enos_environment.localhost.public_ip_address}/32", join(",", data.aws_vpc.infra.cidr_block_associations.*.cidr_block)]
   }
 
   # Internal Traffic

@@ -6,7 +6,6 @@ resource "aws_instance" "vault_instance" {
   subnet_id              = tolist(data.aws_subnet_ids.infra.ids)[count.index]
   key_name               = var.ssh_aws_keypair
   iam_instance_profile   = aws_iam_instance_profile.vault_profile.name
-  user_data              = base64encode(data.template_file.user_data_script.rendered)
   tags = merge(
     var.common_tags,
     {
@@ -15,12 +14,97 @@ resource "aws_instance" "vault_instance" {
   )
 }
 
-data "template_file" "user_data_script" {
-  template = file("${path.module}/user-data.sh.tpl")
-  vars = {
-    package_url = var.package_url
-    consul_ips = join(" ", var.consul_ips)
-    kms_key = data.aws_kms_key.kms_key.id
-    vault_license = var.vault_license
+resource "enos_file" "vault_systemd" {
+  depends_on = [
+    aws_instance.vault_instance
+  ]
+  source      = "${path.module}/files/vault.service"
+  destination = "/tmp/vault.service"
+
+  for_each = toset([for idx in range(var.instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = aws_instance.vault_instance[tonumber(each.value)].public_ip
+    }
+  }
+}
+
+resource "enos_file" "vault_hcl" {
+  depends_on = [
+    aws_instance.vault_instance
+  ]
+  content     = data.template_file.server_hcl_template[tonumber(each.value)].rendered
+  destination = "/tmp/server.hcl"
+
+  for_each = toset([for idx in range(var.instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = aws_instance.vault_instance[tonumber(each.value)].public_ip
+    }
+  }
+}
+
+resource "enos_remote_exec" "install_vault" {
+  depends_on = [
+    enos_file.vault_systemd
+  ]
+  content = data.template_file.install_template[tonumber(each.value)].rendered
+
+  for_each = toset([for idx in range(var.instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = aws_instance.vault_instance[tonumber(each.value)].public_ip
+    }
+  }
+}
+
+resource "enos_remote_exec" "configure_consul_agent" {
+  depends_on = [
+    enos_remote_exec.install_vault
+  ]
+  content = data.template_file.configure_consul_agent[tonumber(each.value)].rendered
+
+  for_each = toset([for idx in range(var.instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = aws_instance.vault_instance[tonumber(each.value)].public_ip
+    }
+  }
+}
+
+resource "enos_remote_exec" "configure_vault" {
+  depends_on = [
+    enos_file.vault_hcl,
+    enos_remote_exec.configure_consul_agent
+  ]
+  content = data.template_file.configure_template[tonumber(each.value)].rendered
+
+  for_each = toset([for idx in range(var.instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = aws_instance.vault_instance[tonumber(each.value)].public_ip
+    }
+  }
+}
+
+resource "enos_remote_exec" "secure_vault_logs" {
+  depends_on = [
+    enos_remote_exec.configure_vault
+  ]
+
+  inline = [
+    "sudo mkdir /var/log/vault.d",
+    "sudo mv /tmp/vault_install.log  /var/log/vault.d/vault_install.log",
+    "sudo mv /tmp/vault_consul_agent.log  /var/log/vault.d/vault_consul_agent.log",
+    "sudo mv /tmp/vault_config.log  /var/log/vault.d/vault_config.log",
+    "sudo chmod 600 /var/log/vault.d/*.log",
+    "sudo chown -R root:root /var/log/vault.d"
+  ]
+
+  for_each = toset([for idx in range(var.instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = aws_instance.vault_instance[tonumber(each.value)].public_ip
+    }
   }
 }

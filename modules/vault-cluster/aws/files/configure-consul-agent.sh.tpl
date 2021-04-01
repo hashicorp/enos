@@ -18,11 +18,8 @@ fi
 IPS="${consul_ips}"
 
 # Make sure consul agent is started and joins
-until host consul.service.consul 127.0.0.1
-do
-  sudo nohup consul agent -join $${IPS// / -join } -data-dir /tmp > consul.out&
-  sleep 2s
-done
+sudo nohup consul agent -retry-join $${IPS// / -join } -data-dir /tmp > consul.out&
+
 
 # Wait until consul is up
 until consul operator raft list-peers

@@ -36,7 +36,8 @@ provider "aws" {
 }
 
 module "enos_infra" {
-  source = "./modules/enos-infra/aws"
+  source  = "app.terraform.io/hashicorp-qti/aws-infra/enos"
+  version = "0.0.1"
 
   project_name      = var.project_name
   environment       = var.environment
@@ -45,7 +46,8 @@ module "enos_infra" {
 }
 
 module "consul_cluster" {
-  source     = "./modules/consul-cluster/aws"
+  source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
+  version = "0.0.1"
   depends_on = [module.enos_infra]
 
   project_name      = var.project_name
@@ -62,7 +64,8 @@ module "consul_cluster" {
 // Depend on consul_cluster while we use consul as backend for our scenarios
 // Remove or update this dependency when you change the backend
 module "vault_cluster" {
-  source = "./modules/vault-cluster/aws"
+  source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
+  version = "0.0.1"
   depends_on = [
     module.enos_infra,
     module.consul_cluster,

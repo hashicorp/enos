@@ -36,3 +36,15 @@ variable "ssh_aws_keypair" {
   type        = string
   default     = "qti-aws-keypair"
 }
+
+variable "vault_version" {
+  type        = string
+  description = "The desired version of Vault to install"
+  default     = "1.6.2"
+}
+
+variable "vault_instance_count" {
+  type        = string
+  description = "The number of instances to provision for the Vault cluster"
+  default     = 3
+}

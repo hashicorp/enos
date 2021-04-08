@@ -48,6 +48,7 @@ module "enos_infra" {
 module "consul_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
   version = "0.0.1"
+
   depends_on = [module.enos_infra]
 
   project_name      = var.project_name
@@ -65,7 +66,8 @@ module "consul_cluster" {
 // Remove or update this dependency when you change the backend
 module "vault_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = "0.0.1"
+  version = "0.0.2"
+
   depends_on = [
     module.enos_infra,
     module.consul_cluster,
@@ -78,6 +80,32 @@ module "vault_cluster" {
   ubuntu_ami_id   = module.enos_infra.ubuntu_ami_id
   vpc_id          = module.enos_infra.vpc_id
   kms_key_arn     = module.enos_infra.kms_key_arn
+  instance_count  = var.vault_instance_count
   consul_ips      = module.consul_cluster.instance_private_ips
   vault_license   = file("${path.root}/vault.hclic")
+  vault_version   = var.vault_version
+}
+
+resource "enos_remote_exec" "verify_vault_version" {
+  depends_on = [module.vault_cluster]
+
+  content = <<EOF
+#!/bin/bash -e
+
+version=$(vault -version | cut -d ' ' -f2)
+
+if [[ "$version" != "v${var.vault_version}+ent" ]]; then
+  echo `Vault version mismatch. Expected ${var.vault_version}, got "$version"` >&2
+  exit 1
+fi
+
+exit 0
+EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
 }

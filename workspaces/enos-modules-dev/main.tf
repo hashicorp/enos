@@ -47,7 +47,7 @@ module "enos_infra" {
 
 module "consul_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
-  version = "0.0.1"
+  version = "0.0.2"
 
   depends_on = [module.enos_infra]
 
@@ -66,7 +66,7 @@ module "consul_cluster" {
 // Remove or update this dependency when you change the backend
 module "vault_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = "0.0.2"
+  version = "0.0.3"
 
   depends_on = [
     module.enos_infra,

@@ -83,7 +83,7 @@ module "vault_cluster" {
   instance_count  = var.vault_instance_count
   consul_ips      = module.consul_cluster.instance_private_ips
   vault_license   = file("${path.root}/vault.hclic")
-  vault_version   = var.vault_version
+  vault_version   = var.base_vault_version
 }
 
 resource "enos_remote_exec" "verify_vault_version" {
@@ -94,12 +94,73 @@ resource "enos_remote_exec" "verify_vault_version" {
 
 version=$(vault -version | cut -d ' ' -f2)
 
-if [[ "$version" != "v${var.vault_version}+ent" ]]; then
-  echo `Vault version mismatch. Expected ${var.vault_version}, got "$version"` >&2
+if [[ "$version" != "v${var.base_vault_version}+ent" ]]; then
+  echo `Vault version mismatch. Expected ${var.base_vault_version}, got "$version"` >&2
   exit 1
 fi
 
 exit 0
+EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+
+resource "enos_remote_exec" "upgrade_standby" {
+  depends_on = [module.vault_cluster, enos_remote_exec.verify_vault_version]
+
+  content = <<EOF
+#!/bin/bash
+exec >> /tmp/upgrade.log 2>&1
+export VAULT_ADDR=http://localhost:8200
+
+if vault status | grep "HA Mode" | grep standby;
+then
+    sudo systemctl stop vault
+    cd /tmp
+    wget https://releases.hashicorp.com/vault/${var.upgrade_vault_version}+ent/vault_${var.upgrade_vault_version}+ent_linux_amd64.zip
+    sudo unzip -o vault_${var.upgrade_vault_version}+ent_linux_amd64.zip  -d /usr/local/bin
+    sudo setcap cap_ipc_lock=+ep /usr/local/bin/vault
+    sudo systemctl start vault
+    until vault status
+    do
+        sleep 1s
+    done
+fi
+EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+
+resource "enos_remote_exec" "upgrade_active" {
+  depends_on = [module.vault_cluster, enos_remote_exec.upgrade_standby]
+
+  content = <<EOF
+#!/bin/bash
+exec >> /tmp/upgrade.log 2>&1
+export VAULT_ADDR=http://localhost:8200
+
+if vault status | grep "HA Mode" | grep active;
+then
+    cd /tmp;
+    sudo systemctl stop vault
+    wget https://releases.hashicorp.com/vault/${var.upgrade_vault_version}+ent/vault_${var.upgrade_vault_version}+ent_linux_amd64.zip 
+    sudo unzip -o ${var.upgrade_vault_version}+ent_linux_amd64.zip  -d /usr/local/bin
+    sudo systemctl start vault
+    until vault status
+    do
+        sleep 1s
+    done
+fi
 EOF
 
   for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])

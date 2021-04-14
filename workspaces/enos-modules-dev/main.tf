@@ -95,7 +95,7 @@ resource "enos_remote_exec" "verify_vault_version" {
 version=$(vault -version | cut -d ' ' -f2)
 
 if [[ "$version" != "v${var.base_vault_version}+ent" ]]; then
-  echo `Vault version mismatch. Expected ${var.base_vault_version}, got "$version"` >&2
+  echo "Vault version mismatch. Expected ${var.base_vault_version}, got '$version'" >&2
   exit 1
 fi
 
@@ -123,7 +123,7 @@ then
     sudo systemctl stop vault
     cd /tmp
     wget https://releases.hashicorp.com/vault/${var.upgrade_vault_version}+ent/vault_${var.upgrade_vault_version}+ent_linux_amd64.zip
-    sudo unzip -o vault_${var.upgrade_vault_version}+ent_linux_amd64.zip  -d /usr/local/bin
+    sudo unzip -o vault_${var.upgrade_vault_version}+ent_linux_amd64.zip -d /usr/local/bin
     sudo setcap cap_ipc_lock=+ep /usr/local/bin/vault
     sudo systemctl start vault
     until vault status
@@ -154,13 +154,44 @@ then
     cd /tmp;
     sudo systemctl stop vault
     wget https://releases.hashicorp.com/vault/${var.upgrade_vault_version}+ent/vault_${var.upgrade_vault_version}+ent_linux_amd64.zip 
-    sudo unzip -o ${var.upgrade_vault_version}+ent_linux_amd64.zip  -d /usr/local/bin
+    sudo unzip -o vault_${var.upgrade_vault_version}+ent_linux_amd64.zip -d /usr/local/bin
     sudo systemctl start vault
     until vault status
     do
         sleep 1s
     done
 fi
+EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+resource "enos_remote_exec" "verify_upgrade" {
+  depends_on = [module.vault_cluster, enos_remote_exec.upgrade_active]
+
+  content = <<EOF
+#!/bin/bash -e
+
+version=$(vault -version | cut -d ' ' -f2)
+
+if [[ "$version" != "v${var.upgrade_vault_version}+ent" ]]; then
+  echo "Vault upgrade version mismatch. Expected ${var.upgrade_vault_version}, got '$version'" >&2
+  exit 1
+fi
+
+# The
+if [ -f /etc/vault.d/tokens* ]
+then
+  export VAULT_ADDR=http://localhost:8200
+  export VAULT_TOKEN=$(cat /etc/vault.d/tokens*)
+  vault read secret/test || exit 1
+fi
+
+exit 0
 EOF
 
   for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])

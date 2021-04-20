@@ -29,3 +29,8 @@ output "vault_instance_public_ips" {
   description = "Public IPs of Vault instances"
   value       = module.vault_cluster.instance_public_ips
 }
+
+output "vault_token" {
+  description = "value"
+  value       = module.vault_cluster.vault_token
+}

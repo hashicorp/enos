@@ -66,7 +66,7 @@ module "consul_cluster" {
 // Remove or update this dependency when you change the backend
 module "vault_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = "0.0.3"
+  version = "0.0.4"
 
   depends_on = [
     module.enos_infra,
@@ -110,6 +110,8 @@ EOF
   }
 }
 
+# The documented process for a vault cluster upgrade: stop and upgrade the standbys, then do
+# the same on the primary node after the standbys are back up and running
 resource "enos_remote_exec" "upgrade_standby" {
   depends_on = [module.vault_cluster, enos_remote_exec.verify_vault_version]
 
@@ -120,12 +122,7 @@ export VAULT_ADDR=http://localhost:8200
 
 if vault status | grep "HA Mode" | grep standby;
 then
-    sudo systemctl stop vault
-    cd /tmp
-    wget https://releases.hashicorp.com/vault/${var.upgrade_vault_version}+ent/vault_${var.upgrade_vault_version}+ent_linux_amd64.zip
-    sudo unzip -o vault_${var.upgrade_vault_version}+ent_linux_amd64.zip -d /usr/local/bin
-    sudo setcap cap_ipc_lock=+ep /usr/local/bin/vault
-    sudo systemctl start vault
+    /tmp/install-vault.sh ${var.upgrade_vault_version}
     until vault status
     do
         sleep 1s
@@ -151,11 +148,7 @@ export VAULT_ADDR=http://localhost:8200
 
 if vault status | grep "HA Mode" | grep active;
 then
-    cd /tmp;
-    sudo systemctl stop vault
-    wget https://releases.hashicorp.com/vault/${var.upgrade_vault_version}+ent/vault_${var.upgrade_vault_version}+ent_linux_amd64.zip 
-    sudo unzip -o vault_${var.upgrade_vault_version}+ent_linux_amd64.zip -d /usr/local/bin
-    sudo systemctl start vault
+    /tmp/install-vault.sh ${var.upgrade_vault_version}
     until vault status
     do
         sleep 1s
@@ -183,16 +176,15 @@ if [[ "$version" != "v${var.upgrade_vault_version}+ent" ]]; then
   exit 1
 fi
 
-# The
-if [ -f /etc/vault.d/tokens* ]
-then
-  export VAULT_ADDR=http://localhost:8200
-  export VAULT_TOKEN=$(cat /etc/vault.d/tokens*)
-  vault read secret/test || exit 1
-fi
+# Verify our test data
+vault read secret/test
 
 exit 0
 EOF
+  environment = {
+    VAULT_ADDR : "http://localhost:8200",
+    VAULT_TOKEN : module.vault_cluster.vault_token
+  }
 
   for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
   transport = {

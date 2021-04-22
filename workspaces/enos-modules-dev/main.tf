@@ -47,7 +47,7 @@ module "enos_infra" {
 
 module "consul_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
-  version = "0.0.1"
+  version = "0.0.2"
 
   depends_on = [module.enos_infra]
 
@@ -66,7 +66,7 @@ module "consul_cluster" {
 // Remove or update this dependency when you change the backend
 module "vault_cluster" {
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = "0.0.2"
+  version = "0.0.4"
 
   depends_on = [
     module.enos_infra,
@@ -83,7 +83,7 @@ module "vault_cluster" {
   instance_count  = var.vault_instance_count
   consul_ips      = module.consul_cluster.instance_private_ips
   vault_license   = file("${path.root}/vault.hclic")
-  vault_version   = var.vault_version
+  vault_version   = var.base_vault_version
 }
 
 resource "enos_remote_exec" "verify_vault_version" {
@@ -94,13 +94,97 @@ resource "enos_remote_exec" "verify_vault_version" {
 
 version=$(vault -version | cut -d ' ' -f2)
 
-if [[ "$version" != "v${var.vault_version}+ent" ]]; then
-  echo `Vault version mismatch. Expected ${var.vault_version}, got "$version"` >&2
+if [[ "$version" != "v${var.base_vault_version}+ent" ]]; then
+  echo "Vault version mismatch. Expected ${var.base_vault_version}, got '$version'" >&2
   exit 1
 fi
 
 exit 0
 EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+
+# The documented process for a vault cluster upgrade: stop and upgrade the standbys, then do
+# the same on the primary node after the standbys are back up and running
+resource "enos_remote_exec" "upgrade_standby" {
+  depends_on = [module.vault_cluster, enos_remote_exec.verify_vault_version]
+
+  content = <<EOF
+#!/bin/bash
+exec >> /tmp/upgrade.log 2>&1
+export VAULT_ADDR=http://localhost:8200
+
+if vault status | grep "HA Mode" | grep standby;
+then
+    /tmp/install-vault.sh ${var.upgrade_vault_version}
+    until vault status
+    do
+        sleep 1s
+    done
+fi
+EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+
+resource "enos_remote_exec" "upgrade_active" {
+  depends_on = [module.vault_cluster, enos_remote_exec.upgrade_standby]
+
+  content = <<EOF
+#!/bin/bash
+exec >> /tmp/upgrade.log 2>&1
+export VAULT_ADDR=http://localhost:8200
+
+if vault status | grep "HA Mode" | grep active;
+then
+    /tmp/install-vault.sh ${var.upgrade_vault_version}
+    until vault status
+    do
+        sleep 1s
+    done
+fi
+EOF
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+resource "enos_remote_exec" "verify_upgrade" {
+  depends_on = [module.vault_cluster, enos_remote_exec.upgrade_active]
+
+  content = <<EOF
+#!/bin/bash -e
+
+version=$(vault -version | cut -d ' ' -f2)
+
+if [[ "$version" != "v${var.upgrade_vault_version}+ent" ]]; then
+  echo "Vault upgrade version mismatch. Expected ${var.upgrade_vault_version}, got '$version'" >&2
+  exit 1
+fi
+
+# Verify our test data
+vault read secret/test
+
+exit 0
+EOF
+  environment = {
+    VAULT_ADDR : "http://localhost:8200",
+    VAULT_TOKEN : module.vault_cluster.vault_token
+  }
 
   for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
   transport = {

@@ -22,9 +22,6 @@
 # Crash log files
 crash.log
 
-# Exclude all .tfvars files
-*.tfvars
-
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc

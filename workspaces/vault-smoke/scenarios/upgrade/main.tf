@@ -4,7 +4,7 @@ terraform {
       source = "hashicorp/aws"
     }
     enos = {
-      version = ">= 0.1.2"
+      version = ">= 0.1.3"
       source  = "hashicorp.com/qti/enos"
     }
   }
@@ -28,8 +28,9 @@ provider "aws" {
 
 # Build our core infrastructure
 module "enos_infra" {
+  #source  = "../../../../../terraform-enos-aws-infra"
   source  = "app.terraform.io/hashicorp-qti/aws-infra/enos"
-  version = "0.0.1"
+  version = ">= 0.0.2"
 
   project_name      = var.project_name
   environment       = var.environment
@@ -52,7 +53,7 @@ data "enos_artifactory_item" "vault" {
 module "consul_cluster" {
   #source  = "../../../../../terraform-enos-aws-consul"
   source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
-  version = ">= 0.1.6"
+  version = ">= 0.1.7"
 
   depends_on = [module.enos_infra]
 
@@ -74,7 +75,7 @@ module "consul_cluster" {
 module "vault_cluster" {
   #source  = "../../../../../terraform-enos-aws-vault"
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = ">= 0.0.7"
+  version = ">= 0.0.8"
 
   depends_on = [
     module.enos_infra,

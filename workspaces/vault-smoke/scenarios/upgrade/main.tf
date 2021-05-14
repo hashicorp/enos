@@ -4,7 +4,7 @@ terraform {
       source = "hashicorp/aws"
     }
     enos = {
-      version = ">= 0.1.1"
+      version = ">= 0.1.2"
       source  = "hashicorp.com/qti/enos"
     }
   }
@@ -50,7 +50,7 @@ data "enos_artifactory_item" "vault" {
 
 # Build the Consul backend
 module "consul_cluster" {
-  # source  = "../../../../../terraform-enos-aws-consul"
+  #source  = "../../../../../terraform-enos-aws-consul"
   source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
   version = ">= 0.1.6"
 
@@ -71,12 +71,10 @@ module "consul_cluster" {
 }
 
 # Build the Vault cluster
-# Note: we don't set a license for this Vault cluster because the verify license
-# smoke tests # are designed to verify the default license.
 module "vault_cluster" {
   #source  = "../../../../../terraform-enos-aws-vault"
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = ">= 0.0.6"
+  version = ">= 0.0.7"
 
   depends_on = [
     module.enos_infra,
@@ -94,26 +92,20 @@ module "vault_cluster" {
   consul_ips                = module.consul_cluster.instance_private_ips
   vault_license             = var.vault_license_path != null ? file(var.vault_license_path) : null
   vault_install_dir         = var.vault_install_dir
-  vault_release             = null
-  vault_artifactory_release = {
+  vault_release             = merge(var.vault_initial_release, { product = "vault" })
+}
+
+resource "enos_bundle_install" "upgrade_vault_binary" {
+  depends_on = [module.vault_cluster]
+  for_each   = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+
+  destination = var.vault_install_dir
+  artifactory = {
     url      = data.enos_artifactory_item.vault.results[0].url
     sha256   = data.enos_artifactory_item.vault.results[0].sha256
     username = var.vault_artifactory_release.username
     token    = var.vault_artifactory_release.token
   }
-}
-
-# Run the smoke tests
-resource "enos_remote_exec" "smoke-verify-license" {
-  depends_on = [module.vault_cluster]
-  for_each   = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
-
-  content = templatefile("${path.module}/templates/smoke-verify-license.sh", {
-    vault_install_dir = var.vault_install_dir,
-    vault_token       = module.vault_cluster.vault_root_token,
-    vault_version     = var.vault_artifactory_release.properties["productVersion"]
-    vault_edition     = var.vault_artifactory_release.properties["EDITION"]
-  })
 
   transport = {
     ssh = {
@@ -122,19 +114,36 @@ resource "enos_remote_exec" "smoke-verify-license" {
   }
 }
 
-resource "enos_remote_exec" "smoke-write-test-data" {
-  depends_on = [enos_remote_exec.smoke-verify-license]
+# The documented process for a vault cluster upgrade: stop and upgrade the standbys, then do
+# the same on the primary node after the standbys are back up and running
+resource "enos_remote_exec" "upgrade_standby" {
+  depends_on = [enos_bundle_install.upgrade_vault_binary]
 
-  content = templatefile("${path.module}/templates/smoke-write-test-data.sh", {
-    test_key          = "smoke"
-    test_value        = "fire"
+  content = templatefile("${path.module}/templates/vault-upgrade.sh", {
     vault_install_dir = var.vault_install_dir,
-    vault_token       = module.vault_cluster.vault_root_token,
+    upgrade_target    = "standby"
   })
 
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
   transport = {
     ssh = {
-      host = module.vault_cluster.instance_public_ips[0]
+      host = module.vault_cluster.instance_public_ips[each.value]
+    }
+  }
+}
+
+resource "enos_remote_exec" "upgrade_active" {
+  depends_on = [enos_remote_exec.upgrade_standby]
+
+  content = templatefile("${path.module}/templates/vault-upgrade.sh", {
+    vault_install_dir = var.vault_install_dir,
+    upgrade_target    = "active"
+  })
+
+  for_each = toset([for idx in range(var.vault_instance_count) : tostring(idx)])
+  transport = {
+    ssh = {
+      host = module.vault_cluster.instance_public_ips[each.value]
     }
   }
 }

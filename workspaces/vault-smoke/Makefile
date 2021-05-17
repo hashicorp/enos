@@ -7,8 +7,7 @@ destroy: verify-license-destroy upgrade-destroy
 verify-license-init:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\
 	mkdir -p ./terraform-plugin-cache && \
-	terraform -chdir=./scenarios/verify-license init -upgrade -var-file=../../terraform.tfvars &&\
-	chmod -R +x ./terraform-plugin-cache/hashicorp.com/qti/enos/*
+	terraform -chdir=./scenarios/verify-license init -upgrade -var-file=../../terraform.tfvars
 
 verify-license-run:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\
@@ -21,8 +20,7 @@ verify-license-destroy:
 upgrade-init:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\
 	mkdir -p ./terraform-plugin-cache && \
-	terraform -chdir=./scenarios/upgrade init -upgrade -var-file=../../terraform.tfvars &&\
-	chmod -R +x ./terraform-plugin-cache/hashicorp.com/qti/enos/*
+	terraform -chdir=./scenarios/upgrade init -upgrade -var-file=../../terraform.tfvars
 
 upgrade-run:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\

@@ -83,16 +83,61 @@ variable "vault_instance_count" {
   default = 3
 }
 
-variable "vault_artifactory_release" {
+variable "artifactory_username" {
+  type = string
+  description = "The Artifactory username for authenticating with Artifactory"
+  default = null
+}
+
+variable "artifactory_token" {
+  type = string
+  description = "The Artifactory token for authenticating with Artifactory"
+  default = null
+}
+
+variable "vault_enterprise_product_revision" {
+  type = string
+  description = "The product revision used when staging the release. This is probably the git SHA"
+  default = null
+}
+
+variable "vault_oss_product_revision" {
+  type = string
+  description = "The product revision used when staging the release. This is probably the git SHA"
+  default = null
+}
+
+variable "vault_product_version" {
+  type = string
+  description = "The product revision used when staging the release. This is probably the git SHA"
+  default = null
+}
+
+variable "vault_product_editions_to_test" {
+  type = list(string)
+  description = "The product editions to test"
+  default = ["oss", "ent", "ent.hsm", "prem", "prem.hsm", "pro"]
+}
+
+variable "vault_artifactory_release_query" {
   type = object({
-    username = string
-    token = string
     host = string
     repo = string
-    path = string
     name = string
     properties = map(string)
   })
-  description = "Vault release version and edition to install from artifactory.hashicorp.engineering"
-  default = null
+  description = "Vault release version and edition to upgrade from artifactory.hashicorp.engineering"
+  default = {
+    host       = "https://artifactory.hashicorp.engineering/artifactory"
+    repo       = "hashicorp-packagespec-buildcache-local*"
+    name       = "*.zip"
+    properties = {
+      "GOARCH"          = "amd64"
+      "GOOS"            = "linux"
+      "artifactType"    = "package"
+      # EDITION should be the enterprise edition
+      # productRevision should be the git SHA of the staged release
+      # productVersion should be the version of Vault
+    }
+  }
 }

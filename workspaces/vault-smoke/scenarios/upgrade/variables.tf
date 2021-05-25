@@ -83,28 +83,85 @@ variable "vault_instance_count" {
   default = 3
 }
 
-variable "vault_initial_release" {
+variable "vault_enterprise_initial_release" {
   type = object({
     edition = string
     version = string
   })
-  description = "Vault release version to install prior to upgrade"
+  description = "Vault Enterprise release version to install prior to upgrade"
   default = {
     edition = "ent"
     version = "1.7.0"
   }
 }
 
-variable "vault_artifactory_release" {
+variable "vault_oss_initial_release" {
   type = object({
-    username = string
-    token = string
+    edition = string
+    version = string
+  })
+  description = "Vault release version to install prior to upgrade"
+  default = {
+    edition = "oss"
+    version = "1.7.0"
+  }
+}
+
+variable "artifactory_username" {
+  type = string
+  description = "The Artifactory username for authenticating with Artifactory"
+  default = null
+}
+
+variable "artifactory_token" {
+  type = string
+  description = "The Artifactory token for authenticating with Artifactory"
+  default = null
+}
+
+variable "vault_enterprise_product_revision" {
+  type = string
+  description = "The product revision used when staging the release. This is probably the git SHA"
+  default = null
+}
+
+variable "vault_oss_product_revision" {
+  type = string
+  description = "The product revision used when staging the release. This is probably the git SHA"
+  default = null
+}
+
+variable "vault_product_version" {
+  type = string
+  description = "The product revision used when staging the release. This is probably the git SHA"
+  default = null
+}
+
+variable "vault_product_editions_to_test" {
+  type = list(string)
+  description = "The product editions to test"
+  default = ["oss", "ent", "ent.hsm", "prem", "prem.hsm", "pro"]
+}
+
+variable "vault_artifactory_release_query" {
+  type = object({
     host = string
     repo = string
-    path = string
     name = string
     properties = map(string)
   })
   description = "Vault release version and edition to upgrade from artifactory.hashicorp.engineering"
-  default = null
+  default = {
+    host       = "https://artifactory.hashicorp.engineering/artifactory"
+    repo       = "hashicorp-packagespec-buildcache-local*"
+    name       = "*.zip"
+    properties = {
+      "GOARCH"          = "amd64"
+      "GOOS"            = "linux"
+      "artifactType"    = "package"
+      # EDITION should be the enterprise edition
+      # productRevision should be the git SHA of the staged release
+      # productVersion should be the version of Vault
+    }
+  }
 }

@@ -5,6 +5,15 @@
 
 set -e
 
+binpath=${vault_install_dir}/vault
+edition=${vault_edition}
+version=${vault_version}
+release="$version+$edition"
+
+if test "$edition" == "oss"; then
+  exit 0
+fi
+
 function retry {
   local retries=$1
   shift
@@ -38,11 +47,6 @@ fail() {
 	exit 1
 }
 
-binpath=${vault_install_dir}/vault
-edition=${vault_edition}
-version=${vault_version}
-release="$version+$edition"
-
 license_expected="temporary"
 case "$release" in
 	*+ent) ;;
@@ -61,9 +65,9 @@ case "$release" in
 	*1.5.*+ent*) features_expected='["HSM", "Performance Replication", "DR Replication", "MFA", "Sentinel", "Seal Wrapping", "Control Groups", "Performance Standby", "Namespaces", "KMIP", "Entropy Augmentation", "Transform Secrets Engine", "Lease Count Quotas"]';;
 	*1.[6-8].*+ent*) features_expected='["HSM", "Performance Replication", "DR Replication", "MFA", "Sentinel", "Seal Wrapping", "Control Groups", "Performance Standby", "Namespaces", "KMIP", "Entropy Augmentation", "Transform Secrets Engine", "Lease Count Quotas", "Key Management Secrets Engine", "Automated Snapshots"]';;
 
-	*1.[2-4].*+pro_*) features_expected='["DR Replication", "Performance Standby", "Namespaces"]';;
-	*1.5.*+pro_*) features_expected='["DR Replication", "Performance Standby", "Namespaces", "Lease Count Quotas"]';;
-	*1.[6-8].*+pro_*) features_expected='["DR Replication", "Performance Standby", "Namespaces", "Lease Count Quotas", "Automated Snapshots"]';;
+	*1.[2-4].*+pro*) features_expected='["DR Replication", "Performance Standby", "Namespaces"]';;
+	*1.5.*+pro*) features_expected='["DR Replication", "Performance Standby", "Namespaces", "Lease Count Quotas"]';;
+	*1.[6-8].*+pro*) features_expected='["DR Replication", "Performance Standby", "Namespaces", "Lease Count Quotas", "Automated Snapshots"]';;
 
 	*1.2.*+prem*) features_expected='["HSM", "Performance Replication", "DR Replication", "MFA", "Sentinel", "Seal Wrapping", "Control Groups", "Performance Standby", "Namespaces", "KMIP"]';;
 	*1.[3-4].*+prem*) features_expected='["HSM", "Performance Replication", "DR Replication", "MFA", "Sentinel", "Seal Wrapping", "Control Groups", "Performance Standby", "Namespaces", "KMIP", "Entropy Augmentation"]';;

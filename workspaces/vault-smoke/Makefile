@@ -11,7 +11,7 @@ verify-license-init:
 
 verify-license-run:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\
-	terraform -chdir=./scenarios/verify-license apply -var-file=../../terraform.tfvars -auto-approve
+	terraform -chdir=./scenarios/verify-license apply -var-file=../../terraform.tfvars -auto-approve -parallelism=20
 
 verify-license-destroy:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\
@@ -24,7 +24,7 @@ upgrade-init:
 
 upgrade-run:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\
-	terraform -chdir=./scenarios/upgrade apply -var-file=../../terraform.tfvars -auto-approve
+	terraform -chdir=./scenarios/upgrade apply -var-file=../../terraform.tfvars -auto-approve -parallelism=20
 
 upgrade-destroy:
 	export TF_CLI_CONFIG_FILE=./mirror.tfrc &&\

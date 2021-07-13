@@ -4,7 +4,7 @@ terraform {
       source = "hashicorp/aws"
     }
     enos = {
-      version = ">= 0.1.3"
+      version = ">= 0.1.5"
       source  = "hashicorp.com/qti/enos"
     }
   }
@@ -32,7 +32,7 @@ locals {
   // be found.
   vault_instances = {for i in setproduct(var.vault_product_editions_to_test, range(var.vault_instance_count)):
     "${i[0]}-${i[1]}" => {
-      edition     = i[0]
+      edition      = i[0]
       instance_idx = i[1]
       cluster_idx  = index(var.vault_product_editions_to_test, i[0])
     }
@@ -63,7 +63,7 @@ data "enos_artifactory_item" "vault" {
 module "infra" {
   #source  = "../../../../../terraform-enos-aws-infra"
   source  = "app.terraform.io/hashicorp-qti/aws-infra/enos"
-  version = ">= 0.0.2"
+  version = ">= 0.0.3"
 
   project_name      = var.project_name
   environment       = var.environment
@@ -75,7 +75,7 @@ module "infra" {
 module "consul" {
   #source  = "../../../../../terraform-enos-aws-consul"
   source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
-  version = ">= 0.1.8"
+  version = ">= 0.1.9"
 
   depends_on = [module.infra]
   count      = length(var.vault_product_editions_to_test)
@@ -98,7 +98,7 @@ module "consul" {
 module "vault" {
   #source  = "../../../../../terraform-enos-aws-vault"
   source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  version = ">= 0.0.9"
+  version = ">= 0.0.10"
 
   depends_on = [
     module.infra,
@@ -115,7 +115,7 @@ module "vault" {
   kms_key_arn       = module.infra.kms_key_arn
   instance_count    = var.vault_instance_count
   consul_ips        = module.consul[count.index].instance_private_ips
-  vault_license     = var.vault_license_path != null ? file(var.vault_license_path) : null
+  vault_license     = var.vault_product_editions_to_test[count.index] != "oss" ? (var.vault_license_path != null ? file(var.vault_license_path) : null) : null
   vault_install_dir = var.vault_install_dir
   vault_release     = var.vault_product_editions_to_test[count.index] == "oss" ? merge(var.vault_oss_initial_release, {
     product = "vault"

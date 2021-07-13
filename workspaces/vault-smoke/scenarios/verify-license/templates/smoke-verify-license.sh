@@ -10,7 +10,13 @@ edition=${vault_edition}
 version=${vault_version}
 release="$version+$edition"
 
+# OSS editions don't require or support licenses.
 if test "$edition" == "oss"; then
+  exit 0
+fi
+
+# Vault >= 1.8 no longer includes built-in license so we can move on.
+if [[ "$release" = *1.[8-9].*+ent* ]]; then
   exit 0
 fi
 

@@ -32,7 +32,7 @@ locals {
   // be found.
   vault_instances = {for i in setproduct(var.vault_product_editions_to_test, range(var.vault_instance_count)):
     "${i[0]}-${i[1]}" => {
-      edition     = i[0]
+      edition      = i[0]
       instance_idx = i[1]
       cluster_idx  = index(var.vault_product_editions_to_test, i[0])
     }
@@ -53,6 +53,7 @@ data "enos_artifactory_item" "vault" {
       "productRevision" = var.vault_oss_product_revision
       "productVersion"  = var.vault_product_version
     }) : merge(var.vault_artifactory_release_query.properties, {
+
       "EDITION"         = var.vault_product_editions_to_test[count.index]
       "productRevision" = var.vault_enterprise_product_revision
       "productVersion"  = var.vault_product_version
@@ -62,9 +63,7 @@ data "enos_artifactory_item" "vault" {
 # Build our core infrastructure
 module "infra" {
   source  = "app.terraform.io/hashicorp-qti/aws-infra/enos"
-  version = ">= 0.0.2"
-
-  #count = length(var.vault_product_editions_to_test)
+  version = ">= 0.0.3"
 
   project_name      = var.project_name
   environment       = var.environment
@@ -74,9 +73,9 @@ module "infra" {
 
 # Build the Consul backend
 module "consul" {
-  source  = "../../../../../terraform-enos-aws-consul"
-  #source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
-  #version = ">= 0.1.7"
+  #source  = "../../../../../terraform-enos-aws-consul"
+  source  = "app.terraform.io/hashicorp-qti/aws-consul/enos"
+  version = ">= 0.1.9"
 
   depends_on = [module.infra]
   count      = length(var.vault_product_editions_to_test)
@@ -99,9 +98,9 @@ module "consul" {
 # Note: we don't set a license for this Vault cluster because the verify license
 # smoke tests # are designed to verify the default license.
 module "vault" {
-  source  = "../../../../../terraform-enos-aws-vault"
-  #source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
-  #version = ">= 0.0.8"
+  #source  = "../../../../../terraform-enos-aws-vault"
+  source  = "app.terraform.io/hashicorp-qti/aws-vault/enos"
+  version = ">= 0.0.10"
 
   count      = length(var.vault_product_editions_to_test)
   depends_on = [
@@ -118,7 +117,9 @@ module "vault" {
   kms_key_arn               = module.infra.kms_key_arn
   instance_count            = var.vault_instance_count
   consul_ips                = module.consul[count.index].instance_private_ips
-  vault_license             = var.vault_license_path != null ? file(var.vault_license_path) : null
+  # only set the vault_license for license verification tests for ent and ent.hsm
+  # because all other editions have built-in licenses or don't require one.
+  vault_license             = lookup({"ent"=true, "ent.hsm"=true}, var.vault_product_editions_to_test[count.index], false) ? file(var.vault_license_path) : null
   vault_install_dir         = var.vault_install_dir
   vault_release             = null
   vault_artifactory_release = {

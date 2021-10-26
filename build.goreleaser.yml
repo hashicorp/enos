@@ -1,0 +1,23 @@
+---
+
+builds:
+  - main: ./command/enos
+    id: enos
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    targets:
+      - linux_amd64
+      - darwin_amd64
+    flags:
+      - -trimpath
+      - -tags=osusergo,netgo
+      - -gcflags="all=-N -l"
+    ldflags:
+      - '-X github.com/hashicorp/enos/internal/version.Version={{ .Env.VERSION }}'
+      - '-X github.com/hashicorp/enos/internal/version.GitSHA={{ .Commit }}'
+      - '-extldflags=-static -s -w'
+    env:
+      - CGO_ENABLED=0
+    binary: enos
+
+changelog:
+  skip: true

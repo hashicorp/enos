@@ -31,4 +31,3 @@ terraform.rc
 *.hclic
 
 /dist
-enos

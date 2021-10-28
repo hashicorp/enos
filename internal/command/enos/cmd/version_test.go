@@ -5,14 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/enos/integration"
-
 	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Cmd_Version(t *testing.T) {
-	integration.EnsureAccCLI(t)
-	runner := integration.Runner(t)
+	ensureAccCLI(t)
+	runner := runner(t)
 
 	for _, test := range []struct {
 		cmd  string

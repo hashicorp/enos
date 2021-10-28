@@ -18,7 +18,10 @@ TEST_ACC=ENOS_ACC=1
 default: build
 
 build:
-	${GORACE} CGO_ENABLED=0 go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o ${BINARY} ./command/enos
+	CGO_ENABLED=0 go build ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o ${BINARY} ./command/enos
+
+build-race:
+	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o ${BINARY} ./command/enos
 
 release:
 	docker run --rm --privileged --env VERSION=${VERSION} \
@@ -33,7 +36,7 @@ test:
 test-acc-release: release
 	${TEST_ACC} ${GORACE} ENOS_BINARY_PATH=${DIST_BINARY_PATH} go test -race ./... -v $(TESTARGS) -timeout 120m
 
-test-acc: build
+test-acc: build-race
 	${TEST_ACC} ${GORACE} ENOS_BINARY_PATH=${BUILD_BINARY_PATH} go test -race ./... -v $(TESTARGS) -timeout 120m
 
 lint:

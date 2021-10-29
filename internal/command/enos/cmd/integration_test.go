@@ -1,4 +1,4 @@
-package integration
+package cmd
 
 import (
 	"context"
@@ -9,22 +9,22 @@ import (
 	"testing"
 )
 
-// Runner returns a default instance of the Enos CLI integration test runner.
-func Runner(t *testing.T) *TestRunner {
+// runner returns a default instance of the Enos CLI integration test runner.
+func runner(t *testing.T) *testRunner {
 	path, ok := os.LookupEnv("ENOS_BINARY_PATH")
 	if !ok {
 		t.Error("ENOS_BINARY_PATH has not been set")
 		t.Fail()
 	}
 
-	return &TestRunner{
+	return &testRunner{
 		BinPath: path,
 		Env:     os.Environ(),
 	}
 }
 
-// EnsureAcc ensures that acceptance test mode is enables, otherwise it skips.
-func EnsureAcc(t *testing.T) {
+// ensureAcc ensures that acceptance test mode is enables, otherwise it skips.
+func ensureAcc(t *testing.T) {
 	t.Helper()
 
 	if acc, ok := os.LookupEnv("ENOS_ACC"); ok {
@@ -36,12 +36,12 @@ func EnsureAcc(t *testing.T) {
 	t.Skip("Skipping because ENOS_ACC has not been set")
 }
 
-// EnsureAccCLI ensures that acceptance test mode is enabled and that a path to
+// ensureAccCLI ensures that acceptance test mode is enabled and that a path to
 // a test binary has been set.
-func EnsureAccCLI(t *testing.T) {
+func ensureAccCLI(t *testing.T) {
 	t.Helper()
 
-	EnsureAcc(t)
+	ensureAcc(t)
 
 	if path, ok := os.LookupEnv("ENOS_BINARY_PATH"); ok {
 		if path != "" {
@@ -52,17 +52,17 @@ func EnsureAccCLI(t *testing.T) {
 	t.Skip("Skipping because ENOS_BINARY_PATH has not been set")
 }
 
-// TestRunner is the Enos CLI integration test runner
-type TestRunner struct {
+// testRunner is the Enos CLI integration test runner
+type testRunner struct {
 	BinPath string
 	Env     []string
 }
 
 // RunCmd runs an Enos sub-command
-func (t *TestRunner) RunCmd(ctx context.Context, subCommand string) ([]byte, error) {
+func (t *testRunner) RunCmd(ctx context.Context, subCommand string) ([]byte, error) {
 	path, err := filepath.Abs(t.BinPath)
 	if err != nil {
 		return nil, nil
 	}
-	return exec.CommandContext(ctx, path, strings.Split(subCommand, " ")...).Output()
+	return exec.CommandContext(ctx, path, strings.Split(subCommand, " ")...).CombinedOutput()
 }

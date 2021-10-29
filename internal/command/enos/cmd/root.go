@@ -16,6 +16,7 @@ var rootCmd = &cobra.Command{
 // Execute executes enos
 func Execute() {
 	rootCmd.AddCommand(newVersionCmd())
+	rootCmd.AddCommand(newScenarioCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

@@ -6,8 +6,11 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
+	"github.com/zclconf/go-cty/cty/function/stdlib"
+
 	hcl "github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
@@ -111,30 +114,95 @@ func (f *Decoder) mergedBody() hcl.Body {
 	return hcl.MergeFiles(files)
 }
 
-// Decode decodes the HCL into a flight plan. It is done in several passes.
-func (f *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
-	fp := NewFlightPlan()
-
-	diags := gohcl.DecodeBody(f.mergedBody(), nil, fp)
-
-	return fp, diags
-}
-
-// NewFlightPlan returns a new instance of a FlightPlan
-func NewFlightPlan() *FlightPlan {
-	return &FlightPlan{
-		Scenarios: []*Scenario{},
+func (f *Decoder) baseEvalContext() *hcl.EvalContext {
+	return &hcl.EvalContext{
+		Variables: map[string]cty.Value{},
+		Functions: map[string]function.Function{
+			"absolute":               stdlib.AbsoluteFunc,
+			"add":                    stdlib.AddFunc,
+			"and":                    stdlib.AndFunc,
+			"byteslen":               stdlib.BytesLenFunc,
+			"bytessclice":            stdlib.BytesSliceFunc,
+			"csvdecode":              stdlib.CSVDecodeFunc,
+			"ceil":                   stdlib.CeilFunc,
+			"chomp":                  stdlib.ChompFunc,
+			"chunklist":              stdlib.ChunklistFunc,
+			"coalesce":               stdlib.CoalesceFunc,
+			"coalescelist":           stdlib.CoalesceListFunc,
+			"compact":                stdlib.CompactFunc,
+			"concat":                 stdlib.ConcatFunc,
+			"distinct":               stdlib.DistinctFunc,
+			"divide":                 stdlib.DivideFunc,
+			"element":                stdlib.ElementFunc,
+			"equal":                  stdlib.EqualFunc,
+			"flatten":                stdlib.FlattenFunc,
+			"floor":                  stdlib.FloorFunc,
+			"format":                 stdlib.FormatFunc,
+			"formatdate":             stdlib.FormatDateFunc,
+			"formatlist":             stdlib.FormatListFunc,
+			"greaterthan":            stdlib.GreaterThanFunc,
+			"greaterthanorequalto":   stdlib.GreaterThanOrEqualToFunc,
+			"hasindex":               stdlib.HasIndexFunc,
+			"indent":                 stdlib.IndentFunc,
+			"index":                  stdlib.IndexFunc,
+			"int":                    stdlib.IntFunc,
+			"jsondecode":             stdlib.JSONDecodeFunc,
+			"jsonencode":             stdlib.JSONEncodeFunc,
+			"join":                   stdlib.JoinFunc,
+			"keys":                   stdlib.KeysFunc,
+			"length":                 stdlib.LengthFunc,
+			"lessthan":               stdlib.LessThanFunc,
+			"lessthanorequalto":      stdlib.LessThanOrEqualToFunc,
+			"log":                    stdlib.LogFunc,
+			"lookup":                 stdlib.LookupFunc,
+			"lower":                  stdlib.LowerFunc,
+			"max":                    stdlib.MaxFunc,
+			"merge":                  stdlib.MergeFunc,
+			"min":                    stdlib.MinFunc,
+			"modulo":                 stdlib.ModuloFunc,
+			"multiply":               stdlib.MultiplyFunc,
+			"negate":                 stdlib.NegateFunc,
+			"not":                    stdlib.NotFunc,
+			"notequal":               stdlib.NotEqualFunc,
+			"or":                     stdlib.OrFunc,
+			"parseint":               stdlib.ParseIntFunc,
+			"pow":                    stdlib.PowFunc,
+			"range":                  stdlib.RangeFunc,
+			"regex":                  stdlib.RegexFunc,
+			"regexall":               stdlib.RegexAllFunc,
+			"regexreplace":           stdlib.RegexReplaceFunc,
+			"replace":                stdlib.ReplaceFunc,
+			"reverse":                stdlib.ReverseFunc,
+			"reverselist":            stdlib.ReverseListFunc,
+			"sethaselement":          stdlib.SetHasElementFunc,
+			"setintersection":        stdlib.SetIntersectionFunc,
+			"setproduct":             stdlib.SetProductFunc,
+			"setsubtract":            stdlib.SetSubtractFunc,
+			"setsymmetricdifference": stdlib.SetSymmetricDifferenceFunc,
+			"setunion":               stdlib.SetUnionFunc,
+			"signum":                 stdlib.SignumFunc,
+			"slice":                  stdlib.SliceFunc,
+			"sort":                   stdlib.SortFunc,
+			"split":                  stdlib.SplitFunc,
+			"strlen":                 stdlib.StrlenFunc,
+			"substr":                 stdlib.SubstrFunc,
+			"subtract":               stdlib.SubtractFunc,
+			"title":                  stdlib.TitleFunc,
+			"trim":                   stdlib.TrimFunc,
+			"trimprefix":             stdlib.TrimPrefixFunc,
+			"trimspace":              stdlib.TrimSpaceFunc,
+			"trimsuffix":             stdlib.TrimSuffixFunc,
+			"upper":                  stdlib.UpperFunc,
+			"values":                 stdlib.ValuesFunc,
+			"zipmap":                 stdlib.ZipmapFunc,
+		},
 	}
 }
 
-// FlightPlan represents out flight plan. Due to the complexity of the Enos DSL
-// we have to decode in several different passes.
-type FlightPlan struct {
-	Scenarios []*Scenario `hcl:"scenario,block"`
-	Remain    hcl.Body    `hcl:",remain"`
-}
+// Decode decodes the HCL into a flight plan.
+func (f *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
+	fp := NewFlightPlan()
+	diags := fp.Decode(f.baseEvalContext(), f.mergedBody())
 
-// Scenario represents a scenario
-type Scenario struct {
-	Name string `hcl:"name,label"`
+	return fp, diags
 }

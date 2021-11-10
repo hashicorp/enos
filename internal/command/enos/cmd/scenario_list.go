@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -50,6 +51,9 @@ func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(fp.Scenarios) != 0 {
+		sort.Slice(fp.Scenarios, func(i, j int) bool {
+			return fp.Scenarios[i].Name < fp.Scenarios[j].Name
+		})
 		header := []string{"scenario"}
 		rows := [][]string{{""}} // add a padding row
 		for _, scenario := range fp.Scenarios {

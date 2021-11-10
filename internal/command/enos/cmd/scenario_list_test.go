@@ -31,7 +31,7 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 		},
 		{
 			dir: "scenario_list_pass_2",
-			out: "SCENARIO \n        \none     \ntwo     \n",
+			out: "SCENARIO \n        \nconsul  \nvault   \n",
 		},
 		{
 			dir:  "scenario_list_fail_malformed",

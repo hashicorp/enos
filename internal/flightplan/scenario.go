@@ -41,11 +41,20 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 
 	// Decode all of our blocks. Make sure that scenario has at least one
 	// step.
-	foundSteps := 0
+	foundSteps := map[string]struct{}{}
 	for _, childBlock := range content.Blocks {
 		switch childBlock.Type {
 		case blockTypeScenarioStep:
-			foundSteps++
+			if _, dupeStep := foundSteps[childBlock.Labels[0]]; dupeStep {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "redeclared step in scenario",
+					Detail:   fmt.Sprintf("a step with name %s has already been declared", childBlock.Labels[0]),
+					Subject:  &childBlock.DefRange,
+				})
+				continue
+			}
+
 			moreDiags = verifyBlockLabelsAreValidIdentifiers(childBlock)
 			diags = diags.Extend(moreDiags)
 			if moreDiags.HasErrors() {
@@ -59,6 +68,7 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 				continue
 			}
 
+			foundSteps[step.Name] = struct{}{}
 			s.Steps = append(s.Steps, step)
 		default:
 			diags = append(diags, &hcl.Diagnostic{
@@ -70,7 +80,7 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 		}
 	}
 
-	if foundSteps == 0 {
+	if len(foundSteps) == 0 {
 		r := block.Body.MissingItemRange()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,

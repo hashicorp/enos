@@ -43,6 +43,9 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	m.Name = block.Labels[0]
 	val, moreDiags := content.Attributes["source"].Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
 	m.Source = val.AsString()
 
 	// "version" isn't required attribute but it is allowed. Handle it manually.
@@ -50,6 +53,9 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	if ok {
 		val, moreDiags := version.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			return diags
+		}
 		m.Version = val.AsString()
 	}
 
@@ -86,6 +92,9 @@ func (m *Module) evalCtx() cty.Value {
 	vals := map[string]cty.Value{
 		"source": cty.StringVal(m.Source),
 		"name":   cty.StringVal(m.Name),
+	}
+	if m.Version != "" {
+		vals["version"] = cty.StringVal(m.Version)
 	}
 
 	for k, v := range m.Attrs {

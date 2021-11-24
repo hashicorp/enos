@@ -18,26 +18,30 @@ import (
 var FileNamePattern = regexp.MustCompile(`^enos[-\w]*?\.hcl$`)
 
 // DecoderOpt is a functional option for a new flight plan
-type DecoderOpt func(*Decoder) *Decoder
+type DecoderOpt func(*Decoder) error
 
 // NewDecoder takes functional options and returns a new flight plan
-func NewDecoder(opts ...DecoderOpt) *Decoder {
-	fp := &Decoder{
+func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
+	d := &Decoder{
 		parser: hclparse.NewParser(),
 	}
 
 	for _, opt := range opts {
-		fp = opt(fp)
+		err := opt(d)
+		if err != nil {
+			return d, err
+		}
 	}
 
-	return fp
+	return d, nil
 }
 
-// WithDecoderDirectory sets the flight plan directory
-func WithDecoderDirectory(path string) DecoderOpt {
-	return func(fp *Decoder) *Decoder {
-		fp.dir = path
-		return fp
+// WithDecoderBaseDir sets the flight plan base directory
+func WithDecoderBaseDir(path string) DecoderOpt {
+	return func(fp *Decoder) error {
+		var err error
+		fp.dir, err = filepath.Abs(path)
+		return err
 	}
 }
 
@@ -201,8 +205,18 @@ func (f *Decoder) baseEvalContext() *hcl.EvalContext {
 
 // Decode decodes the HCL into a flight plan.
 func (f *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
-	fp := NewFlightPlan()
-	diags := fp.Decode(f.baseEvalContext(), f.mergedBody())
+	var diags hcl.Diagnostics
+
+	fp, err := NewFlightPlan(WithFlightPlanBaseDirectory(f.dir))
+	if err != nil {
+		return fp, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "unable to create new flight plan",
+			Detail:   fmt.Sprintf("unable to create new flight plan: %s", err.Error()),
+		})
+	}
+
+	diags = diags.Extend(fp.Decode(f.baseEvalContext(), f.mergedBody(), f.parser.Files()))
 
 	return fp, diags
 }

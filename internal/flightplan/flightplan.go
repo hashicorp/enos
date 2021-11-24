@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 
 	"github.com/zclconf/go-cty/cty"
@@ -25,16 +26,41 @@ var flightPlanSchema = &hcl.BodySchema{
 }
 
 // NewFlightPlan returns a new instance of a FlightPlan
-func NewFlightPlan() *FlightPlan {
-	return &FlightPlan{
+func NewFlightPlan(opts ...Opt) (*FlightPlan, error) {
+	fp := &FlightPlan{
+		Files:     map[string]*hcl.File{},
 		Scenarios: []*Scenario{},
 		Modules:   []*Module{},
 	}
+
+	for _, opt := range opts {
+		err := opt(fp)
+		if err != nil {
+			return fp, err
+		}
+	}
+
+	return fp, nil
 }
+
+// WithFlightPlanBaseDirectory sets the base directory to the absolute path
+// of the directory given.
+func WithFlightPlanBaseDirectory(dir string) Opt {
+	return func(fp *FlightPlan) error {
+		var err error
+		fp.BaseDir, err = filepath.Abs(dir)
+		return err
+	}
+}
+
+// Opt is a flight plan option
+type Opt func(*FlightPlan) error
 
 // FlightPlan represents our flight plan, the main configuration of Enos.
 type FlightPlan struct {
+	BaseDir     string
 	BodyContent *hcl.BodyContent
+	Files       map[string]*hcl.File
 	Scenarios   []*Scenario
 	Modules     []*Module
 }
@@ -43,8 +69,15 @@ type FlightPlan struct {
 // continually expanding the evaluation context as more sub-sections are
 // decoded. It returns HCL diagnostics that are collected over the course of
 // decoding.
-func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body) hcl.Diagnostics {
+func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[string]*hcl.File) hcl.Diagnostics {
 	var diags hcl.Diagnostics
+
+	if fp.BaseDir == "" {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "unable to decode flight plan without a base directory",
+		})
+	}
 
 	if ctx == nil {
 		ctx = &hcl.EvalContext{
@@ -52,6 +85,8 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body) hcl.Diagnostic
 			Functions: map[string]function.Function{},
 		}
 	}
+
+	fp.Files = files
 
 	// Decode our top-level schema
 	fp.BodyContent, diags = body.Content(flightPlanSchema)
@@ -63,6 +98,8 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body) hcl.Diagnostic
 
 	return diags
 }
+
+// WriteDiagnostics takes a writer and
 
 // decodeModules decodes "module" blocks that are defined in the top-level
 // schema.

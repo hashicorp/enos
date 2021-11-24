@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -16,12 +17,16 @@ func Test_Decoder_parseDir(t *testing.T) {
 	t.Parallel()
 
 	newDecoder := func(dir string) *Decoder {
+		t.Helper()
 		path, err := filepath.Abs(filepath.Join("./tests", dir))
 		require.NoError(t, err)
 
-		return NewDecoder(
-			WithDecoderDirectory(path),
+		d, err := NewDecoder(
+			WithDecoderBaseDir(path),
 		)
+		require.NoError(t, err)
+
+		return d
 	}
 
 	t.Run("malformed enos.hcl", func(t *testing.T) {
@@ -87,6 +92,47 @@ scenario "basic" {
 								Module: &ScenarioStepModule{
 									Name:   "backend",
 									Source: modulePath,
+									Attrs:  map[string]cty.Value{},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "modules from the registry",
+			hcl: `
+module "backend" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.11.0"
+}
+
+scenario "basic" {
+  step "first" {
+    module = module.backend
+  }
+}
+`,
+			expected: &FlightPlan{
+				Modules: []*Module{
+					{
+						Name:    "backend",
+						Source:  "terraform-aws-modules/vpc/aws",
+						Version: "3.11.0",
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name: "basic",
+						Steps: []*ScenarioStep{
+							{
+								Name: "first",
+								Module: &ScenarioStepModule{
+									Name:    "backend",
+									Source:  "terraform-aws-modules/vpc/aws",
+									Version: "3.11.0",
+									Attrs:   map[string]cty.Value{},
 								},
 							},
 						},
@@ -177,6 +223,9 @@ scenario "basic" {
 								Module: &ScenarioStepModule{
 									Name:   "backend",
 									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"driver": cty.StringVal("postgres"),
+									},
 								},
 							},
 							{
@@ -184,6 +233,9 @@ scenario "basic" {
 								Module: &ScenarioStepModule{
 									Name:   "frontend_blue",
 									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"app_version": cty.StringVal("1.0.0"),
+									},
 								},
 							},
 							{
@@ -191,13 +243,18 @@ scenario "basic" {
 								Module: &ScenarioStepModule{
 									Name:   "frontend_green",
 									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"app_version": cty.StringVal("1.1.0"),
+									},
 								},
 							},
 							{
 								Name: "frontend_red",
 								Module: &ScenarioStepModule{
-									Name:   "frontend_red",
-									Source: "hashicorp/qti/frontend-aws",
+									Name:    "frontend_red",
+									Source:  "hashicorp/qti/frontend-aws",
+									Version: "2.0.0",
+									Attrs:   map[string]cty.Value{},
 								},
 							},
 						},
@@ -482,9 +539,31 @@ scenario "backend" {
 }
 `, modulePath),
 		},
+		{
+			desc: "redeclared step in scenario",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			decoder := NewDecoder()
+			cwd, err := os.Getwd()
+			require.NoError(t, err)
+			decoder, err := NewDecoder(WithDecoderBaseDir(cwd))
+			require.NoError(t, err)
 			diags := decoder.parseHCL([]byte(test.hcl), "decoder-test.hcl")
 			require.False(t, diags.HasErrors(), diags.Error())
 

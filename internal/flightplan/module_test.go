@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -47,7 +48,10 @@ scenario "basic" {
   }
 }`, modulePath, test.expr)
 
-			decoder := NewDecoder()
+			cwd, err := os.Getwd()
+			require.NoError(t, err)
+			decoder, err := NewDecoder(WithDecoderBaseDir(cwd))
+			require.NoError(t, err)
 			diags := decoder.parseHCL([]byte(hcl), "decoder-test.hcl")
 			require.False(t, diags.HasErrors(), diags.Error())
 

@@ -47,3 +47,12 @@ fmt:
 
 clean:
 	rm -rf dist enos
+
+version:
+ifneq (,$(wildcard version/version_ent.go))
+	@$(CURRENT_DIRECTORY)/build-scripts/version.sh version/version_ent.go
+else
+	@$(CURRENT_DIRECTORY)/build-scripts/version.sh version/version.go
+endif
+
+.PHONY: version

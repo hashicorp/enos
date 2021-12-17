@@ -1,0 +1,151 @@
+name: release_build
+on:
+  # Run the release build workflow manually from GitHub Actions menu
+  workflow_dispatch:
+  # Run the release build workflow on merge only when version.go is updated
+  push:
+    paths:
+      - 'version/version.go'
+    branches:
+      - main
+
+env:
+  PKG_NAME: "enos"
+
+jobs:
+  get-product-version:
+    runs-on: linux
+    outputs:
+      product-version: ${{ steps.get-product-version.outputs.product-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: get product version
+        id: get-product-version
+        run: |
+          make version
+          echo "::set-output name=product-version::$(make version)"
+
+  generate-metadata-file:
+    needs: get-product-version
+    runs-on: linux
+    outputs:
+      filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate metadata file
+        id: generate-metadata-file
+        uses: hashicorp/actions-generate-metadata@main
+        with:
+          version: ${{ needs.get-product-version.outputs.product-version }}
+          product: ${{ env.PKG_NAME }}
+      - name: Upload Metadata
+        uses: actions/upload-artifact@v2
+        with:
+          name: metadata.json
+          path: ${{ steps.generate-metadata-file.outputs.filepath }}
+
+  build:
+    needs: get-product-version
+    runs-on: linux
+    strategy:
+      matrix:
+        go: [1.17]
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+      fail-fast: true
+    name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+    env:
+      GOPRIVATE: 'github.com/hashicorp/*'
+      TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+    outputs:
+      artifact-name: ${{ steps.Build.outputs.artifact-name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir dist out
+          make
+          zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
+          echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+          path: out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+          retention-days: 1
+      - name: Package
+        if: ${{ matrix.goos == 'linux' }}
+        uses: hashicorp/actions-packaging-linux@v1
+        with:
+          name: ${{ github.event.repository.name }}
+          description: "enos CLI package"
+          arch: ${{ matrix.goarch }}
+          version: ${{ needs.get-product-version.outputs.product-version }}
+          maintainer: "HashiCorp"
+          homepage: "https://github.com/hashicorp/enos"
+          license: "MPL-2.0"
+          binary: "dist/${{ env.PKG_NAME }}"
+          deb_depends: "openssl"
+          rpm_depends: "openssl"
+      - name: Set Package Names
+        if: ${{ matrix.goos == 'linux' }}
+        run: |
+          echo "RPM_PACKAGE=$(basename out/*.rpm)" >> $GITHUB_ENV
+          echo "DEB_PACKAGE=$(basename out/*.deb)" >> $GITHUB_ENV
+      - name: Upload RHEL Packages
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.goos == 'linux' }}
+        with:
+          name: ${{ env.RPM_PACKAGE }}
+          path: out/${{ env.RPM_PACKAGE }}
+      - name: Upload Debian Packages
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.goos == 'linux' }}
+        with:
+          name: ${{ env.DEB_PACKAGE }}
+          path: out/${{ env.DEB_PACKAGE }}
+
+  build-docker:
+    name: Docker ${{ matrix.arch }} build
+    needs:
+      - get-product-version
+      - build
+    runs-on: linux
+    strategy:
+      matrix:
+        arch: ["arm64", "amd64"]
+    env:
+      repo: ${{github.event.repository.name}}
+      version: ${{needs.get-product-version.outputs.product-version}}
+      GOPRIVATE: 'github.com/hashicorp/*'
+      TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Docker Build (Action)
+        uses: hashicorp/actions-docker-build@v1
+        with:
+          version: ${{env.version}}
+          target: default
+          arch: ${{matrix.arch}}
+          tags: |
+            docker.io/hashicorp/${{env.repo}}:${{env.version}}
+            986891699432.dkr.ecr.us-east-1.amazonaws.com/hashicorp/${{env.repo}}:${{env.version}}
+
+  validate-artifact:
+    name: Validate Artifact
+    needs: build-artifact
+    # Change branch to main once the build workflow is merged to main
+    uses: hashicorp/enos/.github/workflows/validate.yml@rebwill/QTI-168
+    with:
+      artifact-name: "${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"

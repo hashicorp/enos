@@ -2,11 +2,11 @@ package flightplan
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // Test_Module_EvalContext_Functions tests a few built-in functions to ensure
@@ -48,21 +48,149 @@ scenario "basic" {
   }
 }`, modulePath, test.expr)
 
-			cwd, err := os.Getwd()
-			require.NoError(t, err)
-			decoder, err := NewDecoder(WithDecoderBaseDir(cwd))
-			require.NoError(t, err)
-			diags := decoder.parseHCL([]byte(hcl), "decoder-test.hcl")
+			fp, diags := testDecodeHCL(t, []byte(hcl))
 			require.False(t, diags.HasErrors(), diags.Error())
-
-			fp, moreDiags := decoder.Decode()
-			require.False(t, moreDiags.HasErrors(), moreDiags.Error())
-
 			require.Equal(t, 1, len(fp.Modules))
 			v, ok := fp.Modules[0].Attrs["something"]
 			require.True(t, ok)
-
 			require.Equal(t, test.expected, v.AsString())
+		})
+	}
+}
+
+// Test_Decode_Module tests module decoding
+func Test_Decode_Module(t *testing.T) {
+	t.Parallel()
+
+	modulePath, err := filepath.Abs("./tests/simple_module")
+	require.NoError(t, err)
+
+	for _, test := range []struct {
+		desc     string
+		hcl      string
+		expected *FlightPlan
+		fail     bool
+	}{
+		{
+			desc: "source registry with version",
+			hcl: `
+module "backend" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.11.0"
+}
+
+scenario "basic" {
+  step "first" {
+    module = module.backend
+  }
+}
+`,
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:    "backend",
+						Source:  "terraform-aws-modules/vpc/aws",
+						Version: "3.11.0",
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "basic",
+						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name: "first",
+								Module: &Module{
+									Name:    "backend",
+									Source:  "terraform-aws-modules/vpc/aws",
+									Version: "3.11.0",
+									Attrs:   map[string]cty.Value{},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "invalid identifier",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "hascolon:" {
+  source = "%s"
+}
+
+scenario "basic" {
+  step "first" {
+    module = module.hascolon
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "count meta-arg attr",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+  count = 1
+}
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "for_each meta-arg attr",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+  for_each = toset(["1", "2"])
+}
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "depends_on meta-arg attr",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+module "frontend" {
+  source = "%[1]s"
+  depends_on = module.backend
+}
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+		},
+	} {
+		t.Run(test.desc, func(t *testing.T) {
+			fp, diags := testDecodeHCL(t, []byte(test.hcl))
+			if test.fail {
+				require.True(t, diags.HasErrors(), diags.Error())
+				return
+			}
+			require.False(t, diags.HasErrors(), diags.Error())
+			testRequireEqualFP(t, fp, test.expected)
 		})
 	}
 }

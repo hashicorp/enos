@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"sort"
-
 	"github.com/spf13/cobra"
 )
 
+// newScenarioListCmd returns a new 'scenario list' sub-command
 func newScenarioListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
@@ -15,20 +14,12 @@ func newScenarioListCmd() *cobra.Command {
 	}
 }
 
+// runScenarioListCmd runs a scenario list
 func runScenarioListCmd(cmd *cobra.Command, args []string) error {
-	fp, err := decodeFlightPlan()
-	if err != nil {
-		cmd.SilenceUsage = true
-		return err
-	}
-
-	if len(fp.Scenarios) != 0 {
-		sort.Slice(fp.Scenarios, func(i, j int) bool {
-			return fp.Scenarios[i].Name < fp.Scenarios[j].Name
-		})
+	if len(scenarioCfg.fp.Scenarios) != 0 {
 		header := []string{"scenario"}
 		rows := [][]string{{""}} // add a padding row
-		for _, scenario := range fp.Scenarios {
+		for _, scenario := range scenarioCfg.fp.Scenarios {
 			rows = append(rows, []string{scenario.Name})
 		}
 

@@ -51,8 +51,8 @@ func NewGenerator(opts ...Opt) (*Generator, error) {
 	return req, nil
 }
 
-// WithOutDirectory is the destination directory where modules will be written.
-func WithOutDirectory(dir string) Opt {
+// WithOutBaseDirectory is the destination base directory where modules will be written.
+func WithOutBaseDirectory(dir string) Opt {
 	return func(req *Generator) error {
 		a, err := filepath.Abs(dir)
 		if err != nil {
@@ -63,8 +63,8 @@ func WithOutDirectory(dir string) Opt {
 	}
 }
 
-// WithBaseDirectory is base directory where the scenario defintions reside.
-func WithBaseDirectory(dir string) Opt {
+// WithScenarioBaseDirectory is base directory where the scenario defintions reside.
+func WithScenarioBaseDirectory(dir string) Opt {
 	return func(req *Generator) error {
 		a, err := filepath.Abs(dir)
 		if err != nil {
@@ -93,7 +93,111 @@ func WithUI(ui cli.Ui) Opt {
 
 // Generate converts the Scenario into a terraform module
 func (g *Generator) Generate() error {
+	err := g.generateCLIConfig()
+	if err != nil {
+		return err
+	}
+
 	return g.generateModule()
+}
+
+// TerraformRCPath is where the generated terraform.rc configuration file will
+// be written
+func (g *Generator) TerraformRCPath() string {
+	return filepath.Join(g.TerraformModuleDir(), "terraform.rc")
+}
+
+// TerraformModulePath is where the generated Terraform module file will
+// be written
+func (g *Generator) TerraformModulePath() string {
+	return filepath.Join(g.TerraformModuleDir(), "scenario.tf")
+}
+
+// TerraformModuleDir is the directory where the generated Terraform
+func (g *Generator) TerraformModuleDir() string {
+	return filepath.Join(g.OutDir, g.Scenario.Name)
+}
+
+// generateCLIConfig converts the Scenario's terraform_cli into a terraformrc
+// file.
+func (g *Generator) generateCLIConfig() error {
+	if g.Scenario.TerraformCLI == nil || g.Scenario.TerraformCLI.ConfigVal.IsNull() {
+		return nil
+	}
+
+	rc := hclwrite.NewEmptyFile()
+	body := rc.Body()
+
+	blocks := 0
+	for attr, val := range g.Scenario.TerraformCLI.ConfigVal.AsValueMap() {
+		if blocks != 0 {
+			body.AppendNewline()
+		}
+		blocks++
+
+		switch attr {
+		case "credentials", "credentials_helpers":
+			for blkLabel, blkVal := range val.AsValueMap() {
+				blk := body.AppendNewBlock(attr, []string{blkLabel})
+				for blkAttr, blkAttrVal := range blkVal.AsValueMap() {
+					if blkAttrVal.IsNull() {
+						continue
+					}
+					blk.Body().SetAttributeValue(blkAttr, blkAttrVal)
+				}
+			}
+		case "provider_installation":
+			for _, pi := range val.AsValueSlice() {
+				piBlocks := 0
+				piblk := body.AppendNewBlock(attr, []string{})
+				piBlks := pi.AsValueMap()
+
+				// dev_overrides always needs to come first if it exists
+				// so that it can properly bypass other methods.
+				if devOverride, ok := piBlks["dev_overrides"]; ok {
+					blk := piblk.Body().AppendNewBlock("dev_overrides", []string{})
+					for blkAttr, blkVal := range devOverride.AsValueMap() {
+						blk.Body().AppendUnstructuredTokens(devOverridesTokens(blkAttr, blkVal))
+					}
+					piBlocks++
+				}
+
+				for piBlkName, piBlkVal := range piBlks {
+					switch piBlkName {
+					case "dev_overrides":
+						continue // we already handled it
+					default:
+						piBlocks++
+						if piBlocks != 0 {
+							piblk.Body().AppendNewline()
+						}
+						blk := piblk.Body().AppendNewBlock(piBlkName, []string{})
+						for _, blkVals := range piBlkVal.AsValueSlice() {
+							for blkAttr, blkVal := range blkVals.AsValueMap() {
+								if blkVal.IsNull() {
+									continue
+								}
+								blk.Body().SetAttributeValue(blkAttr, blkVal)
+							}
+						}
+					}
+				}
+			}
+		default:
+			if !val.IsNull() {
+				body.SetAttributeValue(attr, val)
+			}
+		}
+	}
+
+	// Make sure our out directory exists and is a directory
+	err := g.ensureOutDir()
+	if err != nil {
+		return err
+	}
+
+	// Write our RC file to disk
+	return g.write(g.TerraformRCPath(), rc.Bytes())
 }
 
 // generateModule converts a Scenario into an HCL Terraform module and writes
@@ -115,7 +219,7 @@ func (g *Generator) generateModule() error {
 	}
 
 	// Write our module to disk
-	return g.writeModule(mod.Bytes())
+	return g.write(g.TerraformModulePath(), mod.Bytes())
 }
 
 func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
@@ -131,7 +235,7 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 
 		// source
 		src, err := maybeUpdateRelativeSourcePaths(
-			step.Module.Source, g.BaseDir, g.OutDir,
+			step.Module.Source, g.BaseDir, g.TerraformModuleDir(),
 		)
 		if err != nil {
 			return err
@@ -160,17 +264,17 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 }
 
 func (g *Generator) ensureOutDir() error {
-	d, err := os.Open(g.OutDir)
+	d, err := os.Open(g.TerraformModuleDir())
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 
 		if g.UI != nil {
-			g.UI.Info(fmt.Sprintf("creating directory %s", g.OutDir))
+			g.UI.Info(fmt.Sprintf("creating directory %s", g.TerraformModuleDir()))
 		}
 
-		return os.MkdirAll(g.OutDir, 0o755)
+		return os.MkdirAll(g.TerraformModuleDir(), 0o755)
 	}
 
 	info, err := d.Stat()
@@ -179,16 +283,15 @@ func (g *Generator) ensureOutDir() error {
 	}
 
 	if !info.IsDir() {
-		return fmt.Errorf("out directory path (%s) is not a directory", g.OutDir)
+		return fmt.Errorf("out directory path (%s) is not a directory", g.TerraformModuleDir())
 	}
 
 	return nil
 }
 
-func (g *Generator) writeModule(bytes []byte) error {
-	path := filepath.Join(g.OutDir, g.Scenario.Name+".tf")
+func (g *Generator) write(path string, bytes []byte) error {
 	if g.UI != nil {
-		g.UI.Info(fmt.Sprintf("writing module to %s", path))
+		g.UI.Info(fmt.Sprintf("writing to %s", path))
 	}
 	file, err := os.Create(path)
 	if err != nil {
@@ -233,6 +336,29 @@ func dependsOnTokens(name string) hclwrite.Tokens {
 	}
 }
 
+// devOverridesTokens creates the dev_overrides tokens as that stanza is not
+// valid HCL2.
+func devOverridesTokens(name string, val cty.Value) hclwrite.Tokens {
+	tokens := hclwrite.Tokens{
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenStringLit,
+			Bytes: []byte(fmt.Sprintf(`"%s"`, name)),
+		},
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenEqual,
+			Bytes: []byte{'='},
+		},
+	}
+
+	tokens = append(tokens, hclwrite.TokensForValue(val)...)
+	tokens = append(tokens, &hclwrite.Token{
+		Type:  hclsyntax.TokenNewline,
+		Bytes: []byte{'\n'},
+	})
+
+	return tokens
+}
+
 // maybeUpdateRelativeSourcePaths is how we handle relative source paths in
 // terraform modules. That is, Terraform "requires"[0] that module source
 // paths that are local must begin with "./" or "../" so that the getter can
@@ -244,9 +370,10 @@ func dependsOnTokens(name string) hclwrite.Tokens {
 // [0]: https://www.terraform.io/docs/language/modules/sources.html#local-paths
 func maybeUpdateRelativeSourcePaths(source, baseDir, outDir string) (string, error) {
 	if filepath.IsAbs(source) {
-		return source, nil
+		return filepath.EvalSymlinks(source)
 	}
 
+	// Probably not a filepath
 	if !strings.HasPrefix(source, "./") && !strings.HasPrefix(source, "../") {
 		return source, nil
 	}
@@ -254,57 +381,44 @@ func maybeUpdateRelativeSourcePaths(source, baseDir, outDir string) (string, err
 	return relativePath(outDir, filepath.Join(baseDir, source))
 }
 
-// relativePath builds the shortest relative path from one path to another.
-// This function differs from `filepath.Rel()` in that it will produce a Terraform
-// friendly path that will alwasy start with `./` or `./..`, wherease the
-// `filepath.Rel()` passes all results through `filepath.Clean()`, which can
-// produce absolute paths.
+// relativePath builds the shortest relative path from one path to another. This
+// function differs from the standard `filepath.Rel()` because it evaluates symlinks
+// and returns the path with "./" or "../" prepended to adhere to the Terraform
+// source path schema.
 func relativePath(from, to string) (string, error) {
-	sepS := string(os.PathSeparator)
-
-	fromAbs, err := filepath.Abs(from)
-	if err != nil {
-		return "", err
-	}
-	toAbs, err := filepath.Abs(to)
+	var err error
+	from, err = filepath.Abs(from)
 	if err != nil {
 		return "", err
 	}
 
-	// They're the same directory our relative path is "./"
-	if to == from {
+	to, err = filepath.Abs(to)
+	if err != nil {
+		return "", err
+	}
+
+	from, err = filepath.EvalSymlinks(from)
+	if err != nil {
+		return "", err
+	}
+
+	to, err = filepath.EvalSymlinks(to)
+	if err != nil {
+		return "", err
+	}
+
+	rel, err := filepath.Rel(from, to)
+	if err != nil {
+		return rel, err
+	}
+
+	if rel == "." {
 		return "./", nil
 	}
 
-	// Find the most recent directory ancestor
-	commonDirs := 0
-	fromParts := strings.Split(fromAbs, sepS)
-	toParts := strings.Split(toAbs, sepS)
-	for i, d := range fromParts {
-		if toParts[i] != d {
-			break
-		}
-		commonDirs++
+	if !strings.HasPrefix(rel, ".") {
+		return fmt.Sprintf("./%s", rel), nil
 	}
 
-	// Determine how many steps from our from path to our most recent
-	// ancestor
-	fromStepsBack := len(fromParts) - commonDirs
-	if fromStepsBack < 0 {
-		return "", fmt.Errorf("cannot step back past root")
-	}
-
-	// Generate our relative from path step back
-	var fromRel string
-	switch fromStepsBack {
-	case 0:
-		// NOTE: we don't use filepath join on "./" because it calls Clean which
-		// removes the prefix.
-		return fmt.Sprintf(".%s%s", sepS, strings.Join(toParts[commonDirs:], sepS)), nil
-	default:
-		for i := 0; i < fromStepsBack; i++ {
-			fromRel = fmt.Sprintf("%s../", fromRel)
-		}
-		return filepath.Join(fromRel, strings.Join(toParts[commonDirs:], sepS)), nil
-	}
+	return rel, nil
 }

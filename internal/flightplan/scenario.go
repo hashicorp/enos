@@ -3,10 +3,16 @@ package flightplan
 import (
 	"fmt"
 
+	"github.com/zclconf/go-cty/cty/gocty"
+
 	hcl "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 )
 
 var scenarioSchema = &hcl.BodySchema{
+	Attributes: []hcl.AttributeSchema{
+		{Name: "terraform_cli", Required: false},
+	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeScenarioStep, LabelNames: []string{"name"}},
 	},
@@ -14,14 +20,16 @@ var scenarioSchema = &hcl.BodySchema{
 
 // Scenario represents an Enos scenario
 type Scenario struct {
-	Name  string
-	Steps []*ScenarioStep
+	Name         string
+	TerraformCLI *TerraformCLI
+	Steps        []*ScenarioStep
 }
 
 // NewScenario returns a new Scenario
 func NewScenario() *Scenario {
 	return &Scenario{
-		Steps: []*ScenarioStep{},
+		TerraformCLI: NewTerraformCLI(),
+		Steps:        []*ScenarioStep{},
 	}
 }
 
@@ -50,7 +58,8 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 					Severity: hcl.DiagError,
 					Summary:  "redeclared step in scenario",
 					Detail:   fmt.Sprintf("a step with name %s has already been declared", childBlock.Labels[0]),
-					Subject:  &childBlock.DefRange,
+					Subject:  childBlock.TypeRange.Ptr(),
+					Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
 				})
 				continue
 			}
@@ -71,23 +80,82 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 			foundSteps[step.Name] = struct{}{}
 			s.Steps = append(s.Steps, step)
 		default:
-			diags = append(diags, &hcl.Diagnostic{
+			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "unknown block in scenario",
 				Detail:   fmt.Sprintf(`unable to parse unknown block "%s" in scenario`, childBlock.Type),
-				Subject:  &childBlock.DefRange,
+				Subject:  childBlock.TypeRange.Ptr(),
+				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
 			})
 		}
 	}
 
 	if len(foundSteps) == 0 {
-		r := block.Body.MissingItemRange()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "missing required step block",
 			Detail:   "scenarios require one or more step blocks",
-			Subject:  &r,
+			Subject:  block.Body.MissingItemRange().Ptr(),
 		})
+	}
+
+	// Decode the step terraform_cli reference
+	moreDiags = s.decodeAndValidateTerraformCLIAttribute(block, content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	return diags
+}
+
+// decodeAndValidateTerraformCLIAttribute decodess the terraform_cli attribute
+// from the content and validates that it refers to an existing terraform_cli.
+func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
+	block *hcl.Block,
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) hcl.Diagnostics {
+
+	var diags hcl.Diagnostics
+
+	terraformCli, ok := content.Attributes["terraform_cli"]
+	if !ok {
+		// The terraform_cli attribute has not been set so we'll use the default
+		// terraform_cli which we'll get from the eval context.
+		diag := &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "unable to determine terraform_cli",
+			Detail:   "no default terraform_cli's are available in the eval ctx",
+			Subject:  content.MissingItemRange.Ptr(),
+		}
+
+		terraformClis, err := findEvalContextVariable("terraform_cli", ctx)
+		if err != nil {
+			return diags.Append(diag)
+		}
+
+		defaultCli, ok := terraformClis.AsValueMap()["default"]
+		if !ok {
+			return diags.Append(diag)
+		}
+
+		err = gocty.FromCtyValue(defaultCli, &s.TerraformCLI)
+		if err != nil {
+			diag.Summary = "unable to convert default terraform_cli from eval context to object"
+			diag.Detail = err.Error()
+			return diags.Append(diag)
+		}
+
+		return diags
+	}
+
+	// Decode our terraform_cli from the eval context. If it hasn't been defined
+	// this will raise an error.
+	moreDiags := gohcl.DecodeExpression(terraformCli.Expr, ctx, &s.TerraformCLI)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
 	}
 
 	return diags

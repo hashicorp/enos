@@ -10,8 +10,7 @@ import (
 )
 
 func TestAcc_Cmd_Scenario_List(t *testing.T) {
-	ensureAccCLI(t)
-	runner := runner(t)
+	enos := newAcceptanceRunner(t)
 
 	// NOTE: these are a bit brittle as they depend on our output format not
 	// changing. When we add machine readable output we should switch to that.
@@ -43,7 +42,7 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario list --chdir %s", path)
 			fmt.Println(path)
-			out, err := runner.RunCmd(context.Background(), cmd)
+			out, err := enos.run(context.Background(), cmd)
 
 			if test.fail {
 				if test.err != nil {

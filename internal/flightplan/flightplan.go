@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
@@ -13,6 +14,7 @@ import (
 )
 
 const (
+	blockTypeTerraformCLI = "terraform_cli"
 	blockTypeModule       = "module"
 	blockTypeScenario     = "scenario"
 	blockTypeScenarioStep = "step"
@@ -20,6 +22,7 @@ const (
 
 var flightPlanSchema = &hcl.BodySchema{
 	Blocks: []hcl.BlockHeaderSchema{
+		{Type: blockTypeTerraformCLI, LabelNames: []string{"name"}},
 		{Type: blockTypeScenario, LabelNames: []string{"name"}},
 		{Type: blockTypeModule, LabelNames: []string{"name"}},
 	},
@@ -28,9 +31,10 @@ var flightPlanSchema = &hcl.BodySchema{
 // NewFlightPlan returns a new instance of a FlightPlan
 func NewFlightPlan(opts ...Opt) (*FlightPlan, error) {
 	fp := &FlightPlan{
-		Files:     map[string]*hcl.File{},
-		Scenarios: []*Scenario{},
-		Modules:   []*Module{},
+		Files:         map[string]*hcl.File{},
+		TerraformCLIs: []*TerraformCLI{},
+		Scenarios:     []*Scenario{},
+		Modules:       []*Module{},
 	}
 
 	for _, opt := range opts {
@@ -58,11 +62,12 @@ type Opt func(*FlightPlan) error
 
 // FlightPlan represents our flight plan, the main configuration of Enos.
 type FlightPlan struct {
-	BaseDir     string
-	BodyContent *hcl.BodyContent
-	Files       map[string]*hcl.File
-	Scenarios   []*Scenario
-	Modules     []*Module
+	BaseDir       string
+	BodyContent   *hcl.BodyContent
+	Files         map[string]*hcl.File
+	TerraformCLIs []*TerraformCLI
+	Scenarios     []*Scenario
+	Modules       []*Module
 }
 
 // Decode takes a base eval content and HCL body and decodes it in chunks,
@@ -93,13 +98,52 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[stri
 
 	// decode sub-sections. Each sub-section decoder is responsible for
 	// extending the evaluation context for further evaluation.
+	diags = diags.Extend(fp.decodeTerraformCLIs(ctx))
 	diags = diags.Extend(fp.decodeModules(ctx))
 	diags = diags.Extend(fp.decodeScenarios(ctx))
 
 	return diags
 }
 
-// WriteDiagnostics takes a writer and
+// decodeTerraformCLIs decodes "terraform_cli" blocks that are defined in the
+// top-level schema.
+func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	clis := map[string]cty.Value{}
+
+	for _, block := range fp.BodyContent.Blocks {
+		if block.Type != blockTypeTerraformCLI {
+			continue
+		}
+
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		cli := NewTerraformCLI()
+		moreDiags = cli.decode(block, ctx.NewChild())
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		fp.TerraformCLIs = append(fp.TerraformCLIs, cli)
+		clis[cli.Name] = cli.evalCtx()
+	}
+
+	if _, ok := clis["default"]; !ok {
+		// Add the default terraform CLI if it has not been set
+		d := DefaultTerraformCLI()
+		fp.TerraformCLIs = append(fp.TerraformCLIs, d)
+		clis["default"] = d.evalCtx()
+	}
+
+	ctx.Variables["terraform_cli"] = cty.ObjectVal(clis)
+
+	return diags
+}
 
 // decodeModules decodes "module" blocks that are defined in the top-level
 // schema.
@@ -160,6 +204,11 @@ func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
 		fp.Scenarios = append(fp.Scenarios, scenario)
 	}
 
+	// NOTE: when we add variants we'll need to also sort by variants.
+	sort.Slice(fp.Scenarios, func(i, j int) bool {
+		return fp.Scenarios[i].Name < fp.Scenarios[j].Name
+	})
+
 	return diags
 }
 
@@ -182,8 +231,8 @@ func filterTerraformMetaAttrs(in hcl.Attributes) (hcl.Attributes, hcl.Diagnostic
 				Severity: hcl.DiagError,
 				Summary:  "invalid module attribute",
 				Detail:   fmt.Sprintf(`Terraform meta-arguments "%s" are not valid`, attr.Name),
-				Subject:  &attr.NameRange,
-				Context:  &attr.Range,
+				Subject:  attr.NameRange.Ptr(),
+				Context:  hcl.RangeBetween(attr.NameRange, attr.Range).Ptr(),
 			})
 		default:
 			if out == nil {
@@ -210,7 +259,8 @@ func verifyNoBlockInAttrOnlySchema(in hcl.Body) hcl.Diagnostics {
 				Severity: hcl.DiagError,
 				Summary:  "invalid block",
 				Detail:   "sub-blocks are not allowed",
-				Subject:  &block.TypeRange,
+				Subject:  block.TypeRange.Ptr(),
+				Context:  hcl.RangeBetween(block.TypeRange, block.Range()).Ptr(),
 			})
 		}
 	}
@@ -228,7 +278,8 @@ func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
 			Severity: hcl.DiagError,
 			Summary:  "invalid scenario block",
 			Detail:   "scenario blocks can only have a single name label",
-			Subject:  &block.TypeRange,
+			Subject:  block.TypeRange.Ptr(),
+			Context:  hcl.RangeBetween(block.TypeRange, block.DefRange).Ptr(),
 		})
 
 		return diags
@@ -241,7 +292,7 @@ func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
 				Severity: hcl.DiagError,
 				Summary:  "block label is invalid",
 				Detail:   "block label is not a valid HCL identifier",
-				Subject:  &block.LabelRanges[i],
+				Subject:  block.LabelRanges[i].Ptr(),
 			})
 		}
 
@@ -252,7 +303,7 @@ func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
 				Severity: hcl.DiagError,
 				Summary:  "block label is invalid",
 				Detail:   "block label is not a valid enos identifier",
-				Subject:  &block.LabelRanges[i],
+				Subject:  block.LabelRanges[i].Ptr(),
 			})
 		}
 	}

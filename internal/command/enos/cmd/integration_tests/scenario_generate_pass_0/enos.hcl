@@ -12,7 +12,16 @@ module "bar" {
   anotherinput = "anotherbar"
 }
 
+terraform_cli "debug" {
+  env = {
+    TF_LOG_CORE     = "off"
+    TF_LOG_PROVIDER = "debug"
+  }
+}
+
 scenario "test" {
+  terraform_cli = terraform_cli.debug
+
   step "foo" {
     module = module.foo
   }

@@ -1,7 +1,7 @@
 BINARY=enos
 BIN_OS=$$(go env GOOS)
 BIN_ARCH=$$(go env GOARCH)
-VERSION=$$(cat VERSION)
+VERSION=$$(make version)
 GIT_SHA=$$(git rev-parse HEAD)
 CURRENT_DIRECTORY := $(shell pwd)
 DIST_BINARY_PATH=${CURRENT_DIRECTORY}/dist/enos_${BIN_OS}_${BIN_ARCH}/enos

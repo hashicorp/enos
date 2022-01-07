@@ -141,7 +141,7 @@ jobs:
       - name: Build
         run: |
           mkdir dist out
-          go build -o dist/
+          make
           zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
       - uses: actions/upload-artifact@v2
         with:

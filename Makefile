@@ -18,7 +18,7 @@ TEST_ACC=ENOS_ACC=1
 default: build
 
 build:
-	CGO_ENABLED=0 go build ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o ${BINARY} ./command/enos
+	CGO_ENABLED=0 go build ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o dist/${BINARY} ./command/enos
 
 build-race:
 	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o ${BINARY} ./command/enos

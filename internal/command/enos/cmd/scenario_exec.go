@@ -13,8 +13,8 @@ import (
 func newScenarioExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "exec [FILTER] --cmd TERRAFORM-SUB-COMMAND",
-		Short:             "Exec a Terraform modules from matching scenarios",
-		Long:              fmt.Sprintf("Exec a Terraform modules from matching scenarios. %s", scenarioFilterDesc),
+		Short:             "Execute a terraform sub-command in the context of previously generated Terraform modules from matching scenarios",
+		Long:              fmt.Sprintf("Execute a terraform sub-command in the context of previously generated Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioExecCmd,
 		Args:              cobra.RangeArgs(0, 1),
 		ValidArgsFunction: scenarioNameCompletion,

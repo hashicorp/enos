@@ -101,8 +101,8 @@ func (c *Command) Cmd(ctx context.Context) *exec.Cmd {
 	return cmd
 }
 
-// Run takes a context and a command and runs the run command.
-// It returns a *exec.Cmd and any errors that might have ocurred.
+// Run takes a context.Context and executes itself. It returns an instance of
+// *exec.Cmd and an error.
 func (c *Command) Run(ctx context.Context) (*exec.Cmd, error) {
 	cmd := c.Cmd(ctx)
 	err := cmd.Run()

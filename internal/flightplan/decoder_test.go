@@ -30,10 +30,7 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	if expected.TerraformCLIs != nil {
 		require.Len(t, fp.TerraformCLIs, len(expected.TerraformCLIs))
 		for i := range expected.TerraformCLIs {
-			require.EqualValues(t, expected.TerraformCLIs[i].Name, fp.TerraformCLIs[i].Name)
-			require.EqualValues(t, expected.TerraformCLIs[i].Path, fp.TerraformCLIs[i].Path)
-			require.EqualValues(t, expected.TerraformCLIs[i].Env, fp.TerraformCLIs[i].Env)
-			require.EqualValues(t, expected.TerraformCLIs[i].ConfigVal, fp.TerraformCLIs[i].ConfigVal)
+			require.EqualValues(t, expected.TerraformCLIs[i], fp.TerraformCLIs[i])
 		}
 	}
 

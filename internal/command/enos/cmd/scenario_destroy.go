@@ -15,18 +15,14 @@ import (
 func newScenarioDestroyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "destroy [FILTER]",
-		Short:             "Destroy a Terraform modules from matching scenarios",
-		Long:              fmt.Sprintf("Destroy a Terraform modules from matching scenarios. %s", scenarioFilterDesc),
+		Short:             "Destroy previously generated Terraform modules from matching scenarios",
+		Long:              fmt.Sprintf("Destroy previously generated Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioDestroyCmd,
 		Args:              cobra.RangeArgs(0, 1),
 		ValidArgsFunction: scenarioNameCompletion,
 	}
-	cmd.PersistentFlags().BoolVarP(&scenarioCfg.tfConfig.Flags.AutoApprove, "auto-approve", "a", false, "auto-approve the destruction plan")
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "don't wait for terraform state lock")
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoInput, "no-input", false, "disable user input for missing fields")
-	// NOTE: Compact warnings should not be a factor when the UI UX has been implemented
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.CompactWarnings, "compact-warnings", false, "show compact warnings")
-	cmd.PersistentFlags().IntVar(&scenarioCfg.tfConfig.Flags.Parallelism, "scenario-parallelism", 10, "terraform scenario parallelism")
+	cmd.PersistentFlags().IntVar(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
 	cmd.PersistentFlags().DurationVar(&scenarioCfg.tfConfig.Flags.LockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
 
 	return cmd

@@ -100,7 +100,7 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 	}
 
 	// Decode the step terraform_cli reference
-	moreDiags = s.decodeAndValidateTerraformCLIAttribute(block, content, ctx)
+	moreDiags = s.decodeAndValidateTerraformCLIAttribute(content, ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
@@ -112,7 +112,6 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 // decodeAndValidateTerraformCLIAttribute decodess the terraform_cli attribute
 // from the content and validates that it refers to an existing terraform_cli.
 func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
-	block *hcl.Block,
 	content *hcl.BodyContent,
 	ctx *hcl.EvalContext,
 ) hcl.Diagnostics {

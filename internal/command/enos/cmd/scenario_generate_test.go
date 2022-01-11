@@ -17,7 +17,7 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "enos.generate.out")
 	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
 
 	for _, test := range []struct {
 		dir    string

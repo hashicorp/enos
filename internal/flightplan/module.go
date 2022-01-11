@@ -90,7 +90,7 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "invalid value",
-					Detail:   "source must be a string value",
+					Detail:   "version must be a string value",
 					Subject:  version.Expr.Range().Ptr(),
 					Context:  hcl.RangeBetween(version.Expr.StartRange(), version.Expr.Range()).Ptr(),
 				})
@@ -98,7 +98,7 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagWarning,
 					Summary:  "invalid value",
-					Detail:   "source should be a string value, consider changing it",
+					Detail:   "version should be a string value, consider changing it",
 					Subject:  version.Expr.Range().Ptr(),
 					Context:  hcl.RangeBetween(version.Expr.StartRange(), version.Expr.Range()).Ptr(),
 				})

@@ -17,7 +17,7 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("/tmp", "enos.validate")
 	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
 
 	for _, test := range []struct {
 		dir    string
@@ -34,6 +34,8 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			cmd := fmt.Sprintf("scenario validate --chdir %s --out %s", path, test.outDir)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
+			_, err = os.Open(filepath.Join(test.outDir, "test", ".terraform/modules/modules.json"))
+			require.NoError(t, err)
 		})
 	}
 }

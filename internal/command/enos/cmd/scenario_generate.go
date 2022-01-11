@@ -14,7 +14,7 @@ import (
 func newScenarioGenerateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "generate [FILTER]",
-		Short:             "Generate a Terraform modules from matching scenarios",
+		Short:             "Generate Terraform modules from matching scenarios",
 		Long:              fmt.Sprintf("Generate a Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioGenerateCmd,
 		Args:              cobra.RangeArgs(0, 1),

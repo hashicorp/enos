@@ -8,8 +8,8 @@ import (
 func newScenarioListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
-		Short: "List Enos quality requirement scenarios",
-		Long:  "List Enos quality requirement scenarios",
+		Short: "List scenarios",
+		Long:  "List scenarios",
 		RunE:  runScenarioListCmd,
 	}
 }

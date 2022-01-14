@@ -52,6 +52,8 @@ jobs:
         include:
           - {go: "1.17", goos: "linux", goarch: "amd64"}
           - {go: "1.17", goos: "linux", goarch: "arm64"}
+          - {go: "1.17", goos: "darwin", goarch: "amd64"}
+          - {go: "1.17", goos: "darwin", goarch: "arm64"}
       fail-fast: true
 
     name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
@@ -74,7 +76,7 @@ jobs:
         run: |
           mkdir dist out
           make
-          zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
+          zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip enos
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
@@ -91,7 +93,7 @@ jobs:
           maintainer: "HashiCorp"
           homepage: "https://github.com/hashicorp/enos"
           license: "MPL-2.0"
-          binary: "dist/${{ env.PKG_NAME }}"
+          binary: "${{ env.PKG_NAME }}"
           deb_depends: "openssl"
           rpm_depends: "openssl"
 
@@ -112,41 +114,41 @@ jobs:
           name: ${{ env.DEB_PACKAGE }}
           path: out/${{ env.DEB_PACKAGE }}
 
-  build-darwin:
-    needs: get-product-version
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        include:
-          - {go: "1.17", goos: "darwin", goarch: "amd64"}
-          - {go: "1.17", goos: "darwin", goarch: "arm64"}
-      fail-fast: true
+  # build-darwin:
+  #   needs: get-product-version
+  #   runs-on: macos-latest
+  #   strategy:
+  #     matrix:
+  #       include:
+  #         - {go: "1.17", goos: "darwin", goarch: "amd64"}
+  #         - {go: "1.17", goos: "darwin", goarch: "arm64"}
+  #     fail-fast: true
 
-    name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+  #   name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
 
-    env:
-      GOOS: ${{ matrix.goos }}
-      GOARCH: ${{ matrix.goarch }}
-      GOPRIVATE: 'github.com/hashicorp/*'
-      TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+  #   env:
+  #     GOOS: ${{ matrix.goos }}
+  #     GOARCH: ${{ matrix.goarch }}
+  #     GOPRIVATE: 'github.com/hashicorp/*'
+  #     TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
 
-    steps:
-      - uses: actions/checkout@v2
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Setup go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go }}
+  #     - name: Setup go
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: ${{ matrix.go }}
 
-      - name: Build
-        run: |
-          mkdir dist out
-          make
-          zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
-          path: out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+  #     - name: Build
+  #       run: |
+  #         mkdir dist out
+  #         make
+  #         zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+  #         path: out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
 
   build-docker:
     name: Docker ${{ matrix.arch }} build

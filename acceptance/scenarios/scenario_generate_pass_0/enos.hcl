@@ -19,6 +19,9 @@ terraform_cli "debug" {
   }
 }
 
+// TODO: add 'transport' stanza when we can
+// NOTE: We can't add 'transport' stanzas until required_providers support exists
+
 scenario "test" {
   terraform_cli = terraform_cli.debug
 

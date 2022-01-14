@@ -155,11 +155,13 @@ func (g *Generator) generateCLIConfig() error {
 				// dev_overrides always needs to come first if it exists
 				// so that it can properly bypass other methods.
 				if devOverride, ok := piBlks["dev_overrides"]; ok {
-					blk := piblk.Body().AppendNewBlock("dev_overrides", []string{})
-					for blkAttr, blkVal := range devOverride.AsValueMap() {
-						blk.Body().AppendUnstructuredTokens(devOverridesTokens(blkAttr, blkVal))
+					if !devOverride.IsNull() {
+						blk := piblk.Body().AppendNewBlock("dev_overrides", []string{})
+						for blkAttr, blkVal := range devOverride.AsValueMap() {
+							blk.Body().AppendUnstructuredTokens(devOverridesTokens(blkAttr, blkVal))
+						}
+						piBlocks++
 					}
-					piBlocks++
 				}
 
 				for piBlkName, piBlkVal := range piBlks {
@@ -171,8 +173,8 @@ func (g *Generator) generateCLIConfig() error {
 						if piBlocks != 0 {
 							piblk.Body().AppendNewline()
 						}
-						blk := piblk.Body().AppendNewBlock(piBlkName, []string{})
 						for _, blkVals := range piBlkVal.AsValueSlice() {
+							blk := piblk.Body().AppendNewBlock(piBlkName, []string{})
 							for blkAttr, blkVal := range blkVals.AsValueMap() {
 								if blkVal.IsNull() {
 									continue
@@ -206,8 +208,14 @@ func (g *Generator) generateModule() error {
 	mod := hclwrite.NewEmptyFile()
 	modBody := mod.Body()
 
+	// Write provider level enos "transport" configuration
+	err := g.maybeWriteProviderConfig(modBody)
+	if err != nil {
+		return err
+	}
+
 	// Convert each step into a Terraform module
-	err := g.convertStepsToModules(modBody)
+	err = g.convertStepsToModules(modBody)
 	if err != nil {
 		return err
 	}
@@ -220,6 +228,42 @@ func (g *Generator) generateModule() error {
 
 	// Write our module to disk
 	return g.write(g.TerraformModulePath(), mod.Bytes())
+}
+
+func (g *Generator) maybeWriteProviderConfig(rootBody *hclwrite.Body) error {
+	if t := g.Scenario.Transport; t != nil {
+		if t.Name == "" {
+			return nil
+		}
+
+		vals := map[string]cty.Value{}
+		if h := g.Scenario.Transport.SSH.Host; h != "" {
+			vals["host"] = cty.StringVal(h)
+		}
+		if u := g.Scenario.Transport.SSH.User; u != "" {
+			vals["user"] = cty.StringVal(u)
+		}
+		if p := g.Scenario.Transport.SSH.PrivateKey; p != "" {
+			vals["private_key"] = cty.StringVal(p)
+		}
+		if p := g.Scenario.Transport.SSH.PrivateKeyPath; p != "" {
+			vals["private_key_path"] = cty.StringVal(p)
+		}
+		if p := g.Scenario.Transport.SSH.Passphrase; p != "" {
+			vals["passphase"] = cty.StringVal(p)
+		}
+		if p := g.Scenario.Transport.SSH.PassphrasePath; p != "" {
+			vals["passphrase_path"] = cty.StringVal(p)
+		}
+
+		block := rootBody.AppendNewBlock("provider", []string{"enos"})
+		block.Body().SetAttributeValue("transport", cty.ObjectVal(map[string]cty.Value{
+			"ssh": cty.ObjectVal(vals),
+		}))
+		rootBody.AppendNewline()
+	}
+
+	return nil
 }
 
 func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {

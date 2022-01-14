@@ -1,4 +1,4 @@
-package cmd
+package acceptance
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func TestAcc_Cmd_Scenario_Run(t *testing.T) {
 		},
 	} {
 		t.Run(test.dir, func(t *testing.T) {
-			path, err := filepath.Abs(filepath.Join("./integration_tests", test.dir))
+			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario run --chdir %s --out %s", path, test.outDir)
 			out, err := enos.run(context.Background(), cmd)

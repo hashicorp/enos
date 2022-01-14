@@ -34,6 +34,13 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		}
 	}
 
+	if expected.Transports != nil {
+		require.Len(t, fp.Transports, len(expected.Transports))
+		for i := range expected.Transports {
+			require.EqualValues(t, expected.Transports[i], fp.Transports[i])
+		}
+	}
+
 	for i := range expected.Modules {
 		require.EqualValues(t, expected.Modules[i].Name, fp.Modules[i].Name)
 		require.EqualValues(t, expected.Modules[i].Source, fp.Modules[i].Source)
@@ -46,6 +53,8 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	for i := range expected.Scenarios {
 		require.EqualValues(t, expected.Scenarios[i].Name, fp.Scenarios[i].Name)
 		require.EqualValues(t, expected.Scenarios[i].Steps, fp.Scenarios[i].Steps)
+		require.EqualValues(t, expected.Scenarios[i].Transport, fp.Scenarios[i].Transport)
+		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
 	}
 }
 

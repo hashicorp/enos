@@ -31,3 +31,5 @@ terraform.rc
 *.hclic
 
 /dist
+
+/acceptance/support/private_key.pem

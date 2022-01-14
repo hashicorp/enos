@@ -23,7 +23,7 @@ type DecoderOpt func(*Decoder) error
 // NewDecoder takes functional options and returns a new flight plan
 func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
 	d := &Decoder{
-		parser: hclparse.NewParser(),
+		Parser: hclparse.NewParser(),
 	}
 
 	for _, opt := range opts {
@@ -48,7 +48,7 @@ func WithDecoderBaseDir(path string) DecoderOpt {
 // Decoder is our Enos flight plan, or, our representation of the HCL file(s)
 // an author has composed.
 type Decoder struct {
-	parser *hclparse.Parser
+	Parser *hclparse.Parser
 	dir    string
 }
 
@@ -90,7 +90,7 @@ func (f *Decoder) parseDir(path string) hcl.Diagnostics {
 			return nil
 		}
 
-		_, pDiags := f.parser.ParseHCLFile(path)
+		_, pDiags := f.Parser.ParseHCLFile(path)
 		diags = diags.Extend(pDiags)
 		if pDiags.HasErrors() {
 			return pDiags
@@ -103,7 +103,7 @@ func (f *Decoder) parseDir(path string) hcl.Diagnostics {
 }
 
 func (f *Decoder) parseHCL(src []byte, fname string) hcl.Diagnostics {
-	_, diags := f.parser.ParseHCL(src, fname)
+	_, diags := f.Parser.ParseHCL(src, fname)
 
 	return diags
 }
@@ -111,7 +111,7 @@ func (f *Decoder) parseHCL(src []byte, fname string) hcl.Diagnostics {
 func (f *Decoder) mergedBody() hcl.Body {
 	files := []*hcl.File{}
 
-	for _, file := range f.parser.Files() {
+	for _, file := range f.Parser.Files() {
 		files = append(files, file)
 	}
 
@@ -216,7 +216,7 @@ func (f *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 		})
 	}
 
-	diags = diags.Extend(fp.Decode(f.baseEvalContext(), f.mergedBody(), f.parser.Files()))
+	diags = diags.Extend(fp.Decode(f.baseEvalContext(), f.mergedBody(), f.Parser.Files()))
 
 	return fp, diags
 }

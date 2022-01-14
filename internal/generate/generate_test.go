@@ -1,18 +1,33 @@
 package generate
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-// Test_maybeUpdateRelativeSourcePaths tests convering relative module import
-// paths to the correct location.
-func Test_maybeUpdateRelativeSourcePaths(t *testing.T) {
+// Test_maybeUpdateRelativeSourcePaths verifies that we rewrite source paths
+// relative to the filepath defined in the enos.hcl. We also need to ensure
+// that we don't rewrite when given sources that aren't paths.
+// NOTE: when run on macOS where $TMPDIR is usually symlinked to /private/var,
+// we implicitly test that symlinked paths work.
+func Test_MaybeUpdateRelativeSourcePaths(t *testing.T) {
 	t.Parallel()
 
-	baseDir := "/Users/enos/scenarios"
-	outDir := "/tmp/out"
+	tmpDir, err := os.MkdirTemp("", "update_source_paths")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	baseDir := filepath.Join(tmpDir, "scenarios/test")
+	moduleDir := filepath.Join(baseDir, "modules/foo")
+	outDir := filepath.Join(tmpDir, "generated/out")
+	require.NoError(t, os.MkdirAll(moduleDir, 0o755))
+	require.NoError(t, os.MkdirAll(outDir, 0o755))
+	moduleDirEval, err := filepath.EvalSymlinks(moduleDir)
+	require.NoError(t, err)
+
 	for _, test := range []struct {
 		desc     string
 		source   string
@@ -22,63 +37,46 @@ func Test_maybeUpdateRelativeSourcePaths(t *testing.T) {
 	}{
 		{
 			desc:     "absolute",
-			source:   "/Users/enos/scenario/modules/foo",
-			expected: "/Users/enos/scenario/modules/foo",
+			source:   moduleDir,
+			expected: moduleDirEval,
 		},
 		{
 			desc:     "relative ./",
 			source:   "./modules/foo",
-			expected: "../../Users/enos/scenarios/modules/foo",
+			expected: "../../scenarios/test/modules/foo",
 		},
 		{
 			desc:     "relative ../",
 			source:   "../modules/foo",
-			expected: "../../Users/enos/modules/foo",
+			baseDir:  baseDir + "/modules",
+			expected: "../../scenarios/test/modules/foo",
 		},
 		{
 			desc:     "relative ../../",
-			source:   "../modules/foo",
-			expected: "../../Users/enos/modules/foo",
-		},
-		{
-			desc:     "relative ./../../",
-			source:   "../modules/foo",
-			expected: "../../Users/enos/modules/foo",
+			source:   "../../modules/foo",
+			baseDir:  moduleDir,
+			expected: "../../scenarios/test/modules/foo",
 		},
 		{
 			desc:     "relative same dir",
 			source:   "./",
-			baseDir:  "/Users/enos",
-			outDir:   "/Users/enos",
+			baseDir:  tmpDir,
+			outDir:   tmpDir,
 			expected: "./",
 		},
 		{
 			desc:     "relative all common ancestors",
 			source:   "./modules/foo",
-			baseDir:  "/Users/enos",
-			outDir:   "/Users/enos",
+			baseDir:  baseDir,
+			outDir:   baseDir,
 			expected: "./modules/foo",
-		},
-		{
-			desc:     "relative one common ancestor",
-			source:   "./modules/foo",
-			baseDir:  "/Users/enos",
-			outDir:   "/Users/sone",
-			expected: "../enos/modules/foo",
-		},
-		{
-			desc:     "relative two common ancestors",
-			source:   "./modules/foo",
-			baseDir:  "/Users/enos",
-			outDir:   "/Users/enos/out",
-			expected: "../modules/foo",
 		},
 		{
 			desc:     "relative commmon ancestor deep",
 			source:   "./modules/foo",
-			baseDir:  "/Users/enos/projects/enos/scenarios",
-			outDir:   "/Users/enos/out",
-			expected: "../projects/enos/scenarios/modules/foo",
+			baseDir:  baseDir,
+			outDir:   tmpDir,
+			expected: "./scenarios/test/modules/foo",
 		},
 		{
 			desc:     "registry",

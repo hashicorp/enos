@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 
 	hcl "github.com/hashicorp/hcl/v2"
 )
@@ -21,23 +22,13 @@ var scenarioStepSchema = &hcl.BodySchema{
 // ScenarioStep is a step in an Enos scenario
 type ScenarioStep struct {
 	Name   string
-	Module *ScenarioStepModule
-}
-
-// ScenarioStepModule is the module attribute value in a scenario step
-type ScenarioStepModule struct {
-	Name    string
-	Source  string
-	Version string
-	Attrs   map[string]cty.Value
+	Module *Module
 }
 
 // NewScenarioStep returns a new Scenario step
 func NewScenarioStep() *ScenarioStep {
 	return &ScenarioStep{
-		Module: &ScenarioStepModule{
-			Attrs: map[string]cty.Value{},
-		},
+		Module: NewModule(),
 	}
 }
 
@@ -94,12 +85,11 @@ func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.Bod
 
 	module, ok := content.Attributes["module"]
 	if !ok {
-		r := block.Body.MissingItemRange()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "scenario step missing module",
 			Detail:   "scenario step missing module",
-			Subject:  &r,
+			Subject:  block.Body.MissingItemRange().Ptr(),
 		})
 
 		return module, diags
@@ -118,12 +108,12 @@ func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.Bod
 	// referencing we have to manually decode the parts that we do know. Everything
 	// else we'll pass along to Terraform.
 	if val.IsNull() || !val.IsWhollyKnown() || !val.CanIterateElements() {
-		r := module.Expr.Range()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "invalid module value",
 			Detail:   "module must be a known module object",
-			Subject:  &r,
+			Subject:  module.Expr.Range().Ptr(),
+			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 		})
 
 		return module, diags
@@ -131,12 +121,12 @@ func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.Bod
 
 	name, ok := val.AsValueMap()["name"]
 	if !ok {
-		r := module.Expr.Range()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "missing module name",
 			Detail:   "missing module name",
-			Subject:  &r,
+			Subject:  module.NameRange.Ptr(),
+			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 		})
 
 		return module, diags
@@ -145,22 +135,66 @@ func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.Bod
 
 	source, ok := val.AsValueMap()["source"]
 	if !ok {
-		r := module.Expr.Range()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "missing module source",
 			Detail:   "missing module source",
-			Subject:  &r,
+			Subject:  module.Expr.Range().Ptr(),
+			Context:  hcl.RangeBetween(module.Range, module.Expr.Range()).Ptr(),
 		})
 
 		return module, diags
 	}
-	ss.Module.Source = source.AsString()
+	if source.Type() == cty.String {
+		ss.Module.Source = source.AsString()
+	} else {
+		sourceVal, err := convert.Convert(source, cty.String)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "invalid module source value",
+				Detail:   "module source value must be a string",
+				Subject:  module.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(module.Range, module.Expr.Range()).Ptr(),
+			})
+		} else {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "invalid module source value",
+				Detail:   "module source value should be a string, consider updating it",
+				Subject:  module.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(module.Range, module.Expr.Range()).Ptr(),
+			})
+			ss.Module.Source = sourceVal.AsString()
+		}
+	}
 
 	// version is not required so we'll only get it if it has been defined.
 	version, ok := val.AsValueMap()["version"]
 	if ok {
-		ss.Module.Version = version.AsString()
+		if version.Type() == cty.String {
+			ss.Module.Version = version.AsString()
+		} else {
+			versionVal, err := convert.Convert(version, cty.String)
+			if err != nil {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "invalid module version value",
+					Detail:   "module version value must be a string",
+					Subject:  module.Expr.Range().Ptr(),
+					Context:  hcl.RangeBetween(module.Range, module.Expr.Range()).Ptr(),
+				})
+			} else {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "invalid module version value",
+					Detail:   "module version value should be a string, consider updating it",
+					Subject:  module.Expr.Range().Ptr(),
+					Context:  hcl.RangeBetween(module.Range, module.Expr.Range()).Ptr(),
+				})
+				ss.Module.Version = versionVal.AsString()
+			}
+		}
 	}
 
 	return module, diags
@@ -169,39 +203,18 @@ func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.Bod
 func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	var modules cty.Value
-	var foundModules bool
 	var moduleVal cty.Value
+	var err error
 
 	// Search through the eval context chain until we find a "modules" variable.
-	for modCtx := ctx; modCtx != nil; modCtx = modCtx.Parent() {
-		if modCtx == nil {
-			r := module.Expr.Range()
-			diags = diags.Append(&hcl.Diagnostic{
-
-				Severity: hcl.DiagError,
-				Summary:  "unknown module",
-				Detail:   fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
-				Subject:  &r,
-			})
-
-			return moduleVal, diags
-		}
-
-		m, ok := modCtx.Variables["module"]
-		if ok {
-			modules = m
-			foundModules = true
-			break
-		}
-	}
-
-	if !foundModules {
-		r := module.Expr.Range()
+	modules, err = findEvalContextVariable("module", ctx)
+	if err != nil {
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unknown module",
-			Detail:   "cannot use module as no modules have been found declared",
-			Subject:  &r,
+			Detail:   fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
+			Subject:  module.Expr.Range().Ptr(),
+			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 		})
 
 		return moduleVal, diags
@@ -223,26 +236,26 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 
 		source, ok := mod.AsValueMap()["source"]
 		if !ok {
-			r := module.Expr.Range()
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "missing source",
 				Detail:   "module value does not contain a source",
-				Subject:  &r,
+				Subject:  module.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 			})
 
 			break
 		}
 
 		if s := source.AsString(); s != ss.Module.Source {
-			r := module.Expr.Range()
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "module source doesn't match module definition",
 				Detail: fmt.Sprintf("module source for module %s is %s, not %s",
 					ss.Module.Name, s, ss.Module.Source,
 				),
-				Subject: &r,
+				Subject: module.Expr.Range().Ptr(),
+				Context: hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 			})
 			break
 		}
@@ -252,12 +265,12 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 	}
 
 	if moduleVal.IsNull() {
-		r := module.Expr.Range()
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unknown module",
 			Detail:   fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
-			Subject:  &r,
+			Subject:  module.Expr.Range().Ptr(),
+			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 		})
 
 		return moduleVal, diags

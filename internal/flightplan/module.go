@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 
 	hcl "github.com/hashicorp/hcl/v2"
 )
@@ -41,12 +42,36 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	}
 
 	m.Name = block.Labels[0]
-	val, moreDiags := content.Attributes["source"].Expr.Value(ctx)
+	src := content.Attributes["source"]
+	val, moreDiags := src.Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
 	}
-	m.Source = val.AsString()
+
+	if val.Type() == cty.String {
+		m.Source = val.AsString()
+	} else {
+		sourceVal, err := convert.Convert(val, cty.String)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "invalid value",
+				Detail:   "source must be a string value",
+				Subject:  src.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(src.Expr.StartRange(), src.Expr.Range()).Ptr(),
+			})
+		} else {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "invalid value",
+				Detail:   "source should be a string value, consider changing it",
+				Subject:  src.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(src.Expr.StartRange(), src.Expr.Range()).Ptr(),
+			})
+			m.Source = sourceVal.AsString()
+		}
+	}
 
 	// "version" isn't required attribute but it is allowed. Handle it manually.
 	version, ok := content.Attributes["version"]
@@ -56,7 +81,30 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 		if moreDiags.HasErrors() {
 			return diags
 		}
-		m.Version = val.AsString()
+
+		if val.Type() == cty.String {
+			m.Version = val.AsString()
+		} else {
+			versionVal, err := convert.Convert(val, cty.String)
+			if err != nil {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "invalid value",
+					Detail:   "version must be a string value",
+					Subject:  version.Expr.Range().Ptr(),
+					Context:  hcl.RangeBetween(version.Expr.StartRange(), version.Expr.Range()).Ptr(),
+				})
+			} else {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagWarning,
+					Summary:  "invalid value",
+					Detail:   "version should be a string value, consider changing it",
+					Subject:  version.Expr.Range().Ptr(),
+					Context:  hcl.RangeBetween(version.Expr.StartRange(), version.Expr.Range()).Ptr(),
+				})
+				m.Version = versionVal.AsString()
+			}
+		}
 	}
 
 	// The remaining portion of our module block is a bunch of attributes

@@ -9,8 +9,7 @@ import (
 )
 
 func TestAcc_Cmd_Version(t *testing.T) {
-	ensureAccCLI(t)
-	runner := runner(t)
+	enos := newAcceptanceRunner(t)
 
 	for _, test := range []struct {
 		cmd  string
@@ -26,7 +25,7 @@ func TestAcc_Cmd_Version(t *testing.T) {
 			out: regexp.MustCompile(`Enos version: \d*\.\d*\.\d* sha: \w*`),
 		},
 	} {
-		out, err := runner.RunCmd(context.Background(), test.cmd)
+		out, err := enos.run(context.Background(), test.cmd)
 		require.NoError(t, err)
 		require.True(t, test.out.Match(out))
 	}

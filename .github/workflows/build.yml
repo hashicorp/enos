@@ -1,6 +1,7 @@
 name: build
 
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     paths:
@@ -11,6 +12,8 @@ on:
 
 env:
   PKG_NAME: "enos"
+outputs:
+  artifact-name: ${{ jobs.build.outputs.artifact-name }}
 
 jobs:
   get-product-version:
@@ -60,6 +63,8 @@ jobs:
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+    outputs:
+      artifact-name: ${{ steps.Build.with.name }}
 
     steps:
       - uses: actions/checkout@v2

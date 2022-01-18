@@ -2,6 +2,10 @@ name: build
 
 on:
   workflow_call:
+    outputs:
+        artifact-name:
+          description: "Name of uploaded artifact"
+          value: ${{ jobs.build.outputs.artifact-name }}
   workflow_dispatch:
   push:
     paths:
@@ -12,8 +16,6 @@ on:
 
 env:
   PKG_NAME: "enos"
-outputs:
-  artifact-name: ${{ jobs.build.outputs.artifact-name }}
 
 jobs:
   get-product-version:
@@ -64,8 +66,7 @@ jobs:
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     outputs:
-      artifact-name: ${{ steps.Build.with.name }}
-
+      artifact-name: ${{ steps.Build.outputs.artifact-name }}
     steps:
       - uses: actions/checkout@v2
 
@@ -82,11 +83,12 @@ jobs:
           mkdir dist out
           make
           zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip enos
-      - uses: actions/upload-artifact@v2
+          echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
+      - name: Upload
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
           path: out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
-
       - name: Package
         if: ${{ matrix.goos == 'linux' }}
         uses: hashicorp/package@v1

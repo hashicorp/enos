@@ -12,6 +12,7 @@ import (
 var scenarioSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
 		{Name: "terraform_cli", Required: false},
+		{Name: "transport", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeScenarioStep, LabelNames: []string{"name"}},
@@ -22,6 +23,7 @@ var scenarioSchema = &hcl.BodySchema{
 type Scenario struct {
 	Name         string
 	TerraformCLI *TerraformCLI
+	Transport    *Transport
 	Steps        []*ScenarioStep
 }
 
@@ -99,7 +101,14 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 		})
 	}
 
-	// Decode the step terraform_cli reference
+	// Decode the scenario transport reference
+	moreDiags = s.decodeAndValidateTransportAttribute(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode the scenario terraform_cli reference
 	moreDiags = s.decodeAndValidateTerraformCLIAttribute(content, ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
@@ -155,6 +164,58 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
+	}
+
+	return diags
+}
+
+// decodeAndValidateTransportAttribute decodess the transport attribute
+// from the content and validates that it refers to an existing transport.
+func (s *Scenario) decodeAndValidateTransportAttribute(
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	// See if we've set an transport
+	enosTransport, ok := content.Attributes["transport"]
+	if ok {
+		s.Transport = NewTransport()
+		// Decode our transport from the eval context. If it hasn't been defined
+		// this will raise an error.
+		moreDiags := gohcl.DecodeExpression(enosTransport.Expr, ctx, &s.Transport)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			return diags
+		}
+
+		return diags
+	}
+
+	// We haven't been configured to use an transport, so lets set
+	// it to the default if it exists
+	enosTransports, err := findEvalContextVariable("transport", ctx)
+	if err != nil {
+		// We don't have an transport's in the eval context so we
+		// get to move on.
+		return diags
+	}
+
+	// Find default and set it one exists
+	defaultTransport, ok := enosTransports.AsValueMap()["default"]
+	if !ok {
+		return diags
+	}
+
+	s.Transport = NewTransport()
+	err = gocty.FromCtyValue(defaultTransport, &s.Transport)
+	if err != nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "unable to convert default transport from eval context to object",
+			Detail:   err.Error(),
+			Subject:  content.MissingItemRange.Ptr(),
+		})
 	}
 
 	return diags

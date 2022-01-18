@@ -15,6 +15,7 @@ import (
 
 const (
 	blockTypeTerraformCLI = "terraform_cli"
+	blockTypeTransport    = "transport"
 	blockTypeModule       = "module"
 	blockTypeScenario     = "scenario"
 	blockTypeScenarioStep = "step"
@@ -22,6 +23,7 @@ const (
 
 var flightPlanSchema = &hcl.BodySchema{
 	Blocks: []hcl.BlockHeaderSchema{
+		{Type: blockTypeTransport, LabelNames: []string{"name"}},
 		{Type: blockTypeTerraformCLI, LabelNames: []string{"name"}},
 		{Type: blockTypeScenario, LabelNames: []string{"name"}},
 		{Type: blockTypeModule, LabelNames: []string{"name"}},
@@ -33,6 +35,7 @@ func NewFlightPlan(opts ...Opt) (*FlightPlan, error) {
 	fp := &FlightPlan{
 		Files:         map[string]*hcl.File{},
 		TerraformCLIs: []*TerraformCLI{},
+		Transports:    []*Transport{},
 		Scenarios:     []*Scenario{},
 		Modules:       []*Module{},
 	}
@@ -66,6 +69,7 @@ type FlightPlan struct {
 	BodyContent   *hcl.BodyContent
 	Files         map[string]*hcl.File
 	TerraformCLIs []*TerraformCLI
+	Transports    []*Transport
 	Scenarios     []*Scenario
 	Modules       []*Module
 }
@@ -98,9 +102,50 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[stri
 
 	// decode sub-sections. Each sub-section decoder is responsible for
 	// extending the evaluation context for further evaluation.
+	diags = diags.Extend(fp.decodeTransports(ctx))
 	diags = diags.Extend(fp.decodeTerraformCLIs(ctx))
 	diags = diags.Extend(fp.decodeModules(ctx))
 	diags = diags.Extend(fp.decodeScenarios(ctx))
+
+	return diags
+}
+
+// decodeTransports decodes "transport" blocks that are defined in the
+// top-level schema.
+func (fp *FlightPlan) decodeTransports(ctx *hcl.EvalContext) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	transports := map[string]cty.Value{}
+
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeTransport) {
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		transport := NewTransport()
+		moreDiags = transport.decode(block, ctx.NewChild())
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		fp.Transports = append(fp.Transports, transport)
+
+		var err error
+		transports[transport.Name], err = transport.evalCtx()
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "unable to generate eval context for transport",
+				Detail:   err.Error(),
+				Subject:  block.TypeRange.Ptr(),
+				Context:  block.DefRange.Ptr(),
+			})
+		}
+	}
+
+	ctx.Variables["transport"] = cty.ObjectVal(transports)
 
 	return diags
 }
@@ -111,11 +156,7 @@ func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics 
 	var diags hcl.Diagnostics
 	clis := map[string]cty.Value{}
 
-	for _, block := range fp.BodyContent.Blocks {
-		if block.Type != blockTypeTerraformCLI {
-			continue
-		}
-
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeTerraformCLI) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
@@ -151,11 +192,7 @@ func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 	mods := map[string]cty.Value{}
 
-	for _, block := range fp.BodyContent.Blocks {
-		if block.Type != blockTypeModule {
-			continue
-		}
-
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeModule) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
@@ -183,11 +220,7 @@ func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
 func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	for _, block := range fp.BodyContent.Blocks {
-		if block.Type != blockTypeScenario {
-			continue
-		}
-
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeScenario) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {

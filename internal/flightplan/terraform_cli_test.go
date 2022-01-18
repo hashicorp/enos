@@ -9,8 +9,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// Test_Decode_Terraform_CLI
-func Test_Decode_Terraform_CLI(t *testing.T) {
+// Test_Decode_TerraformCLI
+func Test_Decode_TerraformCLI(t *testing.T) {
 	t.Parallel()
 
 	modulePath, err := filepath.Abs("./tests/simple_module")
@@ -34,7 +34,7 @@ module "backend" {
 }
 
 scenario "backend" {
-  step "hascolon:" {
+  step "first" {
     module = module.backend
   }
 }
@@ -56,10 +56,6 @@ module "backend" {
 
 scenario "backend" {
   step "first" {
-    notablock "something" {
-      something = "else"
-    }
-
     module = module.backend
   }
 }
@@ -79,7 +75,6 @@ module "backend" {
 
 scenario "backend" {
   step "first" {
-    notanattr = "foo"
     module = module.backend
   }
 }
@@ -259,7 +254,7 @@ scenario "debug" {
 							Path: "/opt/usr/bin/terraform",
 							Env: map[string]string{
 								"TF_LOG_CORE":     "off",
-								"TF_LOG_PROVIDER": "off",
+								"TF_LOG_PROVIDER": "debug",
 							},
 							ConfigVal: cty.ObjectVal(map[string]cty.Value{
 								"disable_checkpoint":           cty.BoolVal(true),
@@ -286,6 +281,7 @@ scenario "debug" {
 												"include": cty.ListVal([]cty.Value{
 													cty.StringVal("examplef.com/*/*"),
 												}),
+												"exclude": cty.NullVal(cty.List(cty.String)),
 											}),
 										}),
 										"network_mirror": cty.ListVal([]cty.Value{
@@ -294,10 +290,12 @@ scenario "debug" {
 												"include": cty.ListVal([]cty.Value{
 													cty.StringVal("examplen.com/*/*"),
 												}),
+												"exclude": cty.NullVal(cty.List(cty.String)),
 											}),
 										}),
 										"direct": cty.ListVal([]cty.Value{
 											cty.ObjectVal(map[string]cty.Value{
+												"include": cty.NullVal(cty.List(cty.String)),
 												"exclude": cty.ListVal([]cty.Value{
 													cty.StringVal("exampled.com/*/*"),
 												}),

@@ -1,4 +1,4 @@
-package cmd
+package acceptance
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 			// NOTE: Right now we're just testing that the generate command
 			// outputs the files in the right place with the correct names.
 			// Validation and execution are handled by other tests.
-			path, err := filepath.Abs(filepath.Join("./integration_tests", test.dir))
+			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s", path, test.outDir)
 			_, err = enos.run(context.Background(), cmd)

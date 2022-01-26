@@ -43,7 +43,7 @@ jobs:
         id: build
         run: |
           mkdir dist out
-          make
+          make build-race
           zip -r -j out/${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
           echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
       - name: Upload
@@ -60,3 +60,5 @@ jobs:
     uses: hashicorp/enos/.github/workflows/validate.yml@rebwill/QTI-168
     with:
       artifact-name: ${{ needs.build-artifact.outputs.artifact-name }}
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

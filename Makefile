@@ -20,7 +20,7 @@ build:
 	CGO_ENABLED=0 go build ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o dist/${BINARY} ./command/enos
 
 build-race:
-	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o ${BINARY} ./command/enos
+	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o dist/${BINARY} ./command/enos
 
 test:
 	${GORACE} go test -race ./... -v $(TESTARGS) -timeout=5m -parallel=4

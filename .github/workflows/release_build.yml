@@ -149,3 +149,5 @@ jobs:
     uses: hashicorp/enos/.github/workflows/validate.yml@rebwill/QTI-168
     with:
       artifact-name: "${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

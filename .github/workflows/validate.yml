@@ -52,7 +52,7 @@ jobs:
         id: sshkey
         run: |
           mkdir -p ./acceptance/support
-          echo "${{ secrets.ENOS_CI_SSH_KEYPAIR }}" > ./acceptance/support/private_key.pem
+          echo "${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}" > ./acceptance/support/private_key.pem
           chmod 600 ./acceptance/support/private_key.pem
       - name: Download Artifact
         uses: actions/download-artifact@v2

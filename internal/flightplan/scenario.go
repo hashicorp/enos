@@ -124,7 +124,6 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 	content *hcl.BodyContent,
 	ctx *hcl.EvalContext,
 ) hcl.Diagnostics {
-
 	var diags hcl.Diagnostics
 
 	terraformCli, ok := content.Attributes["terraform_cli"]

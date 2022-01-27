@@ -145,8 +145,7 @@ jobs:
   validate-artifact:
     name: Validate Artifact
     needs: build-artifact
-    # Change branch to main once the build workflow is merged to main
-    uses: hashicorp/enos/.github/workflows/validate.yml@rebwill/QTI-168
+    uses: hashicorp/enos/.github/workflows/validate.yml@main
     with:
       artifact-name: "${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"
     secrets:

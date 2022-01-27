@@ -17,7 +17,7 @@ import (
 func ensureAcc(t *testing.T) {
 	t.Helper()
 	if !hasEnosACC() {
-		t.Skip("Skipping because ENOS_ACC has not been set. You must set this environment value to a truthy value to execute acceptance tests")
+		t.Skip("Skipping because ENOS_ACC has not been set. You must set this environment value to a truthy value to execute acceptance tests. Running make test-acc will do this")
 	}
 }
 
@@ -31,10 +31,27 @@ func hasEnosACC() bool {
 	return false
 }
 
+func ensureExt(t *testing.T) {
+	t.Helper()
+	if !hasEnosExt() {
+		t.Skip("Skipping because ENOS_EXT has not been set. You must set this environment value to a truthy value to execute acceptance tests which require external resources like AWS. Running make test-acc-ext with the appropriate support files and AWS credentials should run these tests.")
+	}
+}
+
+func hasEnosExt() bool {
+	if acc, ok := os.LookupEnv("ENOS_EXT"); ok {
+		if acc == "1" || acc == "true" {
+			return true
+		}
+	}
+
+	return false
+}
+
 func ensureEnosCLI(t *testing.T) {
 	t.Helper()
 	if !hasEnosCLI() {
-		t.Skip("Skipping because ENOS_BINARY_PATH has not been set")
+		t.Skip("Skipping because ENOS_BINARY_PATH has not been set. make test-acc will do this for you.")
 	}
 }
 
@@ -92,7 +109,7 @@ func ensurePrivateKey(t *testing.T) {
 	t.Helper()
 	_, err := enosPrivateKey()
 	if err != nil {
-		t.Skip(fmt.Sprintf("Unable to read ./acceptance/support/private_key.pem. If you wish to execute this locally you'll need to copy the ENOS_CI_SSH_KEYPAIR-private from 1Password into ./acceptance/support/private_key.pem: %s", err.Error()))
+		t.Skip(fmt.Sprintf("Unable to read acceptance/support/private_key.pem. If you wish to execute this locally you'll need to copy the ENOS_CI_SSH_KEYPAIR-private from 1Password into acceptance/support/private_key.pem: %s", err.Error()))
 	}
 }
 
@@ -136,19 +153,21 @@ func skipUnlessTerraformCLI() acceptanceRunnerOpt {
 	}
 }
 
-// TODO: use this in QTI-174
-// nolint: unused,deadcode
 func skipUnlessAWSCredentials() acceptanceRunnerOpt {
 	return func(r *acceptanceRunner) {
 		r.skipUnlessAWSCredentials = true
 	}
 }
 
-// TODO: use this in QTI-174
-// nolint: unused,deadcode
 func skipUnlessEnosPrivateKey() acceptanceRunnerOpt {
 	return func(r *acceptanceRunner) {
 		r.skipUnlessEnosPrivateKey = true
+	}
+}
+
+func skipUnlessExtEnabled() acceptanceRunnerOpt {
+	return func(r *acceptanceRunner) {
+		r.skipUnlessExtEnabled = true
 	}
 }
 
@@ -160,6 +179,7 @@ type acceptanceRunner struct {
 	skipUnlessTerraformCLI   bool
 	skipUnlessAWSCredentials bool
 	skipUnlessEnosPrivateKey bool
+	skipUnlessExtEnabled     bool
 }
 
 // run runs an Enos sub-command
@@ -185,5 +205,8 @@ func (r *acceptanceRunner) validate(t *testing.T) {
 	}
 	if r.skipUnlessEnosPrivateKey {
 		ensurePrivateKey(t)
+	}
+	if r.skipUnlessExtEnabled {
+		ensureExt(t)
 	}
 }

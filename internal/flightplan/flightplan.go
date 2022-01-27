@@ -14,17 +14,19 @@ import (
 )
 
 const (
-	blockTypeTerraformCLI = "terraform_cli"
-	blockTypeTransport    = "transport"
-	blockTypeModule       = "module"
-	blockTypeScenario     = "scenario"
-	blockTypeScenarioStep = "step"
+	blockTypeTerraformSetting = "terraform"
+	blockTypeTerraformCLI     = "terraform_cli"
+	blockTypeProvider         = "provider"
+	blockTypeModule           = "module"
+	blockTypeScenario         = "scenario"
+	blockTypeScenarioStep     = "step"
 )
 
 var flightPlanSchema = &hcl.BodySchema{
 	Blocks: []hcl.BlockHeaderSchema{
-		{Type: blockTypeTransport, LabelNames: []string{"name"}},
+		{Type: blockTypeTerraformSetting, LabelNames: []string{"name"}},
 		{Type: blockTypeTerraformCLI, LabelNames: []string{"name"}},
+		{Type: blockTypeProvider, LabelNames: []string{"type", "alias"}},
 		{Type: blockTypeScenario, LabelNames: []string{"name"}},
 		{Type: blockTypeModule, LabelNames: []string{"name"}},
 	},
@@ -33,11 +35,12 @@ var flightPlanSchema = &hcl.BodySchema{
 // NewFlightPlan returns a new instance of a FlightPlan
 func NewFlightPlan(opts ...Opt) (*FlightPlan, error) {
 	fp := &FlightPlan{
-		Files:         map[string]*hcl.File{},
-		TerraformCLIs: []*TerraformCLI{},
-		Transports:    []*Transport{},
-		Scenarios:     []*Scenario{},
-		Modules:       []*Module{},
+		Files:             map[string]*hcl.File{},
+		TerraformSettings: []*TerraformSetting{},
+		TerraformCLIs:     []*TerraformCLI{},
+		Providers:         []*Provider{},
+		Scenarios:         []*Scenario{},
+		Modules:           []*Module{},
 	}
 
 	for _, opt := range opts {
@@ -65,13 +68,14 @@ type Opt func(*FlightPlan) error
 
 // FlightPlan represents our flight plan, the main configuration of Enos.
 type FlightPlan struct {
-	BaseDir       string
-	BodyContent   *hcl.BodyContent
-	Files         map[string]*hcl.File
-	TerraformCLIs []*TerraformCLI
-	Transports    []*Transport
-	Scenarios     []*Scenario
-	Modules       []*Module
+	BaseDir           string
+	BodyContent       *hcl.BodyContent
+	Files             map[string]*hcl.File
+	TerraformSettings []*TerraformSetting
+	TerraformCLIs     []*TerraformCLI
+	Providers         []*Provider
+	Scenarios         []*Scenario
+	Modules           []*Module
 }
 
 // Decode takes a base eval content and HCL body and decodes it in chunks,
@@ -100,52 +104,42 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[stri
 	// Decode our top-level schema
 	fp.BodyContent, diags = body.Content(flightPlanSchema)
 
-	// decode sub-sections. Each sub-section decoder is responsible for
-	// extending the evaluation context for further evaluation.
-	diags = diags.Extend(fp.decodeTransports(ctx))
+	// Decode child blocks. Each child block decoder is responsible for
+	// extending the evaluation context.
+	diags = diags.Extend(fp.decodeTerraformSettings(ctx))
 	diags = diags.Extend(fp.decodeTerraformCLIs(ctx))
+	diags = diags.Extend(fp.decodeProviders(ctx))
 	diags = diags.Extend(fp.decodeModules(ctx))
 	diags = diags.Extend(fp.decodeScenarios(ctx))
 
 	return diags
 }
 
-// decodeTransports decodes "transport" blocks that are defined in the
+// decodeTerraformSettings decodes "terraform" blocks that are defined in the
 // top-level schema.
-func (fp *FlightPlan) decodeTransports(ctx *hcl.EvalContext) hcl.Diagnostics {
+func (fp *FlightPlan) decodeTerraformSettings(ctx *hcl.EvalContext) hcl.Diagnostics {
 	var diags hcl.Diagnostics
-	transports := map[string]cty.Value{}
+	settings := map[string]cty.Value{}
 
-	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeTransport) {
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeTerraformSetting) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			continue
 		}
 
-		transport := NewTransport()
-		moreDiags = transport.decode(block, ctx.NewChild())
+		setting := NewTerraformSetting()
+		moreDiags = setting.decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			continue
 		}
 
-		fp.Transports = append(fp.Transports, transport)
-
-		var err error
-		transports[transport.Name], err = transport.evalCtx()
-		if err != nil {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "unable to generate eval context for transport",
-				Detail:   err.Error(),
-				Subject:  block.TypeRange.Ptr(),
-				Context:  block.DefRange.Ptr(),
-			})
-		}
+		fp.TerraformSettings = append(fp.TerraformSettings, setting)
+		settings[setting.Name] = setting.ToCtyValue()
 	}
 
-	ctx.Variables["transport"] = cty.ObjectVal(transports)
+	ctx.Variables["terraform"] = cty.ObjectVal(settings)
 
 	return diags
 }
@@ -182,6 +176,48 @@ func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics 
 	}
 
 	ctx.Variables["terraform_cli"] = cty.ObjectVal(clis)
+
+	return diags
+}
+
+// decodeProviders decodes "provider" blocks that are defined in the
+// top-level schema.
+func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	// type -> map of aliases -> provider object
+	providers := map[string]map[string]cty.Value{}
+
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeProvider) {
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		provider := NewProvider()
+		moreDiags = provider.decode(block, ctx.NewChild())
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		fp.Providers = append(fp.Providers, provider)
+
+		aliasesForType, ok := providers[provider.Type]
+		if !ok {
+			aliasesForType = map[string]cty.Value{}
+		}
+		aliasesForType[provider.Alias] = provider.ToCtyValue()
+		providers[provider.Type] = aliasesForType
+	}
+
+	// Nest by type and alias so we can access it in the eval context
+	// as providers.type.alias, eg: providers.aws.east.attrs.region
+	vals := map[string]cty.Value{}
+	for providerType, aliases := range providers {
+		vals[providerType] = cty.ObjectVal(aliases)
+	}
+	ctx.Variables["provider"] = cty.ObjectVal(vals)
 
 	return diags
 }
@@ -290,8 +326,7 @@ func verifyNoBlockInAttrOnlySchema(in hcl.Body) hcl.Diagnostics {
 		for _, block := range body.Blocks {
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "invalid block",
-				Detail:   "sub-blocks are not allowed",
+				Summary:  "unexpected block",
 				Subject:  block.TypeRange.Ptr(),
 				Context:  hcl.RangeBetween(block.TypeRange, block.Range()).Ptr(),
 			})

@@ -47,9 +47,8 @@ scenario "basic" {
     module = module.backend
   }
 }`, modulePath, test.expr)
-
-			fp, diags := testDecodeHCL(t, []byte(hcl))
-			require.False(t, diags.HasErrors(), diags.Error())
+			fp, err := testDecodeHCL(t, []byte(hcl))
+			require.NoError(t, err)
 			require.Equal(t, 1, len(fp.Modules))
 			v, ok := fp.Modules[0].Attrs["something"]
 			require.True(t, ok)
@@ -184,12 +183,12 @@ scenario "backend" {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			fp, diags := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
-				require.True(t, diags.HasErrors(), diags.Error())
+				require.Error(t, err)
 				return
 			}
-			require.False(t, diags.HasErrors(), diags.Error())
+			require.NoError(t, err)
 			testRequireEqualFP(t, fp, test.expected)
 		})
 	}

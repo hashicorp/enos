@@ -293,12 +293,12 @@ scenario "backend" {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			fp, diags := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
-				require.True(t, diags.HasErrors(), diags.Error())
+				require.Error(t, err)
 				return
 			}
-			require.False(t, diags.HasErrors(), diags.Error())
+			require.NoError(t, err)
 			testRequireEqualFP(t, fp, test.expected)
 		})
 	}

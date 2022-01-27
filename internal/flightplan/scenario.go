@@ -3,6 +3,7 @@ package flightplan
 import (
 	"fmt"
 
+	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
 
 	hcl "github.com/hashicorp/hcl/v2"
@@ -12,7 +13,8 @@ import (
 var scenarioSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
 		{Name: "terraform_cli", Required: false},
-		{Name: "transport", Required: false},
+		{Name: "terraform", Required: false},
+		{Name: "providers", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeScenarioStep, LabelNames: []string{"name"}},
@@ -21,10 +23,11 @@ var scenarioSchema = &hcl.BodySchema{
 
 // Scenario represents an Enos scenario
 type Scenario struct {
-	Name         string
-	TerraformCLI *TerraformCLI
-	Transport    *Transport
-	Steps        []*ScenarioStep
+	Name             string
+	TerraformCLI     *TerraformCLI
+	TerraformSetting *TerraformSetting
+	Steps            []*ScenarioStep
+	Providers        []*Provider
 }
 
 // NewScenario returns a new Scenario
@@ -32,6 +35,7 @@ func NewScenario() *Scenario {
 	return &Scenario{
 		TerraformCLI: NewTerraformCLI(),
 		Steps:        []*ScenarioStep{},
+		Providers:    []*Provider{},
 	}
 }
 
@@ -101,15 +105,22 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 		})
 	}
 
-	// Decode the scenario transport reference
-	moreDiags = s.decodeAndValidateTransportAttribute(content, ctx)
+	// Decode the scenario terraform_cli reference
+	moreDiags = s.decodeAndValidateTerraformCLIAttribute(content, ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
 	}
 
-	// Decode the scenario terraform_cli reference
-	moreDiags = s.decodeAndValidateTerraformCLIAttribute(content, ctx)
+	// Decode the scenario terraform reference
+	moreDiags = s.decodeAndValidateTerraformSettingsAttribute(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode the scenario providers
+	moreDiags = s.decodeAndValidateProvidersAttribute(content, ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
@@ -168,53 +179,239 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 	return diags
 }
 
-// decodeAndValidateTransportAttribute decodess the transport attribute
-// from the content and validates that it refers to an existing transport.
-func (s *Scenario) decodeAndValidateTransportAttribute(
+// decodeAndValidateTerraformSettingsAttribute decodess the terraform attribute
+// from the content and validates that it refers to an existing terraform.
+func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 	content *hcl.BodyContent,
 	ctx *hcl.EvalContext,
 ) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	// See if we've set an transport
-	enosTransport, ok := content.Attributes["transport"]
+	terraformSetting, ok := content.Attributes["terraform"]
 	if ok {
-		s.Transport = NewTransport()
-		// Decode our transport from the eval context. If it hasn't been defined
-		// this will raise an error.
-		moreDiags := gohcl.DecodeExpression(enosTransport.Expr, ctx, &s.Transport)
+		// A "terraform" attribute value has been set. Make sure it matches
+		// one that has been defined in the outer scope.
+		tfSettingsVal, moreDiags := terraformSetting.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			return diags
 		}
 
+		if tfSettingsVal.IsNull() || !tfSettingsVal.IsWhollyKnown() || !tfSettingsVal.CanIterateElements() {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "terraform value must be that of a terraform block",
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
+		// Find it in the eval context and make sure it matches
+		terraformSettings, err := findEvalContextVariable("terraform", ctx)
+		if err != nil {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "terraform references an undefined terraform block",
+				Detail:   err.Error(),
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
+		settingsName, ok := tfSettingsVal.AsValueMap()["name"]
+		if !ok {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "terraform value does not have the required name attribute",
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
+		if settingsName.IsNull() || !settingsName.IsWhollyKnown() {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "terraform name value must be known",
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
+		setting, ok := terraformSettings.AsValueMap()[settingsName.AsString()]
+		if !ok {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "terraform references an undefined terraform block",
+				Detail:   fmt.Sprintf("no terraform block with a name label %s exists", settingsName.AsString()),
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
+		if tfSettingsVal.Equals(setting) != cty.True {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "terraform value and configured value don't match",
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
+		s.TerraformSetting = NewTerraformSetting()
+		err = s.TerraformSetting.FromCtyValue(setting)
+		if err != nil {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "unable to unmarshal terraform from eval context",
+				Detail:   err.Error(),
+				Subject:  terraformSetting.Expr.Range().Ptr(),
+				Context:  terraformSetting.Range.Ptr(),
+			})
+		}
+
 		return diags
 	}
 
-	// We haven't been configured to use an transport, so lets set
-	// it to the default if it exists
-	enosTransports, err := findEvalContextVariable("transport", ctx)
+	// The terraform attribute has not been set so we'll use the default
+	// terraform settings if they exist.
+	terraformSettings, err := findEvalContextVariable("terraform", ctx)
 	if err != nil {
-		// We don't have an transport's in the eval context so we
-		// get to move on.
-		return diags
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform references an undefined terraform block",
+			Detail:   err.Error(),
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
 	}
 
-	// Find default and set it one exists
-	defaultTransport, ok := enosTransports.AsValueMap()["default"]
+	setting, ok := terraformSettings.AsValueMap()["default"]
 	if !ok {
 		return diags
 	}
 
-	s.Transport = NewTransport()
-	err = gocty.FromCtyValue(defaultTransport, &s.Transport)
+	s.TerraformSetting = NewTerraformSetting()
+	err = s.TerraformSetting.FromCtyValue(setting)
 	if err != nil {
 		return diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "unable to convert default transport from eval context to object",
+			Summary:  "unable to unmarshal terraform from eval context",
 			Detail:   err.Error(),
-			Subject:  content.MissingItemRange.Ptr(),
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
 		})
+	}
+
+	return diags
+}
+
+// decodeAndValidateProvidersAttribute decodess the providers attribute
+// from the content and validates that each sub-attribute references a defined
+// provider.
+func (s *Scenario) decodeAndValidateProvidersAttribute(
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	providers, ok := content.Attributes["providers"]
+	if !ok {
+		return diags
+	}
+
+	providersVal, moreDiags := providers.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	if providersVal.IsNull() || !providersVal.IsWhollyKnown() || !providersVal.CanIterateElements() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "providers value must be a known object",
+			Subject:  providers.Expr.Range().Ptr(),
+			Context:  providers.Range.Ptr(),
+		})
+	}
+
+	// Get our defined providers from the eval context
+	definedProviders, err := findEvalContextVariable("provider", ctx)
+	if err != nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "provider value has not been defined",
+			Detail:   err.Error(),
+			Subject:  providers.Expr.Range().Ptr(),
+			Context:  providers.Range.Ptr(),
+		})
+	}
+
+	// Unroll them so we can look up our provider values by type and alias
+	unrolled := map[string]map[string]cty.Value{}
+	if definedProviders.IsNull() || !definedProviders.IsWhollyKnown() || !definedProviders.CanIterateElements() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "cannot set provider as no providers have been defined",
+			Subject:  providers.Expr.Range().Ptr(),
+			Context:  providers.Range.Ptr(),
+		})
+	}
+	for pType, pVals := range definedProviders.AsValueMap() {
+		aliases := map[string]cty.Value{}
+		for alias, aliasV := range pVals.AsValueMap() {
+			aliases[alias] = aliasV
+		}
+		unrolled[pType] = aliases
+	}
+
+	// For each defined provider, make sure a matching instance is defined and
+	// matches
+	for _, providerVal := range providersVal.AsValueSlice() {
+		provider := NewProvider()
+		err := provider.FromCtyValue(providerVal)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "unable to unmarshal provider value",
+				Detail:   err.Error(),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+			continue
+		}
+
+		types, ok := unrolled[provider.Type]
+		if !ok {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("provider type %s is not defined", provider.Type),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+			continue
+		}
+
+		alias, ok := types[provider.Alias]
+		if !ok {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("alias %s for provider type %s is not defined", provider.Alias, provider.Type),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+			continue
+		}
+
+		if providerVal.Equals(alias) != cty.True {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "provider arguments don't match defined provider",
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+		}
+
+		s.Providers = append(s.Providers, provider)
 	}
 
 	return diags

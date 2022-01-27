@@ -205,23 +205,25 @@ func (g *Generator) generateCLIConfig() error {
 // generateModule converts a Scenario into an HCL Terraform module and writes
 // it to a file in the OutDir.
 func (g *Generator) generateModule() error {
+	// Make sure our out directory exists and is a directory
+	// NOTE: we have to do this before other steps since we'll be writing
+	// things relative to this path.
+	err := g.ensureOutDir()
+	if err != nil {
+		return err
+	}
+
 	mod := hclwrite.NewEmptyFile()
 	modBody := mod.Body()
 
-	// Write provider level enos "transport" configuration
-	err := g.maybeWriteProviderConfig(modBody)
-	if err != nil {
-		return err
-	}
+	// Write "terraform" settings block
+	g.maybeWriteTerraformSettings(modBody)
+
+	// Write provider level config
+	g.maybeWriteProviderConfig(modBody)
 
 	// Convert each step into a Terraform module
 	err = g.convertStepsToModules(modBody)
-	if err != nil {
-		return err
-	}
-
-	// Make sure our out directory exists and is a directory
-	err = g.ensureOutDir()
 	if err != nil {
 		return err
 	}
@@ -230,40 +232,136 @@ func (g *Generator) generateModule() error {
 	return g.write(g.TerraformModulePath(), mod.Bytes())
 }
 
-func (g *Generator) maybeWriteProviderConfig(rootBody *hclwrite.Body) error {
-	if t := g.Scenario.Transport; t != nil {
-		if t.Name == "" {
-			return nil
-		}
-
-		vals := map[string]cty.Value{}
-		if h := g.Scenario.Transport.SSH.Host; h != "" {
-			vals["host"] = cty.StringVal(h)
-		}
-		if u := g.Scenario.Transport.SSH.User; u != "" {
-			vals["user"] = cty.StringVal(u)
-		}
-		if p := g.Scenario.Transport.SSH.PrivateKey; p != "" {
-			vals["private_key"] = cty.StringVal(p)
-		}
-		if p := g.Scenario.Transport.SSH.PrivateKeyPath; p != "" {
-			vals["private_key_path"] = cty.StringVal(p)
-		}
-		if p := g.Scenario.Transport.SSH.Passphrase; p != "" {
-			vals["passphase"] = cty.StringVal(p)
-		}
-		if p := g.Scenario.Transport.SSH.PassphrasePath; p != "" {
-			vals["passphrase_path"] = cty.StringVal(p)
-		}
-
-		block := rootBody.AppendNewBlock("provider", []string{"enos"})
-		block.Body().SetAttributeValue("transport", cty.ObjectVal(map[string]cty.Value{
-			"ssh": cty.ObjectVal(vals),
-		}))
-		rootBody.AppendNewline()
+// maybeWriteTerraformSettings writes any configured "terraform" settings
+// nolint:cyclop
+func (g *Generator) maybeWriteTerraformSettings(rootBody *hclwrite.Body) {
+	s := g.Scenario.TerraformSetting
+	if s == nil {
+		return
 	}
 
-	return nil
+	block := rootBody.AppendNewBlock("terraform", []string{})
+	body := block.Body()
+
+	if s.RequiredVersion != cty.NullVal(cty.String) {
+		body.SetAttributeValue("required_version", s.RequiredVersion)
+		body.AppendNewline()
+	}
+
+	if !s.Experiments.IsNull() && s.Experiments.IsWhollyKnown() {
+		exps := []string{}
+		for _, exp := range s.Experiments.AsValueSlice() {
+			exps = append(exps, exp.AsString())
+		}
+		body.SetAttributeRaw("experiments", experimentsTokens(exps))
+		body.AppendNewline()
+	}
+
+	if s.RequiredProviders != nil && len(s.RequiredProviders) > 0 {
+		rpBlock := body.AppendNewBlock("required_providers", []string{})
+		rpBody := rpBlock.Body()
+
+		for k, v := range s.RequiredProviders {
+			rpBody.SetAttributeValue(k, v)
+		}
+		body.AppendNewline()
+	}
+
+	if s.ProviderMetas != nil {
+		for pmName, pmAttrs := range s.ProviderMetas {
+			pmBlock := body.AppendNewBlock("provider_meta", []string{pmName})
+			pmBody := pmBlock.Body()
+			for k, v := range pmAttrs {
+				pmBody.SetAttributeValue(k, v)
+			}
+			body.AppendNewline()
+		}
+	}
+
+	if s.Backend != nil && s.Backend.Name != "" {
+		beBlock := body.AppendNewBlock("backend", []string{s.Backend.Name})
+		beBody := beBlock.Body()
+
+		for k, v := range s.Backend.Attrs {
+			beBody.SetAttributeValue(k, v)
+		}
+		if len(s.Backend.Attrs) > 0 {
+			beBody.AppendNewline()
+		}
+
+		if !s.Backend.Workspaces.IsNull() && s.Backend.Workspaces.IsWhollyKnown() {
+			for i, wksp := range s.Backend.Workspaces.AsValueSlice() {
+				if i != 0 {
+					beBody.AppendNewline()
+				}
+				wkspBlock := beBody.AppendNewBlock("workspaces", []string{})
+				wkspBody := wkspBlock.Body()
+				for k, v := range wksp.AsValueMap() {
+					if !v.IsNull() && v.IsWhollyKnown() {
+						wkspBody.SetAttributeValue(k, v)
+					}
+				}
+			}
+		}
+	}
+
+	if !s.Cloud.IsNull() && s.Cloud.IsWhollyKnown() {
+		cloudsList, ok := s.Cloud.AsValueMap()["cloud"]
+		if ok {
+			if !cloudsList.IsNull() && cloudsList.IsWhollyKnown() && len(cloudsList.AsValueSlice()) > 0 {
+				cloud := cloudsList.AsValueSlice()[0]
+				cBlock := body.AppendNewBlock("cloud", nil)
+				cBody := cBlock.Body()
+
+				for k, v := range cloud.AsValueMap() {
+					switch k {
+					case "hostname", "organization", "token":
+						cBody.SetAttributeValue(k, v)
+					case "workspaces":
+						for i, wksp := range v.AsValueSlice() {
+							if i != 0 {
+								cBody.AppendNewline()
+							}
+							wkspBlock := cBody.AppendNewBlock("workspaces", []string{})
+							wkspBody := wkspBlock.Body()
+							for wk, wv := range wksp.AsValueMap() {
+								if !wv.IsNull() && wv.IsWhollyKnown() {
+									wkspBody.SetAttributeValue(wk, wv)
+								}
+							}
+						}
+					default:
+					}
+				}
+			}
+		}
+	}
+
+	rootBody.AppendNewline()
+}
+
+func (g *Generator) maybeWriteProviderConfig(rootBody *hclwrite.Body) {
+	if len(g.Scenario.Providers) == 0 {
+		return
+	}
+
+	count := 0
+	for _, provider := range g.Scenario.Providers {
+		if count > 0 {
+			rootBody.AppendNewline()
+		}
+		count++
+		block := rootBody.AppendNewBlock("provider", []string{provider.Type})
+		body := block.Body()
+		for name, val := range provider.Attrs {
+			body.SetAttributeValue(name, val)
+		}
+		if provider.Alias != "" {
+			body.SetAttributeValue("alias", cty.StringVal(provider.Alias))
+		}
+	}
+
+	rootBody.AppendNewline()
 }
 
 func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
@@ -289,6 +387,12 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 		// version
 		if step.Module.Version != "" {
 			body.SetAttributeValue("version", cty.StringVal(step.Module.Version))
+		}
+
+		// providers
+		if len(step.Providers) > 0 {
+			body.AppendNewline()
+			body.SetAttributeRaw("providers", stepProviderTokens(step.Providers))
 		}
 
 		// variable attributes
@@ -345,6 +449,108 @@ func (g *Generator) write(path string, bytes []byte) error {
 
 	_, err = file.Write(hclwrite.Format(bytes))
 	return err
+}
+
+// experimentsTokens returns the terraform settings experiments tokens.
+func experimentsTokens(experiments []string) hclwrite.Tokens {
+	tokens := hclwrite.Tokens{
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenOBrack,
+			Bytes: []byte{'['},
+		},
+	}
+
+	for i, exp := range experiments {
+		if i > 0 {
+			tokens = append(tokens, &hclwrite.Token{
+				Type:  hclsyntax.TokenComma,
+				Bytes: []byte{','},
+			})
+		}
+
+		tokens = append(tokens, &hclwrite.Token{
+			Type:  hclsyntax.TokenIdent,
+			Bytes: []byte(exp),
+		})
+	}
+
+	tokens = append(tokens, &hclwrite.Token{
+		Type:  hclsyntax.TokenOBrack,
+		Bytes: []byte{']'},
+	})
+
+	return tokens
+}
+
+func stepProviderTokens(providers map[string]*flightplan.Provider) hclwrite.Tokens {
+	if len(providers) == 0 {
+		return hclwrite.Tokens{
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenEqual,
+				Bytes: []byte{'='},
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte("null"),
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenNewline,
+				Bytes: []byte{'\n'},
+			},
+		}
+	}
+
+	tokens := hclwrite.Tokens{
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenOBrace,
+			Bytes: []byte{'{'},
+		},
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenNewline,
+			Bytes: []byte{'\n'},
+		},
+	}
+
+	i := 0
+	for importName, provider := range providers {
+		if i > 0 {
+			tokens = append(tokens,
+				&hclwrite.Token{
+					Type:  hclsyntax.TokenNewline,
+					Bytes: []byte{'\n'},
+				},
+			)
+		}
+		i++
+
+		tokens = append(tokens,
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(importName),
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenEqual,
+				Bytes: []byte{'='},
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(fmt.Sprintf("%s.%s", provider.Type, provider.Alias)),
+			},
+		)
+	}
+
+	tokens = append(tokens,
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenNewline,
+			Bytes: []byte{'\n'},
+		},
+		&hclwrite.Token{
+			Type:  hclsyntax.TokenOBrace,
+			Bytes: []byte{'}'},
+		},
+	)
+
+	return tokens
 }
 
 // dependsOnTokens takes the name of module traversal target and returns the

@@ -56,12 +56,13 @@ jobs:
   validate-artifact:
     name: Validate Artifact
     needs: build-artifact
-    # If you are making changes to validate.yml, temporarily update the branch reference below to your PR branch, e.g.:
-    # hashicorp/enos/.github/workflows/validate.yml@your-branch
+    # NOTE: If you are making changes to validate.yml, temporarily update the
+    # branch reference below to your PR branch, e.g.: hashicorp/enos/.github/workflows/validate.yml@your-branch
     # Otherwise, it will look for the current version of validate.yml on main.
-    uses: hashicorp/enos/.github/workflows/validate.yml@main
+    uses: hashicorp/enos/.github/workflows/validate.yml@qti-174
     with:
       artifact-name: ${{ needs.build-artifact.outputs.artifact-name }}
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}

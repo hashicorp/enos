@@ -1,6 +1,9 @@
 name: validate
 
 on:
+   # Note: if you are making changes to this file, you will need to temporarily update the
+   # branch reference in the `validate` workflow caller in pr_build.yml to your current
+   # PR branch. Otherwise, it will look for the current version of validate.yml on main.
   workflow_call:
     inputs:
       artifact-name:

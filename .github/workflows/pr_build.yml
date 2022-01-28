@@ -56,8 +56,10 @@ jobs:
   validate-artifact:
     name: Validate Artifact
     needs: build-artifact
-    # Change branch to main once the build workflow is merged to main
-    uses: hashicorp/enos/.github/workflows/validate.yml@rebwill/QTI-168
+    # If you are making changes to validate.yml, temporarily update the branch reference below to your PR branch, e.g.:
+    # hashicorp/enos/.github/workflows/validate.yml@your-branch
+    # Otherwise, it will look for the current version of validate.yml on main.
+    uses: hashicorp/enos/.github/workflows/validate.yml@main
     with:
       artifact-name: ${{ needs.build-artifact.outputs.artifact-name }}
     secrets:

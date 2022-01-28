@@ -147,7 +147,7 @@ jobs:
     needs: build-artifact
     uses: hashicorp/enos/.github/workflows/validate.yml@main
     with:
-      artifact-name: "${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"
+      artifact-name: "enos_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -144,7 +144,7 @@ jobs:
 
   validate-artifact:
     name: Validate Artifact
-    needs: build-artifact
+    needs: build
     uses: hashicorp/enos/.github/workflows/validate.yml@main
     with:
       artifact-name: "enos_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"

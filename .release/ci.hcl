@@ -17,9 +17,9 @@ event "merge" {
   // i.e. send "merge" complete signal to orchestrator to trigger build
 }
 
-# This "build" event depends on the enos "release_build" Github Actions workflow.
-# The "release_build" workflow is run when a PR is merged to `main` and the version is updated.
-# The "release_build" workflow calls the "validate" workflow, so the artifact must also pass
+# This "build" event depends on the enos "build" Github Actions workflow.
+# The "build" workflow is run when a PR is merged to `main` and the version is updated.
+# The "build" workflow calls the "validate" workflow, so the artifact must also pass
 # acceptance testing in order to successfully complete and trigger this "build" event.
 
 event "build" {
@@ -27,7 +27,7 @@ event "build" {
   action "build" {
     organization = "hashicorp"
     repository = "enos"
-    workflow = "release_build"
+    workflow = "build"
   }
 }
 

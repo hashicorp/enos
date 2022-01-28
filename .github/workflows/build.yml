@@ -1,8 +1,8 @@
-name: release_build
+name: build
 on:
-  # Run the release build workflow manually from GitHub Actions menu
+  # Run the build workflow manually from GitHub Actions menu
   workflow_dispatch:
-  # Run the release build workflow on merge only when version.go is updated
+  # Run the build workflow on merge only when version.go is updated
   push:
     paths:
       - 'version/version.go'

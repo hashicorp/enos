@@ -94,6 +94,11 @@ event "notarize-darwin-arm64" {
     workflow = "notarize-darwin-arm64"
   }
 
+  notification {
+    on = "fail"
+  }
+}
+
 event "sign" {
   depends = ["notarize-darwin-arm64"]
   action "sign" {
@@ -101,6 +106,11 @@ event "sign" {
     repository = "crt-workflows-common"
     workflow = "sign"
   }
+
+  notification {
+    on = "fail"
+  }
+}
 
 event "sign-linux-rpms" {
   depends = ["sign"]

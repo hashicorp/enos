@@ -2,10 +2,8 @@ name: build
 on:
   # Run the build workflow manually from GitHub Actions menu
   workflow_dispatch:
-  # Run the build workflow on merge only when version.go is updated
+  # Run the build workflow on merge to main
   push:
-    paths:
-      - 'version/version.go'
     branches:
       - main
 

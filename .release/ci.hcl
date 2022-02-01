@@ -86,6 +86,32 @@ event "notarize-darwin-amd64" {
   }
 }
 
+event "notarize-darwin-arm64" {
+  depends = ["notarize-darwin-amd64"]
+  action "notarize-darwin-arm64" {
+    organization = "hashicorp"
+    repository = "crt-workflows-common"
+    workflow = "notarize-darwin-arm64"
+  }
+
+  notification {
+    on = "fail"
+  }
+}
+
+event "sign" {
+  depends = ["notarize-darwin-arm64"]
+  action "sign" {
+    organization = "hashicorp"
+    repository = "crt-workflows-common"
+    workflow = "sign"
+  }
+
+  notification {
+    on = "fail"
+  }
+}
+
 event "sign-linux-rpms" {
   depends = ["sign"]
   action "sign-linux-rpms" {

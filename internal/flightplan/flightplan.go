@@ -194,6 +194,12 @@ func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
 			continue
 		}
 
+		moreDiags = verifyBlockHasNLabels(block, 2)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
 		provider := NewProvider()
 		moreDiags = provider.decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
@@ -207,6 +213,18 @@ func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
 		if !ok {
 			aliasesForType = map[string]cty.Value{}
 		}
+		_, previouslyDefined := aliasesForType[provider.Alias]
+		if previouslyDefined {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "provider and alias has been previously defined",
+				Detail:   fmt.Sprintf(`provider %s with alias %s has already been defined`, provider.Type, provider.Alias),
+				Subject:  hcl.RangeBetween(block.LabelRanges[0], block.LabelRanges[1]).Ptr(),
+				Context:  block.DefRange.Ptr(),
+			})
+			continue
+		}
+
 		aliasesForType[provider.Alias] = provider.ToCtyValue()
 		providers[provider.Type] = aliasesForType
 	}
@@ -374,6 +392,24 @@ func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
 				Subject:  block.LabelRanges[i].Ptr(),
 			})
 		}
+	}
+
+	return diags
+}
+
+// verifyBlockHasNLabels verifies that the given block has the appropriate number
+// of defined labels.
+func verifyBlockHasNLabels(block *hcl.Block, n int) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	if len(block.Labels) != n {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "invalid block",
+			Detail:   fmt.Sprintf("block has %d labels but required %d", len(block.Labels), n),
+			Subject:  block.TypeRange.Ptr(),
+			Context:  block.DefRange.Ptr(),
+		})
 	}
 
 	return diags

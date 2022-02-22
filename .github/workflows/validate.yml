@@ -1,6 +1,6 @@
 name: validate
 
-# NOTE  READ ME, Seriously, READ ME NOTE
+# NOTE  ** READ ME **  NOTE
 # This workflow is intended to be imported and called by other workflows.
 # As such, there are many important things that you need to know if you're modifying
 # this file.
@@ -16,7 +16,6 @@ name: validate
 # to pass in the secrets.
 
 on:
-   # NOTE: if you are making changes to this file, you will need to temporarily update the
   workflow_call:
     inputs:
       artifact-name:

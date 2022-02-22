@@ -28,7 +28,7 @@ scenario "test" {
 
   step "bar" {
     module = module.bar
-   }
+  }
 
   step "fooover" {
     module = module.foo

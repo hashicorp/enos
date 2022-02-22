@@ -13,6 +13,7 @@ import (
 var scenarioStepSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
 		{Name: "module", Required: true},
+		{Name: "providers", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: "variables"},
@@ -21,8 +22,9 @@ var scenarioStepSchema = &hcl.BodySchema{
 
 // ScenarioStep is a step in an Enos scenario
 type ScenarioStep struct {
-	Name   string
-	Module *Module
+	Name      string
+	Module    *Module
+	Providers map[string]*Provider
 }
 
 // NewScenarioStep returns a new Scenario step
@@ -61,6 +63,13 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 
 	// Validate that our module references an existing module in the eval context.
 	moduleVal, moreDiags := ss.validateModuleAttributeReference(moduleAttr, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Handle our named providers, if any
+	moreDiags = ss.decodeAndValidateProvidersAttribute(content, ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
@@ -277,6 +286,117 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 	}
 
 	return moduleVal, diags
+}
+
+// decodeAndValidateProvidersAttribute decodess the providers attribute
+// from the content and validates that each sub-attribute references a defined
+// provider.
+func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	providers, ok := content.Attributes["providers"]
+	if !ok {
+		return diags
+	}
+
+	ss.Providers = map[string]*Provider{}
+
+	providersVal, moreDiags := providers.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	if providersVal.IsNull() || !providersVal.IsWhollyKnown() || !providersVal.CanIterateElements() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "providers value must be a known object",
+			Subject:  providers.Expr.Range().Ptr(),
+			Context:  providers.Range.Ptr(),
+		})
+	}
+
+	// Get our defined providers from the eval context
+	definedProviders, err := findEvalContextVariable("provider", ctx)
+	if err != nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "provider value has not been defined",
+			Detail:   err.Error(),
+			Subject:  providers.Expr.Range().Ptr(),
+			Context:  providers.Range.Ptr(),
+		})
+	}
+
+	// Unroll them so we can look up our provider values by type and alias
+	unrolled := map[string]map[string]cty.Value{}
+	if definedProviders.IsNull() || !definedProviders.IsWhollyKnown() || !definedProviders.CanIterateElements() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "cannot set provider as no providers have been defined",
+			Subject:  providers.Expr.Range().Ptr(),
+			Context:  providers.Range.Ptr(),
+		})
+	}
+	for pType, pVals := range definedProviders.AsValueMap() {
+		aliases := map[string]cty.Value{}
+		for alias, aliasV := range pVals.AsValueMap() {
+			aliases[alias] = aliasV
+		}
+		unrolled[pType] = aliases
+	}
+
+	// For each defined provider, make sure a matching instance is defined and
+	// matches
+	for providerImportName, providerVal := range providersVal.AsValueMap() {
+		provider := NewProvider()
+		err := provider.FromCtyValue(providerVal)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("unable to unmarshal provider value for %s", providerImportName),
+				Detail:   err.Error(),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+			continue
+		}
+
+		types, ok := unrolled[provider.Type]
+		if !ok {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("provider type %s is not defined", provider.Type),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+			continue
+		}
+
+		alias, ok := types[provider.Alias]
+		if !ok {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("alias %s for provider type %s is not defined", provider.Alias, provider.Type),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+			continue
+		}
+
+		if providerVal.Equals(alias) != cty.True {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "provider arguments don't match defined provider",
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+		}
+
+		ss.Providers[providerImportName] = provider
+	}
+
+	return diags
 }
 
 func (ss *ScenarioStep) copyModuleAttributes(module cty.Value) {

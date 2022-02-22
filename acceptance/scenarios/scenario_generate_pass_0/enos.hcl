@@ -1,3 +1,10 @@
+terraform_cli "debug" {
+  env = {
+    TF_LOG_CORE     = "off"
+    TF_LOG_PROVIDER = "debug"
+  }
+}
+
 module "foo" {
   source = "./modules/foo"
 
@@ -11,16 +18,6 @@ module "bar" {
   input        = "bar"
   anotherinput = "anotherbar"
 }
-
-terraform_cli "debug" {
-  env = {
-    TF_LOG_CORE     = "off"
-    TF_LOG_PROVIDER = "debug"
-  }
-}
-
-// TODO: add 'transport' stanza when we can
-// NOTE: We can't add 'transport' stanzas until required_providers support exists
 
 scenario "test" {
   terraform_cli = terraform_cli.debug

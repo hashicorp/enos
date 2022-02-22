@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,31 +14,49 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 )
 
-func testDecodeHCL(t *testing.T, hcl []byte) (*FlightPlan, hcl.Diagnostics) {
+func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
+	if !diags.HasErrors() {
+		return nil
+	}
+	msg := &strings.Builder{}
+	writer := hcl.NewDiagnosticTextWriter(msg, files, 0, false)
+	err := writer.WriteDiagnostics(diags)
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, msg.String())
+	}
+
+	return fmt.Errorf(msg.String())
+}
+
+func testDecodeHCL(t *testing.T, hcl []byte) (*FlightPlan, error) {
+	t.Helper()
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
 	decoder, err := NewDecoder(WithDecoderBaseDir(cwd))
 	require.NoError(t, err)
 	diags := decoder.parseHCL(hcl, "decoder-test.hcl")
-	require.False(t, diags.HasErrors(), diags.Error())
-	return decoder.Decode()
+	require.False(t, diags.HasErrors(), testDiagsToError(decoder.Parser.Files(), diags))
+	fp, diags := decoder.Decode()
+	return fp, testDiagsToError(decoder.Parser.Files(), diags)
 }
 
 func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
+	t.Helper()
 	require.Len(t, fp.Modules, len(expected.Modules))
 	require.Len(t, fp.Scenarios, len(expected.Scenarios))
+	require.Len(t, fp.Providers, len(expected.Providers))
+
+	if expected.TerraformSettings != nil {
+		require.Len(t, fp.TerraformSettings, len(expected.TerraformSettings))
+		for i := range expected.TerraformSettings {
+			require.EqualValues(t, expected.TerraformSettings[i], fp.TerraformSettings[i])
+		}
+	}
 
 	if expected.TerraformCLIs != nil {
 		require.Len(t, fp.TerraformCLIs, len(expected.TerraformCLIs))
 		for i := range expected.TerraformCLIs {
 			require.EqualValues(t, expected.TerraformCLIs[i], fp.TerraformCLIs[i])
-		}
-	}
-
-	if expected.Transports != nil {
-		require.Len(t, fp.Transports, len(expected.Transports))
-		for i := range expected.Transports {
-			require.EqualValues(t, expected.Transports[i], fp.Transports[i])
 		}
 	}
 
@@ -53,13 +72,18 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	for i := range expected.Scenarios {
 		require.EqualValues(t, expected.Scenarios[i].Name, fp.Scenarios[i].Name)
 		require.EqualValues(t, expected.Scenarios[i].Steps, fp.Scenarios[i].Steps)
-		require.EqualValues(t, expected.Scenarios[i].Transport, fp.Scenarios[i].Transport)
+		require.EqualValues(t, expected.Scenarios[i].TerraformSetting, fp.Scenarios[i].TerraformSetting)
 		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
+	}
+
+	for importName, provider := range expected.Providers {
+		require.EqualValues(t, expected.Providers[importName], provider)
 	}
 }
 
 // Test_Decoder_parseDir tests loading enos configuration from a directory
 func Test_Decoder_parseDir(t *testing.T) {
+	t.Helper()
 	t.Parallel()
 
 	newDecoder := func(dir string) *Decoder {
@@ -99,6 +123,7 @@ func Test_Decoder_parseDir(t *testing.T) {
 
 // Test_Decode_FlightPlan tests decoding a flight plan
 func Test_Decode_FlightPlan(t *testing.T) {
+	t.Helper()
 	t.Parallel()
 
 	modulePath, err := filepath.Abs("./tests/simple_module")
@@ -189,12 +214,12 @@ scenario "backend" {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			fp, diags := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
-				require.True(t, diags.HasErrors(), diags.Error())
+				require.Error(t, err)
 				return
 			}
-			require.False(t, diags.HasErrors(), diags.Error())
+			require.NoError(t, err)
 			testRequireEqualFP(t, fp, test.expected)
 		})
 	}

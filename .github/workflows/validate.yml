@@ -1,9 +1,21 @@
 name: validate
 
+# NOTE  ** READ ME **  NOTE
+# This workflow is intended to be imported and called by other workflows.
+# As such, there are many important things that you need to know if you're modifying
+# this file.
+#
+# 1) To get a PR to pull in changes from this file you need to temporarily update
+# the branch reference in the `validate` workflow caller in pr_build.yml to your current
+# PR branch. Otherwise, it will look for the current version of validate.yml on main.
+# After the PR goes green you'll need to merge a follow-up PR to run off of main.
+#
+# 2) If you need a secret in this file you need to pass them from the caller
+# workflow into this. You do this by configuring secrets as if they are input
+# down below in the secrets stanza. You then need to update every calling workflow
+# to pass in the secrets.
+
 on:
-   # Note: if you are making changes to this file, you will need to temporarily update the
-   # branch reference in the `validate` workflow caller in pr_build.yml to your current
-   # PR branch. Otherwise, it will look for the current version of validate.yml on main.
   workflow_call:
     inputs:
       artifact-name:
@@ -13,6 +25,8 @@ on:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
+        required: true
+      ENOS_CI_SSH_PRIVATE_KEY:
         required: true
 
 jobs:
@@ -65,4 +79,4 @@ jobs:
         run: |
           ls -l ${{inputs.artifact-name }}
           unzip ${{inputs.artifact-name }} -d dist
-          make test-acc
+          make test-acc-ext

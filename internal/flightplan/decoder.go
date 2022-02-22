@@ -10,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
 
+	"github.com/hashicorp/enos/internal/flightplan/funcs"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
@@ -120,9 +121,14 @@ func (f *Decoder) mergedBody() hcl.Body {
 
 func (f *Decoder) baseEvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
-		Variables: map[string]cty.Value{},
+		Variables: map[string]cty.Value{
+			"path": cty.ObjectVal(map[string]cty.Value{
+				"root": cty.StringVal(f.dir),
+			}),
+		},
 		Functions: map[string]function.Function{
 			"absolute":               stdlib.AbsoluteFunc,
+			"abspath":                funcs.AbsPathFunc,
 			"add":                    stdlib.AddFunc,
 			"and":                    stdlib.AndFunc,
 			"byteslen":               stdlib.BytesLenFunc,
@@ -153,6 +159,7 @@ func (f *Decoder) baseEvalContext() *hcl.EvalContext {
 			"jsondecode":             stdlib.JSONDecodeFunc,
 			"jsonencode":             stdlib.JSONEncodeFunc,
 			"join":                   stdlib.JoinFunc,
+			"joinpath":               funcs.JoinPathFunc,
 			"keys":                   stdlib.KeysFunc,
 			"length":                 stdlib.LengthFunc,
 			"lessthan":               stdlib.LessThanFunc,

@@ -71,10 +71,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup bob CLI
-        uses: hashicorp/action-setup-enos@v1.12
+        uses: hashicorp/action-setup-enos@v1.16
         with:
           github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
       - name: Get bob CLI Version
-+        run: bob --help
+        run: |
+          bob version
+          bob --help

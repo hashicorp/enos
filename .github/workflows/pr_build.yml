@@ -83,5 +83,5 @@ jobs:
           github-token: ${{ secrets.TEST_JGH_TOKEN }}
       - name: Get bob CLI Version
         run: |
-          bob version
+          bob --version
           bob --help

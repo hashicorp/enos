@@ -69,13 +69,18 @@ jobs:
   test-bob-cli:
     name: Test Setup bob CLI
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: 'github.com/hashicorp/*'
+      GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check GH status
+        run: gh auth status
       - name: Setup bob CLI
         uses: hashicorp/action-setup-enos@v1.16
         with:
           github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
-      - name: Checkout
-        uses: actions/checkout@v2
       - name: Get bob CLI Version
         run: |
           bob version

@@ -78,7 +78,7 @@ jobs:
       - name: Check GH status
         run: gh auth status
       - name: Setup bob CLI
-        uses: hashicorp/action-setup-enos@v1.16
+        uses: hashicorp/action-setup-enos@v1.17
         with:
           github-token: ${{ secrets.TEST_JGH_TOKEN }}
       - name: Get bob CLI Version

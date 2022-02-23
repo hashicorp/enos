@@ -1,0 +1,65 @@
+name: create-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        required: true
+        type: string
+        description: The git SHA of the artifacts in Artifactory to be used in this release
+      version:
+        required: true
+        type: string
+        description: The version number to be used in this release (e.g. 1.0.0)
+      channel:
+        required: true
+        type: choice
+        description: The Artifactory channel to grab the release assets from
+        default: stable
+        options:
+        - dev
+        - stable
+        - staging
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: 'github.com/hashicorp/*'
+      GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
+      PRODUCT: ${{ github.event.repository.name }}
+      PRODUCT_VERSION: ${{ github.event.inputs.version }}
+      TAG: "v${{ github.event.inputs.version }}"
+      SHA: ${{ github.event.inputs.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Set up bob CLI
+      - name: Setup bob CLI
+        uses: hashicorp/action-setup-bob@v1
+        with:
+          github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+
+      # Use bob to download the correct repo/version/sha. `bob download artifactory` default output is to .bob/artifacts
+      - name: Download artifacts
+        run: |
+          bob download artifactory \
+          -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
+          -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
+          -channel stable \
+          -commit=${{ env.SHA }} \
+          -product-name=${{env.PRODUCT }} \
+          -product-version=${{ env.PRODUCT_VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+
+      # Confirm that artifacts have been downloaded
+      - name: Confirm
+        run: ls .bob/artifacts
+
+      # Create the release
+      - name: Create release
+        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes ./.bob/artifacts/*.zip

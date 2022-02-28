@@ -76,7 +76,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup bob CLI
-        uses: hashicorp/action-setup-enos@v1.19
+        uses: hashicorp/action-setup-bob@v1
         with:
           github-token: ${{ secrets.TEST_JGH_TOKEN }}
       - name: Get bob CLI Version

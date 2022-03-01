@@ -70,14 +70,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
-      GITHUB_TOKEN: ${{ secrets.TEST_JGH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup bob CLI
         uses: hashicorp/action-setup-bob@v1
         with:
-          github-token: ${{ secrets.TEST_JGH_TOKEN }}
+          github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
       - name: Get bob CLI Version
         run: |
           bob --version

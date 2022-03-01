@@ -1,6 +1,8 @@
 package flightplan
 
 import (
+	"fmt"
+
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
@@ -133,10 +135,10 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	return diags
 }
 
-// evalCtx returns the module contents as an object cty.Value. We can then
+// ToCtyValue returns the module contents as an object cty.Value. We can then
 // embed this into the Variables section of the eval context to allowed method
 // style expression references.
-func (m *Module) evalCtx() cty.Value {
+func (m *Module) ToCtyValue() cty.Value {
 	vals := map[string]cty.Value{
 		"source": cty.StringVal(m.Source),
 		"name":   cty.StringVal(m.Name),
@@ -150,4 +152,44 @@ func (m *Module) evalCtx() cty.Value {
 	}
 
 	return cty.ObjectVal(vals)
+}
+
+// FromCtyValue takes a cty.Value and unmarshals it onto itself. It expects
+// a valid object created from ToCtyValue()
+func (m *Module) FromCtyValue(val cty.Value) error {
+	if val.IsNull() {
+		return nil
+	}
+
+	if !val.IsWhollyKnown() {
+		return fmt.Errorf("cannot unmarshal unknown value")
+	}
+
+	if !val.CanIterateElements() {
+		return fmt.Errorf("value must be an object")
+	}
+
+	for key, val := range val.AsValueMap() {
+		switch key {
+		case "source":
+			if val.Type() != cty.String {
+				return fmt.Errorf("source must be a string")
+			}
+			m.Source = val.AsString()
+		case "Name":
+			if val.Type() != cty.String {
+				return fmt.Errorf("name must be a string ")
+			}
+			m.Name = val.AsString()
+		case "Version":
+			if val.Type() != cty.String {
+				return fmt.Errorf("version must be a string ")
+			}
+			m.Version = val.AsString()
+		default:
+			m.Attrs[key] = val
+		}
+	}
+
+	return nil
 }

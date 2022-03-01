@@ -192,7 +192,7 @@ scenario "test" {
 									Name:   "test",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("s3"),
+										"driver": testMakeStepVarValue(cty.StringVal("s3")),
 									},
 								},
 								Providers: map[string]*Provider{
@@ -330,7 +330,7 @@ scenario "copy_to_eu" {
 									Name:   "copy",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("s3"),
+										"driver": testMakeStepVarValue(cty.StringVal("s3")),
 									},
 								},
 								Providers: map[string]*Provider{
@@ -379,7 +379,7 @@ scenario "copy_to_eu" {
 									Name:   "copy",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("s3"),
+										"driver": testMakeStepVarValue(cty.StringVal("s3")),
 									},
 								},
 								Providers: map[string]*Provider{

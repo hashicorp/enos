@@ -312,7 +312,7 @@ scenario "debug" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": StepVariableVal(&StepVariable{Value: cty.StringVal("postgres")}),
 									},
 								},
 							},
@@ -328,7 +328,7 @@ scenario "debug" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": StepVariableVal(&StepVariable{Value: cty.StringVal("postgres")}),
 									},
 								},
 							},

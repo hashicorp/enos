@@ -53,56 +53,54 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 
 	s.Name = block.Labels[0]
 
-	// Decode all of our blocks. Make sure that scenario has at least one
-	// step.
-	foundSteps := map[string]struct{}{}
-	for _, childBlock := range content.Blocks {
-		switch childBlock.Type {
-		case blockTypeScenarioStep:
-			if _, dupeStep := foundSteps[childBlock.Labels[0]]; dupeStep {
-				diags = diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "redeclared step in scenario",
-					Detail:   fmt.Sprintf("a step with name %s has already been declared", childBlock.Labels[0]),
-					Subject:  childBlock.TypeRange.Ptr(),
-					Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
-				})
-				continue
-			}
-
-			moreDiags = verifyBlockLabelsAreValidIdentifiers(childBlock)
-			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
-				continue
-			}
-
-			step := NewScenarioStep()
-			moreDiags = step.decode(childBlock, ctx)
-			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
-				continue
-			}
-
-			foundSteps[step.Name] = struct{}{}
-			s.Steps = append(s.Steps, step)
-		default:
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "unknown block in scenario",
-				Detail:   fmt.Sprintf(`unable to parse unknown block "%s" in scenario`, childBlock.Type),
-				Subject:  childBlock.TypeRange.Ptr(),
-				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
-			})
-		}
-	}
-
-	if len(foundSteps) == 0 {
+	// Make sure that scenario has at least one step.
+	if len(content.Blocks.OfType(blockTypeScenarioStep)) < 1 {
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "missing required step block",
 			Detail:   "scenarios require one or more step blocks",
 			Subject:  block.Body.MissingItemRange().Ptr(),
 		})
+	}
+
+	// Decode all of our blocks.
+	foundSteps := map[string]struct{}{}
+	for _, childBlock := range content.Blocks.OfType(blockTypeScenarioStep) {
+		if _, dupeStep := foundSteps[childBlock.Labels[0]]; dupeStep {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "redeclared step in scenario",
+				Detail:   fmt.Sprintf("a step with name %s has already been declared", childBlock.Labels[0]),
+				Subject:  childBlock.TypeRange.Ptr(),
+				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
+			})
+			continue
+		}
+
+		moreDiags = verifyBlockLabelsAreValidIdentifiers(childBlock)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		step := NewScenarioStep()
+		moreDiags = step.decode(childBlock, ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		// update the eval context after each step is decoded. This way we can
+		// make previously defined step's variables and module references available
+		// to subsequent steps.
+		moreDiags = step.insertIntoCtx(ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		foundSteps[step.Name] = struct{}{}
+		s.Steps = append(s.Steps, step)
 	}
 
 	// Decode the scenario terraform_cli reference

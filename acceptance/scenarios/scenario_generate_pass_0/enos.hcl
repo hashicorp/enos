@@ -19,6 +19,14 @@ module "bar" {
   anotherinput = "anotherbar"
 }
 
+module "fooref" {
+  source = "./modules/foo"
+}
+
+module "barref" {
+  source = "./modules/bar"
+}
+
 scenario "test" {
   terraform_cli = terraform_cli.debug
 
@@ -44,6 +52,19 @@ scenario "test" {
 
    variables {
       anotherinput = "anotherbarover"
+    }
+  }
+
+  step "fooref" {
+    module = module.fooref
+  }
+
+  step "barref" {
+    module = module.barref
+
+   variables {
+      input        = step.fooref.input
+      anotherinput = step.fooref.anotherinput
     }
   }
 }

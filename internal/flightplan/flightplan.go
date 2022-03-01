@@ -261,7 +261,7 @@ func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
 		}
 
 		fp.Modules = append(fp.Modules, module)
-		mods[module.Name] = module.evalCtx()
+		mods[module.Name] = module.ToCtyValue()
 	}
 
 	ctx.Variables["module"] = cty.ObjectVal(mods)

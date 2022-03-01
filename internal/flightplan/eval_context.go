@@ -8,6 +8,19 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 )
 
+type errNotDefinedInCtx struct {
+	Name string
+	Err  error
+}
+
+func (e *errNotDefinedInCtx) Error() string {
+	return fmt.Sprintf("an eval context variable with name %s has not been defined", e.Name)
+}
+
+func (e *errNotDefinedInCtx) Unwrap() error {
+	return e.Err
+}
+
 func findEvalContextVariable(name string, baseCtx *hcl.EvalContext) (cty.Value, error) {
 	var val cty.Value
 
@@ -27,5 +40,5 @@ func findEvalContextVariable(name string, baseCtx *hcl.EvalContext) (cty.Value, 
 		}
 	}
 
-	return val, fmt.Errorf("an eval context variable with name %s has not been defined", name)
+	return val, &errNotDefinedInCtx{Name: name}
 }

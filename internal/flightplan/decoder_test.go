@@ -71,13 +71,61 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 
 	for i := range expected.Scenarios {
 		require.EqualValues(t, expected.Scenarios[i].Name, fp.Scenarios[i].Name)
-		require.EqualValues(t, expected.Scenarios[i].Steps, fp.Scenarios[i].Steps)
 		require.EqualValues(t, expected.Scenarios[i].TerraformSetting, fp.Scenarios[i].TerraformSetting)
 		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
+
+		require.Len(t, expected.Scenarios[i].Steps, len(fp.Scenarios[i].Steps))
+		for is := range expected.Scenarios[i].Steps {
+			require.EqualValues(t, expected.Scenarios[i].Steps[is].Name, fp.Scenarios[i].Steps[is].Name)
+			require.EqualValues(t, expected.Scenarios[i].Steps[is].Providers, fp.Scenarios[i].Steps[is].Providers)
+			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Name, fp.Scenarios[i].Steps[is].Module.Name)
+			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Source, fp.Scenarios[i].Steps[is].Module.Source)
+			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Version, fp.Scenarios[i].Steps[is].Module.Version)
+
+			for isa := range expected.Scenarios[i].Steps[is].Module.Attrs {
+				eAttr := expected.Scenarios[i].Steps[is].Module.Attrs[isa]
+				aAttr := fp.Scenarios[i].Steps[is].Module.Attrs[isa]
+
+				require.True(t, eAttr.Type().Equals(aAttr.Type()))
+				if !eAttr.IsNull() {
+					testMostlyEqualStepVar(t, eAttr, aAttr)
+				}
+			}
+		}
 	}
 
 	for importName, provider := range expected.Providers {
 		require.EqualValues(t, expected.Providers[importName], provider)
+	}
+}
+
+// Scenario steps vars may have complicated values due to possibly embedded
+// hcl.Traversal carrying lots of hcl.Range metadata and the like. Rather than
+// trying to mock all of that data when testing so we can do true deep matching,
+// we'll instead only check for attribute values that we care about.
+func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
+	t.Helper()
+
+	eVal, diags := StepVariableFromVal(expected)
+	require.False(t, diags.HasErrors(), diags.Error())
+	aVal, diags := StepVariableFromVal(got)
+	require.False(t, diags.HasErrors(), diags.Error())
+	require.EqualValues(t, eVal.Value, aVal.Value)
+	require.Len(t, eVal.Traversal, len(aVal.Traversal))
+	for i := range eVal.Traversal {
+		if i == 0 {
+			eAttr, ok := eVal.Traversal[i].(hcl.TraverseRoot)
+			require.True(t, ok)
+			aAttr, ok := aVal.Traversal[i].(hcl.TraverseRoot)
+			require.True(t, ok)
+			require.EqualValues(t, eAttr.Name, aAttr.Name)
+			continue
+		}
+		eAttr, ok := eVal.Traversal[i].(hcl.TraverseAttr)
+		require.True(t, ok)
+		aAttr, ok := aVal.Traversal[i].(hcl.TraverseAttr)
+		require.True(t, ok)
+		require.EqualValues(t, eAttr.Name, aAttr.Name)
 	}
 }
 

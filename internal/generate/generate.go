@@ -400,7 +400,19 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 			body.AppendNewline()
 		}
 		for k, v := range step.Module.Attrs {
-			body.SetAttributeValue(k, v)
+			stepVar, diags := flightplan.StepVariableFromVal(v)
+			if diags.HasErrors() {
+				return fmt.Errorf(diags.Error())
+			}
+
+			// Use the absolute value
+			if stepVar.Value != cty.NilVal {
+				body.SetAttributeValue(k, stepVar.Value)
+				continue
+			}
+
+			// It's a module reference
+			body.SetAttributeTraversal(k, stepVar.Traversal)
 		}
 
 		if i+1 < len(g.Scenario.Steps) {

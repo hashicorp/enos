@@ -343,7 +343,7 @@ scenario "debug" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},
@@ -396,7 +396,7 @@ scenario "debug" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},
@@ -543,7 +543,7 @@ scenario "debug" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},
@@ -590,7 +590,7 @@ scenario "debug" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},
@@ -740,7 +740,7 @@ scenario "experiments" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},
@@ -778,7 +778,7 @@ scenario "experiments" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},

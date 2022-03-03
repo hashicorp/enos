@@ -1,12 +1,14 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
 	hcl "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hcldec"
 )
 
 // scenarioStepSchema is our knowable scenario step schema.
@@ -414,7 +416,9 @@ func (ss *ScenarioStep) copyModuleAttributes(module cty.Value) {
 			continue
 		}
 
-		ss.Module.Attrs[name] = value
+		ss.Module.Attrs[name] = StepVariableVal(&StepVariable{
+			Value: value,
+		})
 	}
 }
 
@@ -422,6 +426,13 @@ func (ss *ScenarioStep) decodeVariables(varBlocks hcl.Blocks, ctx *hcl.EvalConte
 	var diags hcl.Diagnostics
 
 	for _, varBlock := range varBlocks {
+		// Step variables are decoded into special StepVariableType's because
+		// they can be either known values or traversal references to previous
+		// step outputs, which unknown to enos since it is not aware of the Terraform
+		// module schema. Here, we will dynamically compose and HCL specification
+		// for each variable in the variables block and then decode using our
+		// special variable type.
+		spec := hcldec.ObjectSpec{}
 		attrs, moreDiags := varBlock.Body.JustAttributes()
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
@@ -435,12 +446,56 @@ func (ss *ScenarioStep) decodeVariables(varBlocks hcl.Blocks, ctx *hcl.EvalConte
 		}
 
 		for _, attr := range attrs {
-			ss.Module.Attrs[attr.Name], moreDiags = attr.Expr.Value(ctx)
-			diags = diags.Extend(moreDiags)
+			spec[attr.Name] = &hcldec.AttrSpec{
+				Name:     attr.Name,
+				Type:     StepVariableType,
+				Required: true,
+			}
 		}
 
-		diags = diags.Extend(verifyNoBlockInAttrOnlySchema(varBlock.Body))
+		val, moreDiags := hcldec.Decode(varBlock.Body, spec, ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		for attrName, attrVal := range val.AsValueMap() {
+			ss.Module.Attrs[attrName] = attrVal
+		}
 	}
+
+	return diags
+}
+
+// insertIntoCtx takes a pointer to an eval context and adds the step into
+// it. If no "step" variable is present it will handle creating it.
+func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	var notDefined *errNotDefinedInCtx
+
+	steps := map[string]cty.Value{}
+	stepVal, err := findEvalContextVariable("step", ctx)
+	if err != nil && !errors.As(err, &notDefined) {
+		// This should never happen but lets make sure that it's not a different
+		// error than we expect.
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  `failed to search for "step" eval context`,
+			Detail:   err.Error(),
+		})
+	}
+	if err == nil {
+		steps = stepVal.AsValueMap()
+	}
+
+	steps[ss.Name] = cty.ObjectVal(ss.Module.Attrs)
+	if ctx.Variables == nil {
+		ctx.Variables = map[string]cty.Value{}
+	}
+	// NOTE: we're writing step values into out child context. If we ever need
+	// these values as outputs we'll have to make them available in parent
+	// contexts.
+	ctx.Variables["step"] = cty.ObjectVal(steps)
 
 	return diags
 }

@@ -37,7 +37,6 @@ scenario "backend" {
 }
 `, modulePath),
 		},
-
 		{
 			desc: "valid module reference",
 			hcl: fmt.Sprintf(`
@@ -126,7 +125,7 @@ scenario "basic" {
 									Name:   "backend",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"driver": cty.StringVal("postgres"),
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
 									},
 								},
 							},
@@ -136,7 +135,7 @@ scenario "basic" {
 									Name:   "frontend_blue",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"app_version": cty.StringVal("1.0.0"),
+										"app_version": testMakeStepVarValue(cty.StringVal("1.0.0")),
 									},
 								},
 							},
@@ -146,7 +145,7 @@ scenario "basic" {
 									Name:   "frontend_green",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"app_version": cty.StringVal("1.1.0"),
+										"app_version": testMakeStepVarValue(cty.StringVal("1.1.0")),
 									},
 								},
 							},
@@ -225,7 +224,7 @@ module "backend" {
 scenario "backend" {
   step "first" {
     module = module.backend
-    variables = {
+    variables {
       count = 1
     }
   }
@@ -242,7 +241,7 @@ module "backend" {
 
 scenario "backend" {
   step "first" {
-    variables = {
+    variables {
       for_each = toset(["1", "2"])
     }
     module = module.backend
@@ -264,7 +263,7 @@ module "frontend" {
 
 scenario "backend" {
   step "first" {
-    variables = {
+    variables {
       depends_on = module.backend
     }
     module = module.backend
@@ -290,6 +289,97 @@ scenario "backend" {
   }
 }
 `, modulePath),
+		},
+		{
+			desc: "step variables",
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+
+  oneattr = "oneattrval"
+}
+
+module "two" {
+  source = "%[1]s"
+
+  twoattr = "twoattrval"
+}
+
+scenario "step_vars" {
+  step "one" {
+    module = module.one
+
+	variables {
+      concrete = "oneconcrete"
+	}
+  }
+
+  step "two" {
+    module = module.two
+
+	variables {
+      concrete           = "twoconcrete"
+	  inherited_concrete = step.one.concrete
+	  reference          = step.one.reference
+	  oneattr            = step.one.oneattr
+	}
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "one",
+						Source: modulePath,
+						Attrs: map[string]cty.Value{
+							"oneattr": cty.StringVal("oneattrval"),
+						},
+					},
+					{
+						Name:   "two",
+						Source: modulePath,
+						Attrs: map[string]cty.Value{
+							"twoattr": cty.StringVal("twoattrval"),
+						},
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "step_vars",
+						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name: "one",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"oneattr":  testMakeStepVarValue(cty.StringVal("oneattrval")),
+										"concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
+									},
+								},
+							},
+							{
+								Name: "two",
+								Module: &Module{
+									Name:   "two",
+									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"twoattr":            testMakeStepVarValue(cty.StringVal("twoattrval")),
+										"concrete":           testMakeStepVarValue(cty.StringVal("twoconcrete")),
+										"inherited_concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
+										"reference":          testMakeStepVarTraversal("module", "one", "reference"),
+										"oneattr":            testMakeStepVarValue(cty.StringVal("oneattrval")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {

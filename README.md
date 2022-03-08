@@ -39,10 +39,17 @@ The `validate` workflow is a re-usable GitHub workflow that is called by `PR_bui
 
 ### PR Build Workflow
 
-The `PR_build` workflow is run when a PR is created against the `main` branch.  This workflow creates and uploads `linux/amd64` artifact. It then calls the `validate` workflow which downloads this artifact and runs Lint, Unit, and Acceptances tests on it. 
+The `PR_build` workflow is run when a PR is created against the `main` branch.  This workflow creates and uploads `linux/amd64` artifact. It then calls the `validate` workflow which downloads this artifact and runs Lint, Unit, and Acceptances tests on it. This workflow also verifies that at least one of the four designated `changelog/` labels has been applied to the PR, in order to facilitate automatic generation of release notes (see **Enos Release** section below for more details).
 
 ### Build Workflow
 The `build` workflow is run after PR merge to `main` and only if `version.go` is updated. The `build` workflow creates build artifacts for `Linux` and `Darwin` on `amd64` and `arm64` architectures. It also creates `rpm`, `deb` packages, and `Docker` images. All created artifacts are uploaded to GH workflow. It then calls the `validate` workflow which downloads the `linux/amd64` artifact and runs Lint, Unit, and Acceptance tests on it.
 
-### CRT Release
+### CRT Workflow
 The `ci.hcl` is responsible for configuring the CRT workflow orchestration app. The orchestration app will read this configuration and trigger common workflows from the CRT repo. These workflows are responsible for uploading the release artifacts to Artifactory, notarizing macOS binaries, signing binaries and packages with the appropriate HashiCorp certificates, security scanning, and binary verification. The `build` workflow is a required prerequisite as it is responsible for building the release artifacts and generating the required metadata.
+
+### Enos Release
+Enos is made available as a Github release, via the `create-release` workflow. This workflow is manually triggered via the Github UI. It requires three inputs: the git SHA of the artifacts in Artifactory to be used in this release; the version number to be used in this release; and the Artifactory channel to grab the release assets from. First, it downloads the release assets from Artifactory, which have been previously notarized, signed, scanned, and verified by CRT workflows. Then, it creates a Github release and uploads these artifacts as the release assets. It automatically generates release notes, which are organized into the following categories via the four designated `changelog/` labels. At least one of these labels must be applied to each PR.
+- **New Features 🎉** category includes PRs with the label `changelog/feat`
+- **Bug Fixes 🐛** category includes PRs with the label `changelog/bug`
+- **Other Changes 😎** category includes PRs with the label `changelog/other`
+- PRs with the label `changelog/none` will be excluded from release notes.

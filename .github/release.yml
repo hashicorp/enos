@@ -1,14 +1,14 @@
 changelog:
   exclude:
     labels:
-      - release-notes/exclude
+      - changelog/none
   categories:
     - title: New Features 🎉
       labels:
-        - release-notes/feature
+        - changelog/feat
     - title: Bug Fixes 🐛
       labels:
-        - release-notes/bugfix
+        - changelog/bug
     - title: Other Changes 😎
       labels:
-        - "*"
+        - changelog/other

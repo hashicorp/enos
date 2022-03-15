@@ -10,57 +10,117 @@ env:
   PKG_NAME: "enos"
 
 jobs:
-  build-artifact:
-    name: Build Linux Artifact
+  # build-artifact:
+  #   name: Build Linux Artifact
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       go: [1.17]
+  #       goos: [linux]
+  #       goarch: [amd64]
+  #     fail-fast: true
+  #   outputs:
+  #     artifact-name: ${{ steps.build.outputs.artifact-name }}
+  #   env:
+  #     GOPRIVATE: 'github.com/hashicorp/*'
+  #     TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+  #     GOOS: ${{ matrix.goos }}
+  #     GOARCH: ${{ matrix.goarch }}
+  #     CI: true
+  #   steps:
+  #     - name: Setup go
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: '^1.17.6'
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Get Product Version
+  #       id: get-product-version
+  #       run: |
+  #         make version
+  #         echo "::set-output name=product-version::$(make version)"
+  #     - name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+  #       id: build
+  #       run: |
+  #         mkdir dist out
+  #         make build-race
+  #         zip -r -j out/${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
+  #         echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
+  #     - name: Upload
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: ${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+  #         path: out/${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+  #         retention-days: 1
+
+  # validate-artifact:
+  #   name: Validate Artifact
+  #   needs: build-artifact
+  #   # Use local path to call reusable workflow validate.yml.
+  #   uses: ./.github/workflows/validate.yml
+  #   with:
+  #     artifact-name: ${{ needs.build-artifact.outputs.artifact-name }}
+  #   secrets:
+  #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #     ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}
+
+  create-release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: [1.17]
-        goos: [linux]
-        goarch: [amd64]
-      fail-fast: true
-    outputs:
-      artifact-name: ${{ steps.build.outputs.artifact-name }}
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
-      TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
-      GOOS: ${{ matrix.goos }}
-      GOARCH: ${{ matrix.goarch }}
-      CI: true
+      GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
+      # PRODUCT: ${{ github.event.repository.name }}
+      # PRODUCT_VERSION: ${{ github.event.inputs.version }}
+      # TAG: "v${{ github.event.inputs.version }}"
+      # SHA: ${{ github.event.inputs.sha }}
+      # PRE_RELEASE: ${{ github.event.inputs.pre_release }}
+      # TAG_SUFFIX: ${{ github.event.inputs.tag_suffix }}
+      PRODUCT: enos
+      PRODUCT_VERSION: 0.0.1
+      SHA: 125a772ab9150b9d2be4515a6661631a226b05a2
+      PRE_RELEASE: true
+      TAG_SUFFIX: "dev"
+      TAG: "v${{ env.PRODUCT_VERSION }}-${{ env.TAG_SUFFIX }}"
+
     steps:
-      - name: Setup go
-        uses: actions/setup-go@v2
-        with:
-          go-version: '^1.17.6'
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get Product Version
-        id: get-product-version
-        run: |
-          make version
-          echo "::set-output name=product-version::$(make version)"
-      - name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
-        id: build
-        run: |
-          mkdir dist out
-          make build-race
-          zip -r -j out/${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
-          echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
-          path: out/${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
-          retention-days: 1
 
-  validate-artifact:
-    name: Validate Artifact
-    needs: build-artifact
-    # Use local path to call reusable workflow validate.yml.
-    uses: ./.github/workflows/validate.yml
-    with:
-      artifact-name: ${{ needs.build-artifact.outputs.artifact-name }}
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}
+      # Set up bob CLI
+      - name: Setup bob CLI
+        uses: hashicorp/action-setup-bob@v1
+        with:
+          github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+
+      # Use bob to download the correct repo/version/sha. `bob download artifactory` default output is to .bob/artifacts
+      - name: Download artifacts
+        run: |
+          bob download artifactory \
+          -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
+          -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
+          -channel stable \
+          -commit=${{ env.SHA }} \
+          -product-name=${{env.PRODUCT }} \
+          -product-version=${{ env.PRODUCT_VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+
+      # Confirm that artifacts have been downloaded
+      - name: Confirm
+        run: |
+          ls .bob/artifacts
+          echo "env.PRE_RELEASE:" ${{ env.PRE_RELEASE }}
+          echo "env.TAG_SUFFIX:" ${{ env.TAG_SUFFIX }}
+          echo "env.TAG:" ${{ env.TAG }}
+
+      # Create a pre-release if pre-release has been selected on workflow trigger inputs
+      - name: Create pre-release
+        if: ${{ env.PRE_RELEASE }} == true
+        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes --prerelease --draft ./.bob/artifacts/*.zip
+
+      # Create a regular release if pre-release has not been selected on workflow trigger inputs
+      - name: Create release
+        if: $ {{ env.PRE_RELEASE }} == false
+        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes --draft ./.bob/artifacts/*.zip

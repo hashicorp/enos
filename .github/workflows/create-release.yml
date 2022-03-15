@@ -20,6 +20,10 @@ on:
         - dev
         - stable
         - staging
+      tag_suffix:
+        required: false
+        type: string
+        description: If you would like to add a tag suffix (e.g. v1.0.0-dev), enter the suffix here, including the hyphen (e.g. -dev)
 
 jobs:
   create-release:

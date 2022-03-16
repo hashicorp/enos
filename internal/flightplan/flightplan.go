@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	blockTypeVariable         = "variable"
 	blockTypeTerraformSetting = "terraform"
 	blockTypeTerraformCLI     = "terraform_cli"
 	blockTypeProvider         = "provider"
@@ -29,6 +30,7 @@ var flightPlanSchema = &hcl.BodySchema{
 		{Type: blockTypeProvider, LabelNames: []string{"type", "alias"}},
 		{Type: blockTypeScenario, LabelNames: []string{"name"}},
 		{Type: blockTypeModule, LabelNames: []string{"name"}},
+		{Type: blockTypeVariable, LabelNames: []string{"name"}},
 	},
 }
 
@@ -82,7 +84,7 @@ type FlightPlan struct {
 // continually expanding the evaluation context as more sub-sections are
 // decoded. It returns HCL diagnostics that are collected over the course of
 // decoding.
-func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[string]*hcl.File) hcl.Diagnostics {
+func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, fpFiles, varsFiles map[string]*hcl.File) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	if fp.BaseDir == "" {
@@ -99,10 +101,19 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[stri
 		}
 	}
 
-	fp.Files = files
+	// Create a "unified" body of all flightplan files to use for decoding
+	files := []*hcl.File{}
+	for _, file := range fpFiles {
+		files = append(files, file)
+	}
+	body := hcl.MergeFiles(files)
 
 	// Decode our top-level schema
 	fp.BodyContent, diags = body.Content(flightPlanSchema)
+
+	// Decode and validate our variables. They'll be added to eval context for
+	// access in later decoding.
+	diags = diags.Extend(fp.decodeVariables(ctx, varsFiles))
 
 	// Decode child blocks. Each child block decoder is responsible for
 	// extending the evaluation context.
@@ -111,6 +122,95 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, body hcl.Body, files map[stri
 	diags = diags.Extend(fp.decodeProviders(ctx))
 	diags = diags.Extend(fp.decodeModules(ctx))
 	diags = diags.Extend(fp.decodeScenarios(ctx))
+
+	return diags
+}
+
+// decodeVariables decodes "variable" blocks that are defined in the
+// top-level schema and sets/validates values that might have been passed
+// in via enos.vars.hcl files.
+func (fp *FlightPlan) decodeVariables(ctx *hcl.EvalContext, varFiles map[string]*hcl.File) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	values := map[string]*VariableValue{}
+	vars := map[string]cty.Value{}
+
+	// Create a unified body for our user supplied variables
+	files := []*hcl.File{}
+	for _, file := range varFiles {
+		files = append(files, file)
+	}
+	valuesBody := hcl.MergeFiles(files)
+
+	// Do a sanity check to make sure people are not accidentally defining
+	// "variable" blocks here instead of defining variable input values.
+	content, _, _ := valuesBody.PartialContent(&hcl.BodySchema{
+		Blocks: []hcl.BlockHeaderSchema{
+			{
+				Type:       "variable",
+				LabelNames: []string{"name"},
+			},
+		},
+	})
+	for _, block := range content.Blocks {
+		name := block.Labels[0]
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Variable declaration in enos.vars.hcl file",
+			Detail:   fmt.Sprintf("An enos.vars.hcl file is used to assign values to variables that have already been declared in enos.hcl files, not to declare new variables. To declare variable %q, place this block in one of your enos.hcl files, such as enos-variables.hcl.\n\nTo set a value for this variable in %s, use the definition syntax instead:\n    %s = <value>", name, block.TypeRange.Filename, name),
+			Subject:  &block.TypeRange,
+		})
+	}
+	if diags.HasErrors() {
+		return diags
+	}
+
+	diags = diags.Extend(verifyNoBlockInAttrOnlySchema(valuesBody))
+
+	// Get the values of each variable
+	vals, moreDiags := valuesBody.JustAttributes()
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	for _, val := range vals {
+		ctyVal, moreDiags := val.Expr.Value(nil) // variable values don't have access to anything
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		values[val.Name] = &VariableValue{
+			Value: ctyVal,
+			Range: val.Range,
+		}
+	}
+
+	// Now that we have our user-supplied variable values, we'll decode all of
+	// the "variable" blocks in the normal flightplan config and set the values
+	// as appropriate.
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeVariable) {
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		variable := NewVariable()
+		moreDiags = variable.decode(block, values)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		vars[variable.Name] = variable.Value()
+	}
+
+	// NOTE: At this point we're putting the variables into the eval context and
+	// forgetting about their parsed values. That means we're losing "sensitive"
+	// data and the like but that should be fine for now as we're not doing output
+	// yet.
+	ctx.Variables["var"] = cty.ObjectVal(vars)
 
 	return diags
 }

@@ -1,3 +1,23 @@
+variable "defaultinput" {
+  type = object({
+    value = string
+  })
+  default = {
+    value = "defaultval"
+  }
+  sensitive = false
+}
+
+variable "setinput" {
+  type = object({
+    value = string
+  })
+  default = {
+    value = "defaultval"
+  }
+  sensitive = false
+}
+
 terraform_cli "debug" {
   env = {
     TF_LOG_CORE     = "off"
@@ -8,7 +28,7 @@ terraform_cli "debug" {
 module "foo" {
   source = "./modules/foo"
 
-  input        = "foo"
+  input        = var.defaultinput.value
   anotherinput = ["anotherfoo"]
 }
 
@@ -51,7 +71,7 @@ scenario "test" {
     module = module.bar
 
    variables {
-      anotherinput = "anotherbarover"
+      anotherinput = var.setinput.value
     }
   }
 

@@ -33,3 +33,5 @@ terraform.rc
 /dist
 
 /acceptance/support/private_key.pem
+
+**/.enos/*

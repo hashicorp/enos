@@ -131,7 +131,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 	diags = diags.Extend(decoder.Parse())
 	if diags.HasErrors() {
 		return &flightplan.ErrDiagnostic{
-			Files: decoder.Parser.Files(),
+			Files: decoder.ParserFiles(),
 			Diags: diags,
 		}
 	}
@@ -146,7 +146,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 		}
 
 		return &flightplan.ErrDiagnostic{
-			Files: decoder.Parser.Files(),
+			Files: decoder.ParserFiles(),
 			Diags: diags,
 		}
 	}

@@ -54,10 +54,10 @@ locals {
     "rhel"   = data.aws_ami.rhel.id
   }
 
-  tags = {
+  tags = merge(var.tags, {
     Project = "Enos"
     Name    = "Enos CI Target"
-  }
+  })
 }
 
 data "enos_environment" "localhost" {

@@ -15,8 +15,11 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
-// FileNamePattern is what file names match valid enos configuration files
-var FileNamePattern = regexp.MustCompile(`^enos[-\w]*?\.hcl$`)
+// FlightPlanFileNamePattern is what file names match valid enos configuration files
+var (
+	FlightPlanFileNamePattern = regexp.MustCompile(`^enos[-\w]*?\.hcl$`)
+	VariablesNamePattern      = regexp.MustCompile(`^enos[-\w]*?\.vars\.hcl$`)
+)
 
 // DecoderOpt is a functional option for a new flight plan
 type DecoderOpt func(*Decoder) error
@@ -24,7 +27,8 @@ type DecoderOpt func(*Decoder) error
 // NewDecoder takes functional options and returns a new flight plan
 func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
 	d := &Decoder{
-		Parser: hclparse.NewParser(),
+		FPParser:   hclparse.NewParser(),
+		VarsParser: hclparse.NewParser(),
 	}
 
 	for _, opt := range opts {
@@ -49,23 +53,25 @@ func WithDecoderBaseDir(path string) DecoderOpt {
 // Decoder is our Enos flight plan, or, our representation of the HCL file(s)
 // an author has composed.
 type Decoder struct {
-	Parser *hclparse.Parser
-	dir    string
+	FPParser   *hclparse.Parser
+	VarsParser *hclparse.Parser
+	dir        string
 }
 
 // Parse locates enos configuration files and parses them.
-func (f *Decoder) Parse() hcl.Diagnostics {
+func (d *Decoder) Parse() hcl.Diagnostics {
 	// Parse the given directory, eventually we'll need to also look in the user
 	// configuration directory as well.
-	return f.parseDir(f.dir)
+	return d.parseDir(d.dir)
 }
 
-func (f *Decoder) parseDir(path string) hcl.Diagnostics {
+// parseDir walks the directory and parses any Enos HCL or variables files.
+func (d *Decoder) parseDir(path string) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	// We can ignore the error returned from Walk() because we're aggregating
 	// all errors and warnings into diags, which we'll handle afterwards.
-	_ = filepath.Walk(f.dir, func(path string, info fs.FileInfo, err error) error {
+	_ = filepath.Walk(d.dir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			d := hcl.Diagnostics{
 				{
@@ -82,19 +88,29 @@ func (f *Decoder) parseDir(path string) hcl.Diagnostics {
 		// We're only going a single level deep for now so we can ingnore directories
 		if info.IsDir() {
 			// Always skip the directory unless it's the root we're walking
-			if path != f.dir {
+			if path != d.dir {
 				return filepath.SkipDir
 			}
 		}
 
-		if !FileNamePattern.MatchString(info.Name()) {
+		if VariablesNamePattern.MatchString(info.Name()) {
+			_, pDiags := d.VarsParser.ParseHCLFile(path)
+			diags = diags.Extend(pDiags)
+			if pDiags.HasErrors() {
+				return pDiags
+			}
+
 			return nil
 		}
 
-		_, pDiags := f.Parser.ParseHCLFile(path)
-		diags = diags.Extend(pDiags)
-		if pDiags.HasErrors() {
-			return pDiags
+		if FlightPlanFileNamePattern.MatchString(info.Name()) {
+			_, pDiags := d.FPParser.ParseHCLFile(path)
+			diags = diags.Extend(pDiags)
+			if pDiags.HasErrors() {
+				return pDiags
+			}
+
+			return nil
 		}
 
 		return nil
@@ -103,27 +119,24 @@ func (f *Decoder) parseDir(path string) hcl.Diagnostics {
 	return diags
 }
 
-func (f *Decoder) parseHCL(src []byte, fname string) hcl.Diagnostics {
-	_, diags := f.Parser.ParseHCL(src, fname)
-
-	return diags
-}
-
-func (f *Decoder) mergedBody() hcl.Body {
-	files := []*hcl.File{}
-
-	for _, file := range f.Parser.Files() {
-		files = append(files, file)
+// ParserFiles returns combined parser files. These files can be used to add
+// context to diagnostics.
+func (d *Decoder) ParserFiles() map[string]*hcl.File {
+	files := d.FPParser.Files()
+	for name, file := range d.VarsParser.Files() {
+		files[name] = file
 	}
 
-	return hcl.MergeFiles(files)
+	return files
 }
 
-func (f *Decoder) baseEvalContext() *hcl.EvalContext {
+// baseEvalContext is the root eval context that we'll use during flight plan
+// decoding.
+func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 	return &hcl.EvalContext{
 		Variables: map[string]cty.Value{
 			"path": cty.ObjectVal(map[string]cty.Value{
-				"root": cty.StringVal(f.dir),
+				"root": cty.StringVal(d.dir),
 			}),
 		},
 		Functions: map[string]function.Function{
@@ -211,10 +224,10 @@ func (f *Decoder) baseEvalContext() *hcl.EvalContext {
 }
 
 // Decode decodes the HCL into a flight plan.
-func (f *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
+func (d *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
-	fp, err := NewFlightPlan(WithFlightPlanBaseDirectory(f.dir))
+	fp, err := NewFlightPlan(WithFlightPlanBaseDirectory(d.dir))
 	if err != nil {
 		return fp, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -223,7 +236,5 @@ func (f *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 		})
 	}
 
-	diags = diags.Extend(fp.Decode(f.baseEvalContext(), f.mergedBody(), f.Parser.Files()))
-
-	return fp, diags
+	return fp, diags.Extend(fp.Decode(d.baseEvalContext(), d.FPParser.Files(), d.VarsParser.Files()))
 }

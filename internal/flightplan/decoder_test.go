@@ -34,10 +34,10 @@ func testDecodeHCL(t *testing.T, hcl []byte) (*FlightPlan, error) {
 	require.NoError(t, err)
 	decoder, err := NewDecoder(WithDecoderBaseDir(cwd))
 	require.NoError(t, err)
-	diags := decoder.parseHCL(hcl, "decoder-test.hcl")
-	require.False(t, diags.HasErrors(), testDiagsToError(decoder.Parser.Files(), diags))
+	_, diags := decoder.FPParser.ParseHCL(hcl, "decoder-test.hcl")
+	require.False(t, diags.HasErrors(), testDiagsToError(decoder.ParserFiles(), diags))
 	fp, diags := decoder.Decode()
-	return fp, testDiagsToError(decoder.Parser.Files(), diags)
+	return fp, testDiagsToError(decoder.ParserFiles(), diags)
 }
 
 func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
@@ -157,15 +157,22 @@ func Test_Decoder_parseDir(t *testing.T) {
 	t.Run("no matching configuration files", func(t *testing.T) {
 		decoder := newDecoder("parse_dir_pass_no_matching_names")
 		diags := decoder.Parse()
-		require.False(t, diags.HasErrors())
-		require.Equal(t, 0, len(decoder.Parser.Files()))
+		require.False(t, diags.HasErrors(), diags.Error())
+		require.Equal(t, 0, len(decoder.ParserFiles()))
 	})
 
 	t.Run("two matching files", func(t *testing.T) {
 		decoder := newDecoder("parse_dir_pass_two_matching_names")
 		diags := decoder.Parse()
-		require.False(t, diags.HasErrors())
-		require.Equal(t, 2, len(decoder.Parser.Files()))
+		require.False(t, diags.HasErrors(), diags.Error())
+		require.Equal(t, 2, len(decoder.ParserFiles()))
+	})
+
+	t.Run("vars and configs", func(t *testing.T) {
+		decoder := newDecoder("parse_dir_pass_vars_and_config")
+		diags := decoder.Parse()
+		require.False(t, diags.HasErrors(), diags.Error())
+		require.Equal(t, 3, len(decoder.ParserFiles()))
 	})
 }
 

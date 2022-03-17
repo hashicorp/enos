@@ -1,3 +1,9 @@
+variable "tags" {
+  description = "Tags to add to AWS resources"
+  type        = map(string)
+  default     = null
+}
+
 terraform_cli "default" {
   provider_installation {
     network_mirror {
@@ -55,6 +61,7 @@ provider "enos" "rhel" {
 
 module "ec2_instance" {
   source = "./modules/target"
+  tags   = var.tags
 }
 
 scenario "e2e" {

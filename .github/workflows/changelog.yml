@@ -1,0 +1,18 @@
+name: Require Changelog Label
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled]
+    branches:
+      - main
+
+jobs:
+# If the PR does not have one of the four designated `changelog/` labels applied, this job will fail.
+  check-for-changelog-label:
+    runs-on: ubuntu-latest
+    if: (!contains(github.event.pull_request.labels.*.name, 'changelog/none')) && (!contains(github.event.pull_request.labels.*.name, 'changelog/bug')) && (!contains(github.event.pull_request.labels.*.name, 'changelog/feat')) && (!contains(github.event.pull_request.labels.*.name, 'changelog/other'))
+    steps:
+      - name: Changelog label not found
+        run: |
+          echo "ERROR: PR does not have changelog label. Please add one of the following labels to your PR: changelog/bug, changelog/feat, changelog/other, or changelog/none."
+          exit 1

@@ -10,7 +10,7 @@ on:
       version:
         required: true
         type: string
-        description: The version number to be used in this release (e.g. 1.0.0)
+        description: The version number to be used in this release (e.g. 0.0.1)
       channel:
         required: true
         type: choice
@@ -23,7 +23,12 @@ on:
       tag_suffix:
         required: false
         type: string
-        description: If you would like to add a tag suffix (e.g. v1.0.0-dev), enter the suffix here, including the hyphen (e.g. -dev)
+        description: To add a suffix to the release tag, enter the suffix here, including the hyphen. For example, version "0.0.1" with suffix "-dev" will create the release tag "v0.0.1-dev".
+      pre_release:
+        required: false
+        type: boolean
+        default: false
+        description: To mark this as a pre-release, check this box.
 
 jobs:
   create-release:
@@ -34,9 +39,11 @@ jobs:
       ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
       ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
       PRODUCT: ${{ github.event.repository.name }}
-      PRODUCT_VERSION: ${{ github.event.inputs.version }}
+      VERSION: ${{ github.event.inputs.version }}
       TAG: "v${{ github.event.inputs.version }}"
       SHA: ${{ github.event.inputs.sha }}
+      PRE_RELEASE: ${{ github.event.inputs.pre_release }}
+      TAG_SUFFIX: ${{ github.event.inputs.tag_suffix }}
 
     steps:
       - name: Checkout
@@ -57,13 +64,23 @@ jobs:
           -channel stable \
           -commit=${{ env.SHA }} \
           -product-name=${{env.PRODUCT }} \
-          -product-version=${{ env.PRODUCT_VERSION }} \
-          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+          -product-version=${{ env.VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
 
       # Confirm that artifacts have been downloaded
       - name: Confirm
         run: ls .bob/artifacts
 
-      # Create the release
+      # Create a pre-release if pre-release has been selected on workflow trigger inputs
+      - name: Create pre-release
+        if: ${{ env.PRE_RELEASE }} == true
+        run: |
+          export tag=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          gh release create $tag --target ${{ env.SHA }} --generate-notes --prerelease --draft ./.bob/artifacts/*.zip
+
+      # Create a regular release if pre-release has not been selected on workflow trigger inputs
       - name: Create release
-        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes ./.bob/artifacts/*.zip
+        if: $ {{ env.PRE_RELEASE }} == false
+        run: |
+          export tag=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          gh release create $tag --target ${{ env.SHA }} --generate-notes --draft ./.bob/artifacts/*.zip

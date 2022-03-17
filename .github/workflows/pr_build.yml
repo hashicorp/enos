@@ -5,11 +5,6 @@ on:
   pull_request:
     branches:
       - main
-    types:
-      - opened
-      - edited
-      - reopened
-      - labeled
 
 env:
   PKG_NAME: "enos"
@@ -78,17 +73,16 @@ jobs:
       ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
       ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
       # PRODUCT: ${{ github.event.repository.name }}
-      # PRODUCT_VERSION: ${{ github.event.inputs.version }}
+      # VERSION: ${{ github.event.inputs.version }}
       # TAG: "v${{ github.event.inputs.version }}"
       # SHA: ${{ github.event.inputs.sha }}
       # PRE_RELEASE: ${{ github.event.inputs.pre_release }}
       # TAG_SUFFIX: ${{ github.event.inputs.tag_suffix }}
       PRODUCT: enos
-      PRODUCT_VERSION: 0.0.1
+      VERSION: 0.0.1
       SHA: 125a772ab9150b9d2be4515a6661631a226b05a2
       PRE_RELEASE: true
-      TAG_SUFFIX: "dev"
-      TAG: "v${{ env.PRODUCT_VERSION }}-${{ env.TAG_SUFFIX }}"
+      TAG_SUFFIX: "-dev"
 
     steps:
       - name: Checkout
@@ -109,8 +103,8 @@ jobs:
           -channel stable \
           -commit=${{ env.SHA }} \
           -product-name=${{env.PRODUCT }} \
-          -product-version=${{ env.PRODUCT_VERSION }} \
-          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+          -product-version=${{ env.VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
 
       # Confirm that artifacts have been downloaded
       - name: Confirm
@@ -118,14 +112,17 @@ jobs:
           ls .bob/artifacts
           echo "env.PRE_RELEASE:" ${{ env.PRE_RELEASE }}
           echo "env.TAG_SUFFIX:" ${{ env.TAG_SUFFIX }}
-          echo "env.TAG:" ${{ env.TAG }}
 
       # Create a pre-release if pre-release has been selected on workflow trigger inputs
       - name: Create pre-release
         if: ${{ env.PRE_RELEASE }} == true
-        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes --prerelease --draft ./.bob/artifacts/*.zip
+        run: |
+          export tag=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          gh release create $tag --target ${{ env.SHA }} --generate-notes --prerelease --draft ./.bob/artifacts/*.zip
 
       # Create a regular release if pre-release has not been selected on workflow trigger inputs
       - name: Create release
-        if: $ {{ env.PRE_RELEASE }} == false
-        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes --draft ./.bob/artifacts/*.zip
+        if: ${{ env.PRE_RELEASE }} == false
+        run: |
+          export tag=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          gh release create $tag --target ${{ env.SHA }} --generate-notes --draft ./.bob/artifacts/*.zip

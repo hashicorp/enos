@@ -14,23 +14,37 @@ import (
 )
 
 const (
-	blockTypeVariable         = "variable"
-	blockTypeTerraformSetting = "terraform"
-	blockTypeTerraformCLI     = "terraform_cli"
-	blockTypeProvider         = "provider"
-	blockTypeModule           = "module"
-	blockTypeScenario         = "scenario"
-	blockTypeScenarioStep     = "step"
+	attrLabelNameDefault = "name"
+	attrLabelNameType    = "type"
+	attrLabelNameAlias   = "alias"
+
+	blockTypeBackend           = "backend"
+	blockTypeCloud             = "cloud"
+	blockTypeMatrixExclude     = "exclude"
+	blockTypeMatrixInclude     = "include"
+	blockTypeLocals            = "locals"
+	blockTypeMatrix            = "matrix"
+	blockTypeModule            = "module"
+	blockTypeProvider          = "provider"
+	blockTypeProviderMeta      = "provider_meta"
+	blockTypeRequiredProviders = "required_providers"
+	blockTypeScenario          = "scenario"
+	blockTypeScenarioStep      = "step"
+	blockTypeTerraformSetting  = "terraform"
+	blockTypeTerraformCLI      = "terraform_cli"
+	blockTypeValidation        = "validation"
+	blockTypeVariable          = "variable"
+	blockTypeVariables         = "variables"
 )
 
 var flightPlanSchema = &hcl.BodySchema{
 	Blocks: []hcl.BlockHeaderSchema{
-		{Type: blockTypeTerraformSetting, LabelNames: []string{"name"}},
-		{Type: blockTypeTerraformCLI, LabelNames: []string{"name"}},
-		{Type: blockTypeProvider, LabelNames: []string{"type", "alias"}},
-		{Type: blockTypeScenario, LabelNames: []string{"name"}},
-		{Type: blockTypeModule, LabelNames: []string{"name"}},
-		{Type: blockTypeVariable, LabelNames: []string{"name"}},
+		{Type: blockTypeTerraformSetting, LabelNames: []string{attrLabelNameDefault}},
+		{Type: blockTypeTerraformCLI, LabelNames: []string{attrLabelNameDefault}},
+		{Type: blockTypeProvider, LabelNames: []string{attrLabelNameType, attrLabelNameAlias}},
+		{Type: blockTypeScenario, LabelNames: []string{attrLabelNameDefault}},
+		{Type: blockTypeModule, LabelNames: []string{attrLabelNameDefault}},
+		{Type: blockTypeVariable, LabelNames: []string{attrLabelNameDefault}},
 	},
 }
 
@@ -146,8 +160,8 @@ func (fp *FlightPlan) decodeVariables(ctx *hcl.EvalContext, varFiles map[string]
 	content, _, _ := valuesBody.PartialContent(&hcl.BodySchema{
 		Blocks: []hcl.BlockHeaderSchema{
 			{
-				Type:       "variable",
-				LabelNames: []string{"name"},
+				Type:       blockTypeVariable,
+				LabelNames: []string{attrLabelNameDefault},
 			},
 		},
 	})
@@ -381,22 +395,261 @@ func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
 			continue
 		}
 
-		scenario := NewScenario()
-		moreDiags = scenario.decode(block, ctx.NewChild())
+		// Decode the matrix block and expand the scenarios.
+		matrix, moreDiags := decodeMatrix(ctx, block)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			continue
 		}
 
-		fp.Scenarios = append(fp.Scenarios, scenario)
+		if matrix == nil || len(matrix.Vectors) == 0 {
+			// Our scenario doesn't include a matrix
+			scenario := NewScenario()
+			moreDiags = scenario.decode(block, ctx.NewChild())
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				return diags
+			}
+			fp.Scenarios = append(fp.Scenarios, scenario)
+			continue
+		}
+
+		for _, vec := range matrix.Vectors {
+			// Create a scenario for every matrix variant combination
+			scenario := NewScenario()
+			scenario.Variants = vec
+			matrixCtx := ctx.NewChild()
+			matrixCtx.Variables = map[string]cty.Value{
+				"matrix": vec.CtyVal(),
+			}
+			moreDiags = scenario.decode(block, matrixCtx)
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				// Exit early rather than continuing to decode all scenarios.
+				// We do this to avoid spamming the output with identical
+				// diagnostics for common errors that will be found in all
+				// of the scenarios.
+				return diags
+			}
+
+			fp.Scenarios = append(fp.Scenarios, scenario)
+		}
 	}
 
-	// NOTE: when we add variants we'll need to also sort by variants.
 	sort.Slice(fp.Scenarios, func(i, j int) bool {
-		return fp.Scenarios[i].Name < fp.Scenarios[j].Name
+		return fp.Scenarios[i].String() < fp.Scenarios[j].String()
 	})
 
 	return diags
+}
+
+// decodeMatrix takes an eval context and scenario blocks and decodes only the
+// matrix block. It returns a unique matrix with vectors for all unique variant
+// value combinations.
+func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnostics) {
+	mContent, diags := block.Body.Content(scenarioSchema)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
+	mBlocks := mContent.Blocks.OfType(blockTypeMatrix)
+	switch len(mBlocks) {
+	case 0:
+		// We have no matrix block defined
+		return nil, diags
+	case 1:
+		// Continue
+		break
+	default:
+		return nil, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "scenarios has more than one matrix block defined",
+			Detail:   fmt.Sprintf("up to one matrix block is expected, found %d", len(mBlocks)),
+			Subject:  block.TypeRange.Ptr(),
+			Context:  block.DefRange.Ptr(),
+		})
+	}
+
+	// Let's decode our matrix block into a matrix
+	block = mBlocks[0]
+	matrix := NewMatrix()
+
+	decodeMatrixAttribute := func(block *hcl.Block, attr *hcl.Attribute) (Vector, hcl.Diagnostics) {
+		var diags hcl.Diagnostics
+		vec := Vector{}
+
+		val, moreDiags := attr.Expr.Value(ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			return vec, diags
+		}
+
+		if !val.CanIterateElements() {
+			return vec, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "matrix attribute value must be a list of strings",
+				Detail:   fmt.Sprintf("expected value for %s to be a list of strings, found %s", attr.Name, val.Type().GoString()),
+				Subject:  attr.NameRange.Ptr(),
+				Context:  block.DefRange.Ptr(),
+			})
+		}
+
+		if len(val.AsValueSlice()) == 0 {
+			return vec, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "matrix attribute values cannot be empty lists",
+				Subject:  attr.NameRange.Ptr(),
+				Context:  block.DefRange.Ptr(),
+			})
+		}
+
+		for _, elm := range val.AsValueSlice() {
+			if !elm.Type().Equals(cty.String) {
+				return vec, diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "matrix attribute value must be a list of strings",
+					Detail:   fmt.Sprintf("found element with type %s", elm.GoString()),
+					Subject:  attr.NameRange.Ptr(),
+					Context:  block.DefRange.Ptr(),
+				})
+			}
+
+			vec = append(vec, NewElement(attr.Name, elm.AsString()))
+		}
+
+		return vec, diags
+	}
+
+	// Each attribute in the matrix should be a variant name whose value must
+	// be a list of strings. Convert the value into a matrix vector and add it.
+	// We're ignoring the diagnostics JustAttributes() will return here because
+	// there might also be include and exclude blocks.
+	mAttrs, _ := block.Body.JustAttributes()
+	// Sort our attributes so that our variants elements are deterministic
+	sortedMattrs := []*hcl.Attribute{}
+	for _, attr := range mAttrs {
+		sortedMattrs = append(sortedMattrs, attr)
+	}
+	sort.Slice(sortedMattrs, func(i, j int) bool { return sortedMattrs[i].Name < sortedMattrs[j].Name })
+	for _, attr := range sortedMattrs {
+		vec, moreDiags := decodeMatrixAttribute(block, attr)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		matrix.AddVector(vec)
+	}
+
+	// Now that we have our basic variant vectors in our matrix, we need to combine
+	// all vectors into a product that matches all possible unique value combinations.
+	matrix = matrix.CombinedVectors().UniqueValues()
+
+	// Now we need to go through all of our blocks and process include and exclude
+	// directives. Since HCL allows us to use ordering we'll apply them in the
+	// order in which they're defined.
+	blockC, remain, moreDiags := block.Body.PartialContent(&hcl.BodySchema{
+		Blocks: []hcl.BlockHeaderSchema{
+			{Type: blockTypeMatrixInclude},
+			{Type: blockTypeMatrixExclude},
+		},
+	})
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return nil, diags
+	}
+	diags = diags.Extend(verifyBodyOnlyHasBlocksWithLabels(
+		remain, blockTypeMatrixInclude, blockTypeMatrixExclude,
+	))
+
+	for _, mBlock := range blockC.Blocks {
+		switch mBlock.Type {
+		case "include":
+			iMatrix := NewMatrix()
+			iAttrs, moreDiags := mBlock.Body.JustAttributes()
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				continue
+			}
+
+			// Sort our attributes so that our variants elements are deterministic
+			sortedIattrs := []*hcl.Attribute{}
+			for _, attr := range iAttrs {
+				sortedIattrs = append(sortedIattrs, attr)
+			}
+			sort.Slice(sortedIattrs, func(i, j int) bool { return sortedIattrs[i].Name < sortedIattrs[j].Name })
+
+			for _, attr := range sortedIattrs {
+				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
+				diags = diags.Extend(moreDiags)
+				if moreDiags.HasErrors() {
+					continue
+				}
+
+				iMatrix.AddVector(vec)
+			}
+
+			// Generate our possible include vectors and add them to our main
+			// matrix.
+			for _, vec := range iMatrix.CombinedVectors().UniqueValues().Vectors {
+				matrix.AddVector(vec)
+			}
+		case "exclude":
+			eMatrix := NewMatrix()
+			eAttrs, moreDiags := mBlock.Body.JustAttributes()
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				continue
+			}
+
+			// Sort our attributes so that our variants elements are deterministic
+			sortedEattrs := []*hcl.Attribute{}
+			for _, attr := range eAttrs {
+				sortedEattrs = append(sortedEattrs, attr)
+			}
+			sort.Slice(sortedEattrs, func(i, j int) bool { return sortedEattrs[i].Name < sortedEattrs[j].Name })
+
+			for _, attr := range sortedEattrs {
+				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
+				diags = diags.Extend(moreDiags)
+				if moreDiags.HasErrors() {
+					continue
+				}
+				eMatrix.AddVector(vec)
+			}
+
+			excludes := []*Exclude{}
+			for _, vec := range eMatrix.CombinedVectors().UniqueValues().Vectors {
+				ex, err := NewExclude(ExcludeMatch, vec)
+				if err != nil {
+					diags = diags.Append(&hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "unable to generate exclusion filter",
+						Detail:   err.Error(),
+						Subject:  hcl.RangeBetween(mBlock.LabelRanges[0], mBlock.LabelRanges[1]).Ptr(),
+						Context:  mBlock.DefRange.Ptr(),
+					})
+				}
+				excludes = append(excludes, ex)
+			}
+
+			// Update our matrix to a copy which has vectors which match our exclusions
+			matrix = matrix.Exclude(excludes...)
+		default:
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "invalid block in matrix",
+				Detail:   fmt.Sprintf("blocks of type include and exclude are supported in matrix blocks, found %s", mBlock.Type),
+				Subject:  mBlock.TypeRange.Ptr(),
+				Context:  mBlock.DefRange.Ptr(),
+			})
+			continue
+		}
+	}
+
+	// Return our matrix but do one final pass removing any duplicates that might
+	// have been introduced during our inclusions.
+	return matrix.UniqueValues(), diags
 }
 
 // filterTerraformMetaAttrs does our best to ensure that the given set of
@@ -448,6 +701,36 @@ func verifyNoBlockInAttrOnlySchema(in hcl.Body) hcl.Diagnostics {
 				Subject:  block.TypeRange.Ptr(),
 				Context:  hcl.RangeBetween(block.TypeRange, block.Range()).Ptr(),
 			})
+		}
+	}
+
+	return diags
+}
+
+// verifyBodyOnlyHasBlocksWithLabels is a hacky way to ensure that the given block
+// doesn't have any child blocks execept for those allowed.
+func verifyBodyOnlyHasBlocksWithLabels(in hcl.Body, allowed ...string) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	body, ok := in.(*hclsyntax.Body)
+	if ok && len(body.Blocks) != 0 {
+		for _, block := range body.Blocks {
+			isAllowed := false
+			for _, allowed := range allowed {
+				if block.Type == allowed {
+					isAllowed = true
+					break
+				}
+			}
+			if !isAllowed {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "unexpected block",
+					Detail:   fmt.Sprintf("block type %s is not allowed, must be one of %x", block.Type, allowed),
+					Subject:  block.TypeRange.Ptr(),
+					Context:  hcl.RangeBetween(block.TypeRange, block.Range()).Ptr(),
+				})
+			}
 		}
 	}
 

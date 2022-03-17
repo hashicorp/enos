@@ -18,7 +18,7 @@ func newScenarioRunCmd() *cobra.Command {
 		Short:             "Run Terraform modules from matching scenarios",
 		Long:              fmt.Sprintf("Run Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioRunCmd,
-		Args:              cobra.RangeArgs(0, 1),
+		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "don't wait for terraform state lock")

@@ -18,7 +18,7 @@ func newScenarioValidateCmd() *cobra.Command {
 		Short:             "Validates a Terraform module from matching scenarios",
 		Long:              fmt.Sprintf("Validates a Terraform module from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioValidateCmd,
-		Args:              cobra.RangeArgs(0, 1),
+		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 

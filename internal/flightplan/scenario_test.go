@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // Test_Decode_Scenario tests decoding a scenario
@@ -71,6 +72,52 @@ scenario "backend" {
   }
 }
 `, modulePath),
+		},
+		{
+			desc: "locals",
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+scenario "backend" {
+  locals {
+    mod = module.backend.name
+  }
+
+  step "first" {
+    module = local.mod
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "backend",
+						Source: modulePath,
+						Attrs:  map[string]cty.Value{},
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "backend",
+						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name: "first",
+								Module: &Module{
+									Name:   "backend",
+									Source: modulePath,
+									Attrs:  map[string]cty.Value{},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {

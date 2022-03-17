@@ -157,6 +157,9 @@ terraform_cli "debug" {
   }
 }
 
+terraform_cli "as_string_ref" {
+}
+
 module "backend" {
   source = "%s"
 
@@ -171,6 +174,14 @@ scenario "default" {
 
 scenario "debug" {
   terraform_cli = terraform_cli.debug
+
+  step "backend" {
+    module = module.backend
+  }
+}
+
+scenario "ref" {
+  terraform_cli = "as_string_ref"
 
   step "backend" {
     module = module.backend
@@ -233,6 +244,40 @@ scenario "debug" {
 									}),
 								}),
 							}),
+						}),
+					},
+					{
+						Name: "as_string_ref",
+						Path: "",
+						Env:  map[string]string{},
+						ConfigVal: cty.ObjectVal(map[string]cty.Value{
+							"credentials": cty.MapValEmpty(cty.Object(
+								map[string]cty.Type{"token": cty.String},
+							)),
+							"credentials_helper": cty.MapValEmpty(cty.Object(map[string]cty.Type{
+								"args": cty.List(cty.String),
+							}),
+							),
+							"disable_checkpoint":           cty.NullVal(cty.Bool),
+							"disable_checkpoint_signature": cty.NullVal(cty.Bool),
+							"plugin_cache_dir":             cty.NullVal(cty.String),
+							"provider_installation": cty.ListValEmpty(cty.Object(map[string]cty.Type{
+								"dev_overrides": cty.Map(cty.String),
+								"direct": cty.List(cty.Object(map[string]cty.Type{
+									"exclude": cty.List(cty.String),
+									"include": cty.List(cty.String),
+								})),
+								"filesystem_mirror": cty.List(cty.Object(map[string]cty.Type{
+									"exclude": cty.List(cty.String),
+									"include": cty.List(cty.String),
+									"path":    cty.String,
+								})),
+								"network_mirror": cty.List(cty.Object(map[string]cty.Type{
+									"exclude": cty.List(cty.String),
+									"include": cty.List(cty.String),
+									"url":     cty.String,
+								})),
+							})),
 						}),
 					},
 					DefaultTerraformCLI(),
@@ -321,6 +366,55 @@ scenario "debug" {
 					{
 						Name:         "default",
 						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name: "backend",
+								Module: &Module{
+									Name:   "backend",
+									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"driver": StepVariableVal(&StepVariable{Value: cty.StringVal("postgres")}),
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "ref",
+						TerraformCLI: &TerraformCLI{
+							Name: "as_string_ref",
+							Path: "",
+							Env:  nil,
+							ConfigVal: cty.ObjectVal(map[string]cty.Value{
+								"credentials": cty.MapValEmpty(cty.Object(
+									map[string]cty.Type{"token": cty.String},
+								)),
+								"credentials_helper": cty.MapValEmpty(cty.Object(map[string]cty.Type{
+									"args": cty.List(cty.String),
+								}),
+								),
+								"disable_checkpoint":           cty.NullVal(cty.Bool),
+								"disable_checkpoint_signature": cty.NullVal(cty.Bool),
+								"plugin_cache_dir":             cty.NullVal(cty.String),
+								"provider_installation": cty.ListValEmpty(cty.Object(map[string]cty.Type{
+									"dev_overrides": cty.Map(cty.String),
+									"direct": cty.List(cty.Object(map[string]cty.Type{
+										"exclude": cty.List(cty.String),
+										"include": cty.List(cty.String),
+									})),
+									"filesystem_mirror": cty.List(cty.Object(map[string]cty.Type{
+										"exclude": cty.List(cty.String),
+										"include": cty.List(cty.String),
+										"path":    cty.String,
+									})),
+									"network_mirror": cty.List(cty.Object(map[string]cty.Type{
+										"exclude": cty.List(cty.String),
+										"include": cty.List(cty.String),
+										"url":     cty.String,
+									})),
+								})),
+							}),
+						},
 						Steps: []*ScenarioStep{
 							{
 								Name: "backend",

@@ -33,6 +33,10 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			out: "SCENARIO \n        \nconsul  \nvault   \n",
 		},
 		{
+			dir: "scenario_list_pass_3",
+			out: "SCENARIO              \n                     \ntest [backend:consul]\ntest [backend:raft]  \n",
+		},
+		{
 			dir:  "scenario_list_fail_malformed",
 			fail: true,
 		},

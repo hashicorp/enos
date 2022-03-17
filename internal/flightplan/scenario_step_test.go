@@ -70,7 +70,7 @@ scenario "basic" {
   }
 
   step "frontend_blue" {
-    module = module.frontend_blue
+    module = "frontend_blue"
   }
 
   step "frontend_green" {
@@ -78,7 +78,7 @@ scenario "basic" {
   }
 
   step "frontend_red" {
-    module = module.frontend_red
+    module = "frontend_red"
   }
 }
 `, modulePath),
@@ -306,11 +306,16 @@ module "two" {
 }
 
 scenario "step_vars" {
+  matrix {
+    input = ["matrixinput"]
+  }
+
   step "one" {
     module = module.one
 
 	variables {
-      concrete = "oneconcrete"
+      concrete    = "oneconcrete"
+	  matrixinput = matrix.input
 	}
   }
 
@@ -322,6 +327,8 @@ scenario "step_vars" {
 	  inherited_concrete = step.one.concrete
 	  reference          = step.one.reference
 	  oneattr            = step.one.oneattr
+	  matrixconcrete     = matrix.input
+	  matrixinherited    = step.one.matrixinput
 	}
   }
 }
@@ -349,6 +356,7 @@ scenario "step_vars" {
 				Scenarios: []*Scenario{
 					{
 						Name:         "step_vars",
+						Variants:     Vector{Element{Key: "input", Val: "matrixinput"}},
 						TerraformCLI: DefaultTerraformCLI(),
 						Steps: []*ScenarioStep{
 							{
@@ -357,8 +365,9 @@ scenario "step_vars" {
 									Name:   "one",
 									Source: modulePath,
 									Attrs: map[string]cty.Value{
-										"oneattr":  testMakeStepVarValue(cty.StringVal("oneattrval")),
-										"concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
+										"oneattr":     testMakeStepVarValue(cty.StringVal("oneattrval")),
+										"concrete":    testMakeStepVarValue(cty.StringVal("oneconcrete")),
+										"matrixinput": testMakeStepVarValue(cty.StringVal("matrixinput")),
 									},
 								},
 							},
@@ -371,8 +380,10 @@ scenario "step_vars" {
 										"twoattr":            testMakeStepVarValue(cty.StringVal("twoattrval")),
 										"concrete":           testMakeStepVarValue(cty.StringVal("twoconcrete")),
 										"inherited_concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
-										"reference":          testMakeStepVarTraversal("module", "one", "reference"),
+										"reference":          testMakeStepVarTraversal("step", "one", "reference"),
 										"oneattr":            testMakeStepVarValue(cty.StringVal("oneattrval")),
+										"matrixconcrete":     testMakeStepVarValue(cty.StringVal("matrixinput")),
+										"matrixinherited":    testMakeStepVarValue(cty.StringVal("matrixinput")),
 									},
 								},
 							},

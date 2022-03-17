@@ -33,11 +33,11 @@ terraform "default" {
   }
 }
 
-provider "aws" "east" {
+provider "aws" "east_1" {
   region = "us-east-1"
 }
 
-provider "aws" "west" {
+provider "aws" "west_2" {
   region = "us-west-2"
 }
 
@@ -65,39 +65,51 @@ module "ec2_instance" {
 }
 
 scenario "e2e" {
-  terraform_cli = terraform_cli.default
-  terraform     = terraform.default
+  // this matrix is overly complex to get coverage across all the stanzas
+  matrix {
+    distro     = ["ubuntu", "rhel"]
+    aws_region = ["east"]
 
-  providers = [
-    provider.aws.east,
-    provider.aws.west,
-    provider.enos.rhel,
-    provider.enos.ubuntu
-  ]
-
-  step "ubuntu_target" {
-    module = module.ec2_instance
-
-    providers = {
-      aws  = provider.aws.east
-      enos = provider.enos.ubuntu
+    include {
+      distro     = ["ubuntu"]
+      aws_region = ["west"]
     }
 
-    variables {
-      distro = "ubuntu"
+    exclude {
+      distro     = ["ubuntu"]
+      aws_region = ["east"]
     }
   }
 
-  step "rhel_target" {
+  locals {
+    enos_provider = {
+      rhel   = provider.enos.rhel
+      ubuntu = provider.enos.ubuntu
+    }
+
+    aws_provider = {
+      east = provider.aws.east_1
+      west = provider.aws.west_2
+    }
+  }
+
+  terraform_cli = terraform_cli.default
+  terraform     = terraform.default
+  providers     = [
+    local.aws_provider[matrix.aws_region],
+    local.enos_provider[matrix.distro],
+  ]
+
+  step "target" {
     module = module.ec2_instance
 
     providers = {
-      aws  = provider.aws.west
-      enos = provider.enos.rhel
+      aws  = local.aws_provider[matrix.aws_region]
+      enos = local.enos_provider[matrix.distro]
     }
 
     variables {
-      distro = "rhel"
+      distro = matrix.distro
     }
   }
 }

@@ -5,6 +5,11 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - edited
+      - reopened
+      - labeled
 
 env:
   PKG_NAME: "enos"

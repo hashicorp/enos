@@ -74,9 +74,9 @@ jobs:
       # Create a release, adding a pre-release tag if indicated in the workflow input
       - name: Create release
         run: |
+          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
           PRERELEASE=""
           if [ ${{ env.PRE_RELEASE }} =  true ]; then
             PRERELEASE="--prerelease"
           fi
-          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
           gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

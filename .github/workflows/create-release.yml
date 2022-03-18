@@ -71,16 +71,12 @@ jobs:
       - name: Confirm
         run: ls .bob/artifacts
 
-      # Create a pre-release if pre-release has been selected on workflow trigger inputs
-      - name: Create pre-release
-        if: ${{ env.PRE_RELEASE }} == true
-        run: |
-          export tag=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
-          gh release create $tag --target ${{ env.SHA }} --generate-notes --prerelease --draft ./.bob/artifacts/*.zip
-
-      # Create a regular release if pre-release has not been selected on workflow trigger inputs
+      # Create a release, adding a pre-release tag if indicated in the workflow input
       - name: Create release
-        if: $ {{ env.PRE_RELEASE }} == false
         run: |
-          export tag=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
-          gh release create $tag --target ${{ env.SHA }} --generate-notes --draft ./.bob/artifacts/*.zip
+          PRERELEASE=""
+          if [ ${{ env.PRE_RELEASE }} =  true ]; then
+            PRERELEASE="--prerelease"
+          fi
+          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

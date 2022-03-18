@@ -62,4 +62,10 @@ jobs:
 
       # Create the release
       - name: Create release
-        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes ./.bob/artifacts/*.zip
+        run: |
+          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          PRERELEASE=""
+          if [ ${{ env.PRE_RELEASE }} =  true ]; then
+            PRERELEASE="--prerelease"
+          fi
+          gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

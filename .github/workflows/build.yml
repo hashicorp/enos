@@ -49,7 +49,7 @@ jobs:
     runs-on: linux
     strategy:
       matrix:
-        go: [1.17]
+        go: [1.18]
         goos: [linux, darwin]
         goarch: [amd64, arm64]
       fail-fast: true

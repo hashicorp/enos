@@ -1,0 +1,86 @@
+name: create_release
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        required: true
+        type: string
+        description: The git SHA of the artifacts in Artifactory to be used in this release
+      version:
+        required: true
+        type: string
+        description: The version number to be used in this release (e.g. 1.0.0)
+      channel:
+        required: true
+        type: choice
+        description: The Artifactory channel to grab the release assets from
+        default: stable
+        options:
+        - dev
+        - stable
+        - staging
+<<<<<<< HEAD:.github/workflows/create-release.yml
+=======
+      pre_release:
+        required: false
+        type: boolean
+        default: false
+        description: To mark this as a pre-release, check this box.
+>>>>>>> 47a9f87 (Add support for first 5 chars of SHA in pre-release tags; update documentation; Change workflow name to create_release to follow prior naming conventions):.github/workflows/create_release.yml
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: 'github.com/hashicorp/*'
+      GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
+      PRODUCT: ${{ github.event.repository.name }}
+<<<<<<< HEAD:.github/workflows/create-release.yml
+      PRODUCT_VERSION: ${{ github.event.inputs.version }}
+      TAG: "v${{ github.event.inputs.version }}"
+=======
+      VERSION: ${{ github.event.inputs.version }}
+>>>>>>> 47a9f87 (Add support for first 5 chars of SHA in pre-release tags; update documentation; Change workflow name to create_release to follow prior naming conventions):.github/workflows/create_release.yml
+      SHA: ${{ github.event.inputs.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Set up bob CLI
+      - name: Setup bob CLI
+        uses: hashicorp/action-setup-bob@v1
+        with:
+          github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+
+      # Use bob to download the correct repo/version/sha. `bob download artifactory` default output is to .bob/artifacts
+      - name: Download artifacts
+        run: |
+          bob download artifactory \
+          -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
+          -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
+          -channel stable \
+          -commit=${{ env.SHA }} \
+          -product-name=${{env.PRODUCT }} \
+          -product-version=${{ env.PRODUCT_VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+
+      # Confirm that artifacts have been downloaded
+      - name: Confirm
+        run: ls .bob/artifacts
+
+      # Create a release. If `pre-release` box is checked,
+      # add the `--pre-release` flag to the `gh release create` command, and
+      # create a pre-release tag as `v<version>-pre+<first 5 characters of SHA>`
+      - name: Create release
+        run: |
+          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          PRERELEASE=""
+          if [ ${{ env.PRE_RELEASE }} =  true ]; then
+            PRERELEASE="--prerelease"
+            TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
+          fi
+          gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

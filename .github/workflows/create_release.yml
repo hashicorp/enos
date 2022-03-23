@@ -20,17 +20,14 @@ on:
         - dev
         - stable
         - staging
-<<<<<<< HEAD:.github/workflows/create-release.yml
-=======
       pre_release:
         required: false
         type: boolean
         default: false
         description: To mark this as a pre-release, check this box.
->>>>>>> 47a9f87 (Add support for first 5 chars of SHA in pre-release tags; update documentation; Change workflow name to create_release to follow prior naming conventions):.github/workflows/create_release.yml
 
 jobs:
-  create-release:
+  create_release:
     runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
@@ -38,12 +35,7 @@ jobs:
       ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
       ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
       PRODUCT: ${{ github.event.repository.name }}
-<<<<<<< HEAD:.github/workflows/create-release.yml
-      PRODUCT_VERSION: ${{ github.event.inputs.version }}
-      TAG: "v${{ github.event.inputs.version }}"
-=======
       VERSION: ${{ github.event.inputs.version }}
->>>>>>> 47a9f87 (Add support for first 5 chars of SHA in pre-release tags; update documentation; Change workflow name to create_release to follow prior naming conventions):.github/workflows/create_release.yml
       SHA: ${{ github.event.inputs.sha }}
 
     steps:

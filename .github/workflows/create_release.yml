@@ -10,7 +10,7 @@ on:
       version:
         required: true
         type: string
-        description: The version number to be used in this release (e.g. 1.0.0)
+        description: The version number to be used in this release (e.g. 0.0.1)
       channel:
         required: true
         type: choice
@@ -37,6 +37,7 @@ jobs:
       PRODUCT: ${{ github.event.repository.name }}
       VERSION: ${{ github.event.inputs.version }}
       SHA: ${{ github.event.inputs.sha }}
+      PRE_RELEASE: ${{ github.event.inputs.pre_release }}
 
     steps:
       - name: Checkout
@@ -57,8 +58,8 @@ jobs:
           -channel stable \
           -commit=${{ env.SHA }} \
           -product-name=${{env.PRODUCT }} \
-          -product-version=${{ env.PRODUCT_VERSION }} \
-          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+          -product-version=${{ env.VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
 
       # Confirm that artifacts have been downloaded
       - name: Confirm

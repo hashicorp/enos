@@ -38,7 +38,6 @@ jobs:
       VERSION: ${{ github.event.inputs.version }}
       SHA: ${{ github.event.inputs.sha }}
       PRE_RELEASE: ${{ github.event.inputs.pre_release }}
-      TAG_SUFFIX: ${{ github.event.inputs.tag_suffix }}
 
     steps:
       - name: Checkout

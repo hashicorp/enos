@@ -1,4 +1,4 @@
-name: create-release
+name: create_release
 
 on:
   workflow_dispatch:
@@ -20,10 +20,6 @@ on:
         - dev
         - stable
         - staging
-      tag_suffix:
-        required: false
-        type: string
-        description: To add a suffix to the release tag, enter the suffix here, including the hyphen. For example, version "0.0.1" with suffix "-dev" will create the release tag "v0.0.1-dev".
       pre_release:
         required: false
         type: boolean
@@ -40,7 +36,6 @@ jobs:
       ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
       PRODUCT: ${{ github.event.repository.name }}
       VERSION: ${{ github.event.inputs.version }}
-      TAG: "v${{ github.event.inputs.version }}"
       SHA: ${{ github.event.inputs.sha }}
       PRE_RELEASE: ${{ github.event.inputs.pre_release }}
       TAG_SUFFIX: ${{ github.event.inputs.tag_suffix }}
@@ -71,12 +66,15 @@ jobs:
       - name: Confirm
         run: ls .bob/artifacts
 
-      # Create a release, adding a pre-release tag if indicated in the workflow input
+      # Create a release. If `pre-release` box is checked,
+      # add the `--pre-release` flag to the `gh release create` command, and
+      # create a pre-release tag as `v<version>-pre+<first 5 characters of SHA>`
       - name: Create release
         run: |
           TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
           PRERELEASE=""
           if [ ${{ env.PRE_RELEASE }} =  true ]; then
             PRERELEASE="--prerelease"
+            TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
           fi
           gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

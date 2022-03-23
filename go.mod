@@ -1,6 +1,6 @@
 module github.com/hashicorp/enos
 
-go 1.17
+go 1.18
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.12.0
@@ -35,7 +35,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect

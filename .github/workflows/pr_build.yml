@@ -8,18 +8,6 @@ on:
 
 env:
   PKG_NAME: "enos"
-  GOPRIVATE: 'github.com/hashicorp/*'
-  GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
-  ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
-  ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
-  # PRODUCT: ${{ github.event.repository.name }}
-  # SHA: ${{ github.event.inputs.sha }}
-  # VERSION: ${{ github.event.inputs.version }}
-  # PRE_RELEASE: ${{ github.event.inputs.pre_release }}
-  PRODUCT: enos
-  SHA: 7f6e15ebe2a79e862113502dc576660b70629823 # Artifactory stable - 3/17
-  VERSION: 0.0.1
-  PRE_RELEASE: true
 
 jobs:
   # build-artifact:
@@ -126,6 +114,19 @@ jobs:
   create_pre-release:
     if: ${{ env.PRE_RELEASE == true }}
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: 'github.com/hashicorp/*'
+      GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
+      # PRODUCT: ${{ github.event.repository.name }}
+      # SHA: ${{ github.event.inputs.sha }}
+      # VERSION: ${{ github.event.inputs.version }}
+      # PRE_RELEASE: ${{ github.event.inputs.pre_release }}
+      PRODUCT: enos
+      SHA: 7f6e15ebe2a79e862113502dc576660b70629823 # Artifactory stable - 3/17
+      VERSION: 0.0.1
+      PRE_RELEASE: true
     steps:
       - name: Checkout
         uses: actions/checkout@v2

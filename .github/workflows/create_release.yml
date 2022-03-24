@@ -11,15 +11,15 @@ on:
         required: true
         type: string
         description: The version number to be used in this release (e.g. 0.0.1)
-      channel:
-        required: true
-        type: choice
-        description: The Artifactory channel to grab the release assets from
-        default: stable
-        options:
-        - dev
-        - stable
-        - staging
+      # channel:
+      #   required: true
+      #   type: choice
+      #   description: The Artifactory channel to grab the release assets from
+      #   default: stable
+      #   options:
+      #   - dev
+      #   - stable
+      #   - staging
       pre_release:
         required: false
         type: boolean
@@ -35,8 +35,8 @@ jobs:
       ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
       ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
       PRODUCT: ${{ github.event.repository.name }}
-      VERSION: ${{ github.event.inputs.version }}
       SHA: ${{ github.event.inputs.sha }}
+      VERSION: ${{ github.event.inputs.version }}
       PRE_RELEASE: ${{ github.event.inputs.pre_release }}
 
     steps:

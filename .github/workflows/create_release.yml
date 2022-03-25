@@ -1,4 +1,4 @@
-name: create-release
+name: create_release
 
 on:
   workflow_dispatch:
@@ -10,19 +10,24 @@ on:
       version:
         required: true
         type: string
-        description: The version number to be used in this release (e.g. 1.0.0)
+        description: The version number to be used in this release (e.g. 0.0.1)
       channel:
         required: true
         type: choice
-        description: The Artifactory channel to grab the release assets from
+        description: The Artifactory repo from which to download the release assets
         default: stable
         options:
         - dev
         - stable
         - staging
+      pre_release:
+        required: false
+        type: boolean
+        default: false
+        description: To mark this as a pre-release, check this box.
 
 jobs:
-  create-release:
+  create_release:
     runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
@@ -30,9 +35,10 @@ jobs:
       ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
       ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
       PRODUCT: ${{ github.event.repository.name }}
-      PRODUCT_VERSION: ${{ github.event.inputs.version }}
-      TAG: "v${{ github.event.inputs.version }}"
       SHA: ${{ github.event.inputs.sha }}
+      VERSION: ${{ github.event.inputs.version }}
+      CHANNEL: ${{ github.event.inputs.channel }}
+      PRE_RELEASE: ${{ github.event.inputs.pre_release }}
 
     steps:
       - name: Checkout
@@ -44,22 +50,30 @@ jobs:
         with:
           github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
 
-      # Use bob to download the correct repo/version/sha. `bob download artifactory` default output is to .bob/artifacts
+      # Use bob to download artifacts from Artifactory
       - name: Download artifacts
         run: |
           bob download artifactory \
           -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
           -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
-          -channel stable \
+          -channel ${{ env.CHANNEL }} \
           -commit=${{ env.SHA }} \
           -product-name=${{env.PRODUCT }} \
-          -product-version=${{ env.PRODUCT_VERSION }} \
-          -pattern="${{ env.PRODUCT }}_${{ env.PRODUCT_VERSION }}_*_*.zip"
+          -product-version=${{ env.VERSION }} \
+          -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
 
       # Confirm that artifacts have been downloaded
       - name: Confirm
         run: ls .bob/artifacts
 
-      # Create the release
+      # Create a release. If `pre-release` box is checked, add the `--pre-release` flag and create a
+      # pre-release tag as `v<version>-pre+<first 5 characters of SHA>`.
       - name: Create release
-        run: gh release create ${{env.TAG}} --target ${{ env.SHA }} --generate-notes ./.bob/artifacts/*.zip
+        run: |
+          TAG=v${{ env.VERSION }}
+          PRERELEASE=""
+          if [ ${{ env.PRE_RELEASE }} = true ]; then
+            PRERELEASE="--prerelease"
+            TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
+          fi
+          gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

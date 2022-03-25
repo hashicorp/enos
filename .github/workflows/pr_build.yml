@@ -65,54 +65,7 @@ jobs:
   #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   #     ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}
 
-  # # If `pre-release` was NOT selected, create a regular Github release
-  # create_release:
-  #   if: env.PRE_RELEASE == false
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-
-  #     # Set up bob CLI
-  #     - name: Setup bob CLI
-  #       uses: hashicorp/action-setup-bob@v1
-  #       with:
-  #         github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
-
-  #     # Run bob staging promotion trigger
-  #     - name: Trigger staging promotion
-  #       run: |
-  #         bob trigger-promotion
-  #         --product-name=enos --repo=enos --product-version=0.0.1
-  #         --sha=326e2e4ccd87929c36e382a41f045ee10a3dc14d --environment=enos-int
-  #         --slack-channel=C021AHV0R9S staging
-
-  #     # Download artifacts from Artifactory staging repo
-  #     - name: Download artifacts
-  #       if: ${{ env.PRE_RELEASE }} == true
-  #       run: |
-  #         bob download artifactory \
-  #         -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
-  #         -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
-  #         -channel staging \
-  #         -commit=${{ env.SHA }} \
-  #         -product-name=${{env.PRODUCT }} \
-  #         -product-version=${{ env.VERSION }} \
-  #         -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
-
-  #     # Confirm that artifacts have been downloaded
-  #     - name: Confirm
-  #       run: ls .bob/artifacts
-
-  #     # Create a Github release
-  #     - name: Create release
-  #       run: |
-  #         TAG=v${{ env.VERSION }}
-  #         gh release create $TAG --target ${{ env.SHA }} --generate-notes ./.bob/artifacts/*.zip
-
-  # If `pre-release` was selected, create a Github pre-release
-  create_pre-release:
-    if: ${{ env.PRE_RELEASE == true }}
+  create_release:
     runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
@@ -122,11 +75,14 @@ jobs:
       # PRODUCT: ${{ github.event.repository.name }}
       # SHA: ${{ github.event.inputs.sha }}
       # VERSION: ${{ github.event.inputs.version }}
+      # CHANNEL: ${{ github.event.inputs.channel }}
       # PRE_RELEASE: ${{ github.event.inputs.pre_release }}
       PRODUCT: enos
-      SHA: 7f6e15ebe2a79e862113502dc576660b70629823 # Artifactory stable - 3/17
+      SHA: 7f6e15ebe2a79e862113502dc576660b70629823
       VERSION: 0.0.1
+      CHANNEL: stable
       PRE_RELEASE: true
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -137,20 +93,31 @@ jobs:
         with:
           github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
 
-      # Download artifacts from Artifactory stable repo
+      # Use bob to download the correct repo/version/sha
       - name: Download artifacts
         run: |
           bob download artifactory \
           -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
           -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
-          -channel stable \
+          -channel ${{ env.CHANNEL }} \
           -commit=${{ env.SHA }} \
           -product-name=${{env.PRODUCT }} \
           -product-version=${{ env.VERSION }} \
           -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
 
-      # Create a Github pre-release
-      - name: Create pre-release
+      # Confirm that artifacts have been downloaded
+      - name: Confirm
+        run: ls .bob/artifacts
+
+      # Create a release. If `pre-release` box is checked:
+      # Add the `--pre-release` flag to the `gh release create` command, and
+      # create a pre-release tag with the format `v<version>-pre+<first 5 characters of SHA>`
+      - name: Create release
         run: |
-          TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
-          gh release create $TAG --target ${{ env.SHA }} --generate-notes --prerelease ./.bob/artifacts/*.zip
+          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          PRERELEASE=""
+          if [ ${{ env.PRE_RELEASE }} = true ]; then
+            PRERELEASE="--prerelease"
+            TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
+          fi
+          gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip

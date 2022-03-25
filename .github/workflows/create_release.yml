@@ -11,15 +11,15 @@ on:
         required: true
         type: string
         description: The version number to be used in this release (e.g. 0.0.1)
-      # channel:
-      #   required: true
-      #   type: choice
-      #   description: The Artifactory channel to grab the release assets from
-      #   default: stable
-      #   options:
-      #   - dev
-      #   - stable
-      #   - staging
+      channel:
+        required: true
+        type: choice
+        description: The Artifactory channel to grab the release assets from
+        default: stable
+        options:
+        - dev
+        - stable
+        - staging
       pre_release:
         required: false
         type: boolean
@@ -37,6 +37,7 @@ jobs:
       PRODUCT: ${{ github.event.repository.name }}
       SHA: ${{ github.event.inputs.sha }}
       VERSION: ${{ github.event.inputs.version }}
+      CHANNEL: ${{ github.event.inputs.channel }}
       PRE_RELEASE: ${{ github.event.inputs.pre_release }}
 
     steps:
@@ -55,7 +56,7 @@ jobs:
           bob download artifactory \
           -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
           -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
-          -channel stable \
+          -channel ${{ env.CHANNEL }} \
           -commit=${{ env.SHA }} \
           -product-name=${{env.PRODUCT }} \
           -product-version=${{ env.VERSION }} \
@@ -72,7 +73,7 @@ jobs:
         run: |
           TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
           PRERELEASE=""
-          if [ ${{ env.PRE_RELEASE }} =  true ]; then
+          if [ ${{ env.PRE_RELEASE }} = true ]; then
             PRERELEASE="--prerelease"
             TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
           fi

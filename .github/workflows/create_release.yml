@@ -50,7 +50,7 @@ jobs:
         with:
           github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
 
-      # Use bob to download the correct repo/version/sha. `bob download artifactory` default output is to .bob/artifacts
+      # Use bob to download artifacts from Artifactory
       - name: Download artifacts
         run: |
           bob download artifactory \

@@ -14,7 +14,7 @@ on:
       channel:
         required: true
         type: choice
-        description: The Artifactory channel to grab the release assets from
+        description: The Artifactory repo from which to download the release assets
         default: stable
         options:
         - dev
@@ -66,12 +66,11 @@ jobs:
       - name: Confirm
         run: ls .bob/artifacts
 
-      # Create a release. If `pre-release` box is checked,
-      # add the `--pre-release` flag to the `gh release create` command, and
-      # create a pre-release tag as `v<version>-pre+<first 5 characters of SHA>`
+      # Create a release. If `pre-release` box is checked, add the `--pre-release` flag and create a
+      # pre-release tag as `v<version>-pre+<first 5 characters of SHA>`.
       - name: Create release
         run: |
-          TAG=v${{ env.VERSION }}${{ env.TAG_SUFFIX }}
+          TAG=v${{ env.VERSION }}
           PRERELEASE=""
           if [ ${{ env.PRE_RELEASE }} = true ]; then
             PRERELEASE="--prerelease"

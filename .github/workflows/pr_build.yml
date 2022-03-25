@@ -79,7 +79,7 @@ jobs:
       # PRE_RELEASE: ${{ github.event.inputs.pre_release }}
       PRODUCT: enos
       SHA: 7f6e15ebe2a79e862113502dc576660b70629823
-      VERSION: 0.0.0
+      VERSION: 0.0.1
       CHANNEL: stable
       PRE_RELEASE: false
 

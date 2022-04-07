@@ -103,7 +103,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 		// Determine if it's an inclusive or exclusive filter
 		if strings.HasPrefix(parts[0], "!") {
 			// It's an exclude filter
-			ex, err := NewExclude(ExcludeMatch, Vector{
+			ex, err := NewExclude(ExcludeContains, Vector{
 				NewElement(strings.TrimPrefix(parts[0], "!"), parts[1]),
 			})
 			if err != nil {
@@ -137,7 +137,7 @@ func (fp *FlightPlan) ScenariosSelect(f *ScenarioFilter) []*Scenario {
 
 		// Make sure it matches any includes
 		if len(f.Include) > 0 {
-			if !s.Variants.ContainsValues(f.Include) {
+			if !s.Variants.ContainsUnordered(f.Include) {
 				// Our scenario variants don't include all of the required elements
 				continue
 			}
@@ -145,7 +145,7 @@ func (fp *FlightPlan) ScenariosSelect(f *ScenarioFilter) []*Scenario {
 
 		skip := false
 		for _, ex := range f.Exclude {
-			if ex.ExcludeVector(s.Variants) {
+			if ex.Match(s.Variants) {
 				skip = true
 				break
 			}

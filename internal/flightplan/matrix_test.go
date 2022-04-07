@@ -354,7 +354,7 @@ func Test_Matrix_Vector_Equal(t *testing.T) {
 	}
 }
 
-func Test_Matrix_Vector_ContainsValues(t *testing.T) {
+func Test_Matrix_Vector_ContainsUnordered(t *testing.T) {
 	for _, test := range []struct {
 		desc  string
 		in    Vector
@@ -393,12 +393,12 @@ func Test_Matrix_Vector_ContainsValues(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			require.Equal(t, test.match, test.in.ContainsValues(test.other))
+			require.Equal(t, test.match, test.in.ContainsUnordered(test.other))
 		})
 	}
 }
 
-func Test_Matrix_Vector_EqualValues(t *testing.T) {
+func Test_Matrix_Vector_EqualUnordered(t *testing.T) {
 	for _, test := range []struct {
 		desc  string
 		in    Vector
@@ -425,37 +425,91 @@ func Test_Matrix_Vector_EqualValues(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			require.Equal(t, test.equal, test.in.EqualValues(test.other))
+			require.Equal(t, test.equal, test.in.EqualUnordered(test.other))
 		})
 	}
 }
 
-func Test_Matrix_CombinedVectors(t *testing.T) {
-	m := NewMatrix()
-	m.AddVector(Vector{Element{"backend", "raft"}, Element{"backend", "consul"}})
-	m.AddVector(Vector{Element{"arch", "arm64"}, Element{"arch", "amd64"}})
-	m.AddVector(Vector{Element{"distro", "ubuntu"}, Element{"arch", "rhel"}})
-
-	require.Equal(t, []Vector{
-		{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}},
-		{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "arch", Val: "rhel"}},
-		{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}},
-		{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "arch", Val: "rhel"}},
-		{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}},
-		{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "arch", Val: "rhel"}},
-		{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}},
-		{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "arch", Val: "rhel"}},
-	},
-		m.CombinedVectors().Vectors,
-	)
+func Test_Matrix_CartesianProduct(t *testing.T) {
+	for _, test := range []struct {
+		desc     string
+		in       *Matrix
+		expected *Matrix
+	}{
+		{
+			"nil vectors",
+			&Matrix{Vectors: nil},
+			&Matrix{Vectors: nil},
+		},
+		{
+			"empty vectors",
+			&Matrix{Vectors: []Vector{}},
+			&Matrix{Vectors: nil},
+		},
+		{
+			"regular",
+			&Matrix{
+				Vectors: []Vector{
+					{Element{"backend", "raft"}, Element{"backend", "consul"}},
+					{Element{"arch", "arm64"}, Element{"arch", "amd64"}},
+					{Element{"distro", "ubuntu"}, Element{"distro", "rhel"}},
+				},
+			},
+			&Matrix{Vectors: []Vector{
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "rhel"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "rhel"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "rhel"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "rhel"}},
+			}},
+		},
+		{
+			"irregular",
+			&Matrix{
+				Vectors: []Vector{
+					{Element{"backend", "raft"}, Element{"backend", "consul"}},
+					{Element{"arch", "arm64"}, Element{"arch", "amd64"}, Element{"arch", "ppc64"}},
+					{Element{"distro", "ubuntu"}},
+					{Element{"test", "fresh-install"}, Element{"test", "upgrade"}, Element{"test", "security"}},
+				},
+			},
+			&Matrix{Vectors: []Vector{
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "fresh-install"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "upgrade"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "security"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "fresh-install"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "upgrade"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "security"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "ppc64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "fresh-install"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "ppc64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "upgrade"}},
+				{Element{Key: "backend", Val: "raft"}, Element{Key: "arch", Val: "ppc64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "security"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "fresh-install"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "upgrade"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "arm64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "security"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "fresh-install"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "upgrade"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "security"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "ppc64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "fresh-install"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "ppc64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "upgrade"}},
+				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "ppc64"}, Element{Key: "distro", Val: "ubuntu"}, Element{Key: "test", Val: "security"}},
+			}},
+		},
+	} {
+		t.Run(test.desc, func(t *testing.T) {
+			require.Equal(t, test.expected.Vectors, test.in.CartesianProduct().Vectors)
+		})
+	}
 }
 
-func Test_Matrix_CombinedVectors_empty_vector(t *testing.T) {
+func Test_Matrix_CartesianProduct_empty_vector(t *testing.T) {
 	m := NewMatrix()
 	m.AddVector(Vector{})
 	m.AddVector(Vector{})
 
-	require.Equal(t, &Matrix{}, m.CombinedVectors())
+	require.Equal(t, &Matrix{}, m.CartesianProduct())
 }
 
 func Test_Matrix_UniqueValues(t *testing.T) {
@@ -539,11 +593,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   ExcludeEqualValues,
+					Mode:   ExcludeEqualUnordered,
 					Vector: Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 				},
 				{
-					Mode:   ExcludeEqualValues,
+					Mode:   ExcludeEqualUnordered,
 					Vector: Vector{Element{"arch", "arm64"}, Element{"arch", "amd64"}},
 				},
 			},
@@ -562,11 +616,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   ExcludeMatch,
+					Mode:   ExcludeContains,
 					Vector: Vector{Element{"backend", "mysql"}},
 				},
 				{
-					Mode:   ExcludeMatch,
+					Mode:   ExcludeContains,
 					Vector: Vector{Element{"arch", "arm64"}, Element{"arch", "arm32"}},
 				},
 			},

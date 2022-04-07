@@ -520,18 +520,27 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 		return vec, diags
 	}
 
+	// Go maps are intentionally unordered. We need to sort our attributes
+	// so that our variants elements are deterministic every time we
+	// decode our flightplan.
+	sortedAttributes := func(attrs map[string]*hcl.Attribute) []*hcl.Attribute {
+		sorted := []*hcl.Attribute{}
+		for _, attr := range attrs {
+			sorted = append(sorted, attr)
+		}
+		sort.Slice(sorted, func(i, j int) bool {
+			return sorted[i].Name < sorted[j].Name
+		})
+
+		return sorted
+	}
+
 	// Each attribute in the matrix should be a variant name whose value must
 	// be a list of strings. Convert the value into a matrix vector and add it.
 	// We're ignoring the diagnostics JustAttributes() will return here because
 	// there might also be include and exclude blocks.
 	mAttrs, _ := block.Body.JustAttributes()
-	// Sort our attributes so that our variants elements are deterministic
-	sortedMattrs := []*hcl.Attribute{}
-	for _, attr := range mAttrs {
-		sortedMattrs = append(sortedMattrs, attr)
-	}
-	sort.Slice(sortedMattrs, func(i, j int) bool { return sortedMattrs[i].Name < sortedMattrs[j].Name })
-	for _, attr := range sortedMattrs {
+	for _, attr := range sortedAttributes(mAttrs) {
 		vec, moreDiags := decodeMatrixAttribute(block, attr)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
@@ -543,7 +552,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 
 	// Now that we have our basic variant vectors in our matrix, we need to combine
 	// all vectors into a product that matches all possible unique value combinations.
-	matrix = matrix.CombinedVectors().UniqueValues()
+	matrix = matrix.CartesianProduct().UniqueValues()
 
 	// Now we need to go through all of our blocks and process include and exclude
 	// directives. Since HCL allows us to use ordering we'll apply them in the
@@ -572,14 +581,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				continue
 			}
 
-			// Sort our attributes so that our variants elements are deterministic
-			sortedIattrs := []*hcl.Attribute{}
-			for _, attr := range iAttrs {
-				sortedIattrs = append(sortedIattrs, attr)
-			}
-			sort.Slice(sortedIattrs, func(i, j int) bool { return sortedIattrs[i].Name < sortedIattrs[j].Name })
-
-			for _, attr := range sortedIattrs {
+			for _, attr := range sortedAttributes(iAttrs) {
 				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
 				diags = diags.Extend(moreDiags)
 				if moreDiags.HasErrors() {
@@ -591,7 +593,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 
 			// Generate our possible include vectors and add them to our main
 			// matrix.
-			for _, vec := range iMatrix.CombinedVectors().UniqueValues().Vectors {
+			for _, vec := range iMatrix.CartesianProduct().UniqueValues().Vectors {
 				matrix.AddVector(vec)
 			}
 		case "exclude":
@@ -602,14 +604,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				continue
 			}
 
-			// Sort our attributes so that our variants elements are deterministic
-			sortedEattrs := []*hcl.Attribute{}
-			for _, attr := range eAttrs {
-				sortedEattrs = append(sortedEattrs, attr)
-			}
-			sort.Slice(sortedEattrs, func(i, j int) bool { return sortedEattrs[i].Name < sortedEattrs[j].Name })
-
-			for _, attr := range sortedEattrs {
+			for _, attr := range sortedAttributes(eAttrs) {
 				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
 				diags = diags.Extend(moreDiags)
 				if moreDiags.HasErrors() {
@@ -619,8 +614,8 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 			}
 
 			excludes := []*Exclude{}
-			for _, vec := range eMatrix.CombinedVectors().UniqueValues().Vectors {
-				ex, err := NewExclude(ExcludeMatch, vec)
+			for _, vec := range eMatrix.CartesianProduct().UniqueValues().Vectors {
+				ex, err := NewExclude(ExcludeContains, vec)
 				if err != nil {
 					diags = diags.Append(&hcl.Diagnostic{
 						Severity: hcl.DiagError,

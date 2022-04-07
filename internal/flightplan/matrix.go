@@ -23,18 +23,18 @@ type Matrix struct {
 	Vectors []Vector
 }
 
-// ExcludeMode determines how we're going match Vectors to Exclude
+// ExcludeMode determines how we're going match Vectors which we want to exclude
 type ExcludeMode int
 
 const (
 	// ExcludeExactly will match a vector that has the exact ordered elements
 	ExcludeExactly ExcludeMode = iota + 1
-	// ExcludeEqualValues will match a vector that has the exact elements but may
+	// ExcludeEqualUnordered will match a vector that has the exact elements but may
 	// be unordered.
-	ExcludeEqualValues
-	// ExcludeMatch will match any vector that has at least the given vector
+	ExcludeEqualUnordered
+	// ExcludeContains will match any vector that has at least the given vector
 	// elements in any order.
-	ExcludeMatch
+	ExcludeContains
 )
 
 // An Exclude is a filter to removing Elements from the Matrix's Vector combined
@@ -59,7 +59,7 @@ func NewExclude(mode ExcludeMode, vec Vector) (*Exclude, error) {
 	ex := &Exclude{Mode: mode, Vector: vec}
 
 	switch mode {
-	case ExcludeExactly, ExcludeEqualValues, ExcludeMatch:
+	case ExcludeExactly, ExcludeEqualUnordered, ExcludeContains:
 	default:
 		return ex, fmt.Errorf("unknown exclusion mode: %d", mode)
 	}
@@ -97,10 +97,10 @@ func (v Vector) Equal(other Vector) bool {
 	return true
 }
 
-// EqualValues returns true if both Vectors have the same Elements but might
+// EqualUnordered returns true if both Vectors have the same Elements but might
 // not be ordered the same. This is useful for Vectors of pairs that do not
 // enforce ordering.
-func (v Vector) EqualValues(other Vector) bool {
+func (v Vector) EqualUnordered(other Vector) bool {
 	if len(v) != len(other) {
 		return false
 	}
@@ -124,9 +124,9 @@ func (v Vector) EqualValues(other Vector) bool {
 	return vC.Equal(otherC)
 }
 
-// ContainsValues returns a boolean which represent if vector contains the values
+// ContainsUnordered returns a boolean which represent if vector contains the values
 // of another vector.
-func (v Vector) ContainsValues(other Vector) bool {
+func (v Vector) ContainsUnordered(other Vector) bool {
 	for _, otherElm := range other {
 		match := false
 		for _, elm := range v {
@@ -171,27 +171,6 @@ func (m *Matrix) AddVector(vec Vector) {
 	m.Vectors = append(m.Vectors, vecC)
 }
 
-// ExcludeVector determines if Exclude directive matches the vector
-func (ex *Exclude) ExcludeVector(vec Vector) bool {
-	switch ex.Mode {
-	case ExcludeExactly:
-		if vec.Equal(ex.Vector) {
-			return true
-		}
-	case ExcludeEqualValues:
-		if vec.EqualValues(ex.Vector) {
-			return true
-		}
-	case ExcludeMatch:
-		if vec.ContainsValues(ex.Vector) {
-			return true
-		}
-	default:
-	}
-
-	return false
-}
-
 // Exclude takes exclude vararg exclude directives as instances of Exclude. It
 // returns a new matrix with all exclude directives having been processed on
 // on the parent matrix.
@@ -201,7 +180,7 @@ func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
 	for _, vec := range m.Vectors {
 		skip := false
 		for _, ex := range Excludes {
-			if ex.ExcludeVector(vec) {
+			if ex.Match(vec) {
 				skip = true
 				break
 			}
@@ -214,55 +193,55 @@ func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
 	return nm
 }
 
-// CombinedVectors creates a new Matrix of the product of combining all possible
-// Vectors unique combinations.
-func (m *Matrix) CombinedVectors() *Matrix {
-	combined := NewMatrix()
+// CartesianProduct returns a pointer to a new Matrix whose Vectors are the
+// Cartesian product of combining all possible Vector Elements from the Matrix.
+func (m *Matrix) CartesianProduct() *Matrix {
+	product := NewMatrix()
 	vlen := len(m.Vectors)
 	if vlen == 0 {
-		return combined
+		return product
 	}
-	// vecIdx is where we'll keep track of which index to use in a given Vector
-	// for our combined Vector.
+	// vecIdx is where we'll keep track the Element index for each Vector.
 	vecIdx := make([]int, vlen)
 
 	for {
-		// Create our Vector by taking the index address of each Element and
-		// getting the value out of the corresponding Vector.
+		// Create our next product Vector by reading our Element index address
+		// for each Vector in our vector index.
 		vec := Vector{}
 		for i := 0; i < vlen; i++ {
 			vec = append(vec, m.Vectors[i][vecIdx[i]])
 		}
-		combined.Vectors = append(combined.Vectors, vec)
+		product.Vectors = append(product.Vectors, vec)
 
-		// Find the Vector we need to increase by searching backwards through
-		// all Vectors until we run into a Vector whose Element index cannot be
-		// incremented.
+		// Starting from the last Vector in the Matrix, walk backwards until
+		// we find a Vector's whose element index can be incremented.
 		next := vlen - 1
 		for {
 			if next >= 0 && (vecIdx[next]+1 >= len(m.Vectors[next])) {
+				// We can't increment this Vector, keep walking back
 				next = next - 1
 			} else {
+				// We found a Vector index to increment or we've exhausted our
+				// search for a Vector that can be incremented.
 				break
 			}
 		}
 
-		// We cannot walk back past our current Vector and our current Vector
-		// cannot be incremented. We're done.
+		// We walked back past the first Vector. We're done.
 		if next < 0 {
 			break
 		}
 
-		// Increment our selected Vectors Element index.
+		// Increment the Element index for the Vector we walked back to.
 		vecIdx[next]++
 
-		// Reset all Elements in Vectors past our chosen Element to zero.
+		// Reset all Element indices in Vectors past our walked to Vector.
 		for i := next + 1; i < vlen; i++ {
 			vecIdx[i] = 0
 		}
 	}
 
-	return combined
+	return product
 }
 
 // HasVector returns whether or not a matrix has a vector that exactly matches
@@ -281,7 +260,7 @@ func (m *Matrix) HasVector(other Vector) bool {
 // values match exactly with another that is given.
 func (m *Matrix) HasVectorValues(other Vector) bool {
 	for _, v := range m.Vectors {
-		if v.EqualValues(other) {
+		if v.EqualUnordered(other) {
 			return true
 		}
 	}
@@ -311,4 +290,25 @@ func (m *Matrix) UniqueValues() *Matrix {
 	}
 
 	return nm
+}
+
+// ExcludeVector determines if Exclude directive matches the vector
+func (ex *Exclude) Match(vec Vector) bool {
+	switch ex.Mode {
+	case ExcludeExactly:
+		if vec.Equal(ex.Vector) {
+			return true
+		}
+	case ExcludeEqualUnordered:
+		if vec.EqualUnordered(ex.Vector) {
+			return true
+		}
+	case ExcludeContains:
+		if vec.ContainsUnordered(ex.Vector) {
+			return true
+		}
+	default:
+	}
+
+	return false
 }

@@ -52,7 +52,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			&ScenarioFilter{
 				Include: Vector{NewElement("backend", "consul")},
 				Exclude: []*Exclude{
-					{ExcludeMatch, Vector{NewElement("arch", "arm64")}},
+					{ExcludeContains, Vector{NewElement("arch", "arm64")}},
 				},
 			},
 			[]*Scenario{scenarios[3], scenarios[7]},
@@ -64,7 +64,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 				Name:    "upgrade",
 				Include: Vector{NewElement("backend", "raft")},
 				Exclude: []*Exclude{
-					{ExcludeMatch, Vector{NewElement("arch", "amd64")}},
+					{ExcludeContains, Vector{NewElement("arch", "amd64")}},
 				},
 			},
 			[]*Scenario{scenarios[4]},
@@ -115,7 +115,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 				Name:    "test",
 				Include: Vector{NewElement("backend", "consul")},
 				Exclude: []*Exclude{
-					{ExcludeMatch, Vector{NewElement("arch", "arm64")}},
+					{ExcludeContains, Vector{NewElement("arch", "arm64")}},
 				},
 			},
 		},
@@ -125,7 +125,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			&ScenarioFilter{
 				Include: Vector{NewElement("backend", "raft")},
 				Exclude: []*Exclude{
-					{ExcludeMatch, Vector{NewElement("arch", "amd64")}},
+					{ExcludeContains, Vector{NewElement("arch", "amd64")}},
 				},
 			},
 		},

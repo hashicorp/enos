@@ -1,5 +1,5 @@
 class Enos < Formula
-	desc "Enos: a closed-source Test as Code software tool that provides a consistent CLI workflow to test software."
+	desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable and shareable declarative language."
 	homepage "https://github.com/hashicorp/enos"
 	version "0.0.1"
 

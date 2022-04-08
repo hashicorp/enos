@@ -13,8 +13,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func main() {
+	rootCmd.AddCommand(newCreateFormulaCommand())
+
+	err := rootCmd.Execute()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+}
+
 const formulaTemplate = `class Enos < Formula
-	desc "Enos: a closed-source Test as Code software tool that provides a consistent CLI workflow to test software."
+	desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable and shareable declarative language."
 	homepage "https://github.com/hashicorp/enos"
 	version "{{.Version}}"
 
@@ -57,6 +67,9 @@ const formulaTemplate = `class Enos < Formula
 	end
 end
 	`
+
+// Create a new template
+var t = template.Must(template.New("formula").Parse(formulaTemplate))
 
 var rootCmd = cobra.Command{
 	Use:   "homebrew",
@@ -154,9 +167,9 @@ func readMetadata(path string) (*metadata, error) {
 // Execute the template with the metadata values to `dest`
 func renderHomebrewFormulaTemplate(dest io.Writer, metadataPath string) error {
 	metadata, err := readMetadata(metadataPath)
-
-	// Create a new template
-	t := template.Must(template.New("formula").Parse(formulaTemplate))
+	if err != nil {
+		fmt.Println("reading metadata:", err)
+	}
 
 	// Execute the template using metadata values from the SHASUMS file
 	err = t.Execute(dest, metadata)
@@ -189,14 +202,4 @@ func createFormula(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func main() {
-	rootCmd.AddCommand(newCreateFormulaCommand())
-
-	err := rootCmd.Execute()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }

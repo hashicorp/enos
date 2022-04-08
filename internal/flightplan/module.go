@@ -176,12 +176,12 @@ func (m *Module) FromCtyValue(val cty.Value) error {
 				return fmt.Errorf("source must be a string")
 			}
 			m.Source = val.AsString()
-		case "Name":
+		case "name":
 			if val.Type() != cty.String {
 				return fmt.Errorf("name must be a string ")
 			}
 			m.Name = val.AsString()
-		case "Version":
+		case "version":
 			if val.Type() != cty.String {
 				return fmt.Errorf("version must be a string ")
 			}

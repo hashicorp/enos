@@ -7,7 +7,6 @@ REPO=github.com/hashicorp/enos
 GO_BUILD_TAGS=-tags osusergo,netgo
 GO_LD_FLAGS=-ldflags="-extldflags=-static -X ${REPO}/internal/version.Version=${VERSION} -X ${REPO}/internal/version.GitSHA=${GIT_SHA}"
 GO_GC_FLAGS=-gcflags="all=-N -l"
-GO_RELEASER_DOCKER_TAG=latest
 GORACE=GORACE=log_path=/tmp/enos-gorace.log
 TEST_ACC=ENOS_ACC=1
 TEST_ACC_EXT=ENOS_ACC=1 ENOS_EXT=1

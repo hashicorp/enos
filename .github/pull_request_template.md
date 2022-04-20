@@ -1,6 +1,4 @@
-[Header - Replace this with a short setence describing the changes]
-
-[Message - Replace with an explanation of the changes]
+<!--- Leave your commit message at the top and remove this comment block --->
 
 ### How to read this pull request
 You may provide an optional explanation of the best way a review might

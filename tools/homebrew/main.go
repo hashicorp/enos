@@ -99,9 +99,7 @@ func newCreateFormulaCommand() *cobra.Command {
 	}
 
 	createFormula.PersistentFlags().StringVarP(&createFormulaConfigs.path, "path", "p", "", "the path to the SHA265SUMS file")
-	createFormula.PersistentFlags().StringVarP(&createFormulaConfigs.version, "version", "v", "", "the version of the release")
-	createFormula.PersistentFlags().StringVarP(&createFormulaConfigs.versionTag, "version-tag", "t", "", "the version tag of the release")
-	createFormula.PersistentFlags().StringVarP(&createFormulaConfigs.outPath, "outpath", "o", "", "the pat")
+	createFormula.PersistentFlags().StringVarP(&createFormulaConfigs.outPath, "outpath", "o", "", "the path to the output file")
 
 	return createFormula
 }

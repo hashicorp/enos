@@ -1,0 +1,101 @@
+name: Update Homebrew Formula
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+      product:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+    secrets:
+      PAT:
+        required: true
+      ARTIFACTORY_TOKEN:
+        required: true
+      ARTIFACTORY_USER:
+        required: true
+
+jobs:
+
+  update-formula:
+    name: "Update Homebrew formula definition"
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
+      # Note: gh CLI automatically uses env.GH_TOKEN for authentication.
+      # This token must have read:org scope in order to authenticate on a different repo.
+      GH_TOKEN: ${{ secrets.PAT }}
+      TARGET_REPO: hashicorp/homebrew-internal
+      TARGET_REPO_FILEPATH: homebrew-internal-checkout
+      BASE_BRANCH: main
+      PR_BRANCH: enos_homebrew_formula_update_v${{ inputs.version }}
+      PR_TITLE: "Homebrew formula update for Enos version v${{ inputs.version }}"
+      PR_BODY: "This is an automatically generated PR to update the Homebrew formula for Enos after a release has been completed."
+      COMMIT_MSG: "Update Homebrew formula for Enos version v${{ inputs.version }}"
+      GIT_USER_EMAIL: team-secure-quality@hashicorp.com
+      GIT_USER_NAME: Secure Quality Team
+      # TO DO: change to quality-team
+      REVIEWER: rebwill
+    steps:
+      # Checkout Enos repo
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: enos-checkout
+
+      # Set up bob CLI
+      - name: Setup bob CLI
+        uses: hashicorp/action-setup-bob@v1
+        with:
+          github-token: ${{ secrets.PAT }}
+
+      # Use bob to download SHA256SUMS file from Artifactory
+      - name: Download artifacts
+        run: |
+          bob download artifactory \
+          -token=${{ secrets.ARTIFACTORY_TOKEN }} \
+          -user=${{ secrets.ARTIFACTORY_USER }} \
+          -channel ${{ inputs.channel }} \
+          -commit=${{ inputs.sha }} \
+          -product-name=${{ inputs.product }} \
+          -product-version=${{ inputs.version }} \
+          -pattern="${{ inputs.product }}_${{ inputs.version }}_SHA256SUMS"
+
+      # Generate Homebrew formula file (enos.rb)
+      - name: Generate Homebrew formula file
+        run: |
+          cd enos-checkout
+          go run ./tools/homebrew/... create -p ../.bob/artifacts/${{ inputs.product }}_${{ inputs.version }}_SHA256SUMS -o enos.rb
+          ls -ah
+          cat enos.rb
+
+      # Checkout target repo
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.TARGET_REPO }}
+          path: ${{ env.TARGET_REPO_FILEPATH }}
+          token: ${{ secrets.PAT }}
+
+      # Create PR
+      - name: Create PR
+        run: |
+          cd ${{ env.TARGET_REPO_FILEPATH }}
+          git config user.email "${{ env.GIT_USER_EMAIL }}"
+          git config user.name "${{ env.GIT_USER_NAME }}"
+          git checkout -b ${{ env.PR_BRANCH }}
+          mv ../enos-checkout/enos.rb ./HomebrewFormula/enos.rb
+          git add HomebrewFormula/enos.rb
+          git commit -m "${{ env.COMMIT_MSG }}"
+          git push origin ${{ env.PR_BRANCH }}
+
+          gh pr create --repo ${{ env.TARGET_REPO }} --base ${{ env.BASE_BRANCH }} --head ${{ env.PR_BRANCH }} --title "${{ env.PR_TITLE }}" --body "${{ env.PR_BODY }}" --reviewer ${{ env.REVIEWER }}

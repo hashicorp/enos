@@ -1,7 +1,9 @@
 package flightplan
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
@@ -17,13 +19,17 @@ var scenarioSchema = &hcl.BodySchema{
 		{Name: "providers", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
-		{Type: blockTypeScenarioStep, LabelNames: []string{"name"}},
+		{Type: blockTypeScenarioStep, LabelNames: []string{attrLabelNameDefault}},
+		// Matrix blocks are handled by the matrix decoder
+		{Type: blockTypeMatrix},
+		{Type: blockTypeLocals},
 	},
 }
 
 // Scenario represents an Enos scenario
 type Scenario struct {
 	Name             string
+	Variants         Vector
 	TerraformCLI     *TerraformCLI
 	TerraformSetting *TerraformSetting
 	Steps            []*ScenarioStep
@@ -37,6 +43,21 @@ func NewScenario() *Scenario {
 		Steps:        []*ScenarioStep{},
 		Providers:    []*Provider{},
 	}
+}
+
+// String returns the scenario identifiers as a string
+func (s *Scenario) String() string {
+	str := s.Name
+	if len(s.Variants) > 0 {
+		str = fmt.Sprintf("%s %s", str, s.Variants.String())
+	}
+
+	return str
+}
+
+// UID returns a unique identifier from the name and variants
+func (s *Scenario) UID() string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(s.String())))
 }
 
 // decode takes an HCL block and an evalutaion context and it decodes itself
@@ -63,7 +84,35 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 		})
 	}
 
-	// Decode all of our blocks.
+	// Decode our locals
+	moreDiags = s.decodeAndValidateLocalsBlock(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode the scenario terraform_cli reference
+	moreDiags = s.decodeAndValidateTerraformCLIAttribute(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode the scenario terraform reference
+	moreDiags = s.decodeAndValidateTerraformSettingsAttribute(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode the scenario providers
+	moreDiags = s.decodeAndValidateProvidersAttribute(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode all of our step blocks.
 	foundSteps := map[string]struct{}{}
 	for _, childBlock := range content.Blocks.OfType(blockTypeScenarioStep) {
 		if _, dupeStep := foundSteps[childBlock.Labels[0]]; dupeStep {
@@ -103,26 +152,49 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 		s.Steps = append(s.Steps, step)
 	}
 
-	// Decode the scenario terraform_cli reference
-	moreDiags = s.decodeAndValidateTerraformCLIAttribute(content, ctx)
-	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	return diags
+}
+
+// decodeAndValidateLocalsBlock decodes the locals block and makes the values
+// available in the evaluation context of the scenario.
+func (s *Scenario) decodeAndValidateLocalsBlock(
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	if len(content.Blocks.OfType(blockTypeLocals)) == 0 {
 		return diags
 	}
 
-	// Decode the scenario terraform reference
-	moreDiags = s.decodeAndValidateTerraformSettingsAttribute(content, ctx)
-	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
-		return diags
-	}
+	locals := map[string]cty.Value{}
+	for _, localsBlock := range content.Blocks.OfType(blockTypeLocals) {
+		moreDiags := verifyBlockHasNLabels(localsBlock, 0)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
 
-	// Decode the scenario providers
-	moreDiags = s.decodeAndValidateProvidersAttribute(content, ctx)
-	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
-		return diags
+		attrs, moreDiags := localsBlock.Body.JustAttributes()
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		for _, attr := range attrs {
+			val, moreDiags := attr.Expr.Value(ctx)
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				continue
+			}
+
+			locals[attr.Name] = val
+		}
 	}
+	if ctx.Variables == nil {
+		ctx.Variables = map[string]cty.Value{}
+	}
+	ctx.Variables["local"] = cty.ObjectVal(locals)
 
 	return diags
 }
@@ -135,10 +207,9 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 ) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	terraformCli, ok := content.Attributes["terraform_cli"]
-	if !ok {
-		// The terraform_cli attribute has not been set so we'll use the default
-		// terraform_cli which we'll get from the eval context.
+	findAndLoadCLI := func(name string) hcl.Diagnostics {
+		var diags hcl.Diagnostics
+
 		diag := &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to determine terraform_cli",
@@ -151,12 +222,12 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 			return diags.Append(diag)
 		}
 
-		defaultCli, ok := terraformClis.AsValueMap()["default"]
+		cli, ok := terraformClis.AsValueMap()[name]
 		if !ok {
 			return diags.Append(diag)
 		}
 
-		err = gocty.FromCtyValue(defaultCli, &s.TerraformCLI)
+		err = gocty.FromCtyValue(cli, &s.TerraformCLI)
 		if err != nil {
 			diag.Summary = "unable to convert default terraform_cli from eval context to object"
 			diag.Detail = err.Error()
@@ -166,9 +237,32 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 		return diags
 	}
 
+	terraformCli, ok := content.Attributes["terraform_cli"]
+	if !ok {
+		// The terraform_cli attribute has not been set so we'll use the default
+		// terraform_cli which we'll get from the eval context.
+		moreDiags := findAndLoadCLI("default")
+		diags = diags.Extend(moreDiags)
+		return diags
+	}
+
+	terraformCliVal, moreDiags := terraformCli.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	if terraformCliVal.Type().Equals(cty.String) {
+		// Our value has been set to a string address.
+		moreDiags := findAndLoadCLI(terraformCliVal.AsString())
+		diags = diags.Extend(moreDiags)
+		return diags
+
+	}
+
 	// Decode our terraform_cli from the eval context. If it hasn't been defined
 	// this will raise an error.
-	moreDiags := gohcl.DecodeExpression(terraformCli.Expr, ctx, &s.TerraformCLI)
+	moreDiags = gohcl.DecodeExpression(terraformCli.Expr, ctx, &s.TerraformCLI)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
@@ -186,70 +280,72 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 	var diags hcl.Diagnostics
 
 	terraformSetting, ok := content.Attributes["terraform"]
-	if ok {
-		// A "terraform" attribute value has been set. Make sure it matches
-		// one that has been defined in the outer scope.
-		tfSettingsVal, moreDiags := terraformSetting.Expr.Value(ctx)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+
+	terraformSettings, err := findEvalContextVariable("terraform", ctx)
+	if err != nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform references an undefined terraform block",
+			Detail:   err.Error(),
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
+	}
+
+	if !ok || terraformSetting == nil {
+		// The terraform attribute has not been set so we'll use the default
+		// terraform settings if they exist.
+		setting, ok := terraformSettings.AsValueMap()["default"]
+		if !ok {
 			return diags
 		}
 
-		if tfSettingsVal.IsNull() || !tfSettingsVal.IsWhollyKnown() || !tfSettingsVal.CanIterateElements() {
-			return diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "terraform value must be that of a terraform block",
-				Subject:  terraformSetting.Expr.Range().Ptr(),
-				Context:  terraformSetting.Range.Ptr(),
-			})
-		}
-
-		// Find it in the eval context and make sure it matches
-		terraformSettings, err := findEvalContextVariable("terraform", ctx)
+		s.TerraformSetting = NewTerraformSetting()
+		err = s.TerraformSetting.FromCtyValue(setting)
 		if err != nil {
 			return diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "terraform references an undefined terraform block",
+				Summary:  "unable to unmarshal terraform from eval context",
 				Detail:   err.Error(),
 				Subject:  terraformSetting.Expr.Range().Ptr(),
 				Context:  terraformSetting.Range.Ptr(),
 			})
 		}
 
-		settingsName, ok := tfSettingsVal.AsValueMap()["name"]
-		if !ok {
-			return diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "terraform value does not have the required name attribute",
-				Subject:  terraformSetting.Expr.Range().Ptr(),
-				Context:  terraformSetting.Range.Ptr(),
-			})
-		}
+		return diags
+	}
 
-		if settingsName.IsNull() || !settingsName.IsWhollyKnown() {
-			return diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "terraform name value must be known",
-				Subject:  terraformSetting.Expr.Range().Ptr(),
-				Context:  terraformSetting.Range.Ptr(),
-			})
-		}
+	// A "terraform" attribute value has been set. Make sure it matches
+	// one that has been defined in the outer scope.
+	tfSettingsVal, moreDiags := terraformSetting.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
 
-		setting, ok := terraformSettings.AsValueMap()[settingsName.AsString()]
+	if tfSettingsVal.IsNull() || !tfSettingsVal.IsWhollyKnown() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform value must be set to a terraform block label or value",
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
+	}
+
+	// The value of the terraform settings attribute can be either a string
+	// name of the terraform settings to use, or the exact value of a
+	// terraform settings that has been defined. We'll handle both cases
+	// here.
+
+	if tfSettingsVal.Type().Equals(cty.String) {
+		// They set the value to a string so we'll set it to the value of a
+		// terraform settings in the eval context.
+		setting, ok := terraformSettings.AsValueMap()[tfSettingsVal.AsString()]
 		if !ok {
 			return diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "terraform references an undefined terraform block",
-				Detail:   fmt.Sprintf("no terraform block with a name label %s exists", settingsName.AsString()),
-				Subject:  terraformSetting.Expr.Range().Ptr(),
-				Context:  terraformSetting.Range.Ptr(),
-			})
-		}
-
-		if tfSettingsVal.Equals(setting) != cty.True {
-			return diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "terraform value and configured value don't match",
+				Detail:   fmt.Sprintf("no terraform block with a name label %s exists", tfSettingsVal.AsString()),
 				Subject:  terraformSetting.Expr.Range().Ptr(),
 				Context:  terraformSetting.Range.Ptr(),
 			})
@@ -270,22 +366,53 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 		return diags
 	}
 
-	// The terraform attribute has not been set so we'll use the default
-	// terraform settings if they exist.
-	terraformSettings, err := findEvalContextVariable("terraform", ctx)
-	if err != nil {
+	// Okay, it's not a string, it must be an exact terraform settings value.
+	if !tfSettingsVal.CanIterateElements() {
 		return diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "terraform references an undefined terraform block",
-			Detail:   err.Error(),
+			Summary:  "terraform value must be set to a terraform block label or value",
 			Subject:  terraformSetting.Expr.Range().Ptr(),
 			Context:  terraformSetting.Range.Ptr(),
 		})
 	}
 
-	setting, ok := terraformSettings.AsValueMap()["default"]
+	settingsName, ok := tfSettingsVal.AsValueMap()["name"]
 	if !ok {
-		return diags
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform value does not have the required name attribute",
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
+	}
+
+	if settingsName.IsNull() || !settingsName.IsWhollyKnown() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform name value must be known",
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
+	}
+
+	setting, ok := terraformSettings.AsValueMap()[settingsName.AsString()]
+	if !ok {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform references an undefined terraform block",
+			Detail:   fmt.Sprintf("no terraform block with a name label %s exists", settingsName.AsString()),
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
+	}
+
+	if tfSettingsVal.Equals(setting) != cty.True {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "terraform value and configured value don't match",
+			Subject:  terraformSetting.Expr.Range().Ptr(),
+			Context:  terraformSetting.Range.Ptr(),
+		})
 	}
 
 	s.TerraformSetting = NewTerraformSetting()
@@ -362,10 +489,82 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 		unrolled[pType] = aliases
 	}
 
-	// For each defined provider, make sure a matching instance is defined and
-	// matches
+	// findProvider finds an unrolled provider given a provider type and alias
+	findProvider := func(pType string, pAlias string) (cty.Value, hcl.Diagnostics) {
+		var diags hcl.Diagnostics
+
+		types, ok := unrolled[pType]
+		if !ok {
+			return cty.NilVal, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("provider type %s is not defined", pType),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+		}
+
+		alias, ok := types[pAlias]
+		if !ok {
+			return cty.NilVal, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("alias %s for provider type %s is not defined", pAlias, pType),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+		}
+
+		return alias, diags
+	}
+
+	// For each provider value that has been given, make sure addressed providers
+	// exist and that provider values match.
 	for _, providerVal := range providersVal.AsValueSlice() {
 		provider := NewProvider()
+
+		if providerVal.Type().Equals(cty.String) {
+			// We've been given a string value for our provider so it must be
+			// an address. Break it apart and look for the corresponding value
+			// to the address.
+			parts := strings.Split(providerVal.AsString(), ".")
+			if len(parts) != 2 {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "provider attribute must be a provider value or type.alias string",
+					Detail:   fmt.Sprintf("provider value %s is not a valid provider address", providerVal.AsString()),
+					Subject:  providers.Expr.Range().Ptr(),
+					Context:  providers.Range.Ptr(),
+				})
+				continue
+			}
+
+			// Find a matching value in the eval context from our address
+			var moreDiags hcl.Diagnostics
+			providerVal, moreDiags = findProvider(parts[0], parts[1])
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				continue
+			}
+
+			// Marshal our provider value into our instance and add it to the providers
+			// list.
+			err := provider.FromCtyValue(providerVal)
+			if err != nil {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "unable to unmarshal provider value",
+					Detail:   err.Error(),
+					Subject:  providers.Expr.Range().Ptr(),
+					Context:  providers.Range.Ptr(),
+				})
+				continue
+			}
+
+			s.Providers = append(s.Providers, provider)
+			continue
+		}
+
+		// Marshal our provider value into our instance and add it to the providers
+		// list.
 		err := provider.FromCtyValue(providerVal)
 		if err != nil {
 			diags = diags.Append(&hcl.Diagnostic{
@@ -378,25 +577,11 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 			continue
 		}
 
-		types, ok := unrolled[provider.Type]
-		if !ok {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("provider type %s is not defined", provider.Type),
-				Subject:  providers.Expr.Range().Ptr(),
-				Context:  providers.Range.Ptr(),
-			})
-			continue
-		}
-
-		alias, ok := types[provider.Alias]
-		if !ok {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("alias %s for provider type %s is not defined", provider.Alias, provider.Type),
-				Subject:  providers.Expr.Range().Ptr(),
-				Context:  providers.Range.Ptr(),
-			})
+		// Our provider value must be an actual provider. Find the corresponding
+		// unrolled provider and ensure that it matches.
+		alias, moreDiags := findProvider(provider.Type, provider.Alias)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
 			continue
 		}
 
@@ -408,7 +593,6 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 				Context:  providers.Range.Ptr(),
 			})
 		}
-
 		s.Providers = append(s.Providers, provider)
 	}
 

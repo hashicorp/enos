@@ -73,6 +73,7 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		require.EqualValues(t, expected.Scenarios[i].Name, fp.Scenarios[i].Name)
 		require.EqualValues(t, expected.Scenarios[i].TerraformSetting, fp.Scenarios[i].TerraformSetting)
 		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
+		require.EqualValues(t, expected.Scenarios[i].Variants, fp.Scenarios[i].Variants)
 
 		require.Len(t, expected.Scenarios[i].Steps, len(fp.Scenarios[i].Steps))
 		for is := range expected.Scenarios[i].Steps {

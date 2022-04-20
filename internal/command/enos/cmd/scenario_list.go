@@ -7,7 +7,7 @@ import (
 // newScenarioListCmd returns a new 'scenario list' sub-command
 func newScenarioListCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "list",
+		Use:   "list [FILTER]",
 		Short: "List scenarios",
 		Long:  "List scenarios",
 		RunE:  runScenarioListCmd,
@@ -16,15 +16,22 @@ func newScenarioListCmd() *cobra.Command {
 
 // runScenarioListCmd runs a scenario list
 func runScenarioListCmd(cmd *cobra.Command, args []string) error {
-	if len(scenarioCfg.fp.Scenarios) != 0 {
-		header := []string{"scenario"}
-		rows := [][]string{{""}} // add a padding row
-		for _, scenario := range scenarioCfg.fp.Scenarios {
-			rows = append(rows, []string{scenario.Name})
-		}
-
-		UI.RenderTable(header, rows)
+	scenarios, err := filterScenarios(args)
+	if err != nil {
+		return err
 	}
+
+	if len(scenarios) == 0 {
+		return nil
+	}
+
+	header := []string{"scenario"}
+	rows := [][]string{{""}} // add a padding row
+	for _, scenario := range scenarios {
+		rows = append(rows, []string{scenario.String()})
+	}
+
+	UI.RenderTable(header, rows)
 
 	return nil
 }

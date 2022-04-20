@@ -239,13 +239,13 @@ module "copy" {
 scenario "copy_to_east" {
   providers = [
     provider.aws.west,
-    provider.aws.east
+	"aws.east",
   ]
 
   step "copy" {
     module    = module.copy
     providers = {
-      src = provider.aws.west
+      src = "aws.west"
       dst = provider.aws.east
     }
   }

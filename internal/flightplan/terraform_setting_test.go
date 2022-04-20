@@ -787,6 +787,115 @@ scenario "experiments" {
 				},
 			},
 		},
+		{
+			desc: "allows string based address references",
+			hcl: fmt.Sprintf(`
+terraform "experiments" {
+  experiments = ["something"]
+
+  cloud {
+    organization = "qti"
+    hostname = "cloud.terraform.io"
+    token = "yunouselogin"
+
+    workspaces {
+      tags = ["something", "another"]
+      name = "foo"
+    }
+  }
+}
+
+module "backend" {
+  source = "%s"
+
+  driver = "postgres"
+}
+
+scenario "default" {
+  terraform = "experiments"
+  step "backend" {
+    module = module.backend
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				TerraformSettings: []*TerraformSetting{
+					{
+						Name:              "experiments",
+						RequiredVersion:   cty.NullVal(cty.String),
+						Experiments:       cty.ListVal([]cty.Value{cty.StringVal("something")}),
+						RequiredProviders: map[string]cty.Value{},
+						ProviderMetas:     map[string]map[string]cty.Value{},
+						Cloud: cty.ObjectVal(map[string]cty.Value{
+							"cloud": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+								"hostname":     cty.StringVal("cloud.terraform.io"),
+								"organization": cty.StringVal("qti"),
+								"token":        cty.StringVal("yunouselogin"),
+								"workspaces": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+									"tags": cty.ListVal([]cty.Value{
+										cty.StringVal("something"),
+										cty.StringVal("another"),
+									}),
+									"name": cty.StringVal("foo"),
+								})}),
+							})}),
+						}),
+					},
+				},
+				Modules: []*Module{
+					{
+						Name:   "backend",
+						Source: modulePath,
+						Attrs: map[string]cty.Value{
+							"driver": cty.StringVal("postgres"),
+						},
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "default",
+						TerraformCLI: DefaultTerraformCLI(),
+						TerraformSetting: &TerraformSetting{
+							Name:              "experiments",
+							RequiredVersion:   cty.NullVal(cty.String),
+							Experiments:       cty.ListVal([]cty.Value{cty.StringVal("something")}),
+							RequiredProviders: map[string]cty.Value{},
+							ProviderMetas:     map[string]map[string]cty.Value{},
+							Backend:           NewTerraformSettingBackend(),
+							Cloud: cty.ObjectVal(map[string]cty.Value{
+								"cloud": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+									"hostname":     cty.StringVal("cloud.terraform.io"),
+									"organization": cty.StringVal("qti"),
+									"token":        cty.StringVal("yunouselogin"),
+									"workspaces": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+										"tags": cty.ListVal([]cty.Value{
+											cty.StringVal("something"),
+											cty.StringVal("another"),
+										}),
+										"name": cty.StringVal("foo"),
+									})}),
+								})}),
+							}),
+						},
+						Steps: []*ScenarioStep{
+							{
+								Name: "backend",
+								Module: &Module{
+									Name:   "backend",
+									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			fp, err := testDecodeHCL(t, []byte(test.hcl))

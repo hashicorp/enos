@@ -33,7 +33,7 @@ var terraformCLISpec = hcldec.ObjectSpec{
 	},
 	"credentials": &hcldec.BlockMapSpec{
 		TypeName:   "credentials",
-		LabelNames: []string{"name"},
+		LabelNames: []string{attrLabelNameDefault},
 		Nested: hcldec.ObjectSpec{
 			"token": &hcldec.AttrSpec{
 				Name:     "token",
@@ -44,7 +44,7 @@ var terraformCLISpec = hcldec.ObjectSpec{
 	},
 	"credentials_helper": &hcldec.BlockMapSpec{
 		TypeName:   "credentials_helper",
-		LabelNames: []string{"name"},
+		LabelNames: []string{attrLabelNameDefault},
 		Nested: hcldec.ObjectSpec{
 			"args": &hcldec.AttrSpec{
 				Name:     "args",

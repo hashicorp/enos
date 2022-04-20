@@ -44,7 +44,7 @@ func StepVariableFromVal(v cty.Value) (*StepVariable, hcl.Diagnostics) {
 
 func init() {
 	StepVariableType = cty.CapsuleWithOps("stepvar", reflect.TypeOf(StepVariable{}), &cty.CapsuleOps{
-		ExtensionData: func(key interface{}) interface{} {
+		ExtensionData: func(key any) any {
 			switch key {
 			case customdecode.CustomExpressionDecoder:
 				return customdecode.CustomExpressionDecoderFunc(
@@ -139,24 +139,7 @@ func init() {
 							})
 						}
 
-						// Okay, we know that we're referencing a known step but
-						// we don't know about the attribute. That's the best
-						// we can do. Before we return the value we'll rename
-						// the root of the traversal to "module", since that
-						// is really what we're referencing.
-						root, ok := traversal[0].(hcl.TraverseRoot)
-						if !ok {
-							return StepVariableVal(stepVar), diags.Append(&hcl.Diagnostic{
-								Severity: hcl.DiagError,
-								Summary:  "malformed traversal",
-								Subject:  traversal.SourceRange().Ptr(),
-								Context:  expr.Range().Ptr(),
-							})
-						}
-						root.Name = "module"
-						traversal[0] = root
 						stepVar.Traversal = traversal
-
 						return StepVariableVal(stepVar), diags
 					},
 				)
@@ -167,11 +150,11 @@ func init() {
 		TypeGoString: func(_ reflect.Type) string {
 			return "flightplan.StepVariable"
 		},
-		GoString: func(raw interface{}) string {
+		GoString: func(raw any) string {
 			stepVar, _ := raw.(*StepVariable)
 			return fmt.Sprintf("flightplan.StepVariable(%#v)", stepVar)
 		},
-		RawEquals: func(a, b interface{}) bool {
+		RawEquals: func(a, b any) bool {
 			stepVarA, _ := a.(*StepVariable)
 			stepVarB, _ := b.(*StepVariable)
 			return (stepVarA.Value == stepVarB.Value) &&

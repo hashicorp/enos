@@ -157,13 +157,8 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 // filterScenarios takes CLI arguments that may contain a scenario filter and
 // returns the filtered results.
 func filterScenarios(args []string) ([]*flightplan.Scenario, error) {
-	filterArg := ""
-	if len(args) == 1 {
-		filterArg = args[0]
-	}
-
 	filter, err := flightplan.NewScenarioFilter(
-		flightplan.WithScenarioFilterParse(filterArg),
+		flightplan.WithScenarioFilterParse(args),
 	)
 	if err != nil {
 		return nil, err
@@ -207,6 +202,14 @@ func scenarioTimeoutContext() (context.Context, func()) {
 	}
 
 	return ctx, cancel
+}
+
+// scenarioFilterArgs is our own cobra.PositionsArgs implementation that
+// validates that the arguments given to a scenario command are a valid scenario
+// filter.
+func scenarioFilterArgs(cmd *cobra.Command, args []string) error {
+	_, err := flightplan.ParseScenarioFilter(args)
+	return err
 }
 
 // newGeneratorFor returns a generator for a given scenario, its base directory

@@ -72,7 +72,7 @@ func Test_StepVariableType_Decode(t *testing.T) {
 				}),
 			}},
 			expectTraversal: true,
-			value:           testMakeStepVarTraversal("module", "foo", "ref", "thing"),
+			value:           testMakeStepVarTraversal("step", "foo", "ref", "thing"),
 		},
 		{
 			desc: "no step in context",

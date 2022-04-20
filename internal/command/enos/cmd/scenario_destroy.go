@@ -18,7 +18,7 @@ func newScenarioDestroyCmd() *cobra.Command {
 		Short:             "Destroy previously generated Terraform modules from matching scenarios",
 		Long:              fmt.Sprintf("Destroy previously generated Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioDestroyCmd,
-		Args:              cobra.RangeArgs(0, 1),
+		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "don't wait for terraform state lock")

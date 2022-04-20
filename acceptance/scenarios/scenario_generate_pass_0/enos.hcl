@@ -50,6 +50,10 @@ module "barref" {
 scenario "test" {
   terraform_cli = terraform_cli.debug
 
+  matrix {
+    foo = ["matrixfoo", "matrixbar"]
+  }
+
   step "foo" {
     module = module.foo
   }
@@ -62,7 +66,7 @@ scenario "test" {
     module = module.foo
 
     variables {
-      input = "fooover"
+      input        = matrix.foo
       anotherinput = ["fooover"]
     }
   }

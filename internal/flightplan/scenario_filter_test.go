@@ -12,9 +12,14 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []*Scenario{
-		{Name: "a"},
-		{Name: "b"},
-		{Name: "c"},
+		{Name: "fresh-install", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+		{Name: "fresh-install", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+		{Name: "fresh-install", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+		{Name: "fresh-install", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+		{Name: "upgrade", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+		{Name: "upgrade", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+		{Name: "upgrade", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+		{Name: "upgrade", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
 	}
 
 	for _, test := range []struct {
@@ -24,21 +29,53 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 		expected  []*Scenario
 	}{
 		{
-			"match one",
+			"name only",
 			scenarios,
-			&ScenarioFilter{Name: "b"},
-			[]*Scenario{scenarios[1]},
+			&ScenarioFilter{Name: "upgrade"},
+			scenarios[4:],
 		},
 		{
-			"match all",
+			"name no match",
+			scenarios,
+			&ScenarioFilter{Name: "package"},
+			[]*Scenario{},
+		},
+		{
+			"select all",
 			scenarios,
 			&ScenarioFilter{SelectAll: true},
 			scenarios,
 		},
 		{
-			"match none",
+			"variant with no name",
 			scenarios,
-			&ScenarioFilter{Name: "nope"},
+			&ScenarioFilter{
+				Include: Vector{NewElement("backend", "consul")},
+				Exclude: []*Exclude{
+					{ExcludeContains, Vector{NewElement("arch", "arm64")}},
+				},
+			},
+			[]*Scenario{scenarios[3], scenarios[7]},
+		},
+		{
+			"variant with name",
+			scenarios,
+			&ScenarioFilter{
+				Name:    "upgrade",
+				Include: Vector{NewElement("backend", "raft")},
+				Exclude: []*Exclude{
+					{ExcludeContains, Vector{NewElement("arch", "amd64")}},
+				},
+			},
+			[]*Scenario{scenarios[4]},
+		},
+		{
+			"variant matches vector but requires more",
+			scenarios,
+			&ScenarioFilter{
+				Name:    "upgrade",
+				Include: Vector{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("edition", "ent")},
+			},
 			[]*Scenario{},
 		},
 	} {
@@ -58,23 +95,39 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 
 	for _, test := range []struct {
 		desc      string
-		filterArg string
+		filterArg []string
 		expected  *ScenarioFilter
 	}{
 		{
 			"blank filter",
-			"",
+			[]string{},
 			&ScenarioFilter{SelectAll: true},
 		},
 		{
 			"filter with only name",
-			"test",
+			[]string{"test"},
 			&ScenarioFilter{Name: "test"},
 		},
 		{
 			"filter with name and variants",
-			"test variant:foo",
-			&ScenarioFilter{Name: "test"},
+			[]string{"test", "backend:consul", "!arch:arm64"},
+			&ScenarioFilter{
+				Name:    "test",
+				Include: Vector{NewElement("backend", "consul")},
+				Exclude: []*Exclude{
+					{ExcludeContains, Vector{NewElement("arch", "arm64")}},
+				},
+			},
+		},
+		{
+			"filter with no name and variants",
+			[]string{"!arch:amd64", "backend:raft"},
+			&ScenarioFilter{
+				Include: Vector{NewElement("backend", "raft")},
+				Exclude: []*Exclude{
+					{ExcludeContains, Vector{NewElement("arch", "amd64")}},
+				},
+			},
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {

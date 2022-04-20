@@ -19,7 +19,7 @@ var variableSchema = &hcl.BodySchema{
 		{Name: "sensitive"},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
-		{Type: "validation"},
+		{Type: blockTypeValidation},
 	},
 }
 

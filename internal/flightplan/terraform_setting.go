@@ -72,9 +72,9 @@ func (t *TerraformSetting) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Di
 	// Handle the rest of our schema manually since it isn't strictly defined
 	content, moreDiags := remain.Content(&hcl.BodySchema{
 		Blocks: []hcl.BlockHeaderSchema{
-			{Type: "required_providers"},
-			{Type: "provider_meta", LabelNames: []string{"name"}},
-			{Type: "backend", LabelNames: []string{"name"}},
+			{Type: blockTypeRequiredProviders},
+			{Type: blockTypeProviderMeta, LabelNames: []string{attrLabelNameDefault}},
+			{Type: blockTypeBackend, LabelNames: []string{attrLabelNameDefault}},
 		},
 	})
 	diags = diags.Extend(moreDiags)
@@ -95,8 +95,8 @@ func (t *TerraformSetting) ensureOnlyCloudOrBackendDefined(body hcl.Body) hcl.Di
 
 	content, _, moreDiags := body.PartialContent(&hcl.BodySchema{
 		Blocks: []hcl.BlockHeaderSchema{
-			{Type: "cloud"},
-			{Type: "backend", LabelNames: []string{"name"}},
+			{Type: blockTypeCloud},
+			{Type: blockTypeBackend, LabelNames: []string{attrLabelNameDefault}},
 		},
 	})
 	diags = diags.Extend(moreDiags)
@@ -104,8 +104,8 @@ func (t *TerraformSetting) ensureOnlyCloudOrBackendDefined(body hcl.Body) hcl.Di
 		return diags
 	}
 
-	clouds := content.Blocks.OfType("cloud")
-	backends := content.Blocks.OfType("backends")
+	clouds := content.Blocks.OfType(blockTypeCloud)
+	backends := content.Blocks.OfType(blockTypeBackend)
 
 	if len(clouds) > 0 && len(backends) > 0 {
 		for _, cloud := range clouds {

@@ -1,5 +1,5 @@
 BINARY=enos
-VERSION=$$($(CURRENT_DIRECTORY)/build-scripts/version.sh version/version.go)
+VERSION=$$($(CURRENT_DIRECTORY)/.release/build-scripts/version.sh version/version.go)
 GIT_SHA=$$(git rev-parse HEAD)
 CURRENT_DIRECTORY := $(shell pwd)
 BUILD_BINARY_PATH=${CURRENT_DIRECTORY}/dist/${BINARY}
@@ -38,6 +38,6 @@ clean:
 	rm -rf dist enos
 
 version:
-	@$(CURRENT_DIRECTORY)/build-scripts/version.sh version/version.go
+	@$(CURRENT_DIRECTORY)/.release/build-scripts/version.sh version/version.go
 
 .PHONY: version

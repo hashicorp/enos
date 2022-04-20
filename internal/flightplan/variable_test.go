@@ -109,7 +109,7 @@ variable "complex" {
 			require.False(t, diags.HasErrors(), diags.Error())
 			content, diags := f.Body.Content(&hcl.BodySchema{
 				Blocks: []hcl.BlockHeaderSchema{
-					{Type: blockTypeVariable, LabelNames: []string{"name"}},
+					{Type: blockTypeVariable, LabelNames: []string{attrLabelNameDefault}},
 				},
 			})
 			require.False(t, diags.HasErrors(), diags.Error())

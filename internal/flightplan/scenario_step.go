@@ -3,6 +3,7 @@ package flightplan
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -18,7 +19,7 @@ var scenarioStepSchema = &hcl.BodySchema{
 		{Name: "providers", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
-		{Type: "variables"},
+		{Type: blockTypeVariables},
 	},
 }
 
@@ -118,11 +119,56 @@ func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.Bod
 	// Since we don't know the variable schema of the Terraform module we're
 	// referencing we have to manually decode the parts that we do know. Everything
 	// else we'll pass along to Terraform.
-	if val.IsNull() || !val.IsWhollyKnown() || !val.CanIterateElements() {
+	if val.IsNull() || !val.IsWhollyKnown() {
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "invalid module value",
 			Detail:   "module must be a known module object",
+			Subject:  module.Expr.Range().Ptr(),
+			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
+		})
+
+		return module, diags
+	}
+
+	if val.Type().Equals(cty.String) {
+		// We have a string address reference to a module. Try and locate it in
+		// the eval context and set the appropriate source.
+		modules, err := findEvalContextVariable("module", ctx)
+		if err != nil {
+			return module, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "unknown module",
+				Detail:   "no modules have been defined",
+				Subject:  module.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
+			})
+		}
+
+		// Validate that our module configuration references an existing module.
+		// We only care that the name and source match. All other variables and
+		// and attributes we'll carry over.
+		mod, ok := modules.AsValueMap()[val.AsString()]
+		if !ok {
+			return module, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "unknown module",
+				Detail:   fmt.Sprintf("no modules with name %s have been defined", val.AsString()),
+				Subject:  module.Expr.Range().Ptr(),
+				Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
+			})
+		}
+
+		// Set our value to the module we found via the name reference
+		val = mod
+	}
+
+	// We've been given a module value
+	if !val.CanIterateElements() {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "invalid module value",
+			Detail:   "module must be a string name or module value",
 			Subject:  module.Expr.Range().Ptr(),
 			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 		})
@@ -348,10 +394,80 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 		unrolled[pType] = aliases
 	}
 
+	// findProvider finds an unrolled provider given a provider type and alias
+	findProvider := func(pType string, pAlias string) (cty.Value, hcl.Diagnostics) {
+		var diags hcl.Diagnostics
+
+		types, ok := unrolled[pType]
+		if !ok {
+			return cty.NilVal, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("provider type %s is not defined", pType),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+		}
+
+		alias, ok := types[pAlias]
+		if !ok {
+			return cty.NilVal, diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("alias %s for provider type %s is not defined", pAlias, pType),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
+		}
+
+		return alias, diags
+	}
+
 	// For each defined provider, make sure a matching instance is defined and
 	// matches
 	for providerImportName, providerVal := range providersVal.AsValueMap() {
 		provider := NewProvider()
+
+		if providerVal.Type().Equals(cty.String) {
+			// We've been given a string value for our provider so it must be
+			// an address. Break it apart and look for the corresponding value
+			// to the address.
+			parts := strings.Split(providerVal.AsString(), ".")
+			if len(parts) != 2 {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "provider attribute must be a provider value or type.alias string",
+					Detail:   fmt.Sprintf("provider value %s is not a valid provider address", providerVal.AsString()),
+					Subject:  providers.Expr.Range().Ptr(),
+					Context:  providers.Range.Ptr(),
+				})
+				continue
+			}
+
+			// Find a matching value in the eval context from our address
+			var moreDiags hcl.Diagnostics
+			providerVal, moreDiags = findProvider(parts[0], parts[1])
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				continue
+			}
+
+			// Marshal our provider value into our instance and add it to the providers
+			// list.
+			err := provider.FromCtyValue(providerVal)
+			if err != nil {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "unable to unmarshal provider value",
+					Detail:   err.Error(),
+					Subject:  providers.Expr.Range().Ptr(),
+					Context:  providers.Range.Ptr(),
+				})
+				continue
+			}
+
+			ss.Providers[providerImportName] = provider
+			continue
+		}
+
 		err := provider.FromCtyValue(providerVal)
 		if err != nil {
 			diags = diags.Append(&hcl.Diagnostic{
@@ -364,25 +480,9 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 			continue
 		}
 
-		types, ok := unrolled[provider.Type]
-		if !ok {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("provider type %s is not defined", provider.Type),
-				Subject:  providers.Expr.Range().Ptr(),
-				Context:  providers.Range.Ptr(),
-			})
-			continue
-		}
-
-		alias, ok := types[provider.Alias]
-		if !ok {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("alias %s for provider type %s is not defined", provider.Alias, provider.Type),
-				Subject:  providers.Expr.Range().Ptr(),
-				Context:  providers.Range.Ptr(),
-			})
+		alias, moreDiags := findProvider(provider.Type, provider.Alias)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
 			continue
 		}
 

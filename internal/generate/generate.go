@@ -10,6 +10,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
@@ -115,7 +116,7 @@ func (g *Generator) TerraformModulePath() string {
 
 // TerraformModuleDir is the directory where the generated Terraform
 func (g *Generator) TerraformModuleDir() string {
-	return filepath.Join(g.OutDir, g.Scenario.Name)
+	return filepath.Join(g.OutDir, g.Scenario.UID())
 }
 
 // generateCLIConfig converts the Scenario's terraform_cli into a terraformrc
@@ -411,7 +412,18 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 				continue
 			}
 
+			if stepVar.Traversal == nil {
+				continue
+			}
+
 			// It's a module reference
+			// Rename the root of the traversal to "module" and write it out
+			root, ok := stepVar.Traversal[0].(hcl.TraverseRoot)
+			if !ok {
+				return fmt.Errorf("malformed step variable reference")
+			}
+			root.Name = "module"
+			stepVar.Traversal[0] = root
 			body.SetAttributeTraversal(k, stepVar.Traversal)
 		}
 

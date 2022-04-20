@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,27 +20,48 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(tmpDir) })
 
-	for _, testDir := range []string{
-		"scenario_generate_pass_0",
-		"scenario_generate_pass_backend",
-		"scenario_generate_pass_cloud",
+	for _, test := range []struct {
+		dir  string
+		args string
+		uid  string
+	}{
+		{
+			"scenario_generate_pass_0",
+			"test foo:matrixfoo",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixfoo]"))),
+		},
+		{
+			"scenario_generate_pass_0",
+			"test foo:matrixbar",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixbar]"))),
+		},
+		{
+			"scenario_generate_pass_backend",
+			"",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("test"))),
+		},
+		{
+			"scenario_generate_pass_cloud",
+			"",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("test"))),
+		},
 	} {
-		t.Run(testDir, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s %s", test.dir, test.args), func(t *testing.T) {
 			// NOTE: Right now we're just testing that the generate command
 			// outputs the files in the right place with the correct names.
 			// Validation and execution are handled by other tests.
-			outDir := filepath.Join(tmpDir, testDir)
+			outDir := filepath.Join(tmpDir, test.dir)
 			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
-			path, err := filepath.Abs(filepath.Join("./scenarios", testDir))
+			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
 			require.NoError(t, err)
-			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s", path, outDir)
+			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s %s", path, outDir, test.args)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoErrorf(t, err, string(out))
-			s, err := os.Open(filepath.Join(outDir, "test/scenario.tf"))
+			s, err := os.Open(filepath.Join(outDir, test.uid, "scenario.tf"))
 			require.NoError(t, err)
 			s.Close()
-			rc, err := os.Open(filepath.Join(outDir, "test/terraform.rc"))
+			rc, err := os.Open(filepath.Join(outDir, test.uid, "terraform.rc"))
 			require.NoError(t, err)
 			rc.Close()
 		})

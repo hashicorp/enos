@@ -22,7 +22,6 @@ The [Setup Enos Github Action](https://github.com/hashicorp/action-setup-enos) i
 The internal [Enos homebrew formula](https://github.com/hashicorp/homebrew-internal/tree/main/HomebrewFormula) is available to easily install releases of `enos` on your local machine. Github releases are also available for download in this repository.
 
 ## Features
-
 ### DSL
 The `enos` DSL is similar to Terraform's root module syntax, but differs in a few significant ways. Rather than a single root module, an author can define reusable top-level resources to be shared between one-or-many scenarios.
 

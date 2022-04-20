@@ -256,9 +256,9 @@ func (m *Matrix) HasVector(other Vector) bool {
 	return false
 }
 
-// HasVectorValues returns whether or not a matrix has a vector whose unordered
+// HasVectorUnordered returns whether or not a matrix has a vector whose unordered
 // values match exactly with another that is given.
-func (m *Matrix) HasVectorValues(other Vector) bool {
+func (m *Matrix) HasVectorUnordered(other Vector) bool {
 	for _, v := range m.Vectors {
 		if v.EqualUnordered(other) {
 			return true
@@ -284,7 +284,7 @@ func (m *Matrix) Unique() *Matrix {
 func (m *Matrix) UniqueValues() *Matrix {
 	nm := NewMatrix()
 	for _, v := range m.Vectors {
-		if !nm.HasVectorValues(v) {
+		if !nm.HasVectorUnordered(v) {
 			nm.AddVector(v)
 		}
 	}
@@ -292,7 +292,7 @@ func (m *Matrix) UniqueValues() *Matrix {
 	return nm
 }
 
-// ExcludeVector determines if Exclude directive matches the vector
+// Match determines if Exclude directive matches the vector
 func (ex *Exclude) Match(vec Vector) bool {
 	switch ex.Mode {
 	case ExcludeExactly:

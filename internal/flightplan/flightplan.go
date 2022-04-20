@@ -523,7 +523,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 	// Go maps are intentionally unordered. We need to sort our attributes
 	// so that our variants elements are deterministic every time we
 	// decode our flightplan.
-	sortedAttributes := func(attrs map[string]*hcl.Attribute) []*hcl.Attribute {
+	sortAttributes := func(attrs map[string]*hcl.Attribute) []*hcl.Attribute {
 		sorted := []*hcl.Attribute{}
 		for _, attr := range attrs {
 			sorted = append(sorted, attr)
@@ -540,7 +540,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 	// We're ignoring the diagnostics JustAttributes() will return here because
 	// there might also be include and exclude blocks.
 	mAttrs, _ := block.Body.JustAttributes()
-	for _, attr := range sortedAttributes(mAttrs) {
+	for _, attr := range sortAttributes(mAttrs) {
 		vec, moreDiags := decodeMatrixAttribute(block, attr)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
@@ -581,7 +581,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				continue
 			}
 
-			for _, attr := range sortedAttributes(iAttrs) {
+			for _, attr := range sortAttributes(iAttrs) {
 				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
 				diags = diags.Extend(moreDiags)
 				if moreDiags.HasErrors() {
@@ -604,7 +604,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				continue
 			}
 
-			for _, attr := range sortedAttributes(eAttrs) {
+			for _, attr := range sortAttributes(eAttrs) {
 				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
 				diags = diags.Extend(moreDiags)
 				if moreDiags.HasErrors() {

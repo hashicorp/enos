@@ -16,14 +16,12 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 	modulePath, err := filepath.Abs("./tests/simple_module")
 	require.NoError(t, err)
 
-	for _, test := range []struct {
-		desc     string
+	for desc, test := range map[string]struct {
 		hcl      string
 		expected *FlightPlan
 		fail     bool
 	}{
-		{
-			desc: "matrix with label",
+		"matrix with label": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -41,8 +39,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "more than one matrix block",
+		"more than one matrix block": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -64,8 +61,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "invalid matrix value",
+		"invalid matrix value": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -83,8 +79,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "invalid block",
+		"invalid block": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -103,8 +98,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "invalid value include",
+		"invalid value include": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -124,8 +118,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "invalid block include",
+		"invalid block include": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -146,8 +139,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "invalid value exclude",
+		"invalid value exclude": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -167,9 +159,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-
-		{
-			desc: "invalid block exclude",
+		"invalid block exclude": {
 			fail: true,
 			hcl: fmt.Sprintf(`
 			module "backend" {
@@ -190,8 +180,7 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 			}
 			`, modulePath),
 		},
-		{
-			desc: "valid matrix",
+		"valid matrix": {
 			hcl: fmt.Sprintf(`
 module "books" {
   source = "%s"
@@ -310,7 +299,7 @@ scenario "nighttime" {
 			},
 		},
 	} {
-		t.Run(test.desc, func(t *testing.T) {
+		t.Run(desc, func(t *testing.T) {
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
@@ -323,131 +312,113 @@ scenario "nighttime" {
 }
 
 func Test_Matrix_Vector_Equal(t *testing.T) {
-	for _, test := range []struct {
-		desc  string
+	for desc, test := range map[string]struct {
 		in    Vector
 		other Vector
 		equal bool
 	}{
-		{
-			"equal",
+		"equal": {
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			true,
 		},
-		{
-			"ordered but unequal Elements",
+		"ordered but unequal Elements": {
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}, Element{"backend", "mssql"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			false,
 		},
-		{
-			"equal Values",
+		"equal Values": {
 			Vector{Element{"backend", "consul"}, Element{"backend", "raft"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			false,
 		},
 	} {
-		t.Run(test.desc, func(t *testing.T) {
+		t.Run(desc, func(t *testing.T) {
 			require.Equal(t, test.equal, test.in.Equal(test.other))
 		})
 	}
 }
 
 func Test_Matrix_Vector_ContainsUnordered(t *testing.T) {
-	for _, test := range []struct {
-		desc  string
+	for desc, test := range map[string]struct {
 		in    Vector
 		other Vector
 		match bool
 	}{
-		{
-			"exact",
+		"exact": {
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			true,
 		},
-		{
-			"unordered unequal len match",
+		"unordered unequal len match": {
 			Vector{Element{"backend", "consul"}, Element{"backend", "raft"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}, Element{"backend", "mssql"}},
 			false,
 		},
-		{
-			"unordered exact",
+		"unordered exact": {
 			Vector{Element{"backend", "consul"}, Element{"backend", "raft"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			true,
 		},
-		{
-			"equal len no match",
+		"equal len no match": {
 			Vector{Element{"backend", "myssql"}, Element{"backend", "raft"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			false,
 		},
-		{
-			"unequal len no match",
+		"unequal len no match": {
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}, Element{"backend", "mssql"}},
 			false,
 		},
 	} {
-		t.Run(test.desc, func(t *testing.T) {
+		t.Run(desc, func(t *testing.T) {
 			require.Equal(t, test.match, test.in.ContainsUnordered(test.other))
 		})
 	}
 }
 
 func Test_Matrix_Vector_EqualUnordered(t *testing.T) {
-	for _, test := range []struct {
-		desc  string
+	for desc, test := range map[string]struct {
 		in    Vector
 		other Vector
 		equal bool
 	}{
-		{
-			"equal",
+		"equal": {
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			true,
 		},
-		{
-			"ordered but unequal Elements",
+		"ordered but unequal Elements": {
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}, Element{"backend", "mssql"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			false,
 		},
-		{
-			"equal Values",
+		"equal Values": {
 			Vector{Element{"backend", "consul"}, Element{"backend", "raft"}},
 			Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 			true,
 		},
 	} {
-		t.Run(test.desc, func(t *testing.T) {
+		t.Run(desc, func(t *testing.T) {
 			require.Equal(t, test.equal, test.in.EqualUnordered(test.other))
 		})
 	}
 }
 
 func Test_Matrix_CartesianProduct(t *testing.T) {
-	for _, test := range []struct {
-		desc     string
+	for desc, test := range map[string]struct {
 		in       *Matrix
 		expected *Matrix
 	}{
-		{
-			"nil vectors",
+		"nil vectors": {
 			&Matrix{Vectors: nil},
 			&Matrix{Vectors: nil},
 		},
-		{
-			"empty vectors",
+		"empty vectors": {
 			&Matrix{Vectors: []Vector{}},
 			&Matrix{Vectors: nil},
 		},
-		{
-			"regular",
+		"regular": {
 			&Matrix{
 				Vectors: []Vector{
 					{Element{"backend", "raft"}, Element{"backend", "consul"}},
@@ -466,8 +437,7 @@ func Test_Matrix_CartesianProduct(t *testing.T) {
 				{Element{Key: "backend", Val: "consul"}, Element{Key: "arch", Val: "amd64"}, Element{Key: "distro", Val: "rhel"}},
 			}},
 		},
-		{
-			"irregular",
+		"irregular": {
 			&Matrix{
 				Vectors: []Vector{
 					{Element{"backend", "raft"}, Element{"backend", "consul"}},
@@ -498,7 +468,7 @@ func Test_Matrix_CartesianProduct(t *testing.T) {
 			}},
 		},
 	} {
-		t.Run(test.desc, func(t *testing.T) {
+		t.Run(desc, func(t *testing.T) {
 			require.Equal(t, test.expected.Vectors, test.in.CartesianProduct().Vectors)
 		})
 	}
@@ -552,14 +522,12 @@ func Test_Matrix_Unique(t *testing.T) {
 }
 
 func Test_Matrix_Exclude(t *testing.T) {
-	for _, test := range []struct {
-		desc     string
+	for desc, test := range map[string]struct {
 		in       *Matrix
 		Excludes []*Exclude
 		expected *Matrix
 	}{
-		{
-			"exact",
+		"exact": {
 			&Matrix{Vectors: []Vector{
 				{Element{"backend", "raft"}, Element{"backend", "consul"}},
 				{Element{"backend", "raft"}, Element{"backend", "consul"}},
@@ -582,8 +550,7 @@ func Test_Matrix_Exclude(t *testing.T) {
 				{Element{"arch", "amd64"}, Element{"arch", "arm64"}},
 			}},
 		},
-		{
-			"equal Values",
+		"equal values": {
 			&Matrix{Vectors: []Vector{
 				{Element{"backend", "raft"}, Element{"backend", "consul"}},
 				{Element{"backend", "raft"}, Element{"backend", "consul"}},
@@ -605,8 +572,7 @@ func Test_Matrix_Exclude(t *testing.T) {
 				{Element{"arch", "amd64"}, Element{"arch", "arm64"}, Element{"arch", "ppc64"}},
 			}},
 		},
-		{
-			"match",
+		"match": {
 			&Matrix{Vectors: []Vector{
 				{Element{"backend", "raft"}, Element{"backend", "consul"}, Element{"backend", "mssql"}},
 				{Element{"backend", "consul"}, Element{"backend", "raft"}, Element{"backend", "mysql"}},
@@ -630,6 +596,8 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 		},
 	} {
-		require.Equal(t, test.expected.Vectors, test.in.Exclude(test.Excludes...).Vectors)
+		t.Run(desc, func(t *testing.T) {
+			require.Equal(t, test.expected.Vectors, test.in.Exclude(test.Excludes...).Vectors)
+		})
 	}
 }

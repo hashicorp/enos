@@ -549,3 +549,5 @@ To create the release, the workflow downloads the release assets from Artifactor
 - **Bug Fixes 🐛** category includes PRs with the label `changelog/bug`
 - **Other Changes 😎** category includes PRs with the label `changelog/other`
 - PRs with the label `changelog/none` will be excluded from release notes.
+
+After it completes, the release workflow automatically triggers another workflow that updates the Homebrew formula file in hashicorp/homebrew-internal, HashiCorp's internal Homebrew tap.

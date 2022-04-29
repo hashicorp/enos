@@ -43,7 +43,7 @@ jobs:
       BASE_BRANCH: main
       PR_BRANCH: enos_homebrew_formula_update_v${{ inputs.version }}
       PR_TITLE: "Homebrew formula update for Enos version v${{ inputs.version }}"
-      PR_BODY: "This is an automatically generated PR to update the Homebrew formula for Enos after a release has been completed."
+      PR_BODY: "This is an automatically generated PR to update the Homebrew formula for Enos after a release has been completed. It must be manually approved and merged by a reviewer."
       COMMIT_MSG: "Update Homebrew formula for Enos version v${{ inputs.version }}"
       GIT_USER_EMAIL: team-secure-quality@hashicorp.com
       GIT_USER_NAME: Secure Quality Team
@@ -80,8 +80,6 @@ jobs:
         run: |
           cd enos-checkout
           go run ./tools/homebrew/... create -p ../.bob/artifacts/${{ inputs.product }}_${{ inputs.version }}_SHA256SUMS -o enos.rb
-          ls -ah
-          cat enos.rb
 
       # Checkout target repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
@@ -99,16 +97,10 @@ jobs:
           cd ${{ env.TARGET_REPO_FILEPATH }}
           git config user.email "${{ env.GIT_USER_EMAIL }}"
           git config user.name "${{ env.GIT_USER_NAME }}"
+          git checkout -b ${{ env.PR_BRANCH }}
           mv ../enos-checkout/enos.rb ./HomebrewFormula/enos.rb
-          gh auth status
+          git add HomebrewFormula/enos.rb
+          git commit -m "${{ env.COMMIT_MSG }}"
+          git push origin ${{ env.PR_BRANCH }}
 
-    # cd ${{ env.TARGET_REPO_FILEPATH }}
-    # git config user.email "${{ env.GIT_USER_EMAIL }}"
-    # git config user.name "${{ env.GIT_USER_NAME }}"
-    # git checkout -b ${{ env.PR_BRANCH }}
-    # mv ../enos-checkout/enos.rb ./HomebrewFormula/enos.rb
-    # git add HomebrewFormula/enos.rb
-    # git commit -m "${{ env.COMMIT_MSG }}"
-    # git push origin ${{ env.PR_BRANCH }}
-
-    # gh pr create --repo ${{ env.TARGET_REPO }} --base ${{ env.BASE_BRANCH }} --head ${{ env.PR_BRANCH }} --title "${{ env.PR_TITLE }}" --body "${{ env.PR_BODY }}" --reviewer ${{ env.REVIEWER }}
+          gh pr create --repo ${{ env.TARGET_REPO }} --base ${{ env.BASE_BRANCH }} --head ${{ env.PR_BRANCH }} --title "${{ env.PR_TITLE }}" --body "${{ env.PR_BODY }}" --reviewer ${{ env.REVIEWER }}

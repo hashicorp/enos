@@ -549,3 +549,5 @@ To create the release, the workflow downloads the release assets from Artifactor
 - **Bug Fixes 🐛** category includes PRs with the label `changelog/bug`
 - **Other Changes 😎** category includes PRs with the label `changelog/other`
 - PRs with the label `changelog/none` will be excluded from release notes.
+
+After the release workflow completes, it automatically triggers another workflow. This workflow creates an updated version of the Enos Homebrew formula file and opens a PR for it in HashiCorp's internal Homebrew tap, `hashicorp/homebrew-internal`.

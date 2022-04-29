@@ -27,7 +27,8 @@ on:
         description: To mark this as a pre-release, check this box.
 
 jobs:
-  create_release:
+  create-release:
+    name: Create Release
     runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
@@ -58,7 +59,7 @@ jobs:
           -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
           -channel ${{ env.CHANNEL }} \
           -commit=${{ env.SHA }} \
-          -product-name=${{env.PRODUCT }} \
+          -product-name=${{ env.PRODUCT }} \
           -product-version=${{ env.VERSION }} \
           -pattern="${{ env.PRODUCT }}_${{ env.VERSION }}_*_*.zip"
 
@@ -77,3 +78,20 @@ jobs:
             TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
           fi
           gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip
+
+  # If not a pre-release, generate an updated Homebrew formula definition file
+  # and open a PR on hashicorp/homebrew-internal with the updated file
+  trigger-homebrew-formula-update:
+    if: ${{ github.event.inputs.pre_release == 'false' }}
+    name: Trigger update to Homebrew formula
+    needs: create-release
+    uses: ./.github/workflows/update_homebrew_formula.yml
+    with:
+      channel: ${{ github.event.inputs.channel }}
+      sha: ${{ github.event.inputs.sha }}
+      product: ${{ github.event.repository.name }}
+      version: ${{ github.event.inputs.version }}
+    secrets:
+      GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}

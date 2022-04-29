@@ -75,7 +75,6 @@ jobs:
           -pattern="${{ inputs.product }}_${{ inputs.version }}_SHA256SUMS"
 
       # Generate Homebrew formula file (enos.rb)
-      # TO DO: Remove unnecessary lines below
       - name: Generate Homebrew formula file
         run: |
           cd enos-checkout

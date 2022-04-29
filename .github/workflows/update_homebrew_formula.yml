@@ -43,8 +43,7 @@ jobs:
       COMMIT_MSG: "Update Homebrew formula for Enos version v${{ inputs.version }}"
       GIT_USER_EMAIL: team-secure-quality@hashicorp.com
       GIT_USER_NAME: Secure Quality Team
-      # TO DO: change to quality-team
-      REVIEWER: rebwill
+      REVIEWER: quality-team
     steps:
       # Checkout Enos repo
       - name: Checkout

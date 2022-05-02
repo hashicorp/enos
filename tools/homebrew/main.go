@@ -23,7 +23,8 @@ func main() {
 	}
 }
 
-const formulaTemplate = `class Enos < Formula
+const formulaTemplate = `require_relative "../Strategies/private_strategy"
+class Enos < Formula
 	desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable and shareable declarative language."
 	homepage "https://github.com/hashicorp/enos"
 	version "{{.Version}}"
@@ -66,7 +67,7 @@ const formulaTemplate = `class Enos < Formula
 		end
 	end
 end
-	`
+`
 
 // Create a new template
 var t = template.Must(template.New("formula").Parse(formulaTemplate))

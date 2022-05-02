@@ -1,3 +1,4 @@
+require_relative "../Strategies/private_strategy"
 class Enos < Formula
 	desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable and shareable declarative language."
 	homepage "https://github.com/hashicorp/enos"
@@ -41,4 +42,3 @@ class Enos < Formula
 		end
 	end
 end
-	

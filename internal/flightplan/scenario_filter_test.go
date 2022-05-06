@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // Test_ScenarioFilter_ScenariosSelect tests that a flight plan returns the
@@ -52,7 +54,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			&ScenarioFilter{
 				Include: Vector{NewElement("backend", "consul")},
 				Exclude: []*Exclude{
-					{ExcludeContains, Vector{NewElement("arch", "arm64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "arm64")}},
 				},
 			},
 			[]*Scenario{scenarios[3], scenarios[7]},
@@ -64,7 +66,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 				Name:    "upgrade",
 				Include: Vector{NewElement("backend", "raft")},
 				Exclude: []*Exclude{
-					{ExcludeContains, Vector{NewElement("arch", "amd64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "amd64")}},
 				},
 			},
 			[]*Scenario{scenarios[4]},
@@ -115,7 +117,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 				Name:    "test",
 				Include: Vector{NewElement("backend", "consul")},
 				Exclude: []*Exclude{
-					{ExcludeContains, Vector{NewElement("arch", "arm64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "arm64")}},
 				},
 			},
 		},
@@ -125,7 +127,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			&ScenarioFilter{
 				Include: Vector{NewElement("backend", "raft")},
 				Exclude: []*Exclude{
-					{ExcludeContains, Vector{NewElement("arch", "amd64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "amd64")}},
 				},
 			},
 		},

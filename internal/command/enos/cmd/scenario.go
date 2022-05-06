@@ -8,22 +8,31 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/durationpb"
 
-	"github.com/hashicorp/enos/internal/execute"
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/execute/terraform"
 	"github.com/hashicorp/enos/internal/flightplan"
-	"github.com/hashicorp/enos/internal/generate"
+	"github.com/hashicorp/enos/internal/server"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/hcl/v2"
 )
 
 // scenarioConfig is the 'scenario' sub-command configuration type
 type scenarioConfig struct {
-	baseDir  string
-	outDir   string
-	fp       *flightplan.FlightPlan
-	timeout  time.Duration
-	tfConfig *terraform.Config
+	baseDir     string
+	outDir      string
+	fp          *flightplan.FlightPlan
+	timeout     time.Duration
+	tfConfig    *terraform.Config
+	lockTimeout time.Duration
 }
+
+var (
+	flightPlan *pb.FlightPlan
+	enosServer *server.ServiceV1
+	enosClient pb.EnosServiceClient
+)
 
 // scenarioCfg is the 'scenario' sub-command configuration
 var scenarioCfg = scenarioConfig{
@@ -44,21 +53,20 @@ include spaces, VARIANT SUBFILTERS cannot include spaces. E.g.
 
 VARIANT SUBFILTER = '[!]KEY:PATTERN|WILDCARD|ABSOLUTE'
 
-FILTER = '[SCENARIO NAME] [...VARIANT SUBFILTER]'
-
-NOTE: VARIANT SUBFILTERS have not been implemented yet`
+FILTER = '[SCENARIO NAME] [...VARIANT SUBFILTER]'`
 
 // newScenarioCmd returns a new instance of the 'scenario' sub-command
 func newScenarioCmd() *cobra.Command {
 	scenarioCmd := &cobra.Command{
-		Use:               "scenario",
-		Short:             "Enos quality requirement scenarios",
-		Long:              "Enos quality requirement scenarios",
-		PersistentPreRunE: scenarioCmdPreRun,
+		Use:                "scenario",
+		Short:              "Enos quality requirement scenarios",
+		Long:               "Enos quality requirement scenarios",
+		PersistentPreRunE:  scenarioCmdPreRun,
+		PersistentPostRunE: scenarioCmdPostRun,
 	}
 
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioCfg.baseDir, "chdir", "d", "", "use the given directory as the working directory")
-	scenarioCmd.PersistentFlags().StringVarP(&scenarioCfg.outDir, "out", "o", "", "base directory for scenario state")
+	scenarioCmd.PersistentFlags().StringVarP(&scenarioCfg.outDir, "out", "o", "", "base directory where generated modules will be created")
 	scenarioCmd.PersistentFlags().DurationVar(&scenarioCfg.timeout, "timeout", 15*time.Minute, "the command timeout")
 
 	scenarioCmd.AddCommand(newScenarioListCmd())
@@ -76,9 +84,39 @@ func newScenarioCmd() *cobra.Command {
 // scenarioCmdPreRun is the scenario sub-command pre-run. We'll use it to initialize
 // the program and decode the enos flight plan.
 func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
+	var err error
 	rootCmdPreRun(cmd, args)
 
+	// Convert arguments that cobra flags can't handle
+	scenarioCfg.tfConfig.Flags.LockTimeout = durationpb.New(scenarioCfg.lockTimeout)
+
+	// Determine our default base directory and out directory
+	err = setupDefaultScenarioCfg()
+	if err != nil {
+		return err
+	}
+
+	flightPlan, err = readFlightPlanConfig(scenarioCfg.baseDir)
+	if err != nil {
+		return err
+	}
+
+	enosServer, enosClient, err = startGRPCServer(context.Background(), 5*time.Second)
+	if err != nil {
+		return err
+	}
+
 	return decodeFlightPlan(cmd)
+}
+
+// scenarioCmdPostRun is the scenario sub-command post-run. We'll use it to shut
+// down the server.
+func scenarioCmdPostRun(cmd *cobra.Command, args []string) error {
+	if enosServer != nil {
+		enosServer.Stop()
+	}
+
+	return nil
 }
 
 // setupDefaultScenarioCfg sets up default scenario configuration
@@ -102,8 +140,6 @@ func setupDefaultScenarioCfg() error {
 		if err != nil {
 			return fmt.Errorf("unable to get absolute path from given working directory: %w", err)
 		}
-	} else {
-		scenarioCfg.outDir = filepath.Join(scenarioCfg.baseDir, ".enos")
 	}
 
 	return nil
@@ -112,11 +148,6 @@ func setupDefaultScenarioCfg() error {
 // decodeFlightPlan decodes the flight plan
 func decodeFlightPlan(cmd *cobra.Command) error {
 	diags := hcl.Diagnostics{}
-
-	err := setupDefaultScenarioCfg()
-	if err != nil {
-		return err
-	}
 
 	decoder, err := flightplan.NewDecoder(
 		flightplan.WithDecoderBaseDir(scenarioCfg.baseDir),
@@ -132,8 +163,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 	diags = diags.Extend(decoder.Parse())
 	if diags.HasErrors() {
 		return &flightplan.ErrDiagnostic{
-			Files: decoder.ParserFiles(),
-			Diags: diags,
+			Diags: diagnostics.FromHCL(decoder.ParserFiles(), diags),
 		}
 	}
 
@@ -147,25 +177,11 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 		}
 
 		return &flightplan.ErrDiagnostic{
-			Files: decoder.ParserFiles(),
-			Diags: diags,
+			Diags: diagnostics.FromHCL(decoder.ParserFiles(), diags),
 		}
 	}
 
 	return nil
-}
-
-// filterScenarios takes CLI arguments that may contain a scenario filter and
-// returns the filtered results.
-func filterScenarios(args []string) ([]*flightplan.Scenario, error) {
-	filter, err := flightplan.NewScenarioFilter(
-		flightplan.WithScenarioFilterParse(args),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return scenarioCfg.fp.ScenariosSelect(filter), nil
 }
 
 // scenarioNameCompletion returns a shell directive of available flight plans.
@@ -213,87 +229,25 @@ func scenarioFilterArgs(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-// newGeneratorFor returns a generator for a given scenario, its base directory
-// and the generated module out directory.
-func newGeneratorFor(scenario *flightplan.Scenario, baseDir string, outDir string) (*generate.Generator, error) {
-	var err error
-	var gen *generate.Generator
+// readFlightPlanConfig scans a directory for Enos flight plan configuration and returns
+// a new instance of FlightPlan.
+func readFlightPlanConfig(dir string) (*pb.FlightPlan, error) {
+	fp := &pb.FlightPlan{
+		BaseDir: dir,
+	}
 
-	outDir, err = filepath.Abs(outDir)
+	cfgFiles, err := flightplan.FindRawFiles(dir, flightplan.FlightPlanFileNamePattern)
 	if err != nil {
-		return gen, err
+		return nil, err
 	}
 
-	baseDir, err = filepath.Abs(baseDir)
+	varsFiles, err := flightplan.FindRawFiles(dir, flightplan.VariablesNamePattern)
 	if err != nil {
-		return gen, err
+		return nil, err
 	}
 
-	return generate.NewGenerator(
-		generate.WithScenario(scenario),
-		generate.WithScenarioBaseDirectory(baseDir),
-		generate.WithOutBaseDirectory(outDir),
-		generate.WithUI(UI),
-	)
-}
+	fp.EnosHcl = cfgFiles
+	fp.EnosVarsHcl = varsFiles
 
-// newExecutorFor takes an existing generator and returns an executor configured
-// to execute what the generator will generate.
-func newExecutorFor(gen *generate.Generator) (*execute.Executor, error) {
-	// get a copy of our terraform CLI configuration and populate it with
-	// the generators output paths and files.
-	tfCfg := *scenarioCfg.tfConfig
-	tfCfg.ConfigPath = gen.TerraformRCPath()
-	tfCfg.DirPath = gen.TerraformModuleDir()
-	tfCfg.UI = UI
-
-	if gen != nil && gen.Scenario != nil {
-		if gen.Scenario.TerraformCLI != nil {
-			tfCfg.Env = gen.Scenario.TerraformCLI.Env
-
-			if gen.Scenario.TerraformCLI.Path != "" {
-				path, err := filepath.Abs(gen.Scenario.TerraformCLI.Path)
-				if err != nil {
-					return nil, fmt.Errorf("expanding path to terraform binary: %w", err)
-				}
-				tfCfg.BinPath = path
-			}
-		}
-	}
-
-	return execute.NewExecutor(
-		execute.WithTerraformConfig(&tfCfg),
-	)
-}
-
-// scenarioGenAndExec takes the command arguments, filters the scenarios that
-// match the given filter and executes the given function with the generator
-// and executor.
-func scenarioGenAndExec(args []string, f func(context.Context, *generate.Generator, *execute.Executor) error) error {
-	scenarios, err := filterScenarios(args)
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := scenarioTimeoutContext()
-	defer cancel()
-
-	for _, scenario := range scenarios {
-		gen, err := newGeneratorFor(scenario, scenarioCfg.baseDir, scenarioCfg.outDir)
-		if err != nil {
-			return err
-		}
-
-		exec, err := newExecutorFor(gen)
-		if err != nil {
-			return err
-		}
-
-		err = f(ctx, gen, exec)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return fp, nil
 }

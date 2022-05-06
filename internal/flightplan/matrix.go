@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // An Element is an Element of a Matrix Vector
@@ -23,23 +25,9 @@ type Matrix struct {
 	Vectors []Vector
 }
 
-// ExcludeMode determines how we're going match Vectors which we want to exclude
-type ExcludeMode int
-
-const (
-	// ExcludeExactly will match a vector that has the exact ordered elements
-	ExcludeExactly ExcludeMode = iota + 1
-	// ExcludeEqualUnordered will match a vector that has the exact elements but may
-	// be unordered.
-	ExcludeEqualUnordered
-	// ExcludeContains will match any vector that has at least the given vector
-	// elements in any order.
-	ExcludeContains
-)
-
 // An Exclude is a filter to removing Elements from the Matrix's Vector combined
 type Exclude struct {
-	Mode   ExcludeMode
+	Mode   pb.Scenario_Filter_Exclude_Mode
 	Vector Vector
 }
 
@@ -55,11 +43,13 @@ func NewMatrix() *Matrix {
 
 // NewExclude takes an ExcludeMode and Vector, validates the ExcludeMode and return
 // a pointer to a new instance of Exclude and any errors encountered.
-func NewExclude(mode ExcludeMode, vec Vector) (*Exclude, error) {
+func NewExclude(mode pb.Scenario_Filter_Exclude_Mode, vec Vector) (*Exclude, error) {
 	ex := &Exclude{Mode: mode, Vector: vec}
 
 	switch mode {
-	case ExcludeExactly, ExcludeEqualUnordered, ExcludeContains:
+	case pb.Scenario_Filter_Exclude_MODE_EXACTLY,
+		pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
+		pb.Scenario_Filter_Exclude_MODE_CONTAINS:
 	default:
 		return ex, fmt.Errorf("unknown exclusion mode: %d", mode)
 	}
@@ -70,6 +60,16 @@ func NewExclude(mode ExcludeMode, vec Vector) (*Exclude, error) {
 // String returns the element as a string
 func (e Element) String() string {
 	return fmt.Sprintf("%s:%s", e.Key, e.Val)
+}
+
+// Proto returns the element as a proto message
+func (e Element) Proto() *pb.Scenario_Filter_Element {
+	return &pb.Scenario_Filter_Element{Key: e.Key, Value: e.Val}
+}
+
+// NewElementFromProto creates a new Element from a proto filter element
+func NewElementFromProto(p *pb.Scenario_Filter_Element) Element {
+	return NewElement(p.GetKey(), p.GetValue())
 }
 
 // String returns the vector as a string
@@ -152,6 +152,29 @@ func (v Vector) CtyVal() cty.Value {
 	}
 
 	return cty.ObjectVal(vals)
+}
+
+// Proto returns the vector as a proto message
+func (v Vector) Proto() *pb.Scenario_Filter_Vector {
+	pbv := &pb.Scenario_Filter_Vector{Elements: []*pb.Scenario_Filter_Element{}}
+
+	for _, elm := range v {
+		pbv.Elements = append(pbv.Elements, &pb.Scenario_Filter_Element{
+			Key:   elm.Key,
+			Value: elm.Val,
+		})
+	}
+
+	return pbv
+}
+
+// NewVectorFromProto takes a proto filter vector and returns a new Vector
+func NewVectorFromProto(pbv *pb.Scenario_Filter_Vector) Vector {
+	v := Vector{}
+	for _, elm := range pbv.GetElements() {
+		v = append(v, NewElement(elm.GetKey(), elm.GetValue()))
+	}
+	return v
 }
 
 // AddVector adds a vector the the matrix.
@@ -295,15 +318,15 @@ func (m *Matrix) UniqueValues() *Matrix {
 // Match determines if Exclude directive matches the vector
 func (ex *Exclude) Match(vec Vector) bool {
 	switch ex.Mode {
-	case ExcludeExactly:
+	case pb.Scenario_Filter_Exclude_MODE_EXACTLY:
 		if vec.Equal(ex.Vector) {
 			return true
 		}
-	case ExcludeEqualUnordered:
+	case pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED:
 		if vec.EqualUnordered(ex.Vector) {
 			return true
 		}
-	case ExcludeContains:
+	case pb.Scenario_Filter_Exclude_MODE_CONTAINS:
 		if vec.ContainsUnordered(ex.Vector) {
 			return true
 		}
@@ -311,4 +334,18 @@ func (ex *Exclude) Match(vec Vector) bool {
 	}
 
 	return false
+}
+
+// Proto returns the exclude as a proto message
+func (ex *Exclude) Proto() *pb.Scenario_Filter_Exclude {
+	return &pb.Scenario_Filter_Exclude{
+		Vector: ex.Vector.Proto(),
+		Mode:   ex.Mode,
+	}
+}
+
+// FromProto unmarshals a proto Scenario_Filter_Exclude into itself
+func (ex *Exclude) FromProto(pfe *pb.Scenario_Filter_Exclude) {
+	ex.Vector = NewVectorFromProto(pfe.GetVector())
+	ex.Mode = pfe.GetMode()
 }

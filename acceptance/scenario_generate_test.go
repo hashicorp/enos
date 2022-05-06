@@ -9,6 +9,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // TestAcc_Cmd_Scenario_Generate tests that a scenario can generate into the
@@ -22,69 +25,102 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 
 	for _, test := range []struct {
 		dir  string
-		args string
-		uid  string
-		noRc bool
+		name string
+		// We assume the variants will result in one generated module
+		variants [][]string
+		uid      string
 	}{
 		{
 			"scenario_generate_pass_0",
-			"test foo:matrixfoo",
+			"test",
+			[][]string{{"foo", "matrixfoo"}},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixfoo]"))),
-			false,
 		},
 		{
 			"scenario_generate_pass_0",
-			"test foo:matrixbar",
+			"test",
+			[][]string{{"foo", "matrixbar"}},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixbar]"))),
-			false,
 		},
 		{
 			"scenario_generate_pass_backend",
-			"",
+			"test",
+			[][]string{},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test"))),
-			false,
 		},
 		{
 			"scenario_generate_pass_cloud",
-			"",
+			"test",
+			[][]string{},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test"))),
-			false,
 		},
 		{
 			"scenario_generate_step_vars",
-			"step_vars distro:rhel arch:arm",
+			"step_vars",
+			[][]string{{"arch", "arm"}, {"distro", "rhel"}},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("step_vars [arch:arm distro:rhel]"))),
-			true,
 		},
 		{
 			"scenario_generate_complex_module_source",
-			"",
+			"path",
+			[][]string{},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("path"))),
-			true,
 		},
 	} {
-		t.Run(fmt.Sprintf("%s %s", test.dir, test.args), func(t *testing.T) {
-			// NOTE: Right now we're just testing that the generate command
-			// outputs the files in the right place with the correct names.
-			// Validation and execution are handled by other tests.
+		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
 			outDir := filepath.Join(tmpDir, test.dir)
 			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
+			outDir, err = filepath.EvalSymlinks(outDir)
+			require.NoError(t, err)
 			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
 			require.NoError(t, err)
-			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s %s", path, outDir, test.args)
+
+			filter := test.name
+			elements := []*pb.Scenario_Filter_Element{}
+			for _, variant := range test.variants {
+				filter = fmt.Sprintf("%s %s:%s", filter, variant[0], variant[1])
+				elements = append(elements, &pb.Scenario_Filter_Element{
+					Key:   variant[0],
+					Value: variant[1],
+				})
+			}
+
+			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s %s --format json", path, outDir, filter)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoErrorf(t, err, string(out))
-			s, err := os.Open(filepath.Join(outDir, test.uid, "scenario.tf"))
-			require.NoError(t, err)
-			s.Close()
-			rc, err := os.Open(filepath.Join(outDir, test.uid, "terraform.rc"))
-			if test.noRc {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+
+			expected := &pb.GenerateScenariosResponse{
+				Responses: []*pb.Scenario_Command_Generate_Response{
+					{
+						TerraformModule: &pb.Terraform_Module{
+							ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
+							RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),
+							ScenarioRef: &pb.Ref_Scenario{
+								Id: &pb.Scenario_ID{
+									Name: test.name,
+									Uid:  test.uid,
+									Variants: &pb.Scenario_Filter_Vector{
+										Elements: elements,
+									},
+								},
+							},
+						},
+					},
+				},
 			}
-			rc.Close()
+
+			got := &pb.GenerateScenariosResponse{}
+			require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
+			require.Len(t, got.GetResponses(), len(expected.GetResponses()))
+			for i := range expected.Responses {
+				got := got.Responses[i].GetTerraformModule()
+				expected := expected.Responses[i].GetTerraformModule()
+
+				require.Equal(t, expected.ModulePath, got.ModulePath)
+				require.Equal(t, expected.RcPath, got.RcPath)
+				require.Equal(t, expected.ScenarioRef.String(), got.ScenarioRef.String())
+			}
 		})
 	}
 }

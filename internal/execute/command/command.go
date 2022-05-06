@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"sort"
 
-	"github.com/hashicorp/enos/internal/ui"
+	"github.com/hashicorp/enos/internal/ui/terminal"
 )
 
 // Command is a functional options wrapper around exec.Cmd
@@ -40,7 +40,7 @@ func NewCommand(name string, opts ...Opt) *Command {
 
 // WithUI takes a UI and configures the cmd's STDERR, STDIN, and STDOUT
 // to use the UI's outputs.
-func WithUI(ui *ui.UI) Opt {
+func WithUI(ui *terminal.UI) Opt {
 	return func(cmd *Command) {
 		cmd.ExecOpts = append(cmd.ExecOpts, func(ecmd *exec.Cmd) {
 			ecmd.Stderr = ui.Stderr

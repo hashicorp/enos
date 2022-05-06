@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/enos/internal/execute"
-	"github.com/hashicorp/enos/internal/generate"
+	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // newScenarioValidateCmd returns a new 'scenario validate' sub-command
@@ -28,21 +29,35 @@ func newScenarioValidateCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoRefresh, "no-refresh", false, "disable refreshing state")
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.RefreshOnly, "refresh-only", false, "only refresh state")
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.Upgrade, "upgrade", false, "upgrade modules and providers")
-	cmd.PersistentFlags().IntVar(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
-	cmd.PersistentFlags().DurationVar(&scenarioCfg.tfConfig.Flags.LockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
+	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
+	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
+
+	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 
 	return cmd
 }
 
 // runScenarioValidateCmd is the function that validates scenarios
 func runScenarioValidateCmd(cmd *cobra.Command, args []string) error {
-	return scenarioGenAndExec(args, func(ctx context.Context, gen *generate.Generator, exec *execute.Executor) error {
-		err := gen.Generate()
-		if err != nil {
-			return err
-		}
+	ctx, cancel := scenarioTimeoutContext()
+	defer cancel()
 
-		_, err = exec.Validate(ctx)
-		return err
+	sf, err := flightplan.ParseScenarioFilter(args)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	res, err := enosClient.ValidateScenarios(ctx, &pb.ValidateScenariosRequest{
+		Workspace: &pb.Workspace{
+			Flightplan: flightPlan,
+			OutDir:     scenarioCfg.outDir,
+			TfExecCfg:  scenarioCfg.tfConfig.Proto(),
+		},
+		Filter: sf.Proto(),
 	})
+	if err != nil {
+		return err
+	}
+
+	return ui.ShowScenarioValidate(res)
 }

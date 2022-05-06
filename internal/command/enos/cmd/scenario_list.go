@@ -1,7 +1,15 @@
 package cmd
 
 import (
+	"context"
+	"time"
+
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // newScenarioListCmd returns a new 'scenario list' sub-command
@@ -16,22 +24,23 @@ func newScenarioListCmd() *cobra.Command {
 
 // runScenarioListCmd runs a scenario list
 func runScenarioListCmd(cmd *cobra.Command, args []string) error {
-	scenarios, err := filterScenarios(args)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sf, err := flightplan.ParseScenarioFilter(args)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	res, err := enosClient.ListScenarios(ctx, &pb.ListScenariosRequest{
+		Workspace: &pb.Workspace{
+			Flightplan: flightPlan,
+		},
+		Filter: sf.Proto(),
+	})
 	if err != nil {
 		return err
 	}
 
-	if len(scenarios) == 0 {
-		return nil
-	}
-
-	header := []string{"scenario"}
-	rows := [][]string{{""}} // add a padding row
-	for _, scenario := range scenarios {
-		rows = append(rows, []string{scenario.String()})
-	}
-
-	UI.RenderTable(header, rows)
-
-	return nil
+	return ui.ShowScenarioList(res)
 }

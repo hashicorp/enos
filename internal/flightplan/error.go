@@ -1,32 +1,31 @@
 package flightplan
 
 import (
-	"fmt"
 	"strings"
 
-	hcl "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/enos/internal/diagnostics"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // ErrDiagnostic is an error that can carry diagnostics information
 type ErrDiagnostic struct {
-	Diags hcl.Diagnostics
-	Files map[string]*hcl.File
-	Err   error
+	Diags          []*pb.Diagnostic
+	DiagStringOpts []diagnostics.StringOpt
+	Err            error
 }
 
 // Error returns a joined message from all diagnostics errors
 func (e *ErrDiagnostic) Error() string {
-	msg := strings.Builder{}
 	if e.Diags == nil {
-		return e.Err.Error()
+		if e.Err != nil {
+			return e.Err.Error()
+		}
+		return ""
 	}
 
-	for i, err := range e.Diags.Errs() {
-		if i == 0 {
-			msg.WriteString(err.Error())
-		} else {
-			msg.WriteString(fmt.Sprintf(": %s", err.Error()))
-		}
+	msg := strings.Builder{}
+	for _, diag := range e.Diags {
+		_, _ = msg.WriteString(diagnostics.String(diag, e.DiagStringOpts...))
 	}
 
 	return msg.String()

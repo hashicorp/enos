@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/customdecode"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
 // StepVariableType is a cty capsule type that represents "step" variables.
@@ -40,6 +41,63 @@ func StepVariableFromVal(v cty.Value) (*StepVariable, hcl.Diagnostics) {
 	}
 
 	return v.EncapsulatedValue().(*StepVariable), diags
+}
+
+// absTraversalForExpr is similar to hcl.AbsTraversalForExpr() in that it returns
+// an expression as an absolute value. Where it differs is that our implementation
+// will use the passed in EvalContext to resolve values in the expression that
+// might otherwise be unknown.
+// NOTE: This implemenation currently only support expanding the values of keys
+// in index expressions. Enos is intended to support passing configuration between
+// modules by reference. If you need to perform complex operations on step
+// variables you'll need to perform that in the module that is taking the value
+// as an input.
+func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Traversal, hcl.Diagnostics) {
+	traversal, diags := hcl.AbsTraversalForExpr(expr)
+	if !diags.HasErrors() {
+		// We have a valid absolute traversal
+		return traversal, diags
+	}
+
+	traversal = hcl.Traversal{}
+
+	// If we're here we're dealing with an expression that has neither a known
+	// value or a static absolute traversal. We'll attempt to unwrap our expresion
+	// and decode unknown values into static values where possible.
+	for {
+		switch t := expr.(type) {
+		case *hclsyntax.ScopeTraversalExpr:
+			// We're run into what is likely the root of our traversal. Append
+			// what we've got and break our loop as there are no more collection
+			// expressions to unwrap.
+			return append(t.AsTraversal(), traversal...), nil
+		case *hclsyntax.IndexExpr:
+			v, err := t.Key.Value(ctx)
+			if err != nil {
+				return traversal, hcl.Diagnostics{&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "unable to resolve index value",
+					Detail:   err.Error(),
+					Subject:  t.StartRange().Ptr(),
+					Context:  t.SrcRange.Ptr(),
+				}}
+			}
+			// Add our known index value to the traversal and set the next
+			// collection expression for unwrapping
+			traversal = append(hcl.Traversal{hcl.TraverseIndex{
+				SrcRange: t.SrcRange,
+				Key:      v,
+			}}, traversal...)
+			expr = t.Collection
+		default:
+			return traversal, hcl.Diagnostics{&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("expanding expression for %s is not supported", reflect.TypeOf(t).Name()),
+				Subject:  t.StartRange().Ptr(),
+				Context:  t.Range().Ptr(),
+			}}
+		}
+	}
 }
 
 func init() {
@@ -88,7 +146,7 @@ func init() {
 
 						// We have an unknown value. Let's find out if it's a
 						// valid traversal to another "step".
-						traversal, moreDiags := hcl.AbsTraversalForExpr(expr)
+						traversal, moreDiags := absTraversalForExpr(expr, ctx)
 						if moreDiags.HasErrors() {
 							// If it's not an absolute traversal we can't do
 							// static analysis.
@@ -104,7 +162,7 @@ func init() {
 								Subject:  traversal.SourceRange().Ptr(),
 								Context:  expr.Range().Ptr(),
 								Summary:  "step variable is unknowable",
-								Detail:   "step variables can only be uknown if the value is a reference to a step module output",
+								Detail:   "step variables can only be unknown if the value is a reference to a step module output",
 							})
 						}
 

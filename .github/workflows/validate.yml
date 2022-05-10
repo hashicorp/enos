@@ -35,10 +35,9 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: '^1.18.1'
-      - name: Run golangci-lint
-        uses: hashicorp/golangci-lint-action@v3
-        with:
-          version: latest
+      - name: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run -v -c .golangci.yml --out-format=github-actions --timeout=5m0s
 
   fmt:
     name: "Format"

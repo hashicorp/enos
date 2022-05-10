@@ -28,19 +28,23 @@ jobs:
   lint:
     name: "Lint"
     runs-on: ubuntu-latest
-    container: docker.mirror.hashicorp.services/golangci/golangci-lint:latest-alpine
     steps:
-      - uses: actions/checkout@v2
-      - run: golangci-lint run --out-format=github-actions --timeout=5m0s
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - uses: actions/checkout@v3
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
 
   fmt:
     name: "Format"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: '^1.18.1'
       - name: gofumpt
@@ -55,9 +59,9 @@ jobs:
       CI: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: '^1.18.1'
       - name: Setup Terraform

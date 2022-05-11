@@ -15,7 +15,7 @@ var SemverConstraint = function.New(&function.Spec{
 			Type: cty.String,
 		},
 		{
-			Name: "constaint",
+			Name: "constraint",
 			Type: cty.String,
 		},
 	},

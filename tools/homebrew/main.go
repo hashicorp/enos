@@ -92,10 +92,24 @@ type metadata struct {
 	VersionTag     string
 }
 
-type errUnknownArch struct{}
+type errInvalidFilenameReason string
 
-func (*errUnknownArch) Error() string {
-	return "Unknown arch. Filename should be in format <product>_<version>_<linux|darwin>_<amd64|arm64>.zip"
+var (
+	errInvalidFilenameReasonArch    = errInvalidFilenameReason("Unknown architecture")
+	errInvalidFilenameReasonPlaform = errInvalidFilenameReason("Unknown platform")
+)
+
+type errInvalidFilename struct {
+	reason errInvalidFilenameReason
+}
+
+func (e *errInvalidFilename) Error() string {
+	msg := "Filename should be in format <product>_<version>_<linux|darwin>_<amd64|arm64>.zip"
+	if e.reason != "" {
+		return fmt.Sprintf("%s. %s", e.reason, msg)
+	}
+
+	return msg
 }
 
 func newCreateFormulaCommand() *cobra.Command {
@@ -145,7 +159,7 @@ func readMetadata(path string) (*metadata, error) {
 				case "amd64.zip":
 					metadata.DarwinAMD64SHA = tempSha
 				default:
-					return metadata, &errUnknownArch{}
+					return metadata, &errInvalidFilename{errInvalidFilenameReasonArch}
 				}
 			case "linux":
 				switch parts[3] {
@@ -154,10 +168,10 @@ func readMetadata(path string) (*metadata, error) {
 				case "amd64.zip":
 					metadata.LinuxAMD64SHA = tempSha
 				default:
-					return metadata, &errUnknownArch{}
+					return metadata, &errInvalidFilename{errInvalidFilenameReasonArch}
 				}
 			default:
-				return metadata, &errUnknownArch{}
+				return metadata, &errInvalidFilename{errInvalidFilenameReasonPlaform}
 			}
 		}
 	}

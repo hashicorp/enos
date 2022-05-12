@@ -1,0 +1,3 @@
+variable "ami" {
+  type = string
+}

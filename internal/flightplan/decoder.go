@@ -198,6 +198,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"replace":                stdlib.ReplaceFunc,
 			"reverse":                stdlib.ReverseFunc,
 			"reverselist":            stdlib.ReverseListFunc,
+			"semverconstraint":       funcs.SemverConstraint,
 			"sethaselement":          stdlib.SetHasElementFunc,
 			"setintersection":        stdlib.SetIntersectionFunc,
 			"setproduct":             stdlib.SetProductFunc,

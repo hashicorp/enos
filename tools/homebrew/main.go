@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -93,6 +92,26 @@ type metadata struct {
 	VersionTag     string
 }
 
+type errInvalidFilenameReason string
+
+var (
+	errInvalidFilenameReasonArch    = errInvalidFilenameReason("Unknown architecture")
+	errInvalidFilenameReasonPlaform = errInvalidFilenameReason("Unknown platform")
+)
+
+type errInvalidFilename struct {
+	reason errInvalidFilenameReason
+}
+
+func (e *errInvalidFilename) Error() string {
+	msg := "Filename should be in format <product>_<version>_<linux|darwin>_<amd64|arm64>.zip"
+	if e.reason != "" {
+		return fmt.Sprintf("%s. %s", e.reason, msg)
+	}
+
+	return msg
+}
+
 func newCreateFormulaCommand() *cobra.Command {
 	createFormula := &cobra.Command{
 		Use:  "create",
@@ -140,7 +159,7 @@ func readMetadata(path string) (*metadata, error) {
 				case "amd64.zip":
 					metadata.DarwinAMD64SHA = tempSha
 				default:
-					return metadata, errors.New("Unknown arch. Filename should be in format <product>_<version>_<linux|darwin>_<amd64|arm64>.zip")
+					return metadata, &errInvalidFilename{errInvalidFilenameReasonArch}
 				}
 			case "linux":
 				switch parts[3] {
@@ -149,10 +168,10 @@ func readMetadata(path string) (*metadata, error) {
 				case "amd64.zip":
 					metadata.LinuxAMD64SHA = tempSha
 				default:
-					return metadata, errors.New("Unknown arch. Filename should be in format <product>_<version>_<linux|darwin>_<amd64|arm64>.zip")
+					return metadata, &errInvalidFilename{errInvalidFilenameReasonArch}
 				}
 			default:
-				return metadata, errors.New("Unknown platform. Filename should be in format <product>_<version>_<linux|darwin>_<amd64|arm64>.zip")
+				return metadata, &errInvalidFilename{errInvalidFilenameReasonPlaform}
 			}
 		}
 	}
@@ -167,13 +186,13 @@ func readMetadata(path string) (*metadata, error) {
 func renderHomebrewFormulaTemplate(dest io.Writer, metadataPath string) error {
 	metadata, err := readMetadata(metadataPath)
 	if err != nil {
-		fmt.Println("reading metadata:", err)
+		fmt.Printf("reading metadata: %s\n", err.Error())
 	}
 
 	// Execute the template using metadata values from the SHASUMS file
 	err = t.Execute(dest, metadata)
 	if err != nil {
-		fmt.Println("executing template:", err)
+		fmt.Printf("executing template: %s\n", err.Error())
 	}
 	return nil
 }
@@ -185,19 +204,19 @@ func createFormula(cmd *cobra.Command, args []string) error {
 	// Create a new formula template and fill in the values from the SHASUMS input file
 	err := renderHomebrewFormulaTemplate(&buf, createFormulaConfigs.path)
 	if err != nil {
-		fmt.Println("rendering Homebrew formula template:", err)
+		fmt.Printf("rendering Homebrew formula template: %s\n", err.Error())
 	}
 
 	// Create an output file
 	output, err := os.Create(createFormulaConfigs.outPath)
 	if err != nil {
-		fmt.Println("creating file: ", err)
+		fmt.Printf("creating file: %s\n", err.Error())
 	}
 
 	// Write the template to the output file
 	_, err = buf.WriteTo(output)
 	if err != nil {
-		fmt.Println("writing updated template to output file: ", err)
+		fmt.Printf("writing updated template to output file: %s\n", err.Error())
 	}
 
 	return nil

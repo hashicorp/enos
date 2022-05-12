@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -109,7 +108,7 @@ func ensurePrivateKey(t *testing.T) {
 	t.Helper()
 	_, err := enosPrivateKey()
 	if err != nil {
-		t.Skip(fmt.Sprintf("Unable to read acceptance/support/private_key.pem. If you wish to execute this locally you'll need to copy the ENOS_CI_SSH_KEYPAIR-private from 1Password into acceptance/support/private_key.pem: %s", err.Error()))
+		t.Skipf("Unable to read acceptance/support/private_key.pem. If you wish to execute this locally you'll need to copy the ENOS_CI_SSH_KEYPAIR-private from 1Password into acceptance/support/private_key.pem: %s", err.Error())
 	}
 }
 

@@ -29,7 +29,7 @@ test-acc-ext: build-race
 	${TEST_ACC_EXT} ${GORACE} ENOS_BINARY_PATH=${BUILD_BINARY_PATH} go test -race ./... -v $(TESTARGS) -timeout 120m
 
 lint:
-	golangci-lint run -v
+	golangci-lint run -v -c .golangci.yml
 
 fmt:
 	gofumpt -w -l .

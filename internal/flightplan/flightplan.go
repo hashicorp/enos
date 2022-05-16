@@ -25,6 +25,7 @@ const (
 	blockTypeLocals            = "locals"
 	blockTypeMatrix            = "matrix"
 	blockTypeModule            = "module"
+	blockTypeOutput            = "output"
 	blockTypeProvider          = "provider"
 	blockTypeProviderMeta      = "provider_meta"
 	blockTypeRequiredProviders = "required_providers"

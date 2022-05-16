@@ -68,6 +68,7 @@ func newScenarioCmd() *cobra.Command {
 	scenarioCmd.AddCommand(newScenarioDestroyCmd())
 	scenarioCmd.AddCommand(newScenarioRunCmd())
 	scenarioCmd.AddCommand(newScenarioExecCmd())
+	scenarioCmd.AddCommand(newScenarioOutputCmd())
 
 	return scenarioCmd
 }

@@ -74,6 +74,24 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		require.EqualValues(t, expected.Scenarios[i].TerraformSetting, fp.Scenarios[i].TerraformSetting)
 		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
 		require.EqualValues(t, expected.Scenarios[i].Variants, fp.Scenarios[i].Variants)
+		require.Len(t, expected.Scenarios[i].Outputs, len(fp.Scenarios[i].Outputs))
+
+		if len(fp.Scenarios[i].Outputs) > 0 {
+			for oi := range expected.Scenarios[i].Outputs {
+				require.Equal(t, expected.Scenarios[i].Outputs[oi].Name, fp.Scenarios[i].Outputs[oi].Name)
+				require.Equal(t, expected.Scenarios[i].Outputs[oi].Description, fp.Scenarios[i].Outputs[oi].Description)
+				require.Equal(t, expected.Scenarios[i].Outputs[oi].Sensitive, fp.Scenarios[i].Outputs[oi].Sensitive)
+				eVal := expected.Scenarios[i].Outputs[oi].Value
+				aVal := fp.Scenarios[i].Outputs[oi].Value
+
+				require.True(t, eVal.Type().Equals(aVal.Type()),
+					fmt.Sprintf("expected type %s, got %s", eVal.Type().FriendlyName(), aVal.Type().FriendlyName()),
+				)
+				if !eVal.IsNull() {
+					testMostlyEqualStepVar(t, eVal, aVal)
+				}
+			}
+		}
 
 		require.Len(t, expected.Scenarios[i].Steps, len(fp.Scenarios[i].Steps))
 		for is := range expected.Scenarios[i].Steps {

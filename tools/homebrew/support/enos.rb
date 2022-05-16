@@ -4,6 +4,8 @@ class Enos < Formula
 	homepage "https://github.com/hashicorp/enos"
 	version "0.0.1"
 
+	depends_on "terraform"
+
 	on_macos do
 		if Hardware::CPU.arm?
 			url "https://github.com/hashicorp/enos/releases/download/v0.0.1/enos_0.0.1_darwin_arm64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy

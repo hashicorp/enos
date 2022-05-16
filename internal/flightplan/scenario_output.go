@@ -15,13 +15,12 @@ type ScenarioOutput struct {
 	Value       cty.Value
 }
 
-// NewScenarioOutput returns a new Variable
+// NewScenarioOutput returns a new Output
 func NewScenarioOutput() *ScenarioOutput {
 	return &ScenarioOutput{Value: cty.NilVal}
 }
 
-// decode takes in an HCL block of a variable and any set variable values and
-// and decodes itself.
+// decode takes in an HCL block of an output and unmarshal the value into itself.
 func (v *ScenarioOutput) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 	v.Name = block.Labels[0]

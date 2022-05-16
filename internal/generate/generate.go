@@ -439,20 +439,6 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 	return nil
 }
 
-func stepToModuleTraversal(in hcl.Traversal) error {
-	if len(in) == 0 {
-		return nil
-	}
-	root, ok := in[0].(hcl.TraverseRoot)
-	if !ok {
-		return fmt.Errorf("malformed step variable reference")
-	}
-	root.Name = "module"
-	in[0] = root
-
-	return nil
-}
-
 func (g *Generator) maybeWriteOutputs(rootBody *hclwrite.Body) error {
 	// Output value for each output
 	for i, output := range g.Scenario.Outputs {
@@ -771,4 +757,20 @@ func relativePath(from, to string) (string, error) {
 	}
 
 	return rel, nil
+}
+
+// stepToModuleTraversal takes a "step" traversal and updates the root of the
+// the traversal to "module"
+func stepToModuleTraversal(in hcl.Traversal) error {
+	if len(in) == 0 {
+		return nil
+	}
+	root, ok := in[0].(hcl.TraverseRoot)
+	if !ok {
+		return fmt.Errorf("malformed step variable reference")
+	}
+	root.Name = "module"
+	in[0] = root
+
+	return nil
 }

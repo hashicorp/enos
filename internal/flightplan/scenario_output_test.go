@@ -36,7 +36,7 @@ scenario "basic" {
 
   output "static" {
     description = "static output"
-	sensitive   = true
+    sensitive   = true
     value       = "veryknown"
   }
 
@@ -142,7 +142,7 @@ scenario "backend" {
 
     output "something" {
       notanattr = "something"
-	  value     = "foo"
+      value     = "foo"
     }
   }
 }
@@ -163,12 +163,12 @@ scenario "backend" {
 
   output "static" {
     description = "static output"
-    value = "veryknown"
+    value       = "veryknown"
   }
 
   output "static" {
     description = "static output"
-    value = "veryknown"
+    value       = "veryknown"
   }
 }
 `, modulePath),

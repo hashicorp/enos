@@ -39,32 +39,32 @@ scenario "step_vars" {
 
   output "absolute" {
     description = "an absolute value"
-    sensitive = true
-    value = "something"
+    sensitive   = true
+    value       = "something"
   }
 
   output "from_variables" {
     description = "something set as a variable"
-    value = var.project
+    value       = var.project
   }
 
   output "module_default" {
     description = "a known value inherited through module defaults"
-    value = step.infra_default.az
+    value       = step.infra_default.az
   }
 
   output "step_known" {
     description = "a known value set at a step"
-    value = step.infra_west.az
+    value       = step.infra_west.az
   }
 
   output "step_reference_output_ref" {
     description = "a reference to a step output that is not known"
-    value = step.target.ami
+    value       = step.target.ami
   }
 
   output "step_reference_unknown" {
     description = "a reference to a step output that is unknown"
-    value = step.target.ips
+    value       = step.target.ips
   }
 }

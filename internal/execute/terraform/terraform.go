@@ -22,6 +22,7 @@ type Config struct {
 	DirPath    string            // what directory to execute the command in
 	Env        map[string]string // envrionment variables
 	ExecSubCmd string            // raw command to run
+	OutputName string            // output name
 	Flags      *Flags
 }
 
@@ -297,4 +298,9 @@ func (f *Flags) DestroyOptions() []tfexec.DestroyOption {
 		tfexec.Parallelism(f.Parallelism),
 		tfexec.Refresh(f.RefreshOnly),
 	}
+}
+
+// OutputOptions are the output commands options
+func (f *Flags) OutputOptions() []tfexec.OutputOption {
+	return []tfexec.OutputOption{}
 }

@@ -20,6 +20,7 @@ var scenarioSchema = &hcl.BodySchema{
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeScenarioStep, LabelNames: []string{attrLabelNameDefault}},
+		{Type: blockTypeOutput, LabelNames: []string{attrLabelNameDefault}},
 		// Matrix blocks are handled by the matrix decoder
 		{Type: blockTypeMatrix},
 		{Type: blockTypeLocals},
@@ -34,6 +35,7 @@ type Scenario struct {
 	TerraformSetting *TerraformSetting
 	Steps            []*ScenarioStep
 	Providers        []*Provider
+	Outputs          []*ScenarioOutput
 }
 
 // NewScenario returns a new Scenario
@@ -42,6 +44,7 @@ func NewScenario() *Scenario {
 		TerraformCLI: NewTerraformCLI(),
 		Steps:        []*ScenarioStep{},
 		Providers:    []*Provider{},
+		Outputs:      []*ScenarioOutput{},
 	}
 }
 
@@ -113,43 +116,17 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 	}
 
 	// Decode all of our step blocks.
-	foundSteps := map[string]struct{}{}
-	for _, childBlock := range content.Blocks.OfType(blockTypeScenarioStep) {
-		if _, dupeStep := foundSteps[childBlock.Labels[0]]; dupeStep {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "redeclared step in scenario",
-				Detail:   fmt.Sprintf("a step with name %s has already been declared", childBlock.Labels[0]),
-				Subject:  childBlock.TypeRange.Ptr(),
-				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
-			})
-			continue
-		}
+	moreDiags = s.decodeAndValidateStepBlocks(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
 
-		moreDiags = verifyBlockLabelsAreValidIdentifiers(childBlock)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
-			continue
-		}
-
-		step := NewScenarioStep()
-		moreDiags = step.decode(childBlock, ctx)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
-			continue
-		}
-
-		// update the eval context after each step is decoded. This way we can
-		// make previously defined step's variables and module references available
-		// to subsequent steps.
-		moreDiags = step.insertIntoCtx(ctx)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
-			continue
-		}
-
-		foundSteps[step.Name] = struct{}{}
-		s.Steps = append(s.Steps, step)
+	// Decode our outputs
+	moreDiags = s.decodeAndValidateOutputBlocks(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
 	}
 
 	return diags
@@ -594,6 +571,93 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 			})
 		}
 		s.Providers = append(s.Providers, provider)
+	}
+
+	return diags
+}
+
+func (s *Scenario) decodeAndValidateStepBlocks(
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	foundSteps := map[string]struct{}{}
+
+	for _, childBlock := range content.Blocks.OfType(blockTypeScenarioStep) {
+		if _, dupeStep := foundSteps[childBlock.Labels[0]]; dupeStep {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "redeclared step in scenario",
+				Detail:   fmt.Sprintf("a step with name %s has already been declared", childBlock.Labels[0]),
+				Subject:  childBlock.TypeRange.Ptr(),
+				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
+			})
+			continue
+		}
+
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(childBlock)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		step := NewScenarioStep()
+		moreDiags = step.decode(childBlock, ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		// update the eval context after each step is decoded. This way we can
+		// make previously defined step's variables and module references available
+		// to subsequent steps.
+		moreDiags = step.insertIntoCtx(ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		foundSteps[step.Name] = struct{}{}
+		s.Steps = append(s.Steps, step)
+	}
+
+	return diags
+}
+
+func (s *Scenario) decodeAndValidateOutputBlocks(
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+	foundOutputs := map[string]struct{}{}
+
+	for _, childBlock := range content.Blocks.OfType(blockTypeOutput) {
+		if _, dupeOut := foundOutputs[childBlock.Labels[0]]; dupeOut {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "redeclared output in scenario",
+				Detail:   fmt.Sprintf("an output with name %s has already been declared", childBlock.Labels[0]),
+				Subject:  childBlock.TypeRange.Ptr(),
+				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
+			})
+			continue
+		}
+
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(childBlock)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		out := NewScenarioOutput()
+		moreDiags = out.decode(childBlock, ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			continue
+		}
+
+		foundOutputs[out.Name] = struct{}{}
+		s.Outputs = append(s.Outputs, out)
 	}
 
 	return diags

@@ -2,8 +2,10 @@ package execute
 
 import (
 	"context"
+	"io"
 	"os/exec"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/hashicorp/enos/internal/execute/terraform"
@@ -115,4 +117,22 @@ func (e *Executor) Run(ctx context.Context) (*RunResponse, error) {
 // Exec executes a raw terraform sub command
 func (e *Executor) Exec(ctx context.Context) (*exec.Cmd, error) {
 	return e.TFConfig.RunExecSubCmd(ctx)
+}
+
+// Output returns the state output
+func (e *Executor) Output(ctx context.Context) (map[string]tfexec.OutputMeta, error) {
+	var out map[string]tfexec.OutputMeta
+	var err error
+	var tf *tfexec.Terraform
+
+	tf, err = e.TFConfig.Terraform()
+	if err != nil {
+		return out, err
+	}
+
+	// The caller needs to handle writing output
+	tf.SetStderr(io.Discard)
+	tf.SetStdout(io.Discard)
+
+	return tf.Output(ctx, e.TFConfig.Flags.OutputOptions()...)
 }

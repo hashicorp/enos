@@ -47,7 +47,7 @@ func StepVariableFromVal(v cty.Value) (*StepVariable, hcl.Diagnostics) {
 // an expression as an absolute value. Where it differs is that our implementation
 // will use the passed in EvalContext to resolve values in the expression that
 // might otherwise be unknown.
-// NOTE: This implemenation currently only support expanding the values of keys
+// NOTE: This implementation currently only support expanding the values of keys
 // in index expressions. Enos is intended to support passing configuration between
 // modules by reference. If you need to perform complex operations on step
 // variables you'll need to perform that in the module that is taking the value
@@ -90,17 +90,23 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 			}}, traversal...)
 			expr = t.Collection
 		default:
-			return traversal, hcl.Diagnostics{&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("expanding expression for %s is not supported", reflect.TypeOf(t).Name()),
-				Subject:  t.StartRange().Ptr(),
-				Context:  t.Range().Ptr(),
-			}}
+			// Alright, we can't get an absolute value, an absolute traversal, or
+			// an absolute traversal that's been expanded from the eval context.
+			// This could happen because of a syntax error in the expression or
+			// because of unknown values in the expression. To make troubleshooting
+			// easier for the author we'll return both the expression and
+			// absolute traversal diagnostics to ease in solving the problem.
+			_, exprDiags := expr.Value(ctx)
+			return traversal, exprDiags.Extend(diags)
 		}
 	}
 }
 
 func init() {
+	// NOTE: As our implementation of StepVariableType has to be set during init
+	// you will need to register any package level variables that use it in this
+	// init function or as a func at runtime. If you don't the value will be
+	// the zero-value of cty.Type.
 	StepVariableType = cty.CapsuleWithOps("stepvar", reflect.TypeOf(StepVariable{}), &cty.CapsuleOps{
 		ExtensionData: func(key any) any {
 			switch key {
@@ -129,15 +135,10 @@ func init() {
 						// contents of the value to avoid nesting stepvars.
 						absVal, moreDiags := expr.Value(ctx)
 						if !moreDiags.HasErrors() {
-							// It's an known value. If it's a stepvar get the
-							// value out of it to avoid nesting known stepvars.
+							// It's an known value. If it's a stepvar return
+							// it as we don't want to nest step vars.
 							if absVal.Type().Equals(StepVariableType) {
-								nested, moreDiags := StepVariableFromVal(absVal)
-								diags = diags.Extend(moreDiags)
-								if moreDiags.HasErrors() {
-									return StepVariableVal(stepVar), diags
-								}
-								absVal = nested.Value
+								return absVal, diags
 							}
 
 							stepVar.Value = absVal

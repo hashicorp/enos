@@ -1,3 +1,8 @@
+variable "az" {
+  type    = string
+  default = "us-east-1"
+}
+
 output "amis" {
   value = {
     "ubuntu" = {

@@ -592,9 +592,6 @@ func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
 	if ctx.Variables == nil {
 		ctx.Variables = map[string]cty.Value{}
 	}
-	// NOTE: we're writing step values into out child context. If we ever need
-	// these values as outputs we'll have to make them available in parent
-	// contexts.
 	ctx.Variables["step"] = cty.ObjectVal(steps)
 
 	return diags

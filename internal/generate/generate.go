@@ -229,6 +229,12 @@ func (g *Generator) generateModule() error {
 		return err
 	}
 
+	// Write our outputs
+	err = g.maybeWriteOutputs(modBody)
+	if err != nil {
+		return err
+	}
+
 	// Write our module to disk
 	return g.write(g.TerraformModulePath(), mod.Bytes())
 }
@@ -418,16 +424,72 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 
 			// It's a module reference
 			// Rename the root of the traversal to "module" and write it out
-			root, ok := stepVar.Traversal[0].(hcl.TraverseRoot)
-			if !ok {
-				return fmt.Errorf("malformed step variable reference")
+			err := stepToModuleTraversal(stepVar.Traversal)
+			if err != nil {
+				return err
 			}
-			root.Name = "module"
-			stepVar.Traversal[0] = root
 			body.SetAttributeTraversal(k, stepVar.Traversal)
 		}
 
 		if i+1 < len(g.Scenario.Steps) {
+			rootBody.AppendNewline()
+		}
+	}
+
+	return nil
+}
+
+func (g *Generator) maybeWriteOutputs(rootBody *hclwrite.Body) error {
+	// Output value for each output
+	for i, output := range g.Scenario.Outputs {
+		if i == 0 {
+			rootBody.AppendNewline()
+		}
+
+		block := rootBody.AppendNewBlock("output", []string{output.Name})
+		body := block.Body()
+
+		if output.Description != "" {
+			body.SetAttributeValue("description", cty.StringVal(output.Description))
+		}
+
+		if output.Sensitive {
+			body.SetAttributeValue("sensitive", cty.BoolVal(true))
+		}
+
+		writeOutput := func(output *flightplan.ScenarioOutput) error {
+			if output.Value == cty.NilVal {
+				return nil
+			}
+
+			stepVar, diags := flightplan.StepVariableFromVal(output.Value)
+			if diags.HasErrors() {
+				return fmt.Errorf(diags.Error())
+			}
+
+			// Use the absolute value if it exists
+			if stepVar.Value != cty.NilVal {
+				body.SetAttributeValue("value", stepVar.Value)
+				return nil
+			}
+
+			if stepVar.Traversal != nil {
+				err := stepToModuleTraversal(stepVar.Traversal)
+				if err != nil {
+					return err
+				}
+				body.SetAttributeTraversal("value", stepVar.Traversal)
+			}
+
+			return nil
+		}
+
+		err := writeOutput(output)
+		if err != nil {
+			return err
+		}
+
+		if i+1 < len(g.Scenario.Outputs) {
 			rootBody.AppendNewline()
 		}
 	}
@@ -695,4 +757,20 @@ func relativePath(from, to string) (string, error) {
 	}
 
 	return rel, nil
+}
+
+// stepToModuleTraversal takes a "step" traversal and updates the root of the
+// the traversal to "module"
+func stepToModuleTraversal(in hcl.Traversal) error {
+	if len(in) == 0 {
+		return nil
+	}
+	root, ok := in[0].(hcl.TraverseRoot)
+	if !ok {
+		return fmt.Errorf("malformed step variable reference")
+	}
+	root.Name = "module"
+	in[0] = root
+
+	return nil
 }

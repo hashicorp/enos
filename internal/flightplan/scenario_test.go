@@ -82,11 +82,17 @@ module "backend" {
 
 scenario "backend" {
   locals {
-    mod = module.backend.name
+    something = "another"
+    another   = local.something
+    mod       = module.backend.name
   }
 
   step "first" {
     module = local.mod
+  }
+
+  output "another" {
+    value = local.another
   }
 }
 `, modulePath),
@@ -113,6 +119,12 @@ scenario "backend" {
 									Source: modulePath,
 									Attrs:  map[string]cty.Value{},
 								},
+							},
+						},
+						Outputs: []*ScenarioOutput{
+							{
+								Name:  "another",
+								Value: testMakeStepVarValue(cty.StringVal("another")),
 							},
 						},
 					},

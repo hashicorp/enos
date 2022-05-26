@@ -3,6 +3,7 @@ package flightplan
 import (
 	"crypto/sha256"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
@@ -145,7 +146,13 @@ func (s *Scenario) decodeAndValidateLocalsBlock(
 	}
 
 	locals := map[string]cty.Value{}
-	for _, localsBlock := range content.Blocks.OfType(blockTypeLocals) {
+	for i, localsBlock := range content.Blocks.OfType(blockTypeLocals) {
+		if i == 0 {
+			if ctx.Variables == nil {
+				ctx.Variables = map[string]cty.Value{}
+			}
+		}
+
 		moreDiags := verifyBlockHasNLabels(localsBlock, 0)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
@@ -158,7 +165,20 @@ func (s *Scenario) decodeAndValidateLocalsBlock(
 			continue
 		}
 
+		// Since our decoder gives us our locals as a map we cannot depend
+		// on them being in the order in which they were defined. Rather than
+		// trying to topologically sort them by their traversals, we'll sort them
+		// by their declared range offset. This requires scenario authors to
+		// write locals in the order in which they are to be referred.
+		sortedLocals := []*hcl.Attribute{}
 		for _, attr := range attrs {
+			sortedLocals = append(sortedLocals, attr)
+		}
+		sort.Slice(sortedLocals, func(i, j int) bool {
+			return sortedLocals[i].Range.Start.Byte < sortedLocals[j].Range.Start.Byte
+		})
+
+		for _, attr := range sortedLocals {
 			val, moreDiags := attr.Expr.Value(ctx)
 			diags = diags.Extend(moreDiags)
 			if moreDiags.HasErrors() {
@@ -166,12 +186,9 @@ func (s *Scenario) decodeAndValidateLocalsBlock(
 			}
 
 			locals[attr.Name] = val
+			ctx.Variables["local"] = cty.ObjectVal(locals)
 		}
 	}
-	if ctx.Variables == nil {
-		ctx.Variables = map[string]cty.Value{}
-	}
-	ctx.Variables["local"] = cty.ObjectVal(locals)
 
 	return diags
 }

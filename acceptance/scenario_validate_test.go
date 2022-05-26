@@ -35,6 +35,11 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			"test foo:matrixbar",
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixbar]"))),
 		},
+		{
+			"scenario_generate_complex_module_source",
+			"",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("path"))),
+		},
 	} {
 		t.Run(test.dir, func(t *testing.T) {
 			outDir := filepath.Join(tmpDir, test.dir)

@@ -1,1 +1,5 @@
 * @hashicorp/quality-team
+
+# release configuration
+/.release/                              @hashicorp/release-engineering @hashicorp/quality-team
+/.github/workflows/build.yml            @hashicorp/release-engineering @hashicorp/quality-team

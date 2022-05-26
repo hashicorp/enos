@@ -186,9 +186,6 @@ func (s *Scenario) decodeAndValidateLocalsBlock(
 			}
 
 			locals[attr.Name] = val
-			if ctx.Variables == nil {
-				ctx.Variables = map[string]cty.Value{}
-			}
 			ctx.Variables["local"] = cty.ObjectVal(locals)
 		}
 	}

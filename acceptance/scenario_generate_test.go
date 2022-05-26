@@ -56,6 +56,12 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 			fmt.Sprintf("%x", sha256.Sum256([]byte("step_vars [arch:arm distro:rhel]"))),
 			true,
 		},
+		{
+			"scenario_generate_complex_module_source",
+			"",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("path"))),
+			true,
+		},
 	} {
 		t.Run(fmt.Sprintf("%s %s", test.dir, test.args), func(t *testing.T) {
 			// NOTE: Right now we're just testing that the generate command

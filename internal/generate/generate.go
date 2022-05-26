@@ -55,19 +55,29 @@ func NewGenerator(opts ...Opt) (*Generator, error) {
 // WithOutBaseDirectory is the destination base directory where modules will be written.
 func WithOutBaseDirectory(dir string) Opt {
 	return func(req *Generator) error {
-		a, err := filepath.Abs(dir)
+		a, err := absoluteNoSymlinks(dir)
 		if err != nil {
 			return err
 		}
+
 		req.OutDir = a
 		return nil
 	}
 }
 
+func absoluteNoSymlinks(path string) (string, error) {
+	a, err := filepath.Abs(path)
+	if err != nil {
+		return a, err
+	}
+
+	return filepath.EvalSymlinks(a)
+}
+
 // WithScenarioBaseDirectory is base directory where the scenario defintions reside.
 func WithScenarioBaseDirectory(dir string) Opt {
 	return func(req *Generator) error {
-		a, err := filepath.Abs(dir)
+		a, err := absoluteNoSymlinks(dir)
 		if err != nil {
 			return err
 		}

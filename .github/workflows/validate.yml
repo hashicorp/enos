@@ -53,7 +53,7 @@ jobs:
       - name: fmt-check
         run: |
           go install mvdan.cc/gofumpt@latest
-	        go install github.com/bufbuild/buf/cmd/buf@latest
+          go install github.com/bufbuild/buf/cmd/buf@latest
           make fmt-check
 
   acceptance:

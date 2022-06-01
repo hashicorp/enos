@@ -3,9 +3,24 @@ package basic
 import (
 	"fmt"
 
+	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
+
+// ShowScenarioGenerate shows scenario generate view
+func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
+	for _, out := range res.GetResponses() {
+		scenario := flightplan.NewScenario()
+		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
+		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
+		v.writeGenerateResponse(out)
+	}
+
+	v.WriteDiagnostics(res.GetDiagnostics())
+
+	return status.GenerateScenarios(res)
+}
 
 func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response) {
 	if out == nil {
@@ -32,15 +47,4 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response)
 	v.ui.Debug(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
 	v.ui.Debug(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 	v.WriteDiagnostics(out.GetDiagnostics())
-}
-
-// ShowScenarioGenerate shows scenario generate view
-func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
-	for _, out := range res.GetResponses() {
-		v.writeGenerateResponse(out)
-	}
-
-	v.WriteDiagnostics(res.GetDiagnostics())
-
-	return status.GenerateScenarios(res)
 }

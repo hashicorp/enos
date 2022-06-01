@@ -21,7 +21,6 @@ var rootCmd = &cobra.Command{
 	Long:              "Enos is a one stop shop for defining and executing complex test scenarios",
 	PersistentPreRun:  rootCmdPreRun,
 	PersistentPostRun: rootCmdPostRun,
-	SilenceErrors:     true, // we handle this ourselves
 	CompletionOptions: cobra.CompletionOptions{DisableDescriptions: true},
 }
 
@@ -59,15 +58,17 @@ func Execute() {
 			os.Exit(exitErr.ExitCode)
 		}
 
-		var err2 error
-		var diagErr *status.ErrDiagnostic
-		if errors.As(err, &diagErr) {
-			err2 = ui.ShowDiagnostics(diagErr.Diags)
-		} else {
-			err2 = ui.ShowError(err)
-		}
-		if err2 != nil {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", err.Error(), err2.Error())
+		if ui != nil {
+			var err2 error
+			var diagErr *status.ErrDiagnostic
+			if errors.As(err, &diagErr) {
+				err2 = ui.ShowDiagnostics(diagErr.Diags)
+			} else {
+				err2 = ui.ShowError(err)
+			}
+			if err2 != nil {
+				fmt.Fprintf(os.Stderr, "%s: %s\n", err.Error(), err2.Error())
+			}
 		}
 
 		os.Exit(1)
@@ -119,6 +120,8 @@ func setupCLIUI() error {
 }
 
 func rootCmdPreRun(cmd *cobra.Command, args []string) {
+	cmd.SilenceErrors = true // we handle this ourselves
+
 	err := setupCLIUI()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())

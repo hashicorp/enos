@@ -37,7 +37,7 @@ func newFmtCmd() *cobra.Command {
 func runFmtCmd(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true // We'll handle it from here cobra
 
-	readEnosFiles := func(path string) (map[string][]byte, []*pb.Diagnostic) {
+	readEnosFiles := func(path string) ([]*pb.FormatRequest_File, []*pb.Diagnostic) {
 		var err error
 
 		if path == "" {
@@ -69,9 +69,17 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		if info.IsDir() {
+			files := []*pb.FormatRequest_File{}
+
 			fpFiles, err := flightplan.FindRawFiles(path, flightplan.FlightPlanFileNamePattern)
 			if err != nil {
 				return nil, diagnostics.FromErr(err)
+			}
+			for path, bytes := range fpFiles {
+				files = append(files, &pb.FormatRequest_File{
+					Path: path,
+					Body: bytes,
+				})
 			}
 
 			varsFiles, err := flightplan.FindRawFiles(path, flightplan.VariablesNamePattern)
@@ -79,9 +87,11 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 				return nil, diagnostics.FromErr(err)
 			}
 
-			files := fpFiles
 			for path, bytes := range varsFiles {
-				files[path] = bytes
+				files = append(files, &pb.FormatRequest_File{
+					Path: path,
+					Body: bytes,
+				})
 			}
 
 			return files, nil
@@ -92,13 +102,13 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 			return nil, diagnostics.FromErr(err)
 		}
 
-		return map[string][]byte{
-			path: content,
+		return []*pb.FormatRequest_File{
+			{Path: path, Body: content},
 		}, nil
 	}
 
 	var err error
-	req := &pb.FormatRequest{Config: fmtCfg, Files: map[string][]byte{}}
+	req := &pb.FormatRequest{Config: fmtCfg, Files: []*pb.FormatRequest_File{}}
 	res := &pb.FormatResponse{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -125,7 +135,9 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 			res.Diagnostics = diagnostics.FromErr(err)
 			return ui.ShowFormat(fmtCfg, res)
 		}
-		req.Files["STDIN"] = bytes
+		req.Files = []*pb.FormatRequest_File{
+			{Path: "STDIN", Body: bytes},
+		}
 	}
 
 	res, err = enosClient.Format(ctx, req)

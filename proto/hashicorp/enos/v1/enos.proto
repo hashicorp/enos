@@ -443,8 +443,13 @@ message OutputScenariosResponse {
 }
 
 message FormatRequest {
-  map<string, bytes> files = 1;
+  repeated File files = 1;
   Config config = 2;
+
+  message File {
+    string path = 1;
+    bytes body = 2;
+  }
 
   message Config {
     bool write = 1;

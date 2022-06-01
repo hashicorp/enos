@@ -30,21 +30,21 @@ func (s *ServiceV1) Format(
 		Responses: []*pb.FormatResponse_Response{},
 	}
 
-	for path, b := range req.GetFiles() {
+	for _, file := range req.GetFiles() {
 		r := &pb.FormatResponse_Response{
-			Path: path,
+			Path: file.GetPath(),
 		}
 		// Make sure we can parse it as valid HCL, otherwise whatever we'd
 		// format would likely render it even more broken.
-		_, diags := hclwrite.ParseConfig(b, path, hcl.InitialPos)
+		_, diags := hclwrite.ParseConfig(file.GetBody(), file.GetPath(), hcl.InitialPos)
 		if diags.HasErrors() {
 			r.Diagnostics = diagnostics.FromHCL(nil, diags)
 			res.Responses = append(res.Responses, r)
 			continue
 		}
 
-		formatted := hclwrite.Format(b)
-		if bytes.Equal(b, formatted) {
+		formatted := hclwrite.Format(file.GetBody())
+		if bytes.Equal(file.GetBody(), formatted) {
 			// If nothing has changed we can move on
 			res.Responses = append(res.Responses, r)
 			continue
@@ -54,22 +54,22 @@ func (s *ServiceV1) Format(
 
 		if req.GetConfig().GetDiff() {
 			edits := myers.ComputeEdits(
-				span.URIFromPath(path),
-				string(b),
+				span.URIFromPath(file.GetPath()),
+				string(file.GetBody()),
 				string(formatted),
 			)
 			r.Diff = strings.TrimSuffix(
-				fmt.Sprint(gotextdiff.ToUnified("old", "new", string(b), edits)),
+				fmt.Sprint(gotextdiff.ToUnified("old", "new", string(file.GetBody()), edits)),
 				"\n",
 			)
 		}
 
-		if path == "STDIN" && req.GetConfig().GetWrite() {
+		if file.GetPath() == "STDIN" && req.GetConfig().GetWrite() {
 			r.Body = strings.TrimSuffix(string(formatted), "\n")
 		}
 
-		if path != "STDIN" && req.GetConfig().GetWrite() && !req.GetConfig().GetCheck() {
-			f, err := os.OpenFile(path, os.O_RDWR, 0o755)
+		if file.GetPath() != "STDIN" && req.GetConfig().GetWrite() && !req.GetConfig().GetCheck() {
+			f, err := os.OpenFile(file.GetPath(), os.O_RDWR, 0o755)
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
 				res.Responses = append(res.Responses, r)

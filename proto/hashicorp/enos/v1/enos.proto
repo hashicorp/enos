@@ -1,0 +1,442 @@
+syntax = "proto3";
+
+package hashicorp.enos.v1;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/hashicorp/enos/internal/pb;pb";
+
+service EnosService {
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {}
+  rpc ListScenarios(ListScenariosRequest) returns (ListScenariosResponse) {}
+  rpc ValidateScenarios(ValidateScenariosRequest) returns (ValidateScenariosResponse) {}
+  rpc GenerateScenarios(GenerateScenariosRequest) returns (GenerateScenariosResponse) {}
+  rpc LaunchScenarios(LaunchScenariosRequest) returns (LaunchScenariosResponse) {}
+  rpc DestroyScenarios(DestroyScenariosRequest) returns (DestroyScenariosResponse) {}
+  rpc RunScenarios(RunScenariosRequest) returns (RunScenariosResponse) {}
+  rpc ExecScenarios(ExecScenariosRequest) returns (ExecScenariosResponse) {}
+  rpc OutputScenarios(OutputScenariosRequest) returns (OutputScenariosResponse) {}
+}
+
+// UI contains messages related to the UI calling the server. This information
+// will be populated by the caller and passed to the server, which it can use
+// in some instances to generate output tailored for the caller.
+message UI {
+  message Settings {
+    uint32 width = 1;
+    bool is_tty = 2;
+    bool use_color = 3;
+    Format format = 4;
+    Level level = 5;
+    // stdout_path if defined, we'll write our stdout messages to a file in
+    // the given path
+    string stdout_path = 6;
+    // stderr_path if defined, we'll write our stderr messages to a file in
+    // the given path
+    string stderr_path = 7;
+
+    enum Format {
+      FORMAT_UNSPECIFIED = 0;
+      FORMAT_BASIC_TEXT = 1;
+      FORMAT_JSON = 2;
+    }
+
+    enum Level {
+      LEVEL_UNSPECIFIED = 0;
+      LEVEL_ERROR = 1;
+      LEVEL_WARN = 2;
+      LEVEL_INFO = 3;
+      LEVEL_DEBUG = 4;
+    }
+  }
+}
+
+// Diagnostic is how we'll return error messages that may or may not have code
+// context associated with it. This is general enough to handle Terraform's
+// JSON output diagnostics and Enos HCL diagnostics.
+message Diagnostic {
+  Severity severity = 1;
+  string summary = 2;
+  string detail = 3;
+  Range range = 4;
+  Snippet snippet = 5;
+
+  enum Severity {
+    SEVERITY_UNSPECIFIED = 0;
+    SEVERITY_UNKNOWN = 1;
+    SEVERITY_ERROR = 2;
+    SEVERITY_WARNING = 3;
+  }
+
+  message Snippet {
+    string context = 1;
+    string code = 2;
+    int64 start_line = 3 [json_name = "start_line"];
+    int64 highlight_start_offset = 4 [json_name = "highlight_start_offset"];
+    int64 highlight_end_offset = 5 [json_name = "highlight_end_offset"];
+    repeated ExpressionValue values = 6;
+  }
+
+  message ExpressionValue {
+    string traversal = 1;
+    string statement = 2;
+  }
+}
+
+message Range {
+  string filename = 1;
+  Pos start = 2;
+  Pos end = 3;
+
+  message Pos {
+    int64 line = 1;
+    int64 column = 2;
+    int64 byte = 3;
+  }
+}
+
+// Workspace defines an Enos workspace. In our case that means our working directory,
+// output directory, flight plan and any Terraform specific configuration.
+message Workspace {
+  // flightplan is our workspace flight plan configuration and variables
+  FlightPlan flightplan = 1;
+  // terraform_exec contains our default and override Terraform execution
+  // configuration.
+  Terraform.Executor.Config tf_exec_cfg = 4;
+  // dir is our workspaces directory. This will default to the current working
+  // directory.
+  string dir = 5;
+  // Terraform modules are scoped relative to directories. This optional field
+  // can be used as the base working dir for generated modules. If it is not
+  // set Enos will use $dir/.enos
+  string out_dir = 6;
+}
+
+// FlightPlan is the Enos configuration.
+message FlightPlan {
+  string base_dir = 1;
+  map<string, bytes> enos_hcl = 2;
+  map<string, bytes> enos_vars_hcl = 3;
+}
+
+// Scenario is an Enos scenario.
+message Scenario {
+  // ID is the unique identification of the scenario and its variants.
+  message ID {
+    string name = 1;
+    Filter.Vector variants = 2;
+    string uid = 3;
+  }
+
+  // Filter is a scenario filter.
+  message Filter {
+    string name = 1;
+    SelectAll select_all = 2;
+    Vector include = 3;
+    repeated Exclude exclude = 4;
+
+    message SelectAll {}
+
+    message Element {
+      string key = 1;
+      string value = 2;
+    }
+
+    message Vector {
+      repeated Element elements = 1;
+    }
+
+    message Exclude {
+      Vector vector = 1;
+      Mode mode = 2;
+
+      enum Mode {
+        MODE_UNSPECIFIED = 0;
+        // MODE_EXACTLY will match a vector that has the exact ordered elements
+        MODE_EXACTLY = 1;
+        // MODE_EQUAL_UNORDERED will match a vector that has the exact elements
+        // but may be unordered.
+        MODE_EQUAL_UNORDERED = 2;
+        // MODE_CONTAINS will match any vector that has at least the given vector
+        // elements in any order.
+        MODE_CONTAINS = 3;
+      }
+    }
+  }
+
+  // Command is an enos scenario command.
+  message Command {
+    message Generate {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
+      }
+    }
+
+    message Validate {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        Generate.Response generate = 2;
+        Terraform.Command.Init.Response init = 3;
+        Terraform.Command.Validate.Response validate = 4;
+        Terraform.Command.Plan.Response plan = 5;
+      }
+    }
+
+    message Launch {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        Generate.Response generate = 2;
+        Terraform.Command.Init.Response init = 3;
+        Terraform.Command.Validate.Response validate = 4;
+        Terraform.Command.Plan.Response plan = 5;
+        Terraform.Command.Apply.Response apply = 6;
+      }
+    }
+
+    message Destroy {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
+        Terraform.Command.Destroy.Response destroy = 3;
+      }
+    }
+
+    message Run {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        Generate.Response generate = 2;
+        Terraform.Command.Init.Response init = 3;
+        Terraform.Command.Validate.Response validate = 4;
+        Terraform.Command.Plan.Response plan = 5;
+        Terraform.Command.Apply.Response apply = 6;
+        Terraform.Command.Destroy.Response destroy = 7;
+      }
+    }
+
+    message Exec {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        string sub_command = 2 [json_name = "sub_command"];
+        Terraform.Module terraform_module = 3 [json_name = "terraform_module"];
+        Terraform.Command.Exec.Response exec = 4;
+      }
+    }
+
+    message Output {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
+        Terraform.Command.Output.Response output = 3;
+      }
+    }
+  }
+}
+
+message Terraform {
+  message Module {
+    string module_path = 1 [json_name = "module_path"];
+    string rc_path = 2 [json_name = "rc_path"];
+    Ref.Scenario scenario_ref = 3 [json_name = "scenario"];
+  }
+
+  message Command {
+    message Init {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        string stderr = 2;
+      }
+    }
+
+    message Validate {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        bool valid = 2;
+        int64 error_count = 3 [json_name = "error_count"];
+        int64 warning_count = 4 [json_name = "warning_count"];
+        string format_version = 5 [json_name = "format_version"];
+      }
+    }
+
+    message Plan {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        bool changes_present = 2 [json_name = "changes_present"];
+        string stderr = 3;
+      }
+    }
+
+    message Apply {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        string stderr = 2;
+      }
+    }
+
+    message Destroy {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        string stderr = 2;
+      }
+    }
+
+    message Exec {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        string stderr = 2;
+        string stdout = 3;
+      }
+    }
+
+    message Output {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        repeated Meta meta = 2;
+
+        message Meta {
+          string name = 1;
+          bytes type = 2;
+          bytes value = 3;
+          bool sensitive = 4;
+          string stderr = 5;
+        }
+      }
+    }
+  }
+
+  message Executor {
+    Config config = 1;
+
+    message Config {
+      // Terraform CLI flags
+      Flags flags = 1;
+      // The path to the terraform binary
+      string bin_path = 2;
+      // Where the .terraformrc configuration is
+      string config_path = 3;
+      // The directory from which to execute Terraform
+      string working_dir_path = 4;
+      // Environment variables to set when executing Terraform
+      map<string, string> env = 5;
+      // User supplied sub-command
+      string user_sub_command = 6;
+      // Output filter
+      string output_filter = 7;
+
+      // Flags are a subset of the Terraform flags that we allow to be settable.
+      message Flags {
+        // -backup=path
+        string backup_state_file_path = 1;
+        // -lock-timeout=10s
+        google.protobuf.Duration lock_timeout = 2;
+        // -backend=false
+        bool no_backend = 3;
+        // -lock=false
+        bool no_lock = 4;
+        // -get=false
+        bool no_download = 5;
+        // -refresh=false
+        bool no_refresh = 6;
+        // -parallelism=n
+        uint32 parallelism = 7;
+        // -refresh-only
+        bool refresh_only = 8;
+        // -upgrade
+        bool upgrade = 9;
+      }
+    }
+  }
+}
+
+message Ref {
+  message Scenario {
+    hashicorp.enos.v1.Scenario.ID id = 1;
+  }
+}
+
+message GetVersionRequest {}
+message GetVersionResponse {
+  repeated Diagnostic diagnostics = 1;
+  string version = 2;
+  string git_sha = 3 [json_name = "git_sha"];
+}
+
+message ListScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message ListScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Ref.Scenario scenarios = 2;
+}
+
+message GenerateScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message GenerateScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Generate.Response responses = 2;
+}
+
+message ValidateScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message ValidateScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Validate.Response responses = 2;
+}
+
+message LaunchScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message LaunchScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Launch.Response responses = 3;
+}
+
+message DestroyScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message DestroyScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Destroy.Response responses = 2;
+}
+
+message RunScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message RunScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Run.Response responses = 2;
+}
+
+message ExecScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message ExecScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Exec.Response responses = 2;
+}
+
+message OutputScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message OutputScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Scenario.Command.Output.Response responses = 2;
+}

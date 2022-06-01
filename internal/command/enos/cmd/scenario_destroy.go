@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/enos/internal/execute"
-	"github.com/hashicorp/enos/internal/generate"
+	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // newScenarioDestroyCmd returns a new `scenario destroy` sub-command
@@ -21,16 +22,37 @@ func newScenarioDestroyCmd() *cobra.Command {
 		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
+
 	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "don't wait for terraform state lock")
-	cmd.PersistentFlags().IntVar(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
-	cmd.PersistentFlags().DurationVar(&scenarioCfg.tfConfig.Flags.LockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
+	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
+	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
+
+	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 
 	return cmd
 }
 
 // runScenarioDestroyCmd is the function that destroys scenarios
 func runScenarioDestroyCmd(cmd *cobra.Command, args []string) error {
-	return scenarioGenAndExec(args, func(ctx context.Context, gen *generate.Generator, exec *execute.Executor) error {
-		return exec.Destroy(ctx)
+	ctx, cancel := scenarioTimeoutContext()
+	defer cancel()
+
+	sf, err := flightplan.ParseScenarioFilter(args)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	res, err := enosClient.DestroyScenarios(ctx, &pb.DestroyScenariosRequest{
+		Workspace: &pb.Workspace{
+			Flightplan: flightPlan,
+			OutDir:     scenarioCfg.outDir,
+			TfExecCfg:  scenarioCfg.tfConfig.Proto(),
+		},
+		Filter: sf.Proto(),
 	})
+	if err != nil {
+		return err
+	}
+
+	return ui.ShowScenarioDestroy(res)
 }

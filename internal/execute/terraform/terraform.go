@@ -1,7 +1,6 @@
 package terraform
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,21 +8,49 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	"github.com/hashicorp/enos/internal/execute/command"
-	"github.com/hashicorp/enos/internal/ui"
+	"github.com/hashicorp/enos/internal/ui/terminal"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
 // Config is the Terraform CLI executor configuration
 type Config struct {
-	UI         *ui.UI            // UI to use for input/output
+	UI         *terminal.UI      // UI to use for input/output
 	BinPath    string            // where terraform binary is
 	ConfigPath string            // where the terraformrc config is
 	DirPath    string            // what directory to execute the command in
 	Env        map[string]string // envrionment variables
 	ExecSubCmd string            // raw command to run
 	OutputName string            // output name
-	Flags      *Flags
+	Flags      *pb.Terraform_Executor_Config_Flags
+}
+
+// Proto returns the instance of config as proto terraform executor config
+func (c *Config) Proto() *pb.Terraform_Executor_Config {
+	return &pb.Terraform_Executor_Config{
+		Flags:          c.Flags,
+		BinPath:        c.BinPath,
+		ConfigPath:     c.ConfigPath,
+		WorkingDirPath: c.DirPath,
+		Env:            c.Env,
+		UserSubCommand: c.ExecSubCmd,
+		OutputFilter:   c.OutputName,
+	}
+}
+
+// FromProto unmarshals and instance of a proto terraform executor configuration
+// into itself.
+func (c *Config) FromProto(pcfg *pb.Terraform_Executor_Config) {
+	c.Flags = pcfg.GetFlags()
+	c.BinPath = pcfg.GetBinPath()
+	c.ConfigPath = pcfg.GetConfigPath()
+	c.DirPath = pcfg.GetWorkingDirPath()
+	c.Env = pcfg.GetEnv()
+	c.ExecSubCmd = pcfg.GetUserSubCommand()
+	c.OutputName = pcfg.GetOutputFilter()
 }
 
 func (c *Config) tfPath() (string, error) {
@@ -54,11 +81,12 @@ func (c *Config) tfEnv() map[string]string {
 	return tfexec.CleanEnv(env)
 }
 
-// RunExecSubCmd executes the Terraform sub-command
-func (c *Config) RunExecSubCmd(ctx context.Context) (*exec.Cmd, error) {
+// NewExecSubCmd creates a new instance of a command to run a terraform
+// sub-command
+func (c *Config) NewExecSubCmd() *command.Command {
 	execPath, err := c.tfPath()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	opts := []command.Opt{
@@ -74,7 +102,7 @@ func (c *Config) RunExecSubCmd(ctx context.Context) (*exec.Cmd, error) {
 		opts = append(opts, command.WithUI(c.UI))
 	}
 
-	return command.NewCommand(execPath, opts...).Run(ctx)
+	return command.NewCommand(execPath, opts...)
 }
 
 // Terraform returns a new instance of a configured *tfexec.Terraform
@@ -105,20 +133,6 @@ func (c *Config) Terraform() (*tfexec.Terraform, error) {
 	return tf, nil
 }
 
-// Flags are a subset of the Terraform flags that we allow to be settable.
-type Flags struct {
-	BackupStateFilePath string        // -backup=path
-	LockTimeout         time.Duration // -lock-timeout=10s
-	NoBackend           bool          // -backend=false
-	NoLock              bool          // -lock=false
-	NoDownload          bool          // -get=false
-	NoRefresh           bool          // -refresh=false
-	OutPath             string        // -out=path
-	Parallelism         int           // -parallelism=n
-	RefreshOnly         bool          // -refresh-only
-	Upgrade             bool          // -upgrade
-}
-
 // ConfigOpt is a Terraform CLI executor configuration option
 type ConfigOpt func(*Config)
 
@@ -133,7 +147,7 @@ type (
 func NewConfig(opts ...ConfigOpt) *Config {
 	cfg := &Config{
 		Env:   map[string]string{},
-		Flags: &Flags{},
+		Flags: &pb.Terraform_Executor_Config_Flags{},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -143,7 +157,7 @@ func NewConfig(opts ...ConfigOpt) *Config {
 }
 
 // WithUI sets the UI
-func WithUI(ui *ui.UI) ConfigOpt {
+func WithUI(ui *terminal.UI) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.UI = ui
 	}
@@ -187,7 +201,7 @@ func WithExecSubCommand(cmd string) ConfigOpt {
 // WithLockTimeout sets the state lock timeout
 func WithLockTimeout(timeout time.Duration) ConfigOpt {
 	return func(cfg *Config) {
-		cfg.Flags.LockTimeout = timeout
+		cfg.Flags.LockTimeout = durationpb.New(timeout)
 	}
 }
 
@@ -219,17 +233,10 @@ func WithNoRefresh() ConfigOpt {
 	}
 }
 
-// WithOutPath sets the outfile path
-func WithOutPath(out string) ConfigOpt {
-	return func(cfg *Config) {
-		cfg.Flags.OutPath = out
-	}
-}
-
 // WithParallelism sets the parallelism
 func WithParallelism(p int) ConfigOpt {
 	return func(cfg *Config) {
-		cfg.Flags.Parallelism = p
+		cfg.Flags.Parallelism = uint32(p)
 	}
 }
 
@@ -247,60 +254,66 @@ func WithUpgrade() ConfigOpt {
 	}
 }
 
-func (f *Flags) lockTimeoutString() string {
-	if f.LockTimeout == 0 {
+// WithProtoConfig sets configuration from a proto config
+func WithProtoConfig(pcfg *pb.Terraform_Executor_Config) ConfigOpt {
+	return func(cfg *Config) {
+		cfg.FromProto(pcfg)
+	}
+}
+
+func (c *Config) lockTimeoutString() string {
+	if c.Flags.GetLockTimeout().AsDuration() == 0 {
 		return "0s"
 	}
 
-	return fmt.Sprintf("%dms", f.LockTimeout.Milliseconds())
+	return fmt.Sprintf("%dms", c.Flags.GetLockTimeout().AsDuration().Milliseconds())
 }
 
 // InitOptions are the init command options
-func (f *Flags) InitOptions() []tfexec.InitOption {
+func (c *Config) InitOptions() []tfexec.InitOption {
 	return []tfexec.InitOption{
-		tfexec.Backend(f.NoBackend),
-		tfexec.Get(!f.NoDownload),
-		tfexec.Upgrade(!f.NoLock),
+		tfexec.Backend(c.Flags.GetNoBackend()),
+		tfexec.Get(!c.Flags.GetNoDownload()),
+		tfexec.Upgrade(!c.Flags.GetNoLock()),
 	}
 }
 
 // PlanOptions are the plan command options
-func (f *Flags) PlanOptions() []tfexec.PlanOption {
+func (c *Config) PlanOptions() []tfexec.PlanOption {
 	return []tfexec.PlanOption{
-		tfexec.Refresh(!f.NoRefresh),
-		tfexec.LockTimeout(f.lockTimeoutString()),
-		tfexec.Lock(!f.NoLock),
-		tfexec.Out(f.OutPath),
-		tfexec.Parallelism(f.Parallelism),
-		tfexec.Refresh(f.RefreshOnly),
+		tfexec.Refresh(!c.Flags.GetNoRefresh()),
+		tfexec.LockTimeout(c.lockTimeoutString()),
+		tfexec.Lock(!c.Flags.GetNoLock()),
+		tfexec.Parallelism(int(c.Flags.GetParallelism())),
+		tfexec.Refresh(c.Flags.GetRefreshOnly()),
 	}
 }
 
 // ApplyOptions are the apply command options
-func (f *Flags) ApplyOptions() []tfexec.ApplyOption {
+func (c *Config) ApplyOptions() []tfexec.ApplyOption {
 	return []tfexec.ApplyOption{
-		tfexec.Backup(f.BackupStateFilePath),
-		tfexec.Refresh(!f.NoRefresh),
-		tfexec.LockTimeout(f.lockTimeoutString()),
-		tfexec.Lock(!f.NoLock),
-		tfexec.Parallelism(f.Parallelism),
-		tfexec.Refresh(f.RefreshOnly),
+		tfexec.Backup(c.Flags.GetBackupStateFilePath()),
+		tfexec.Refresh(!c.Flags.GetNoRefresh()),
+		tfexec.LockTimeout(c.lockTimeoutString()),
+		tfexec.Lock(!c.Flags.GetNoLock()),
+		tfexec.Parallelism(int(c.Flags.GetParallelism())),
+		tfexec.Refresh(c.Flags.GetRefreshOnly()),
 	}
 }
 
 // DestroyOptions are the destroy command options
-func (f *Flags) DestroyOptions() []tfexec.DestroyOption {
+func (c *Config) DestroyOptions() []tfexec.DestroyOption {
 	return []tfexec.DestroyOption{
-		tfexec.Backup(f.BackupStateFilePath),
-		tfexec.Refresh(!f.NoRefresh),
-		tfexec.LockTimeout(f.lockTimeoutString()),
-		tfexec.Lock(!f.NoLock),
-		tfexec.Parallelism(f.Parallelism),
-		tfexec.Refresh(f.RefreshOnly),
+		tfexec.Backup(c.Flags.GetBackupStateFilePath()),
+		tfexec.Refresh(!c.Flags.GetNoRefresh()),
+		tfexec.LockTimeout(c.lockTimeoutString()),
+		tfexec.Lock(!c.Flags.GetNoLock()),
+		tfexec.Parallelism(int(c.Flags.GetParallelism())),
+		tfexec.Refresh(c.Flags.GetRefreshOnly()),
 	}
 }
 
 // OutputOptions are the output commands options
-func (f *Flags) OutputOptions() []tfexec.OutputOption {
+func (c *Config) OutputOptions() []tfexec.OutputOption {
 	return []tfexec.OutputOption{}
 }

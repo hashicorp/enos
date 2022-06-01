@@ -28,7 +28,7 @@ type Generator struct {
 
 // NewGenerator takes options and returns a new validated generator
 func NewGenerator(opts ...Opt) (*Generator, error) {
-	req := &Generator{}
+	req := &Generator{UI: cli.NewMockUi()}
 
 	for _, opt := range opts {
 		err := opt(req)

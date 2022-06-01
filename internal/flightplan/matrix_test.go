@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // Test_Decode_Scenario_Matrix tests decoding of a matrix in scenarios
@@ -537,11 +539,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   ExcludeExactly,
+					Mode:   pb.Scenario_Filter_Exclude_MODE_EXACTLY,
 					Vector: Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 				},
 				{
-					Mode:   ExcludeExactly,
+					Mode:   pb.Scenario_Filter_Exclude_MODE_EXACTLY,
 					Vector: Vector{Element{"arch", "amd64"}, Element{"arch", "arm64"}, Element{"arch", "ppc64"}},
 				},
 			},
@@ -560,11 +562,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   ExcludeEqualUnordered,
+					Mode:   pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
 					Vector: Vector{Element{"backend", "raft"}, Element{"backend", "consul"}},
 				},
 				{
-					Mode:   ExcludeEqualUnordered,
+					Mode:   pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
 					Vector: Vector{Element{"arch", "arm64"}, Element{"arch", "amd64"}},
 				},
 			},
@@ -582,11 +584,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   ExcludeContains,
+					Mode:   pb.Scenario_Filter_Exclude_MODE_CONTAINS,
 					Vector: Vector{Element{"backend", "mysql"}},
 				},
 				{
-					Mode:   ExcludeContains,
+					Mode:   pb.Scenario_Filter_Exclude_MODE_CONTAINS,
 					Vector: Vector{Element{"arch", "arm64"}, Element{"arch", "arm32"}},
 				},
 			},

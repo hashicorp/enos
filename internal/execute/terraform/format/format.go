@@ -11,22 +11,22 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 
-	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // TerraformOutput takes a terraform executor output metadata and returns it as
 // as human friendly formatted string.
-func TerraformOutput(out tfexec.OutputMeta, indent int) (string, error) {
-	if out.Sensitive {
+func TerraformOutput(out *pb.Terraform_Command_Output_Response_Meta, indent int) (string, error) {
+	if out.GetSensitive() {
 		return "(sensitive)", nil
 	}
 
-	typ, err := ctyjson.UnmarshalType(out.Type)
+	typ, err := ctyjson.UnmarshalType(out.GetType())
 	if err != nil {
 		return "", err
 	}
 
-	val, err := ctyjson.Unmarshal(out.Value, typ)
+	val, err := ctyjson.Unmarshal(out.GetValue(), typ)
 	if err != nil {
 		return "", err
 	}

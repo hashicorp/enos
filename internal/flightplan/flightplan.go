@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
@@ -616,7 +617,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 
 			excludes := []*Exclude{}
 			for _, vec := range eMatrix.CartesianProduct().UniqueValues().Vectors {
-				ex, err := NewExclude(ExcludeContains, vec)
+				ex, err := NewExclude(pb.Scenario_Filter_Exclude_MODE_CONTAINS, vec)
 				if err != nil {
 					diags = diags.Append(&hcl.Diagnostic{
 						Severity: hcl.DiagError,

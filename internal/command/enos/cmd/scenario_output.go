@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/enos/internal/execute"
-	"github.com/hashicorp/enos/internal/execute/terraform/format"
-	"github.com/hashicorp/enos/internal/generate"
+	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // newScenarioOutputCmd returns a new 'scenario output' command
@@ -21,43 +21,35 @@ func newScenarioOutputCmd() *cobra.Command {
 		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
+
 	cmd.PersistentFlags().StringVar(&scenarioCfg.tfConfig.OutputName, "name", "", "terraform state value to show")
+
+	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 
 	return cmd
 }
 
 // runScenarioOutputCmd is the function that returns scenario output
 func runScenarioOutputCmd(cmd *cobra.Command, args []string) error {
-	return scenarioGenAndExec(args, func(ctx context.Context, gen *generate.Generator, exec *execute.Executor) error {
-		res, err := exec.Output(ctx)
-		if err != nil {
-			return err
-		}
+	ctx, cancel := scenarioTimeoutContext()
+	defer cancel()
 
-		if scenarioCfg.tfConfig.OutputName != "" {
-			out, ok := res[scenarioCfg.tfConfig.OutputName]
-			if !ok {
-				return fmt.Errorf("no output value for %s found", scenarioCfg.tfConfig.OutputName)
-			}
+	sf, err := flightplan.ParseScenarioFilter(args)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
 
-			s, err := format.TerraformOutput(out, 2)
-			if err != nil {
-				return err
-			}
-			UI.Output(gen.Scenario.String())
-			UI.Output(fmt.Sprintf("  %s\n", s))
-			return nil
-		}
-
-		UI.Output(gen.Scenario.String())
-		for name, out := range res {
-			s, err := format.TerraformOutput(out, 2)
-			if err != nil {
-				return err
-			}
-			UI.Output(fmt.Sprintf("  %s = %s", name, s))
-		}
-
-		return nil
+	res, err := enosClient.OutputScenarios(ctx, &pb.OutputScenariosRequest{
+		Workspace: &pb.Workspace{
+			Flightplan: flightPlan,
+			OutDir:     scenarioCfg.outDir,
+			TfExecCfg:  scenarioCfg.tfConfig.Proto(),
+		},
+		Filter: sf.Proto(),
 	})
+	if err != nil {
+		return err
+	}
+
+	return ui.ShowScenarioOutput(res)
 }

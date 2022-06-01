@@ -2,137 +2,295 @@ package execute
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
-	"github.com/hashicorp/terraform-exec/tfexec"
-	tfjson "github.com/hashicorp/terraform-json"
-
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/execute/terraform"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // Opt is a validate module option
-type Opt func(*Executor) error
+type Opt func(*Executor)
 
 // Executor is a Terraform module executor
 type Executor struct {
 	TFConfig *terraform.Config
+	Module   *pb.Terraform_Module
 }
 
-// ValidateResponse is the response output from the validate command
-type ValidateResponse struct {
-	*tfjson.ValidateOutput
+// NewTextOutput returns a new TextOutput
+func NewTextOutput() *TextOutput {
+	return &TextOutput{
+		// Stdout is currently discarded because we don't do anything with
+		// terraform's raw output.
+		Stdout: io.Discard,
+		Stderr: &strings.Builder{},
+	}
+}
+
+// TextOutput is a terraform text output collector
+type TextOutput struct {
+	Stdout io.Writer
+	Stderr *strings.Builder
 }
 
 // RunResponse is the response output from the run command
 type RunResponse struct {
-	*ValidateResponse
+	ValidateResponse *pb.Scenario_Command_Validate_Response
 }
 
 // NewExecutor takes options and returns a new validated generator
-func NewExecutor(opts ...Opt) (*Executor, error) {
+func NewExecutor(opts ...Opt) *Executor {
 	ex := &Executor{}
 
 	for _, opt := range opts {
-		err := opt(ex)
-		if err != nil {
-			return nil, err
-		}
+		opt(ex)
 	}
 
-	return ex, nil
+	return ex
 }
 
-// WithTerraformConfig sets the terraform configuration
-func WithTerraformConfig(cfg *terraform.Config) Opt {
-	return func(ex *Executor) error {
-		ex.TFConfig = cfg
-		return nil
+// WithProtoModuleAndConfig configures the executor with configuration
+// from the proto module and executor configuration.
+func WithProtoModuleAndConfig(mod *pb.Terraform_Module, cfg *pb.Terraform_Executor_Config) Opt {
+	return func(ex *Executor) {
+		ex.Module = mod
+		ex.TFConfig = terraform.NewConfig(
+			terraform.WithProtoConfig(cfg),
+			terraform.WithDirPath(filepath.Dir(mod.GetModulePath())),
+			terraform.WithConfigPath(mod.GetRcPath()),
+		)
 	}
 }
 
 // Validate validates the generated Terraform module by installing any required
 // providers or modules and planning it.
-func (e *Executor) Validate(ctx context.Context) (*ValidateResponse, error) {
-	var err error
-	res := &ValidateResponse{}
+func (e *Executor) Validate(ctx context.Context) *pb.Scenario_Command_Validate_Response {
+	res := &pb.Scenario_Command_Validate_Response{
+		Generate: &pb.Scenario_Command_Generate_Response{
+			TerraformModule: e.Module,
+		},
+	}
 
 	tf, err := e.TFConfig.Terraform()
 	if err != nil {
-		return res, err
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
 	}
 
-	err = tf.Init(ctx, e.TFConfig.Flags.InitOptions()...)
+	initOut := NewTextOutput()
+	tf.SetStdout(initOut.Stdout)
+	tf.SetStderr(initOut.Stderr)
+	err = tf.Init(ctx, e.TFConfig.InitOptions()...)
+	res.Init = &pb.Terraform_Command_Init_Response{
+		Stderr: initOut.Stderr.String(),
+	}
 	if err != nil {
-		return res, err
+		res.Init.Diagnostics = diagnostics.FromErr(err)
+		return res
 	}
 
-	res.ValidateOutput, err = tf.Validate(ctx)
+	res.Validate = &pb.Terraform_Command_Validate_Response{}
+	jsonOut, err := tf.Validate(ctx)
 	if err != nil {
-		return res, err
+		res.Validate.Diagnostics = diagnostics.FromErr(err)
+		return res
 	}
 
-	_, err = tf.Plan(ctx, e.TFConfig.Flags.PlanOptions()...)
-	return res, err
+	if err == nil && jsonOut != nil {
+		res.Validate.FormatVersion = jsonOut.FormatVersion
+		res.Validate.Valid = jsonOut.Valid
+		res.Validate.ErrorCount = int64(jsonOut.ErrorCount)
+		res.Validate.WarningCount = int64(jsonOut.WarningCount)
+		res.Validate.Diagnostics = append(res.Validate.Diagnostics, diagnostics.FromTFJSON(jsonOut.Diagnostics)...)
+	}
+
+	planOut := NewTextOutput()
+	tf.SetStdout(planOut.Stdout)
+	tf.SetStderr(planOut.Stderr)
+	changes, err := tf.Plan(ctx, e.TFConfig.PlanOptions()...)
+	res.Plan = &pb.Terraform_Command_Plan_Response{
+		ChangesPresent: changes,
+		Stderr:         planOut.Stderr.String(),
+	}
+	if err != nil {
+		res.Plan.Diagnostics = diagnostics.FromErr(err)
+		return res
+	}
+
+	return res
 }
 
 // Launch execute the Terraform plan.
-func (e *Executor) Launch(ctx context.Context) error {
-	tf, err := e.TFConfig.Terraform()
-	if err != nil {
-		return err
+func (e *Executor) Launch(ctx context.Context) *pb.Scenario_Command_Launch_Response {
+	res := &pb.Scenario_Command_Launch_Response{
+		Generate: &pb.Scenario_Command_Generate_Response{
+			TerraformModule: e.Module,
+		},
 	}
 
-	return tf.Apply(ctx, e.TFConfig.Flags.ApplyOptions()...)
+	tf, err := e.TFConfig.Terraform()
+	if err != nil {
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
+	}
+
+	validateRes := e.Validate(ctx)
+	res.Diagnostics = validateRes.GetDiagnostics()
+	res.Generate = validateRes.GetGenerate()
+	res.Init = validateRes.GetInit()
+	res.Validate = validateRes.GetValidate()
+	res.Plan = validateRes.GetPlan()
+
+	if len(res.GetDiagnostics()) > 0 {
+		return res
+	}
+
+	applyOut := NewTextOutput()
+	tf.SetStdout(applyOut.Stdout)
+	tf.SetStderr(applyOut.Stderr)
+	err = tf.Apply(ctx, e.TFConfig.ApplyOptions()...)
+	res.Apply = &pb.Terraform_Command_Apply_Response{
+		Stderr:      applyOut.Stderr.String(),
+		Diagnostics: diagnostics.FromErr(err),
+	}
+
+	return res
 }
 
 // Destroy destroys the Terraform plan.
-func (e *Executor) Destroy(ctx context.Context) error {
+func (e *Executor) Destroy(ctx context.Context) *pb.Scenario_Command_Destroy_Response {
+	res := &pb.Scenario_Command_Destroy_Response{
+		TerraformModule: e.Module,
+	}
+
 	tf, err := e.TFConfig.Terraform()
 	if err != nil {
-		return err
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
 	}
 
-	return tf.Destroy(ctx, e.TFConfig.Flags.DestroyOptions()...)
+	destroyOut := NewTextOutput()
+	tf.SetStdout(destroyOut.Stdout)
+	tf.SetStderr(destroyOut.Stderr)
+	err = tf.Destroy(ctx, e.TFConfig.DestroyOptions()...)
+	res.Destroy = &pb.Terraform_Command_Destroy_Response{
+		Stderr: destroyOut.Stderr.String(),
+	}
+	if err != nil {
+		res.Destroy.Diagnostics = diagnostics.FromErr(err)
+	}
+
+	return res
 }
 
-// Run performs an entire test cycle
-func (e *Executor) Run(ctx context.Context) (*RunResponse, error) {
-	var err error
-	res := &RunResponse{}
-
-	res.ValidateResponse, err = e.Validate(ctx)
-	if err != nil {
-		return res, err
+// Run performs an entire scenario execution cycle
+func (e *Executor) Run(ctx context.Context) *pb.Scenario_Command_Run_Response {
+	res := &pb.Scenario_Command_Run_Response{
+		Generate: &pb.Scenario_Command_Generate_Response{
+			TerraformModule: e.Module,
+		},
 	}
 
-	err = e.Launch(ctx)
-	if err != nil {
-		return res, err
+	launchRes := e.Launch(ctx)
+	res.Diagnostics = launchRes.GetDiagnostics()
+	res.Generate = launchRes.GetGenerate()
+	res.Init = launchRes.GetInit()
+	res.Validate = launchRes.GetValidate()
+	res.Plan = launchRes.GetPlan()
+	res.Apply = launchRes.GetApply()
+
+	if len(res.GetDiagnostics()) > 0 {
+		return res
 	}
 
-	return res, e.Destroy(ctx)
+	destroyRes := e.Destroy(ctx)
+	res.Diagnostics = destroyRes.GetDiagnostics()
+	res.Destroy = destroyRes.GetDestroy()
+
+	return res
 }
 
 // Exec executes a raw terraform sub command
-func (e *Executor) Exec(ctx context.Context) (*exec.Cmd, error) {
-	return e.TFConfig.RunExecSubCmd(ctx)
+func (e *Executor) Exec(ctx context.Context) *pb.Scenario_Command_Exec_Response {
+	execOut := NewTextOutput()
+	stdout := &strings.Builder{}
+	execOut.Stdout = stdout
+	cmd := e.TFConfig.NewExecSubCmd()
+	cmd.ExecOpts = append(cmd.ExecOpts, func(ecmd *exec.Cmd) {
+		ecmd.Stderr = execOut.Stderr
+		ecmd.Stdout = execOut.Stdout
+	})
+
+	_, err := cmd.Run(ctx)
+	return &pb.Scenario_Command_Exec_Response{
+		TerraformModule: e.Module,
+		SubCommand:      e.TFConfig.ExecSubCmd,
+		Exec: &pb.Terraform_Command_Exec_Response{
+			Stdout:      stdout.String(),
+			Stderr:      execOut.Stderr.String(),
+			Diagnostics: diagnostics.FromErr(err),
+		},
+	}
 }
 
 // Output returns the state output
-func (e *Executor) Output(ctx context.Context) (map[string]tfexec.OutputMeta, error) {
-	var out map[string]tfexec.OutputMeta
-	var err error
-	var tf *tfexec.Terraform
-
-	tf, err = e.TFConfig.Terraform()
-	if err != nil {
-		return out, err
+func (e *Executor) Output(ctx context.Context) *pb.Scenario_Command_Output_Response {
+	res := &pb.Scenario_Command_Output_Response{
+		TerraformModule: e.Module,
+		Output: &pb.Terraform_Command_Output_Response{
+			Meta: []*pb.Terraform_Command_Output_Response_Meta{},
+		},
 	}
 
-	// The caller needs to handle writing output
-	tf.SetStderr(io.Discard)
-	tf.SetStdout(io.Discard)
+	tf, err := e.TFConfig.Terraform()
+	if err != nil {
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
+	}
 
-	return tf.Output(ctx, e.TFConfig.Flags.OutputOptions()...)
+	outText := NewTextOutput()
+	tf.SetStdout(outText.Stdout)
+	tf.SetStderr(outText.Stderr)
+
+	metas, err := tf.Output(ctx, e.TFConfig.OutputOptions()...)
+	if err != nil {
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
+	}
+
+	if e.TFConfig.OutputName != "" {
+		meta, found := metas[e.TFConfig.OutputName]
+		if !found {
+			err := fmt.Errorf("no output with key %s", e.TFConfig.OutputName)
+			res.Diagnostics = diagnostics.FromErr(err)
+			return res
+		}
+
+		res.Output.Meta = append(res.Output.Meta, &pb.Terraform_Command_Output_Response_Meta{
+			Name:      e.TFConfig.OutputName,
+			Type:      []byte(meta.Type),
+			Value:     []byte(meta.Value),
+			Sensitive: meta.Sensitive,
+			Stderr:    outText.Stderr.String(),
+		})
+
+		return res
+	}
+
+	for name, meta := range metas {
+		res.Output.Meta = append(res.Output.Meta, &pb.Terraform_Command_Output_Response_Meta{
+			Name:      name,
+			Type:      []byte(meta.Type),
+			Value:     []byte(meta.Value),
+			Sensitive: meta.Sensitive,
+			Stderr:    outText.Stderr.String(),
+		})
+	}
+
+	return res
 }

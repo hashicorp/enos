@@ -9,6 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
 
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 )
@@ -62,6 +63,23 @@ func (s *Scenario) String() string {
 // UID returns a unique identifier from the name and variants
 func (s *Scenario) UID() string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(s.String())))
+}
+
+// Ref returns the proto reference
+func (s *Scenario) Ref() *pb.Ref_Scenario {
+	return &pb.Ref_Scenario{
+		Id: &pb.Scenario_ID{
+			Name:     s.Name,
+			Variants: s.Variants.Proto(),
+			Uid:      s.UID(),
+		},
+	}
+}
+
+// FromRef takes a unmarshals a scenario reference into itself
+func (s *Scenario) FromRef(ref *pb.Ref_Scenario) {
+	s.Name = ref.GetId().GetName()
+	s.Variants = NewVectorFromProto(ref.GetId().GetVariants())
 }
 
 // decode takes an HCL block and an evalutaion context and it decodes itself

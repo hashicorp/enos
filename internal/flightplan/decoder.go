@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"regexp"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
@@ -13,12 +12,6 @@ import (
 	"github.com/hashicorp/enos/internal/flightplan/funcs"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
-)
-
-// FlightPlanFileNamePattern is what file names match valid enos configuration files
-var (
-	FlightPlanFileNamePattern = regexp.MustCompile(`^enos[-\w]*?\.hcl$`)
-	VariablesNamePattern      = regexp.MustCompile(`^enos[-\w]*?\.vars\.hcl$`)
 )
 
 // DecoderOpt is a functional option for a new flight plan
@@ -41,6 +34,22 @@ func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
 	return d, nil
 }
 
+// WithDecoderFPFiles sets the flight plan contents as raw bytes
+func WithDecoderFPFiles(files RawFiles) DecoderOpt {
+	return func(fp *Decoder) error {
+		fp.fpFiles = files
+		return nil
+	}
+}
+
+// WithDecoderVarFiles sets the flight plan variable contents as raw bytes
+func WithDecoderVarFiles(files RawFiles) DecoderOpt {
+	return func(fp *Decoder) error {
+		fp.varFiles = files
+		return nil
+	}
+}
+
 // WithDecoderBaseDir sets the flight plan base directory
 func WithDecoderBaseDir(path string) DecoderOpt {
 	return func(fp *Decoder) error {
@@ -55,19 +64,46 @@ func WithDecoderBaseDir(path string) DecoderOpt {
 type Decoder struct {
 	FPParser   *hclparse.Parser
 	VarsParser *hclparse.Parser
+	fpFiles    RawFiles
+	varFiles   RawFiles
 	dir        string
 }
 
 // Parse locates enos configuration files and parses them.
 func (d *Decoder) Parse() hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	// Parse and raw configuration bytes we've been configured with
+	diags = diags.Extend(d.parseRawFiles())
+
 	// Parse the given directory, eventually we'll need to also look in the user
 	// configuration directory as well.
-	return d.parseDir(d.dir)
+	return diags.Extend(d.parseDir(d.dir))
+}
+
+func (d *Decoder) parseRawFiles() hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	for path, bytes := range d.fpFiles {
+		_, moreDiags := d.FPParser.ParseHCL(bytes, path)
+		diags = diags.Extend(moreDiags)
+	}
+
+	for path, bytes := range d.varFiles {
+		_, moreDiags := d.VarsParser.ParseHCL(bytes, path)
+		diags = diags.Extend(moreDiags)
+	}
+
+	return diags
 }
 
 // parseDir walks the directory and parses any Enos HCL or variables files.
 func (d *Decoder) parseDir(path string) hcl.Diagnostics {
 	var diags hcl.Diagnostics
+
+	if path == "" {
+		return diags
+	}
 
 	// We can ignore the error returned from Walk() because we're aggregating
 	// all errors and warnings into diags, which we'll handle afterwards.

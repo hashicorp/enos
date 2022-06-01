@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/enos/internal/execute"
-	"github.com/hashicorp/enos/internal/generate"
+	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // newScenarioGenerateCmd returns a new 'scenario generate' sub-command
@@ -19,6 +20,7 @@ func newScenarioGenerateCmd() *cobra.Command {
 		RunE:              runScenarioGenerateCmd,
 		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
+		Hidden:            true, // This is hidden because it is intended for debug only
 	}
 
 	return cmd
@@ -26,7 +28,24 @@ func newScenarioGenerateCmd() *cobra.Command {
 
 // runScenarioGenerateCmd is the function that generates scenarios
 func runScenarioGenerateCmd(cmd *cobra.Command, args []string) error {
-	return scenarioGenAndExec(args, func(ctx context.Context, gen *generate.Generator, exec *execute.Executor) error {
-		return gen.Generate()
+	ctx, cancel := scenarioTimeoutContext()
+	defer cancel()
+
+	sf, err := flightplan.ParseScenarioFilter(args)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	res, err := enosClient.GenerateScenarios(ctx, &pb.GenerateScenariosRequest{
+		Workspace: &pb.Workspace{
+			Flightplan: flightPlan,
+			OutDir:     scenarioCfg.outDir,
+		},
+		Filter: sf.Proto(),
 	})
+	if err != nil {
+		return err
+	}
+
+	return ui.ShowScenarioGenerate(res)
 }

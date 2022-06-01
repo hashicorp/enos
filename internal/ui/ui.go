@@ -1,218 +1,52 @@
 package ui
 
 import (
+	"fmt"
 	"io"
-	"os"
 
-	"github.com/mattn/go-isatty"
-	"github.com/mitchellh/cli"
-	"github.com/olekukonko/tablewriter"
-
-	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/enos/internal/ui/basic"
+	"github.com/hashicorp/enos/internal/ui/machine"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// RenderTable does a basic render of table data to the desired writer
-func (u *UI) RenderTable(header []string, rows [][]string) {
-	table := tablewriter.NewWriter(u.Stdout)
-
-	table.SetHeader(header)
-
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetNoWhiteSpace(true)
-	table.AppendBulk(rows)
-
-	table.Render()
-}
-
-var _ cli.Ui = (*UI)(nil)
-
-// UI is a CLI UI
-type UI struct {
-	Stderr io.Writer
-	Stdout io.Writer
-	Stdin  io.Reader
-
-	AskPrefix       string
-	AskSecretPrefix string
-	OutputPrefix    string
-	InfoPrefix      string
-	ErrorPrefix     string
-	WarnPrefix      string
-
-	Level Level
-
-	ui cli.Ui
-}
-
-// Level is the output level
-type Level int
-
-// Levels
-const (
-	INFO Level = iota
-	WARN
-	ERROR
+var (
+	_ View = (*basic.View)(nil)
+	_ View = (*machine.View)(nil)
 )
 
-// Opt is a UI option
-type Opt func(*UI)
+// View is a UI view. ShowX() methods are responsible for taking a command output
+// reponse, displaying it appropriately, and exiting with an error if _any_
+// error diagnostics are present in the response.
+type View interface {
+	io.Closer
+	Settings() *pb.UI_Settings
 
-// NewUI takes zero or more options and returns a new UI
-func NewUI(opts ...Opt) *UI {
-	ui := &UI{
-		Level:  INFO,
-		Stderr: os.Stderr,
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-	}
-	for _, opt := range opts {
-		opt(ui)
-	}
-
-	ui.ui = &cli.PrefixedUi{
-		AskPrefix:       ui.AskPrefix,
-		AskSecretPrefix: ui.AskSecretPrefix,
-		OutputPrefix:    ui.OutputPrefix,
-		InfoPrefix:      ui.InfoPrefix,
-		ErrorPrefix:     ui.ErrorPrefix,
-		WarnPrefix:      ui.WarnPrefix,
-		Ui: &cli.BasicUi{
-			Reader:      ui.Stdin,
-			Writer:      ui.Stdout,
-			ErrorWriter: ui.Stderr,
-		},
-	}
-
-	return ui
+	ShowError(error) error
+	ShowDiagnostics([]*pb.Diagnostic) error
+	ShowVersion(all bool, res *pb.GetVersionResponse) error
+	ShowScenarioList(*pb.ListScenariosResponse) error
+	ShowScenarioGenerate(*pb.GenerateScenariosResponse) error
+	ShowScenarioValidate(*pb.ValidateScenariosResponse) error
+	ShowScenarioLaunch(*pb.LaunchScenariosResponse) error
+	ShowScenarioDestroy(*pb.DestroyScenariosResponse) error
+	ShowScenarioRun(*pb.RunScenariosResponse) error
+	ShowScenarioExec(*pb.ExecScenariosResponse) error
+	ShowScenarioOutput(*pb.OutputScenariosResponse) error
 }
 
-// WithStderr sets stderr
-func WithStderr(stderr io.Writer) Opt {
-	return func(ui *UI) {
-		ui.Stderr = stderr
-	}
-}
-
-// WithStdout sets stdout
-func WithStdout(stdout io.Writer) Opt {
-	return func(ui *UI) {
-		ui.Stdout = stdout
-	}
-}
-
-// WithStdin sets stdin
-func WithStdin(stdin io.Reader) Opt {
-	return func(ui *UI) {
-		ui.Stdin = stdin
-	}
-}
-
-// WithAskPrefix sets the ask prefix
-func WithAskPrefix(p string) Opt {
-	return func(ui *UI) {
-		ui.AskPrefix = p
-	}
-}
-
-// WithAskSecretPrefix sets the ask prefix
-func WithAskSecretPrefix(p string) Opt {
-	return func(ui *UI) {
-		ui.AskSecretPrefix = p
-	}
-}
-
-// WithOutputPrefix sets the output prefix
-func WithOutputPrefix(p string) Opt {
-	return func(ui *UI) {
-		ui.OutputPrefix = p
-	}
-}
-
-// WithInfoPrefix sets the info prefix
-func WithInfoPrefix(p string) Opt {
-	return func(ui *UI) {
-		ui.InfoPrefix = p
-	}
-}
-
-// WithErrorPrefix sets the error prefix
-func WithErrorPrefix(p string) Opt {
-	return func(ui *UI) {
-		ui.ErrorPrefix = p
-	}
-}
-
-// WithWarnPrefix sets the warn prefix
-func WithWarnPrefix(p string) Opt {
-	return func(ui *UI) {
-		ui.WarnPrefix = p
-	}
-}
-
-// WithLevel sets logging level
-func WithLevel(l Level) Opt {
-	return func(ui *UI) {
-		ui.Level = l
-	}
-}
-
-// Ask prompts the user for some data
-func (u *UI) Ask(q string) (string, error) {
-	return u.ui.Ask(q)
-}
-
-// AskSecret prompts the user for some data
-func (u *UI) AskSecret(q string) (string, error) {
-	return u.ui.AskSecret(q)
-}
-
-// Output outputs a message to stdout
-func (u *UI) Output(m string) {
-	u.ui.Output(m)
-}
-
-// Info outputs a message at info level
-func (u *UI) Info(m string) {
-	if u.Level <= INFO {
-		u.ui.Info(m)
-	}
-}
-
-// Error outputs a message at error level
-func (u *UI) Error(m string) {
-	if u.Level <= ERROR {
-		u.ui.Error(m)
-	}
-}
-
-// Warn outputs a message at warn level
-func (u *UI) Warn(m string) {
-	if u.Level <= WARN {
-		u.ui.Warn(m)
-	}
-}
-
-// Diagnostics outputs diagnostics to stderr
-func (u *UI) Diagnostics(files map[string]*hcl.File, diags hcl.Diagnostics) error {
-	useColor := false
-	if f, ok := u.Stderr.(*os.File); ok {
-		if isatty.IsTerminal(f.Fd()) {
-			useColor = true
+// New takes a UI configuration settings and returns a new view
+func New(s *pb.UI_Settings) (View, error) {
+	switch s.Format {
+	case pb.UI_Settings_FORMAT_JSON:
+		return machine.New(machine.WithUISettings(s))
+	case pb.UI_Settings_FORMAT_BASIC_TEXT:
+		return basic.New(basic.WithUISettings(s))
+	default:
+		msg := "unsupported UI format"
+		name, ok := pb.UI_Settings_Format_name[int32(s.Format)]
+		if ok {
+			msg = fmt.Sprintf("%s is not a supported UI format", name)
 		}
+		return nil, fmt.Errorf(msg)
 	}
-
-	return hcl.NewDiagnosticTextWriter(
-		u.Stderr,
-		files,
-		78, // wrap at
-		useColor,
-	).WriteDiagnostics(diags)
 }

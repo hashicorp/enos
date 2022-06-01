@@ -3,6 +3,8 @@ package flightplan
 import (
 	"fmt"
 	"strings"
+
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // ScenarioFilter is a filter for scenarios
@@ -72,6 +74,14 @@ func WithScenarioFilterParse(args []string) ScenarioFilterOpt {
 	}
 }
 
+// WithScenarioFilterDecode decodes a filter from a proto Filter
+func WithScenarioFilterDecode(filter *pb.Scenario_Filter) ScenarioFilterOpt {
+	return func(f *ScenarioFilter) error {
+		f.FromProto(filter)
+		return nil
+	}
+}
+
 // ParseScenarioFilter takes command arguments that have been split by spaces
 // and validates that they are composed of a valid scenario filter.
 func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
@@ -103,7 +113,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 		// Determine if it's an inclusive or exclusive filter
 		if strings.HasPrefix(parts[0], "!") {
 			// It's an exclude filter
-			ex, err := NewExclude(ExcludeContains, Vector{
+			ex, err := NewExclude(pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{
 				NewElement(strings.TrimPrefix(parts[0], "!"), parts[1]),
 			})
 			if err != nil {
@@ -118,6 +128,49 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 	}
 
 	return f, nil
+}
+
+// Proto returns the scenario filter as a proto filter
+func (sf *ScenarioFilter) Proto() *pb.Scenario_Filter {
+	pbf := &pb.Scenario_Filter{
+		Name:    sf.Name,
+		Include: sf.Include.Proto(),
+	}
+
+	if len(sf.Exclude) > 0 {
+		pbf.Exclude = []*pb.Scenario_Filter_Exclude{}
+		for _, e := range sf.Exclude {
+			pbf.Exclude = append(pbf.Exclude, e.Proto())
+		}
+	}
+
+	if sf.SelectAll {
+		pbf.SelectAll = &pb.Scenario_Filter_SelectAll{}
+	}
+
+	return pbf
+}
+
+// FromProto unmarshals a proto filter into itself
+func (sf *ScenarioFilter) FromProto(filter *pb.Scenario_Filter) {
+	sf.Name = filter.GetName()
+
+	if i := filter.GetInclude(); i != nil {
+		sf.Include = NewVectorFromProto(i)
+	}
+
+	if e := filter.GetExclude(); len(e) > 0 {
+		sf.Exclude = []*Exclude{}
+		for _, exp := range e {
+			ex := &Exclude{}
+			ex.FromProto(exp)
+			sf.Exclude = append(sf.Exclude, ex)
+		}
+	}
+
+	if sa := filter.GetSelectAll(); sa != nil {
+		sf.SelectAll = true
+	}
 }
 
 // ScenariosSelect takes a scenario filter and returns a slice of matching

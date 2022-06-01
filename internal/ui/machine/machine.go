@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/server/status"
+	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/internal/ui/terminal"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -120,6 +120,14 @@ func (v *View) Close() error {
 	}
 
 	return nil
+}
+
+// ShowFormat shows the output of a format request
+func (v *View) ShowFormat(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error {
+	if err := v.write(res); err != nil {
+		return err
+	}
+	return status.Format(cfg, res)
 }
 
 // ShowError writes the given error to stdout in the formatted version

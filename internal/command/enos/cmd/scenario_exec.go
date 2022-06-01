@@ -21,7 +21,7 @@ func newScenarioExecCmd() *cobra.Command {
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
-	cmd.PersistentFlags().StringVar(&scenarioCfg.tfConfig.ExecSubCmd, "cmd", "", "the terraform sub-command")
+	cmd.PersistentFlags().StringVar(&scenarioCfg.tfConfig.ExecSubCmd, "cmd", "", "The Terraform sub-command")
 
 	_ = cmd.MarkFlagRequired("cmd")
 	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden

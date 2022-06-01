@@ -15,18 +15,10 @@ func newVersionCmd() *cobra.Command {
 		Short: "Enos version",
 		Long:  "Enos version",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// We don't start the server automatically for version, only scenario
-			// sub-commands
-			svr, client, err := startGRPCServer(context.Background(), 5*time.Second)
-			if err != nil {
-				return err
-			}
-			defer svr.Stop()
-
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			defer cancel()
 
-			res, err := client.GetVersion(ctx, &pb.GetVersionRequest{})
+			res, err := enosClient.GetVersion(ctx, &pb.GetVersionRequest{})
 			if err != nil {
 				return err
 			}

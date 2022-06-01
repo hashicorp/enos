@@ -22,7 +22,7 @@ func newScenarioOutputCmd() *cobra.Command {
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
-	cmd.PersistentFlags().StringVar(&scenarioCfg.tfConfig.OutputName, "name", "", "terraform state value to show")
+	cmd.PersistentFlags().StringVar(&scenarioCfg.tfConfig.OutputName, "name", "", "the Terraform state value to show")
 
 	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 

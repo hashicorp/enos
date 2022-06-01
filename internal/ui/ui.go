@@ -24,6 +24,7 @@ type View interface {
 	ShowError(error) error
 	ShowDiagnostics([]*pb.Diagnostic) error
 	ShowVersion(all bool, res *pb.GetVersionResponse) error
+	ShowFormat(*pb.FormatRequest_Config, *pb.FormatResponse) error
 	ShowScenarioList(*pb.ListScenariosResponse) error
 	ShowScenarioGenerate(*pb.GenerateScenariosResponse) error
 	ShowScenarioValidate(*pb.ValidateScenariosResponse) error

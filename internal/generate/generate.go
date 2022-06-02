@@ -417,9 +417,8 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 		block := rootBody.AppendNewBlock("module", []string{step.Name})
 		body := block.Body()
 
-		// depends_on the previous step
-		if i != 0 {
-			body.SetAttributeRaw("depends_on", dependsOnTokens(g.Scenario.Steps[i-1].Name))
+		if len(step.DependsOn) > 0 {
+			body.SetAttributeRaw("depends_on", dependsOnTokens(step.DependsOn))
 		}
 
 		// source
@@ -653,36 +652,87 @@ func stepProviderTokens(providers map[string]*flightplan.Provider) hclwrite.Toke
 	return tokens
 }
 
-// dependsOnTokens takes the name of module traversal target and returns the
+// dependsOnTokens takes the names of module traversal target and returns the
 // tokens necessary to write the HCL. We do this manually because hclwrite
 // does not include a helper for converting cty.Values that contain an absolute
 // traversal into an expression.
-func dependsOnTokens(name string) hclwrite.Tokens {
-	return hclwrite.Tokens{
-		&hclwrite.Token{
+func dependsOnTokens(names []string) hclwrite.Tokens {
+	tokens := hclwrite.Tokens{}
+
+	if len(names) == 0 {
+		return tokens
+	}
+
+	moduleRef := func(name string) hclwrite.Tokens {
+		return hclwrite.Tokens{
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte("module"),
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenDot,
+				Bytes: []byte{'.'},
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(name),
+			},
+		}
+	}
+
+	switch len(names) {
+	case 0:
+		return tokens
+	case 1:
+		tokens = append(tokens, &hclwrite.Token{
 			Type:  hclsyntax.TokenOBrack,
 			Bytes: []byte{'['},
-		},
-		&hclwrite.Token{
-			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte("module"),
-		},
-		&hclwrite.Token{
-			Type:  hclsyntax.TokenDot,
-			Bytes: []byte{'.'},
-		},
-		&hclwrite.Token{
-			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte(name),
-		},
-		&hclwrite.Token{
+		})
+		tokens = append(tokens, moduleRef(names[0])...)
+		return append(tokens, &hclwrite.Token{
 			Type:  hclsyntax.TokenOBrack,
 			Bytes: []byte{']'},
-		},
-		&hclwrite.Token{
-			Type:  hclsyntax.TokenNewline,
-			Bytes: []byte{'\n'},
-		},
+		})
+	default:
+		tokens = append(tokens,
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenOBrack,
+				Bytes: []byte{'['},
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenNewline,
+				Bytes: []byte{'\n'},
+			},
+		)
+
+		last := len(names) - 1
+		for i, name := range names {
+			tokens = append(tokens, moduleRef(name)...)
+			if i != last {
+				tokens = append(tokens,
+					&hclwrite.Token{
+						Type:  hclsyntax.TokenIdent,
+						Bytes: []byte(","),
+					},
+				)
+			}
+
+			tokens = append(tokens, &hclwrite.Token{
+				Type:  hclsyntax.TokenNewline,
+				Bytes: []byte{'\n'},
+			})
+		}
+
+		return append(tokens,
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenOBrack,
+				Bytes: []byte{']'},
+			},
+			&hclwrite.Token{
+				Type:  hclsyntax.TokenNewline,
+				Bytes: []byte{'\n'},
+			},
+		)
 	}
 }
 

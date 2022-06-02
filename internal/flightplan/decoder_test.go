@@ -97,6 +97,7 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		for is := range expected.Scenarios[i].Steps {
 			require.EqualValues(t, expected.Scenarios[i].Steps[is].Name, fp.Scenarios[i].Steps[is].Name)
 			require.EqualValues(t, expected.Scenarios[i].Steps[is].Providers, fp.Scenarios[i].Steps[is].Providers)
+			require.EqualValues(t, expected.Scenarios[i].Steps[is].DependsOn, fp.Scenarios[i].Steps[is].DependsOn)
 			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Name, fp.Scenarios[i].Steps[is].Module.Name)
 			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Source, fp.Scenarios[i].Steps[is].Module.Source)
 			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Version, fp.Scenarios[i].Steps[is].Module.Version)

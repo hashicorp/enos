@@ -1661,6 +1661,116 @@ func (x *OutputScenariosResponse) GetResponses() []*Scenario_Command_Output_Resp
 	return nil
 }
 
+type FormatRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Files  []*FormatRequest_File `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	Config *FormatRequest_Config `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+}
+
+func (x *FormatRequest) Reset() {
+	*x = FormatRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enos_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FormatRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FormatRequest) ProtoMessage() {}
+
+func (x *FormatRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_enos_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FormatRequest.ProtoReflect.Descriptor instead.
+func (*FormatRequest) Descriptor() ([]byte, []int) {
+	return file_enos_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *FormatRequest) GetFiles() []*FormatRequest_File {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+func (x *FormatRequest) GetConfig() *FormatRequest_Config {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+type FormatResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Diagnostics []*Diagnostic              `protobuf:"bytes,1,rep,name=diagnostics,proto3" json:"diagnostics,omitempty"`
+	Responses   []*FormatResponse_Response `protobuf:"bytes,2,rep,name=responses,proto3" json:"responses,omitempty"`
+}
+
+func (x *FormatResponse) Reset() {
+	*x = FormatResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enos_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FormatResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FormatResponse) ProtoMessage() {}
+
+func (x *FormatResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_enos_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FormatResponse.ProtoReflect.Descriptor instead.
+func (*FormatResponse) Descriptor() ([]byte, []int) {
+	return file_enos_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *FormatResponse) GetDiagnostics() []*Diagnostic {
+	if x != nil {
+		return x.Diagnostics
+	}
+	return nil
+}
+
+func (x *FormatResponse) GetResponses() []*FormatResponse_Response {
+	if x != nil {
+		return x.Responses
+	}
+	return nil
+}
+
 type UI_Settings struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1682,7 +1792,7 @@ type UI_Settings struct {
 func (x *UI_Settings) Reset() {
 	*x = UI_Settings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[26]
+		mi := &file_enos_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1695,7 +1805,7 @@ func (x *UI_Settings) String() string {
 func (*UI_Settings) ProtoMessage() {}
 
 func (x *UI_Settings) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[26]
+	mi := &file_enos_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1776,7 +1886,7 @@ type Diagnostic_Snippet struct {
 func (x *Diagnostic_Snippet) Reset() {
 	*x = Diagnostic_Snippet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[27]
+		mi := &file_enos_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1789,7 +1899,7 @@ func (x *Diagnostic_Snippet) String() string {
 func (*Diagnostic_Snippet) ProtoMessage() {}
 
 func (x *Diagnostic_Snippet) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[27]
+	mi := &file_enos_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1859,7 +1969,7 @@ type Diagnostic_ExpressionValue struct {
 func (x *Diagnostic_ExpressionValue) Reset() {
 	*x = Diagnostic_ExpressionValue{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[28]
+		mi := &file_enos_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1872,7 +1982,7 @@ func (x *Diagnostic_ExpressionValue) String() string {
 func (*Diagnostic_ExpressionValue) ProtoMessage() {}
 
 func (x *Diagnostic_ExpressionValue) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[28]
+	mi := &file_enos_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1915,7 +2025,7 @@ type Range_Pos struct {
 func (x *Range_Pos) Reset() {
 	*x = Range_Pos{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[29]
+		mi := &file_enos_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1928,7 +2038,7 @@ func (x *Range_Pos) String() string {
 func (*Range_Pos) ProtoMessage() {}
 
 func (x *Range_Pos) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[29]
+	mi := &file_enos_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1979,7 +2089,7 @@ type Scenario_ID struct {
 func (x *Scenario_ID) Reset() {
 	*x = Scenario_ID{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[32]
+		mi := &file_enos_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1992,7 +2102,7 @@ func (x *Scenario_ID) String() string {
 func (*Scenario_ID) ProtoMessage() {}
 
 func (x *Scenario_ID) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[32]
+	mi := &file_enos_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2044,7 +2154,7 @@ type Scenario_Filter struct {
 func (x *Scenario_Filter) Reset() {
 	*x = Scenario_Filter{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[33]
+		mi := &file_enos_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2057,7 +2167,7 @@ func (x *Scenario_Filter) String() string {
 func (*Scenario_Filter) ProtoMessage() {}
 
 func (x *Scenario_Filter) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[33]
+	mi := &file_enos_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2111,7 +2221,7 @@ type Scenario_Command struct {
 func (x *Scenario_Command) Reset() {
 	*x = Scenario_Command{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[34]
+		mi := &file_enos_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2124,7 +2234,7 @@ func (x *Scenario_Command) String() string {
 func (*Scenario_Command) ProtoMessage() {}
 
 func (x *Scenario_Command) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[34]
+	mi := &file_enos_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2149,7 +2259,7 @@ type Scenario_Filter_SelectAll struct {
 func (x *Scenario_Filter_SelectAll) Reset() {
 	*x = Scenario_Filter_SelectAll{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[35]
+		mi := &file_enos_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2162,7 +2272,7 @@ func (x *Scenario_Filter_SelectAll) String() string {
 func (*Scenario_Filter_SelectAll) ProtoMessage() {}
 
 func (x *Scenario_Filter_SelectAll) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[35]
+	mi := &file_enos_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2190,7 +2300,7 @@ type Scenario_Filter_Element struct {
 func (x *Scenario_Filter_Element) Reset() {
 	*x = Scenario_Filter_Element{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[36]
+		mi := &file_enos_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2203,7 +2313,7 @@ func (x *Scenario_Filter_Element) String() string {
 func (*Scenario_Filter_Element) ProtoMessage() {}
 
 func (x *Scenario_Filter_Element) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[36]
+	mi := &file_enos_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2244,7 +2354,7 @@ type Scenario_Filter_Vector struct {
 func (x *Scenario_Filter_Vector) Reset() {
 	*x = Scenario_Filter_Vector{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[37]
+		mi := &file_enos_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2257,7 +2367,7 @@ func (x *Scenario_Filter_Vector) String() string {
 func (*Scenario_Filter_Vector) ProtoMessage() {}
 
 func (x *Scenario_Filter_Vector) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[37]
+	mi := &file_enos_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2292,7 +2402,7 @@ type Scenario_Filter_Exclude struct {
 func (x *Scenario_Filter_Exclude) Reset() {
 	*x = Scenario_Filter_Exclude{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[38]
+		mi := &file_enos_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2305,7 +2415,7 @@ func (x *Scenario_Filter_Exclude) String() string {
 func (*Scenario_Filter_Exclude) ProtoMessage() {}
 
 func (x *Scenario_Filter_Exclude) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[38]
+	mi := &file_enos_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2344,7 +2454,7 @@ type Scenario_Command_Generate struct {
 func (x *Scenario_Command_Generate) Reset() {
 	*x = Scenario_Command_Generate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[39]
+		mi := &file_enos_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2357,7 +2467,7 @@ func (x *Scenario_Command_Generate) String() string {
 func (*Scenario_Command_Generate) ProtoMessage() {}
 
 func (x *Scenario_Command_Generate) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[39]
+	mi := &file_enos_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2382,7 +2492,7 @@ type Scenario_Command_Validate struct {
 func (x *Scenario_Command_Validate) Reset() {
 	*x = Scenario_Command_Validate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[40]
+		mi := &file_enos_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2395,7 +2505,7 @@ func (x *Scenario_Command_Validate) String() string {
 func (*Scenario_Command_Validate) ProtoMessage() {}
 
 func (x *Scenario_Command_Validate) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[40]
+	mi := &file_enos_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2420,7 +2530,7 @@ type Scenario_Command_Launch struct {
 func (x *Scenario_Command_Launch) Reset() {
 	*x = Scenario_Command_Launch{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[41]
+		mi := &file_enos_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2433,7 +2543,7 @@ func (x *Scenario_Command_Launch) String() string {
 func (*Scenario_Command_Launch) ProtoMessage() {}
 
 func (x *Scenario_Command_Launch) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[41]
+	mi := &file_enos_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2458,7 +2568,7 @@ type Scenario_Command_Destroy struct {
 func (x *Scenario_Command_Destroy) Reset() {
 	*x = Scenario_Command_Destroy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[42]
+		mi := &file_enos_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2471,7 +2581,7 @@ func (x *Scenario_Command_Destroy) String() string {
 func (*Scenario_Command_Destroy) ProtoMessage() {}
 
 func (x *Scenario_Command_Destroy) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[42]
+	mi := &file_enos_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2496,7 +2606,7 @@ type Scenario_Command_Run struct {
 func (x *Scenario_Command_Run) Reset() {
 	*x = Scenario_Command_Run{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[43]
+		mi := &file_enos_proto_msgTypes[45]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2509,7 +2619,7 @@ func (x *Scenario_Command_Run) String() string {
 func (*Scenario_Command_Run) ProtoMessage() {}
 
 func (x *Scenario_Command_Run) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[43]
+	mi := &file_enos_proto_msgTypes[45]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2534,7 +2644,7 @@ type Scenario_Command_Exec struct {
 func (x *Scenario_Command_Exec) Reset() {
 	*x = Scenario_Command_Exec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[44]
+		mi := &file_enos_proto_msgTypes[46]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2547,7 +2657,7 @@ func (x *Scenario_Command_Exec) String() string {
 func (*Scenario_Command_Exec) ProtoMessage() {}
 
 func (x *Scenario_Command_Exec) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[44]
+	mi := &file_enos_proto_msgTypes[46]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2572,7 +2682,7 @@ type Scenario_Command_Output struct {
 func (x *Scenario_Command_Output) Reset() {
 	*x = Scenario_Command_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[45]
+		mi := &file_enos_proto_msgTypes[47]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2585,7 +2695,7 @@ func (x *Scenario_Command_Output) String() string {
 func (*Scenario_Command_Output) ProtoMessage() {}
 
 func (x *Scenario_Command_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[45]
+	mi := &file_enos_proto_msgTypes[47]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2613,7 +2723,7 @@ type Scenario_Command_Generate_Response struct {
 func (x *Scenario_Command_Generate_Response) Reset() {
 	*x = Scenario_Command_Generate_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[46]
+		mi := &file_enos_proto_msgTypes[48]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2626,7 +2736,7 @@ func (x *Scenario_Command_Generate_Response) String() string {
 func (*Scenario_Command_Generate_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Generate_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[46]
+	mi := &file_enos_proto_msgTypes[48]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2671,7 +2781,7 @@ type Scenario_Command_Validate_Response struct {
 func (x *Scenario_Command_Validate_Response) Reset() {
 	*x = Scenario_Command_Validate_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[47]
+		mi := &file_enos_proto_msgTypes[49]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2684,7 +2794,7 @@ func (x *Scenario_Command_Validate_Response) String() string {
 func (*Scenario_Command_Validate_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Validate_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[47]
+	mi := &file_enos_proto_msgTypes[49]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2751,7 +2861,7 @@ type Scenario_Command_Launch_Response struct {
 func (x *Scenario_Command_Launch_Response) Reset() {
 	*x = Scenario_Command_Launch_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[48]
+		mi := &file_enos_proto_msgTypes[50]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2764,7 +2874,7 @@ func (x *Scenario_Command_Launch_Response) String() string {
 func (*Scenario_Command_Launch_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Launch_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[48]
+	mi := &file_enos_proto_msgTypes[50]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2835,7 +2945,7 @@ type Scenario_Command_Destroy_Response struct {
 func (x *Scenario_Command_Destroy_Response) Reset() {
 	*x = Scenario_Command_Destroy_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[49]
+		mi := &file_enos_proto_msgTypes[51]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2848,7 +2958,7 @@ func (x *Scenario_Command_Destroy_Response) String() string {
 func (*Scenario_Command_Destroy_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Destroy_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[49]
+	mi := &file_enos_proto_msgTypes[51]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2902,7 +3012,7 @@ type Scenario_Command_Run_Response struct {
 func (x *Scenario_Command_Run_Response) Reset() {
 	*x = Scenario_Command_Run_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[50]
+		mi := &file_enos_proto_msgTypes[52]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2915,7 +3025,7 @@ func (x *Scenario_Command_Run_Response) String() string {
 func (*Scenario_Command_Run_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Run_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[50]
+	mi := &file_enos_proto_msgTypes[52]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2994,7 +3104,7 @@ type Scenario_Command_Exec_Response struct {
 func (x *Scenario_Command_Exec_Response) Reset() {
 	*x = Scenario_Command_Exec_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[51]
+		mi := &file_enos_proto_msgTypes[53]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3007,7 +3117,7 @@ func (x *Scenario_Command_Exec_Response) String() string {
 func (*Scenario_Command_Exec_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Exec_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[51]
+	mi := &file_enos_proto_msgTypes[53]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3064,7 +3174,7 @@ type Scenario_Command_Output_Response struct {
 func (x *Scenario_Command_Output_Response) Reset() {
 	*x = Scenario_Command_Output_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[52]
+		mi := &file_enos_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3077,7 +3187,7 @@ func (x *Scenario_Command_Output_Response) String() string {
 func (*Scenario_Command_Output_Response) ProtoMessage() {}
 
 func (x *Scenario_Command_Output_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[52]
+	mi := &file_enos_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3127,7 +3237,7 @@ type Terraform_Module struct {
 func (x *Terraform_Module) Reset() {
 	*x = Terraform_Module{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[53]
+		mi := &file_enos_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3140,7 +3250,7 @@ func (x *Terraform_Module) String() string {
 func (*Terraform_Module) ProtoMessage() {}
 
 func (x *Terraform_Module) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[53]
+	mi := &file_enos_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3186,7 +3296,7 @@ type Terraform_Command struct {
 func (x *Terraform_Command) Reset() {
 	*x = Terraform_Command{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[54]
+		mi := &file_enos_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3199,7 +3309,7 @@ func (x *Terraform_Command) String() string {
 func (*Terraform_Command) ProtoMessage() {}
 
 func (x *Terraform_Command) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[54]
+	mi := &file_enos_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3226,7 +3336,7 @@ type Terraform_Executor struct {
 func (x *Terraform_Executor) Reset() {
 	*x = Terraform_Executor{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[55]
+		mi := &file_enos_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3239,7 +3349,7 @@ func (x *Terraform_Executor) String() string {
 func (*Terraform_Executor) ProtoMessage() {}
 
 func (x *Terraform_Executor) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[55]
+	mi := &file_enos_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3271,7 +3381,7 @@ type Terraform_Command_Init struct {
 func (x *Terraform_Command_Init) Reset() {
 	*x = Terraform_Command_Init{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[56]
+		mi := &file_enos_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3284,7 +3394,7 @@ func (x *Terraform_Command_Init) String() string {
 func (*Terraform_Command_Init) ProtoMessage() {}
 
 func (x *Terraform_Command_Init) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[56]
+	mi := &file_enos_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3309,7 +3419,7 @@ type Terraform_Command_Validate struct {
 func (x *Terraform_Command_Validate) Reset() {
 	*x = Terraform_Command_Validate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[57]
+		mi := &file_enos_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3322,7 +3432,7 @@ func (x *Terraform_Command_Validate) String() string {
 func (*Terraform_Command_Validate) ProtoMessage() {}
 
 func (x *Terraform_Command_Validate) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[57]
+	mi := &file_enos_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3347,7 +3457,7 @@ type Terraform_Command_Plan struct {
 func (x *Terraform_Command_Plan) Reset() {
 	*x = Terraform_Command_Plan{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[58]
+		mi := &file_enos_proto_msgTypes[60]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3360,7 +3470,7 @@ func (x *Terraform_Command_Plan) String() string {
 func (*Terraform_Command_Plan) ProtoMessage() {}
 
 func (x *Terraform_Command_Plan) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[58]
+	mi := &file_enos_proto_msgTypes[60]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3385,7 +3495,7 @@ type Terraform_Command_Apply struct {
 func (x *Terraform_Command_Apply) Reset() {
 	*x = Terraform_Command_Apply{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[59]
+		mi := &file_enos_proto_msgTypes[61]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3398,7 +3508,7 @@ func (x *Terraform_Command_Apply) String() string {
 func (*Terraform_Command_Apply) ProtoMessage() {}
 
 func (x *Terraform_Command_Apply) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[59]
+	mi := &file_enos_proto_msgTypes[61]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3423,7 +3533,7 @@ type Terraform_Command_Destroy struct {
 func (x *Terraform_Command_Destroy) Reset() {
 	*x = Terraform_Command_Destroy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[60]
+		mi := &file_enos_proto_msgTypes[62]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3436,7 +3546,7 @@ func (x *Terraform_Command_Destroy) String() string {
 func (*Terraform_Command_Destroy) ProtoMessage() {}
 
 func (x *Terraform_Command_Destroy) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[60]
+	mi := &file_enos_proto_msgTypes[62]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3461,7 +3571,7 @@ type Terraform_Command_Exec struct {
 func (x *Terraform_Command_Exec) Reset() {
 	*x = Terraform_Command_Exec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[61]
+		mi := &file_enos_proto_msgTypes[63]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3474,7 +3584,7 @@ func (x *Terraform_Command_Exec) String() string {
 func (*Terraform_Command_Exec) ProtoMessage() {}
 
 func (x *Terraform_Command_Exec) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[61]
+	mi := &file_enos_proto_msgTypes[63]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3499,7 +3609,7 @@ type Terraform_Command_Output struct {
 func (x *Terraform_Command_Output) Reset() {
 	*x = Terraform_Command_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[62]
+		mi := &file_enos_proto_msgTypes[64]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3512,7 +3622,7 @@ func (x *Terraform_Command_Output) String() string {
 func (*Terraform_Command_Output) ProtoMessage() {}
 
 func (x *Terraform_Command_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[62]
+	mi := &file_enos_proto_msgTypes[64]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3540,7 +3650,7 @@ type Terraform_Command_Init_Response struct {
 func (x *Terraform_Command_Init_Response) Reset() {
 	*x = Terraform_Command_Init_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[63]
+		mi := &file_enos_proto_msgTypes[65]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3553,7 +3663,7 @@ func (x *Terraform_Command_Init_Response) String() string {
 func (*Terraform_Command_Init_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Init_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[63]
+	mi := &file_enos_proto_msgTypes[65]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3598,7 +3708,7 @@ type Terraform_Command_Validate_Response struct {
 func (x *Terraform_Command_Validate_Response) Reset() {
 	*x = Terraform_Command_Validate_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[64]
+		mi := &file_enos_proto_msgTypes[66]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3611,7 +3721,7 @@ func (x *Terraform_Command_Validate_Response) String() string {
 func (*Terraform_Command_Validate_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Validate_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[64]
+	mi := &file_enos_proto_msgTypes[66]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3675,7 +3785,7 @@ type Terraform_Command_Plan_Response struct {
 func (x *Terraform_Command_Plan_Response) Reset() {
 	*x = Terraform_Command_Plan_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[65]
+		mi := &file_enos_proto_msgTypes[67]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3688,7 +3798,7 @@ func (x *Terraform_Command_Plan_Response) String() string {
 func (*Terraform_Command_Plan_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Plan_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[65]
+	mi := &file_enos_proto_msgTypes[67]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3737,7 +3847,7 @@ type Terraform_Command_Apply_Response struct {
 func (x *Terraform_Command_Apply_Response) Reset() {
 	*x = Terraform_Command_Apply_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[66]
+		mi := &file_enos_proto_msgTypes[68]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3750,7 +3860,7 @@ func (x *Terraform_Command_Apply_Response) String() string {
 func (*Terraform_Command_Apply_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Apply_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[66]
+	mi := &file_enos_proto_msgTypes[68]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3792,7 +3902,7 @@ type Terraform_Command_Destroy_Response struct {
 func (x *Terraform_Command_Destroy_Response) Reset() {
 	*x = Terraform_Command_Destroy_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[67]
+		mi := &file_enos_proto_msgTypes[69]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3805,7 +3915,7 @@ func (x *Terraform_Command_Destroy_Response) String() string {
 func (*Terraform_Command_Destroy_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Destroy_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[67]
+	mi := &file_enos_proto_msgTypes[69]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3848,7 +3958,7 @@ type Terraform_Command_Exec_Response struct {
 func (x *Terraform_Command_Exec_Response) Reset() {
 	*x = Terraform_Command_Exec_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[68]
+		mi := &file_enos_proto_msgTypes[70]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3861,7 +3971,7 @@ func (x *Terraform_Command_Exec_Response) String() string {
 func (*Terraform_Command_Exec_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Exec_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[68]
+	mi := &file_enos_proto_msgTypes[70]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3910,7 +4020,7 @@ type Terraform_Command_Output_Response struct {
 func (x *Terraform_Command_Output_Response) Reset() {
 	*x = Terraform_Command_Output_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[69]
+		mi := &file_enos_proto_msgTypes[71]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3923,7 +4033,7 @@ func (x *Terraform_Command_Output_Response) String() string {
 func (*Terraform_Command_Output_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Output_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[69]
+	mi := &file_enos_proto_msgTypes[71]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3968,7 +4078,7 @@ type Terraform_Command_Output_Response_Meta struct {
 func (x *Terraform_Command_Output_Response_Meta) Reset() {
 	*x = Terraform_Command_Output_Response_Meta{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[70]
+		mi := &file_enos_proto_msgTypes[72]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3981,7 +4091,7 @@ func (x *Terraform_Command_Output_Response_Meta) String() string {
 func (*Terraform_Command_Output_Response_Meta) ProtoMessage() {}
 
 func (x *Terraform_Command_Output_Response_Meta) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[70]
+	mi := &file_enos_proto_msgTypes[72]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4056,7 +4166,7 @@ type Terraform_Executor_Config struct {
 func (x *Terraform_Executor_Config) Reset() {
 	*x = Terraform_Executor_Config{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[71]
+		mi := &file_enos_proto_msgTypes[73]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4069,7 +4179,7 @@ func (x *Terraform_Executor_Config) String() string {
 func (*Terraform_Executor_Config) ProtoMessage() {}
 
 func (x *Terraform_Executor_Config) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[71]
+	mi := &file_enos_proto_msgTypes[73]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4163,7 +4273,7 @@ type Terraform_Executor_Config_Flags struct {
 func (x *Terraform_Executor_Config_Flags) Reset() {
 	*x = Terraform_Executor_Config_Flags{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[73]
+		mi := &file_enos_proto_msgTypes[75]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4176,7 +4286,7 @@ func (x *Terraform_Executor_Config_Flags) String() string {
 func (*Terraform_Executor_Config_Flags) ProtoMessage() {}
 
 func (x *Terraform_Executor_Config_Flags) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[73]
+	mi := &file_enos_proto_msgTypes[75]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4266,7 +4376,7 @@ type Ref_Scenario struct {
 func (x *Ref_Scenario) Reset() {
 	*x = Ref_Scenario{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[74]
+		mi := &file_enos_proto_msgTypes[76]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4279,7 +4389,7 @@ func (x *Ref_Scenario) String() string {
 func (*Ref_Scenario) ProtoMessage() {}
 
 func (x *Ref_Scenario) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[74]
+	mi := &file_enos_proto_msgTypes[76]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4300,6 +4410,211 @@ func (x *Ref_Scenario) GetId() *Scenario_ID {
 		return x.Id
 	}
 	return nil
+}
+
+type FormatRequest_File struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Body []byte `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
+}
+
+func (x *FormatRequest_File) Reset() {
+	*x = FormatRequest_File{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enos_proto_msgTypes[77]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FormatRequest_File) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FormatRequest_File) ProtoMessage() {}
+
+func (x *FormatRequest_File) ProtoReflect() protoreflect.Message {
+	mi := &file_enos_proto_msgTypes[77]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FormatRequest_File.ProtoReflect.Descriptor instead.
+func (*FormatRequest_File) Descriptor() ([]byte, []int) {
+	return file_enos_proto_rawDescGZIP(), []int{26, 0}
+}
+
+func (x *FormatRequest_File) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FormatRequest_File) GetBody() []byte {
+	if x != nil {
+		return x.Body
+	}
+	return nil
+}
+
+type FormatRequest_Config struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Write bool `protobuf:"varint,1,opt,name=write,proto3" json:"write,omitempty"`
+	List  bool `protobuf:"varint,2,opt,name=list,proto3" json:"list,omitempty"`
+	Check bool `protobuf:"varint,3,opt,name=check,proto3" json:"check,omitempty"`
+	Diff  bool `protobuf:"varint,4,opt,name=diff,proto3" json:"diff,omitempty"`
+}
+
+func (x *FormatRequest_Config) Reset() {
+	*x = FormatRequest_Config{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enos_proto_msgTypes[78]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FormatRequest_Config) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FormatRequest_Config) ProtoMessage() {}
+
+func (x *FormatRequest_Config) ProtoReflect() protoreflect.Message {
+	mi := &file_enos_proto_msgTypes[78]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FormatRequest_Config.ProtoReflect.Descriptor instead.
+func (*FormatRequest_Config) Descriptor() ([]byte, []int) {
+	return file_enos_proto_rawDescGZIP(), []int{26, 1}
+}
+
+func (x *FormatRequest_Config) GetWrite() bool {
+	if x != nil {
+		return x.Write
+	}
+	return false
+}
+
+func (x *FormatRequest_Config) GetList() bool {
+	if x != nil {
+		return x.List
+	}
+	return false
+}
+
+func (x *FormatRequest_Config) GetCheck() bool {
+	if x != nil {
+		return x.Check
+	}
+	return false
+}
+
+func (x *FormatRequest_Config) GetDiff() bool {
+	if x != nil {
+		return x.Diff
+	}
+	return false
+}
+
+type FormatResponse_Response struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Diagnostics []*Diagnostic `protobuf:"bytes,1,rep,name=diagnostics,proto3" json:"diagnostics,omitempty"`
+	Path        string        `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Changed     bool          `protobuf:"varint,3,opt,name=changed,proto3" json:"changed,omitempty"`
+	Diff        string        `protobuf:"bytes,4,opt,name=diff,proto3" json:"diff,omitempty"`
+	Body        string        `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"` // Used for formatted STDIN
+}
+
+func (x *FormatResponse_Response) Reset() {
+	*x = FormatResponse_Response{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enos_proto_msgTypes[79]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FormatResponse_Response) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FormatResponse_Response) ProtoMessage() {}
+
+func (x *FormatResponse_Response) ProtoReflect() protoreflect.Message {
+	mi := &file_enos_proto_msgTypes[79]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FormatResponse_Response.ProtoReflect.Descriptor instead.
+func (*FormatResponse_Response) Descriptor() ([]byte, []int) {
+	return file_enos_proto_rawDescGZIP(), []int{27, 0}
+}
+
+func (x *FormatResponse_Response) GetDiagnostics() []*Diagnostic {
+	if x != nil {
+		return x.Diagnostics
+	}
+	return nil
+}
+
+func (x *FormatResponse_Response) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FormatResponse_Response) GetChanged() bool {
+	if x != nil {
+		return x.Changed
+	}
+	return false
+}
+
+func (x *FormatResponse_Response) GetDiff() string {
+	if x != nil {
+		return x.Diff
+	}
+	return ""
+}
+
+func (x *FormatResponse_Response) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
 }
 
 var File_enos_proto protoreflect.FileDescriptor
@@ -4929,7 +5244,45 @@ var file_enos_proto_rawDesc = []byte{
 	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
 	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64,
 	0x2e, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x32, 0xc4, 0x07, 0x0a, 0x0b,
+	0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x22, 0x9b, 0x02, 0x0a, 0x0d,
+	0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3b, 0x0a,
+	0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x46,
+	0x69, 0x6c, 0x65, 0x52, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x12, 0x3f, 0x0a, 0x06, 0x63, 0x6f,
+	0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46,
+	0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x43, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x1a, 0x2e, 0x0a, 0x04, 0x46,
+	0x69, 0x6c, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x1a, 0x5c, 0x0a, 0x06, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x14, 0x0a, 0x05, 0x77, 0x72, 0x69, 0x74, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x77, 0x72, 0x69, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6c,
+	0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x6c, 0x69, 0x73, 0x74, 0x12,
+	0x14, 0x0a, 0x05, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05,
+	0x63, 0x68, 0x65, 0x63, 0x6b, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x69, 0x66, 0x66, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x04, 0x64, 0x69, 0x66, 0x66, 0x22, 0xbf, 0x02, 0x0a, 0x0e, 0x46, 0x6f,
+	0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b,
+	0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63,
+	0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x48, 0x0a,
+	0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09, 0x72, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x1a, 0xa1, 0x01, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
+	0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69,
+	0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f,
+	0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x68, 0x61,
+	0x6e, 0x67, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x63, 0x68, 0x61, 0x6e,
+	0x67, 0x65, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x69, 0x66, 0x66, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x64, 0x69, 0x66, 0x66, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x32, 0x95, 0x08, 0x0a, 0x0b,
 	0x45, 0x6e, 0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x5b, 0x0a, 0x0a, 0x47,
 	0x65, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x24, 0x2e, 0x68, 0x61, 0x73, 0x68,
 	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65,
@@ -4990,10 +5343,15 @@ var file_enos_proto_rawDesc = []byte{
 	0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
 	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x53,
 	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2f, 0x65, 0x6e, 0x6f, 0x73, 0x2f,
-	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x70, 0x62, 0x3b, 0x70, 0x62, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x00, 0x12, 0x4f, 0x0a, 0x06, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x20, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x00, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2f, 0x65, 0x6e, 0x6f, 0x73,
+	0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x70, 0x62, 0x3b, 0x70, 0x62, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -5009,7 +5367,7 @@ func file_enos_proto_rawDescGZIP() []byte {
 }
 
 var file_enos_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_enos_proto_msgTypes = make([]protoimpl.MessageInfo, 75)
+var file_enos_proto_msgTypes = make([]protoimpl.MessageInfo, 80)
 var file_enos_proto_goTypes = []interface{}{
 	(UI_Settings_Format)(0),                        // 0: hashicorp.enos.v1.UI.Settings.Format
 	(UI_Settings_Level)(0),                         // 1: hashicorp.enos.v1.UI.Settings.Level
@@ -5041,176 +5399,188 @@ var file_enos_proto_goTypes = []interface{}{
 	(*ExecScenariosResponse)(nil),                  // 27: hashicorp.enos.v1.ExecScenariosResponse
 	(*OutputScenariosRequest)(nil),                 // 28: hashicorp.enos.v1.OutputScenariosRequest
 	(*OutputScenariosResponse)(nil),                // 29: hashicorp.enos.v1.OutputScenariosResponse
-	(*UI_Settings)(nil),                            // 30: hashicorp.enos.v1.UI.Settings
-	(*Diagnostic_Snippet)(nil),                     // 31: hashicorp.enos.v1.Diagnostic.Snippet
-	(*Diagnostic_ExpressionValue)(nil),             // 32: hashicorp.enos.v1.Diagnostic.ExpressionValue
-	(*Range_Pos)(nil),                              // 33: hashicorp.enos.v1.Range.Pos
-	nil,                                            // 34: hashicorp.enos.v1.FlightPlan.EnosHclEntry
-	nil,                                            // 35: hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
-	(*Scenario_ID)(nil),                            // 36: hashicorp.enos.v1.Scenario.ID
-	(*Scenario_Filter)(nil),                        // 37: hashicorp.enos.v1.Scenario.Filter
-	(*Scenario_Command)(nil),                       // 38: hashicorp.enos.v1.Scenario.Command
-	(*Scenario_Filter_SelectAll)(nil),              // 39: hashicorp.enos.v1.Scenario.Filter.SelectAll
-	(*Scenario_Filter_Element)(nil),                // 40: hashicorp.enos.v1.Scenario.Filter.Element
-	(*Scenario_Filter_Vector)(nil),                 // 41: hashicorp.enos.v1.Scenario.Filter.Vector
-	(*Scenario_Filter_Exclude)(nil),                // 42: hashicorp.enos.v1.Scenario.Filter.Exclude
-	(*Scenario_Command_Generate)(nil),              // 43: hashicorp.enos.v1.Scenario.Command.Generate
-	(*Scenario_Command_Validate)(nil),              // 44: hashicorp.enos.v1.Scenario.Command.Validate
-	(*Scenario_Command_Launch)(nil),                // 45: hashicorp.enos.v1.Scenario.Command.Launch
-	(*Scenario_Command_Destroy)(nil),               // 46: hashicorp.enos.v1.Scenario.Command.Destroy
-	(*Scenario_Command_Run)(nil),                   // 47: hashicorp.enos.v1.Scenario.Command.Run
-	(*Scenario_Command_Exec)(nil),                  // 48: hashicorp.enos.v1.Scenario.Command.Exec
-	(*Scenario_Command_Output)(nil),                // 49: hashicorp.enos.v1.Scenario.Command.Output
-	(*Scenario_Command_Generate_Response)(nil),     // 50: hashicorp.enos.v1.Scenario.Command.Generate.Response
-	(*Scenario_Command_Validate_Response)(nil),     // 51: hashicorp.enos.v1.Scenario.Command.Validate.Response
-	(*Scenario_Command_Launch_Response)(nil),       // 52: hashicorp.enos.v1.Scenario.Command.Launch.Response
-	(*Scenario_Command_Destroy_Response)(nil),      // 53: hashicorp.enos.v1.Scenario.Command.Destroy.Response
-	(*Scenario_Command_Run_Response)(nil),          // 54: hashicorp.enos.v1.Scenario.Command.Run.Response
-	(*Scenario_Command_Exec_Response)(nil),         // 55: hashicorp.enos.v1.Scenario.Command.Exec.Response
-	(*Scenario_Command_Output_Response)(nil),       // 56: hashicorp.enos.v1.Scenario.Command.Output.Response
-	(*Terraform_Module)(nil),                       // 57: hashicorp.enos.v1.Terraform.Module
-	(*Terraform_Command)(nil),                      // 58: hashicorp.enos.v1.Terraform.Command
-	(*Terraform_Executor)(nil),                     // 59: hashicorp.enos.v1.Terraform.Executor
-	(*Terraform_Command_Init)(nil),                 // 60: hashicorp.enos.v1.Terraform.Command.Init
-	(*Terraform_Command_Validate)(nil),             // 61: hashicorp.enos.v1.Terraform.Command.Validate
-	(*Terraform_Command_Plan)(nil),                 // 62: hashicorp.enos.v1.Terraform.Command.Plan
-	(*Terraform_Command_Apply)(nil),                // 63: hashicorp.enos.v1.Terraform.Command.Apply
-	(*Terraform_Command_Destroy)(nil),              // 64: hashicorp.enos.v1.Terraform.Command.Destroy
-	(*Terraform_Command_Exec)(nil),                 // 65: hashicorp.enos.v1.Terraform.Command.Exec
-	(*Terraform_Command_Output)(nil),               // 66: hashicorp.enos.v1.Terraform.Command.Output
-	(*Terraform_Command_Init_Response)(nil),        // 67: hashicorp.enos.v1.Terraform.Command.Init.Response
-	(*Terraform_Command_Validate_Response)(nil),    // 68: hashicorp.enos.v1.Terraform.Command.Validate.Response
-	(*Terraform_Command_Plan_Response)(nil),        // 69: hashicorp.enos.v1.Terraform.Command.Plan.Response
-	(*Terraform_Command_Apply_Response)(nil),       // 70: hashicorp.enos.v1.Terraform.Command.Apply.Response
-	(*Terraform_Command_Destroy_Response)(nil),     // 71: hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	(*Terraform_Command_Exec_Response)(nil),        // 72: hashicorp.enos.v1.Terraform.Command.Exec.Response
-	(*Terraform_Command_Output_Response)(nil),      // 73: hashicorp.enos.v1.Terraform.Command.Output.Response
-	(*Terraform_Command_Output_Response_Meta)(nil), // 74: hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
-	(*Terraform_Executor_Config)(nil),              // 75: hashicorp.enos.v1.Terraform.Executor.Config
-	nil,                                            // 76: hashicorp.enos.v1.Terraform.Executor.Config.EnvEntry
-	(*Terraform_Executor_Config_Flags)(nil),        // 77: hashicorp.enos.v1.Terraform.Executor.Config.Flags
-	(*Ref_Scenario)(nil),                           // 78: hashicorp.enos.v1.Ref.Scenario
-	(*durationpb.Duration)(nil),                    // 79: google.protobuf.Duration
+	(*FormatRequest)(nil),                          // 30: hashicorp.enos.v1.FormatRequest
+	(*FormatResponse)(nil),                         // 31: hashicorp.enos.v1.FormatResponse
+	(*UI_Settings)(nil),                            // 32: hashicorp.enos.v1.UI.Settings
+	(*Diagnostic_Snippet)(nil),                     // 33: hashicorp.enos.v1.Diagnostic.Snippet
+	(*Diagnostic_ExpressionValue)(nil),             // 34: hashicorp.enos.v1.Diagnostic.ExpressionValue
+	(*Range_Pos)(nil),                              // 35: hashicorp.enos.v1.Range.Pos
+	nil,                                            // 36: hashicorp.enos.v1.FlightPlan.EnosHclEntry
+	nil,                                            // 37: hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
+	(*Scenario_ID)(nil),                            // 38: hashicorp.enos.v1.Scenario.ID
+	(*Scenario_Filter)(nil),                        // 39: hashicorp.enos.v1.Scenario.Filter
+	(*Scenario_Command)(nil),                       // 40: hashicorp.enos.v1.Scenario.Command
+	(*Scenario_Filter_SelectAll)(nil),              // 41: hashicorp.enos.v1.Scenario.Filter.SelectAll
+	(*Scenario_Filter_Element)(nil),                // 42: hashicorp.enos.v1.Scenario.Filter.Element
+	(*Scenario_Filter_Vector)(nil),                 // 43: hashicorp.enos.v1.Scenario.Filter.Vector
+	(*Scenario_Filter_Exclude)(nil),                // 44: hashicorp.enos.v1.Scenario.Filter.Exclude
+	(*Scenario_Command_Generate)(nil),              // 45: hashicorp.enos.v1.Scenario.Command.Generate
+	(*Scenario_Command_Validate)(nil),              // 46: hashicorp.enos.v1.Scenario.Command.Validate
+	(*Scenario_Command_Launch)(nil),                // 47: hashicorp.enos.v1.Scenario.Command.Launch
+	(*Scenario_Command_Destroy)(nil),               // 48: hashicorp.enos.v1.Scenario.Command.Destroy
+	(*Scenario_Command_Run)(nil),                   // 49: hashicorp.enos.v1.Scenario.Command.Run
+	(*Scenario_Command_Exec)(nil),                  // 50: hashicorp.enos.v1.Scenario.Command.Exec
+	(*Scenario_Command_Output)(nil),                // 51: hashicorp.enos.v1.Scenario.Command.Output
+	(*Scenario_Command_Generate_Response)(nil),     // 52: hashicorp.enos.v1.Scenario.Command.Generate.Response
+	(*Scenario_Command_Validate_Response)(nil),     // 53: hashicorp.enos.v1.Scenario.Command.Validate.Response
+	(*Scenario_Command_Launch_Response)(nil),       // 54: hashicorp.enos.v1.Scenario.Command.Launch.Response
+	(*Scenario_Command_Destroy_Response)(nil),      // 55: hashicorp.enos.v1.Scenario.Command.Destroy.Response
+	(*Scenario_Command_Run_Response)(nil),          // 56: hashicorp.enos.v1.Scenario.Command.Run.Response
+	(*Scenario_Command_Exec_Response)(nil),         // 57: hashicorp.enos.v1.Scenario.Command.Exec.Response
+	(*Scenario_Command_Output_Response)(nil),       // 58: hashicorp.enos.v1.Scenario.Command.Output.Response
+	(*Terraform_Module)(nil),                       // 59: hashicorp.enos.v1.Terraform.Module
+	(*Terraform_Command)(nil),                      // 60: hashicorp.enos.v1.Terraform.Command
+	(*Terraform_Executor)(nil),                     // 61: hashicorp.enos.v1.Terraform.Executor
+	(*Terraform_Command_Init)(nil),                 // 62: hashicorp.enos.v1.Terraform.Command.Init
+	(*Terraform_Command_Validate)(nil),             // 63: hashicorp.enos.v1.Terraform.Command.Validate
+	(*Terraform_Command_Plan)(nil),                 // 64: hashicorp.enos.v1.Terraform.Command.Plan
+	(*Terraform_Command_Apply)(nil),                // 65: hashicorp.enos.v1.Terraform.Command.Apply
+	(*Terraform_Command_Destroy)(nil),              // 66: hashicorp.enos.v1.Terraform.Command.Destroy
+	(*Terraform_Command_Exec)(nil),                 // 67: hashicorp.enos.v1.Terraform.Command.Exec
+	(*Terraform_Command_Output)(nil),               // 68: hashicorp.enos.v1.Terraform.Command.Output
+	(*Terraform_Command_Init_Response)(nil),        // 69: hashicorp.enos.v1.Terraform.Command.Init.Response
+	(*Terraform_Command_Validate_Response)(nil),    // 70: hashicorp.enos.v1.Terraform.Command.Validate.Response
+	(*Terraform_Command_Plan_Response)(nil),        // 71: hashicorp.enos.v1.Terraform.Command.Plan.Response
+	(*Terraform_Command_Apply_Response)(nil),       // 72: hashicorp.enos.v1.Terraform.Command.Apply.Response
+	(*Terraform_Command_Destroy_Response)(nil),     // 73: hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	(*Terraform_Command_Exec_Response)(nil),        // 74: hashicorp.enos.v1.Terraform.Command.Exec.Response
+	(*Terraform_Command_Output_Response)(nil),      // 75: hashicorp.enos.v1.Terraform.Command.Output.Response
+	(*Terraform_Command_Output_Response_Meta)(nil), // 76: hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
+	(*Terraform_Executor_Config)(nil),              // 77: hashicorp.enos.v1.Terraform.Executor.Config
+	nil,                                            // 78: hashicorp.enos.v1.Terraform.Executor.Config.EnvEntry
+	(*Terraform_Executor_Config_Flags)(nil),        // 79: hashicorp.enos.v1.Terraform.Executor.Config.Flags
+	(*Ref_Scenario)(nil),                           // 80: hashicorp.enos.v1.Ref.Scenario
+	(*FormatRequest_File)(nil),                     // 81: hashicorp.enos.v1.FormatRequest.File
+	(*FormatRequest_Config)(nil),                   // 82: hashicorp.enos.v1.FormatRequest.Config
+	(*FormatResponse_Response)(nil),                // 83: hashicorp.enos.v1.FormatResponse.Response
+	(*durationpb.Duration)(nil),                    // 84: google.protobuf.Duration
 }
 var file_enos_proto_depIdxs = []int32{
 	2,   // 0: hashicorp.enos.v1.Diagnostic.severity:type_name -> hashicorp.enos.v1.Diagnostic.Severity
 	6,   // 1: hashicorp.enos.v1.Diagnostic.range:type_name -> hashicorp.enos.v1.Range
-	31,  // 2: hashicorp.enos.v1.Diagnostic.snippet:type_name -> hashicorp.enos.v1.Diagnostic.Snippet
-	33,  // 3: hashicorp.enos.v1.Range.start:type_name -> hashicorp.enos.v1.Range.Pos
-	33,  // 4: hashicorp.enos.v1.Range.end:type_name -> hashicorp.enos.v1.Range.Pos
+	33,  // 2: hashicorp.enos.v1.Diagnostic.snippet:type_name -> hashicorp.enos.v1.Diagnostic.Snippet
+	35,  // 3: hashicorp.enos.v1.Range.start:type_name -> hashicorp.enos.v1.Range.Pos
+	35,  // 4: hashicorp.enos.v1.Range.end:type_name -> hashicorp.enos.v1.Range.Pos
 	8,   // 5: hashicorp.enos.v1.Workspace.flightplan:type_name -> hashicorp.enos.v1.FlightPlan
-	75,  // 6: hashicorp.enos.v1.Workspace.tf_exec_cfg:type_name -> hashicorp.enos.v1.Terraform.Executor.Config
-	34,  // 7: hashicorp.enos.v1.FlightPlan.enos_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosHclEntry
-	35,  // 8: hashicorp.enos.v1.FlightPlan.enos_vars_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
+	77,  // 6: hashicorp.enos.v1.Workspace.tf_exec_cfg:type_name -> hashicorp.enos.v1.Terraform.Executor.Config
+	36,  // 7: hashicorp.enos.v1.FlightPlan.enos_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosHclEntry
+	37,  // 8: hashicorp.enos.v1.FlightPlan.enos_vars_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
 	5,   // 9: hashicorp.enos.v1.GetVersionResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
 	7,   // 10: hashicorp.enos.v1.ListScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 11: hashicorp.enos.v1.ListScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 11: hashicorp.enos.v1.ListScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 12: hashicorp.enos.v1.ListScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	78,  // 13: hashicorp.enos.v1.ListScenariosResponse.scenarios:type_name -> hashicorp.enos.v1.Ref.Scenario
+	80,  // 13: hashicorp.enos.v1.ListScenariosResponse.scenarios:type_name -> hashicorp.enos.v1.Ref.Scenario
 	7,   // 14: hashicorp.enos.v1.GenerateScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 15: hashicorp.enos.v1.GenerateScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 15: hashicorp.enos.v1.GenerateScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 16: hashicorp.enos.v1.GenerateScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	50,  // 17: hashicorp.enos.v1.GenerateScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
+	52,  // 17: hashicorp.enos.v1.GenerateScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
 	7,   // 18: hashicorp.enos.v1.ValidateScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 19: hashicorp.enos.v1.ValidateScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 19: hashicorp.enos.v1.ValidateScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 20: hashicorp.enos.v1.ValidateScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	51,  // 21: hashicorp.enos.v1.ValidateScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Validate.Response
+	53,  // 21: hashicorp.enos.v1.ValidateScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Validate.Response
 	7,   // 22: hashicorp.enos.v1.LaunchScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 23: hashicorp.enos.v1.LaunchScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 23: hashicorp.enos.v1.LaunchScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 24: hashicorp.enos.v1.LaunchScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	52,  // 25: hashicorp.enos.v1.LaunchScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Launch.Response
+	54,  // 25: hashicorp.enos.v1.LaunchScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Launch.Response
 	7,   // 26: hashicorp.enos.v1.DestroyScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 27: hashicorp.enos.v1.DestroyScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 27: hashicorp.enos.v1.DestroyScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 28: hashicorp.enos.v1.DestroyScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	53,  // 29: hashicorp.enos.v1.DestroyScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Destroy.Response
+	55,  // 29: hashicorp.enos.v1.DestroyScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Destroy.Response
 	7,   // 30: hashicorp.enos.v1.RunScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 31: hashicorp.enos.v1.RunScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 31: hashicorp.enos.v1.RunScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 32: hashicorp.enos.v1.RunScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	54,  // 33: hashicorp.enos.v1.RunScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Run.Response
+	56,  // 33: hashicorp.enos.v1.RunScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Run.Response
 	7,   // 34: hashicorp.enos.v1.ExecScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 35: hashicorp.enos.v1.ExecScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 35: hashicorp.enos.v1.ExecScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 36: hashicorp.enos.v1.ExecScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	55,  // 37: hashicorp.enos.v1.ExecScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Exec.Response
+	57,  // 37: hashicorp.enos.v1.ExecScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Exec.Response
 	7,   // 38: hashicorp.enos.v1.OutputScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	37,  // 39: hashicorp.enos.v1.OutputScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	39,  // 39: hashicorp.enos.v1.OutputScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	5,   // 40: hashicorp.enos.v1.OutputScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	56,  // 41: hashicorp.enos.v1.OutputScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Output.Response
-	0,   // 42: hashicorp.enos.v1.UI.Settings.format:type_name -> hashicorp.enos.v1.UI.Settings.Format
-	1,   // 43: hashicorp.enos.v1.UI.Settings.level:type_name -> hashicorp.enos.v1.UI.Settings.Level
-	32,  // 44: hashicorp.enos.v1.Diagnostic.Snippet.values:type_name -> hashicorp.enos.v1.Diagnostic.ExpressionValue
-	41,  // 45: hashicorp.enos.v1.Scenario.ID.variants:type_name -> hashicorp.enos.v1.Scenario.Filter.Vector
-	39,  // 46: hashicorp.enos.v1.Scenario.Filter.select_all:type_name -> hashicorp.enos.v1.Scenario.Filter.SelectAll
-	41,  // 47: hashicorp.enos.v1.Scenario.Filter.include:type_name -> hashicorp.enos.v1.Scenario.Filter.Vector
-	42,  // 48: hashicorp.enos.v1.Scenario.Filter.exclude:type_name -> hashicorp.enos.v1.Scenario.Filter.Exclude
-	40,  // 49: hashicorp.enos.v1.Scenario.Filter.Vector.elements:type_name -> hashicorp.enos.v1.Scenario.Filter.Element
-	41,  // 50: hashicorp.enos.v1.Scenario.Filter.Exclude.vector:type_name -> hashicorp.enos.v1.Scenario.Filter.Vector
-	3,   // 51: hashicorp.enos.v1.Scenario.Filter.Exclude.mode:type_name -> hashicorp.enos.v1.Scenario.Filter.Exclude.Mode
-	5,   // 52: hashicorp.enos.v1.Scenario.Command.Generate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	57,  // 53: hashicorp.enos.v1.Scenario.Command.Generate.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	5,   // 54: hashicorp.enos.v1.Scenario.Command.Validate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	50,  // 55: hashicorp.enos.v1.Scenario.Command.Validate.Response.generate:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
-	67,  // 56: hashicorp.enos.v1.Scenario.Command.Validate.Response.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	68,  // 57: hashicorp.enos.v1.Scenario.Command.Validate.Response.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	69,  // 58: hashicorp.enos.v1.Scenario.Command.Validate.Response.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	5,   // 59: hashicorp.enos.v1.Scenario.Command.Launch.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	50,  // 60: hashicorp.enos.v1.Scenario.Command.Launch.Response.generate:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
-	67,  // 61: hashicorp.enos.v1.Scenario.Command.Launch.Response.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	68,  // 62: hashicorp.enos.v1.Scenario.Command.Launch.Response.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	69,  // 63: hashicorp.enos.v1.Scenario.Command.Launch.Response.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	70,  // 64: hashicorp.enos.v1.Scenario.Command.Launch.Response.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
-	5,   // 65: hashicorp.enos.v1.Scenario.Command.Destroy.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	57,  // 66: hashicorp.enos.v1.Scenario.Command.Destroy.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	71,  // 67: hashicorp.enos.v1.Scenario.Command.Destroy.Response.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	5,   // 68: hashicorp.enos.v1.Scenario.Command.Run.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	50,  // 69: hashicorp.enos.v1.Scenario.Command.Run.Response.generate:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
-	67,  // 70: hashicorp.enos.v1.Scenario.Command.Run.Response.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	68,  // 71: hashicorp.enos.v1.Scenario.Command.Run.Response.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	69,  // 72: hashicorp.enos.v1.Scenario.Command.Run.Response.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	70,  // 73: hashicorp.enos.v1.Scenario.Command.Run.Response.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
-	71,  // 74: hashicorp.enos.v1.Scenario.Command.Run.Response.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	5,   // 75: hashicorp.enos.v1.Scenario.Command.Exec.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	57,  // 76: hashicorp.enos.v1.Scenario.Command.Exec.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	72,  // 77: hashicorp.enos.v1.Scenario.Command.Exec.Response.exec:type_name -> hashicorp.enos.v1.Terraform.Command.Exec.Response
-	5,   // 78: hashicorp.enos.v1.Scenario.Command.Output.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	57,  // 79: hashicorp.enos.v1.Scenario.Command.Output.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	73,  // 80: hashicorp.enos.v1.Scenario.Command.Output.Response.output:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response
-	78,  // 81: hashicorp.enos.v1.Terraform.Module.scenario_ref:type_name -> hashicorp.enos.v1.Ref.Scenario
-	75,  // 82: hashicorp.enos.v1.Terraform.Executor.config:type_name -> hashicorp.enos.v1.Terraform.Executor.Config
-	5,   // 83: hashicorp.enos.v1.Terraform.Command.Init.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	5,   // 84: hashicorp.enos.v1.Terraform.Command.Validate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	5,   // 85: hashicorp.enos.v1.Terraform.Command.Plan.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	5,   // 86: hashicorp.enos.v1.Terraform.Command.Apply.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	5,   // 87: hashicorp.enos.v1.Terraform.Command.Destroy.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	5,   // 88: hashicorp.enos.v1.Terraform.Command.Exec.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	5,   // 89: hashicorp.enos.v1.Terraform.Command.Output.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	74,  // 90: hashicorp.enos.v1.Terraform.Command.Output.Response.meta:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
-	77,  // 91: hashicorp.enos.v1.Terraform.Executor.Config.flags:type_name -> hashicorp.enos.v1.Terraform.Executor.Config.Flags
-	76,  // 92: hashicorp.enos.v1.Terraform.Executor.Config.env:type_name -> hashicorp.enos.v1.Terraform.Executor.Config.EnvEntry
-	79,  // 93: hashicorp.enos.v1.Terraform.Executor.Config.Flags.lock_timeout:type_name -> google.protobuf.Duration
-	36,  // 94: hashicorp.enos.v1.Ref.Scenario.id:type_name -> hashicorp.enos.v1.Scenario.ID
-	12,  // 95: hashicorp.enos.v1.EnosService.GetVersion:input_type -> hashicorp.enos.v1.GetVersionRequest
-	14,  // 96: hashicorp.enos.v1.EnosService.ListScenarios:input_type -> hashicorp.enos.v1.ListScenariosRequest
-	18,  // 97: hashicorp.enos.v1.EnosService.ValidateScenarios:input_type -> hashicorp.enos.v1.ValidateScenariosRequest
-	16,  // 98: hashicorp.enos.v1.EnosService.GenerateScenarios:input_type -> hashicorp.enos.v1.GenerateScenariosRequest
-	20,  // 99: hashicorp.enos.v1.EnosService.LaunchScenarios:input_type -> hashicorp.enos.v1.LaunchScenariosRequest
-	22,  // 100: hashicorp.enos.v1.EnosService.DestroyScenarios:input_type -> hashicorp.enos.v1.DestroyScenariosRequest
-	24,  // 101: hashicorp.enos.v1.EnosService.RunScenarios:input_type -> hashicorp.enos.v1.RunScenariosRequest
-	26,  // 102: hashicorp.enos.v1.EnosService.ExecScenarios:input_type -> hashicorp.enos.v1.ExecScenariosRequest
-	28,  // 103: hashicorp.enos.v1.EnosService.OutputScenarios:input_type -> hashicorp.enos.v1.OutputScenariosRequest
-	13,  // 104: hashicorp.enos.v1.EnosService.GetVersion:output_type -> hashicorp.enos.v1.GetVersionResponse
-	15,  // 105: hashicorp.enos.v1.EnosService.ListScenarios:output_type -> hashicorp.enos.v1.ListScenariosResponse
-	19,  // 106: hashicorp.enos.v1.EnosService.ValidateScenarios:output_type -> hashicorp.enos.v1.ValidateScenariosResponse
-	17,  // 107: hashicorp.enos.v1.EnosService.GenerateScenarios:output_type -> hashicorp.enos.v1.GenerateScenariosResponse
-	21,  // 108: hashicorp.enos.v1.EnosService.LaunchScenarios:output_type -> hashicorp.enos.v1.LaunchScenariosResponse
-	23,  // 109: hashicorp.enos.v1.EnosService.DestroyScenarios:output_type -> hashicorp.enos.v1.DestroyScenariosResponse
-	25,  // 110: hashicorp.enos.v1.EnosService.RunScenarios:output_type -> hashicorp.enos.v1.RunScenariosResponse
-	27,  // 111: hashicorp.enos.v1.EnosService.ExecScenarios:output_type -> hashicorp.enos.v1.ExecScenariosResponse
-	29,  // 112: hashicorp.enos.v1.EnosService.OutputScenarios:output_type -> hashicorp.enos.v1.OutputScenariosResponse
-	104, // [104:113] is the sub-list for method output_type
-	95,  // [95:104] is the sub-list for method input_type
-	95,  // [95:95] is the sub-list for extension type_name
-	95,  // [95:95] is the sub-list for extension extendee
-	0,   // [0:95] is the sub-list for field type_name
+	58,  // 41: hashicorp.enos.v1.OutputScenariosResponse.responses:type_name -> hashicorp.enos.v1.Scenario.Command.Output.Response
+	81,  // 42: hashicorp.enos.v1.FormatRequest.files:type_name -> hashicorp.enos.v1.FormatRequest.File
+	82,  // 43: hashicorp.enos.v1.FormatRequest.config:type_name -> hashicorp.enos.v1.FormatRequest.Config
+	5,   // 44: hashicorp.enos.v1.FormatResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	83,  // 45: hashicorp.enos.v1.FormatResponse.responses:type_name -> hashicorp.enos.v1.FormatResponse.Response
+	0,   // 46: hashicorp.enos.v1.UI.Settings.format:type_name -> hashicorp.enos.v1.UI.Settings.Format
+	1,   // 47: hashicorp.enos.v1.UI.Settings.level:type_name -> hashicorp.enos.v1.UI.Settings.Level
+	34,  // 48: hashicorp.enos.v1.Diagnostic.Snippet.values:type_name -> hashicorp.enos.v1.Diagnostic.ExpressionValue
+	43,  // 49: hashicorp.enos.v1.Scenario.ID.variants:type_name -> hashicorp.enos.v1.Scenario.Filter.Vector
+	41,  // 50: hashicorp.enos.v1.Scenario.Filter.select_all:type_name -> hashicorp.enos.v1.Scenario.Filter.SelectAll
+	43,  // 51: hashicorp.enos.v1.Scenario.Filter.include:type_name -> hashicorp.enos.v1.Scenario.Filter.Vector
+	44,  // 52: hashicorp.enos.v1.Scenario.Filter.exclude:type_name -> hashicorp.enos.v1.Scenario.Filter.Exclude
+	42,  // 53: hashicorp.enos.v1.Scenario.Filter.Vector.elements:type_name -> hashicorp.enos.v1.Scenario.Filter.Element
+	43,  // 54: hashicorp.enos.v1.Scenario.Filter.Exclude.vector:type_name -> hashicorp.enos.v1.Scenario.Filter.Vector
+	3,   // 55: hashicorp.enos.v1.Scenario.Filter.Exclude.mode:type_name -> hashicorp.enos.v1.Scenario.Filter.Exclude.Mode
+	5,   // 56: hashicorp.enos.v1.Scenario.Command.Generate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	59,  // 57: hashicorp.enos.v1.Scenario.Command.Generate.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	5,   // 58: hashicorp.enos.v1.Scenario.Command.Validate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	52,  // 59: hashicorp.enos.v1.Scenario.Command.Validate.Response.generate:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
+	69,  // 60: hashicorp.enos.v1.Scenario.Command.Validate.Response.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	70,  // 61: hashicorp.enos.v1.Scenario.Command.Validate.Response.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	71,  // 62: hashicorp.enos.v1.Scenario.Command.Validate.Response.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	5,   // 63: hashicorp.enos.v1.Scenario.Command.Launch.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	52,  // 64: hashicorp.enos.v1.Scenario.Command.Launch.Response.generate:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
+	69,  // 65: hashicorp.enos.v1.Scenario.Command.Launch.Response.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	70,  // 66: hashicorp.enos.v1.Scenario.Command.Launch.Response.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	71,  // 67: hashicorp.enos.v1.Scenario.Command.Launch.Response.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	72,  // 68: hashicorp.enos.v1.Scenario.Command.Launch.Response.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
+	5,   // 69: hashicorp.enos.v1.Scenario.Command.Destroy.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	59,  // 70: hashicorp.enos.v1.Scenario.Command.Destroy.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	73,  // 71: hashicorp.enos.v1.Scenario.Command.Destroy.Response.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	5,   // 72: hashicorp.enos.v1.Scenario.Command.Run.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	52,  // 73: hashicorp.enos.v1.Scenario.Command.Run.Response.generate:type_name -> hashicorp.enos.v1.Scenario.Command.Generate.Response
+	69,  // 74: hashicorp.enos.v1.Scenario.Command.Run.Response.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	70,  // 75: hashicorp.enos.v1.Scenario.Command.Run.Response.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	71,  // 76: hashicorp.enos.v1.Scenario.Command.Run.Response.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	72,  // 77: hashicorp.enos.v1.Scenario.Command.Run.Response.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
+	73,  // 78: hashicorp.enos.v1.Scenario.Command.Run.Response.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	5,   // 79: hashicorp.enos.v1.Scenario.Command.Exec.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	59,  // 80: hashicorp.enos.v1.Scenario.Command.Exec.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	74,  // 81: hashicorp.enos.v1.Scenario.Command.Exec.Response.exec:type_name -> hashicorp.enos.v1.Terraform.Command.Exec.Response
+	5,   // 82: hashicorp.enos.v1.Scenario.Command.Output.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	59,  // 83: hashicorp.enos.v1.Scenario.Command.Output.Response.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	75,  // 84: hashicorp.enos.v1.Scenario.Command.Output.Response.output:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response
+	80,  // 85: hashicorp.enos.v1.Terraform.Module.scenario_ref:type_name -> hashicorp.enos.v1.Ref.Scenario
+	77,  // 86: hashicorp.enos.v1.Terraform.Executor.config:type_name -> hashicorp.enos.v1.Terraform.Executor.Config
+	5,   // 87: hashicorp.enos.v1.Terraform.Command.Init.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	5,   // 88: hashicorp.enos.v1.Terraform.Command.Validate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	5,   // 89: hashicorp.enos.v1.Terraform.Command.Plan.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	5,   // 90: hashicorp.enos.v1.Terraform.Command.Apply.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	5,   // 91: hashicorp.enos.v1.Terraform.Command.Destroy.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	5,   // 92: hashicorp.enos.v1.Terraform.Command.Exec.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	5,   // 93: hashicorp.enos.v1.Terraform.Command.Output.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	76,  // 94: hashicorp.enos.v1.Terraform.Command.Output.Response.meta:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
+	79,  // 95: hashicorp.enos.v1.Terraform.Executor.Config.flags:type_name -> hashicorp.enos.v1.Terraform.Executor.Config.Flags
+	78,  // 96: hashicorp.enos.v1.Terraform.Executor.Config.env:type_name -> hashicorp.enos.v1.Terraform.Executor.Config.EnvEntry
+	84,  // 97: hashicorp.enos.v1.Terraform.Executor.Config.Flags.lock_timeout:type_name -> google.protobuf.Duration
+	38,  // 98: hashicorp.enos.v1.Ref.Scenario.id:type_name -> hashicorp.enos.v1.Scenario.ID
+	5,   // 99: hashicorp.enos.v1.FormatResponse.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	12,  // 100: hashicorp.enos.v1.EnosService.GetVersion:input_type -> hashicorp.enos.v1.GetVersionRequest
+	14,  // 101: hashicorp.enos.v1.EnosService.ListScenarios:input_type -> hashicorp.enos.v1.ListScenariosRequest
+	18,  // 102: hashicorp.enos.v1.EnosService.ValidateScenarios:input_type -> hashicorp.enos.v1.ValidateScenariosRequest
+	16,  // 103: hashicorp.enos.v1.EnosService.GenerateScenarios:input_type -> hashicorp.enos.v1.GenerateScenariosRequest
+	20,  // 104: hashicorp.enos.v1.EnosService.LaunchScenarios:input_type -> hashicorp.enos.v1.LaunchScenariosRequest
+	22,  // 105: hashicorp.enos.v1.EnosService.DestroyScenarios:input_type -> hashicorp.enos.v1.DestroyScenariosRequest
+	24,  // 106: hashicorp.enos.v1.EnosService.RunScenarios:input_type -> hashicorp.enos.v1.RunScenariosRequest
+	26,  // 107: hashicorp.enos.v1.EnosService.ExecScenarios:input_type -> hashicorp.enos.v1.ExecScenariosRequest
+	28,  // 108: hashicorp.enos.v1.EnosService.OutputScenarios:input_type -> hashicorp.enos.v1.OutputScenariosRequest
+	30,  // 109: hashicorp.enos.v1.EnosService.Format:input_type -> hashicorp.enos.v1.FormatRequest
+	13,  // 110: hashicorp.enos.v1.EnosService.GetVersion:output_type -> hashicorp.enos.v1.GetVersionResponse
+	15,  // 111: hashicorp.enos.v1.EnosService.ListScenarios:output_type -> hashicorp.enos.v1.ListScenariosResponse
+	19,  // 112: hashicorp.enos.v1.EnosService.ValidateScenarios:output_type -> hashicorp.enos.v1.ValidateScenariosResponse
+	17,  // 113: hashicorp.enos.v1.EnosService.GenerateScenarios:output_type -> hashicorp.enos.v1.GenerateScenariosResponse
+	21,  // 114: hashicorp.enos.v1.EnosService.LaunchScenarios:output_type -> hashicorp.enos.v1.LaunchScenariosResponse
+	23,  // 115: hashicorp.enos.v1.EnosService.DestroyScenarios:output_type -> hashicorp.enos.v1.DestroyScenariosResponse
+	25,  // 116: hashicorp.enos.v1.EnosService.RunScenarios:output_type -> hashicorp.enos.v1.RunScenariosResponse
+	27,  // 117: hashicorp.enos.v1.EnosService.ExecScenarios:output_type -> hashicorp.enos.v1.ExecScenariosResponse
+	29,  // 118: hashicorp.enos.v1.EnosService.OutputScenarios:output_type -> hashicorp.enos.v1.OutputScenariosResponse
+	31,  // 119: hashicorp.enos.v1.EnosService.Format:output_type -> hashicorp.enos.v1.FormatResponse
+	110, // [110:120] is the sub-list for method output_type
+	100, // [100:110] is the sub-list for method input_type
+	100, // [100:100] is the sub-list for extension type_name
+	100, // [100:100] is the sub-list for extension extendee
+	0,   // [0:100] is the sub-list for field type_name
 }
 
 func init() { file_enos_proto_init() }
@@ -5532,7 +5902,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UI_Settings); i {
+			switch v := v.(*FormatRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -5544,7 +5914,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Diagnostic_Snippet); i {
+			switch v := v.(*FormatResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -5556,7 +5926,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Diagnostic_ExpressionValue); i {
+			switch v := v.(*UI_Settings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -5568,6 +5938,30 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Diagnostic_Snippet); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enos_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Diagnostic_ExpressionValue); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enos_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Range_Pos); i {
 			case 0:
 				return &v.state
@@ -5579,7 +5973,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_ID); i {
 			case 0:
 				return &v.state
@@ -5591,7 +5985,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter); i {
 			case 0:
 				return &v.state
@@ -5603,7 +5997,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command); i {
 			case 0:
 				return &v.state
@@ -5615,7 +6009,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter_SelectAll); i {
 			case 0:
 				return &v.state
@@ -5627,7 +6021,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter_Element); i {
 			case 0:
 				return &v.state
@@ -5639,7 +6033,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter_Vector); i {
 			case 0:
 				return &v.state
@@ -5651,7 +6045,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter_Exclude); i {
 			case 0:
 				return &v.state
@@ -5663,7 +6057,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Generate); i {
 			case 0:
 				return &v.state
@@ -5675,7 +6069,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Validate); i {
 			case 0:
 				return &v.state
@@ -5687,7 +6081,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Launch); i {
 			case 0:
 				return &v.state
@@ -5699,7 +6093,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Destroy); i {
 			case 0:
 				return &v.state
@@ -5711,7 +6105,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Run); i {
 			case 0:
 				return &v.state
@@ -5723,7 +6117,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Exec); i {
 			case 0:
 				return &v.state
@@ -5735,7 +6129,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Output); i {
 			case 0:
 				return &v.state
@@ -5747,7 +6141,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Generate_Response); i {
 			case 0:
 				return &v.state
@@ -5759,7 +6153,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Validate_Response); i {
 			case 0:
 				return &v.state
@@ -5771,7 +6165,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Launch_Response); i {
 			case 0:
 				return &v.state
@@ -5783,7 +6177,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Destroy_Response); i {
 			case 0:
 				return &v.state
@@ -5795,7 +6189,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Run_Response); i {
 			case 0:
 				return &v.state
@@ -5807,7 +6201,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Exec_Response); i {
 			case 0:
 				return &v.state
@@ -5819,7 +6213,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Command_Output_Response); i {
 			case 0:
 				return &v.state
@@ -5831,7 +6225,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Module); i {
 			case 0:
 				return &v.state
@@ -5843,7 +6237,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command); i {
 			case 0:
 				return &v.state
@@ -5855,7 +6249,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Executor); i {
 			case 0:
 				return &v.state
@@ -5867,7 +6261,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Init); i {
 			case 0:
 				return &v.state
@@ -5879,7 +6273,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Validate); i {
 			case 0:
 				return &v.state
@@ -5891,7 +6285,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Plan); i {
 			case 0:
 				return &v.state
@@ -5903,7 +6297,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Apply); i {
 			case 0:
 				return &v.state
@@ -5915,7 +6309,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Destroy); i {
 			case 0:
 				return &v.state
@@ -5927,7 +6321,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Exec); i {
 			case 0:
 				return &v.state
@@ -5939,7 +6333,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Output); i {
 			case 0:
 				return &v.state
@@ -5951,7 +6345,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Init_Response); i {
 			case 0:
 				return &v.state
@@ -5963,7 +6357,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Validate_Response); i {
 			case 0:
 				return &v.state
@@ -5975,7 +6369,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Plan_Response); i {
 			case 0:
 				return &v.state
@@ -5987,7 +6381,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Apply_Response); i {
 			case 0:
 				return &v.state
@@ -5999,7 +6393,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Destroy_Response); i {
 			case 0:
 				return &v.state
@@ -6011,7 +6405,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Exec_Response); i {
 			case 0:
 				return &v.state
@@ -6023,7 +6417,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Output_Response); i {
 			case 0:
 				return &v.state
@@ -6035,7 +6429,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Output_Response_Meta); i {
 			case 0:
 				return &v.state
@@ -6047,7 +6441,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Executor_Config); i {
 			case 0:
 				return &v.state
@@ -6059,7 +6453,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[75].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Executor_Config_Flags); i {
 			case 0:
 				return &v.state
@@ -6071,8 +6465,44 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[74].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[76].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Ref_Scenario); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enos_proto_msgTypes[77].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FormatRequest_File); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enos_proto_msgTypes[78].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FormatRequest_Config); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enos_proto_msgTypes[79].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FormatResponse_Response); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6090,7 +6520,7 @@ func file_enos_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_enos_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   75,
+			NumMessages:   80,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

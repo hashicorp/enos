@@ -31,6 +31,7 @@ type EnosServiceClient interface {
 	RunScenarios(ctx context.Context, in *RunScenariosRequest, opts ...grpc.CallOption) (*RunScenariosResponse, error)
 	ExecScenarios(ctx context.Context, in *ExecScenariosRequest, opts ...grpc.CallOption) (*ExecScenariosResponse, error)
 	OutputScenarios(ctx context.Context, in *OutputScenariosRequest, opts ...grpc.CallOption) (*OutputScenariosResponse, error)
+	Format(ctx context.Context, in *FormatRequest, opts ...grpc.CallOption) (*FormatResponse, error)
 }
 
 type enosServiceClient struct {
@@ -122,6 +123,15 @@ func (c *enosServiceClient) OutputScenarios(ctx context.Context, in *OutputScena
 	return out, nil
 }
 
+func (c *enosServiceClient) Format(ctx context.Context, in *FormatRequest, opts ...grpc.CallOption) (*FormatResponse, error) {
+	out := new(FormatResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.enos.v1.EnosService/Format", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EnosServiceServer is the server API for EnosService service.
 // All implementations should embed UnimplementedEnosServiceServer
 // for forward compatibility
@@ -135,6 +145,7 @@ type EnosServiceServer interface {
 	RunScenarios(context.Context, *RunScenariosRequest) (*RunScenariosResponse, error)
 	ExecScenarios(context.Context, *ExecScenariosRequest) (*ExecScenariosResponse, error)
 	OutputScenarios(context.Context, *OutputScenariosRequest) (*OutputScenariosResponse, error)
+	Format(context.Context, *FormatRequest) (*FormatResponse, error)
 }
 
 // UnimplementedEnosServiceServer should be embedded to have forward compatible implementations.
@@ -167,6 +178,9 @@ func (UnimplementedEnosServiceServer) ExecScenarios(context.Context, *ExecScenar
 }
 func (UnimplementedEnosServiceServer) OutputScenarios(context.Context, *OutputScenariosRequest) (*OutputScenariosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OutputScenarios not implemented")
+}
+func (UnimplementedEnosServiceServer) Format(context.Context, *FormatRequest) (*FormatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Format not implemented")
 }
 
 // UnsafeEnosServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -342,6 +356,24 @@ func _EnosService_OutputScenarios_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EnosService_Format_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FormatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnosServiceServer).Format(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.enos.v1.EnosService/Format",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnosServiceServer).Format(ctx, req.(*FormatRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EnosService_ServiceDesc is the grpc.ServiceDesc for EnosService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -384,6 +416,10 @@ var EnosService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OutputScenarios",
 			Handler:    _EnosService_OutputScenarios_Handler,
+		},
+		{
+			MethodName: "Format",
+			Handler:    _EnosService_Format_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

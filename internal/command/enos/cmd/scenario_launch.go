@@ -23,14 +23,14 @@ func newScenarioLaunchCmd() *cobra.Command {
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "don't wait for terraform state lock")
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoBackend, "no-backend", false, "disable the configured backend")
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoDownload, "no-download", false, "disable downloading modules and providers")
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoRefresh, "no-refresh", false, "disable refreshing state")
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.RefreshOnly, "refresh-only", false, "only refresh state")
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.Upgrade, "upgrade", true, "upgrade modules and providers")
-	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
-	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "Don't wait for the Terraform state lock")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoBackend, "no-backend", false, "Disable the configured backend")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoDownload, "no-download", false, "Disable downloading modules and providers")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoRefresh, "no-refresh", false, "Disable refreshing state")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.RefreshOnly, "refresh-only", false, "Only refresh state")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.Upgrade, "upgrade", true, "Upgrade modules and providers")
+	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "The Terraform scenario parallelism")
+	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "The Duration to wait for the Terraform lock")
 
 	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 

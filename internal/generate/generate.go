@@ -55,7 +55,7 @@ func NewGenerator(opts ...Opt) (*Generator, error) {
 // WithOutBaseDirectory is the destination base directory where modules will be written.
 func WithOutBaseDirectory(dir string) Opt {
 	return func(req *Generator) error {
-		a, err := absoluteNoSymlinks(dir)
+		a, err := ensureDir(dir)
 		if err != nil {
 			return err
 		}
@@ -65,19 +65,10 @@ func WithOutBaseDirectory(dir string) Opt {
 	}
 }
 
-func absoluteNoSymlinks(path string) (string, error) {
-	a, err := filepath.Abs(path)
-	if err != nil {
-		return a, err
-	}
-
-	return filepath.EvalSymlinks(a)
-}
-
 // WithScenarioBaseDirectory is base directory where the scenario defintions reside.
 func WithScenarioBaseDirectory(dir string) Opt {
 	return func(req *Generator) error {
-		a, err := absoluteNoSymlinks(dir)
+		a, err := ensureDir(dir)
 		if err != nil {
 			return err
 		}
@@ -100,6 +91,40 @@ func WithUI(ui cli.Ui) Opt {
 		req.UI = ui
 		return nil
 	}
+}
+
+func ensureDir(dir string) (string, error) {
+	d, err := os.Open(dir)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+
+		err := os.MkdirAll(dir, 0o755)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		info, err := d.Stat()
+		if err != nil {
+			return "", err
+		}
+
+		if !info.IsDir() {
+			return "", fmt.Errorf("out directory path (%s) is not a directory", dir)
+		}
+	}
+
+	return absoluteNoSymlinks(dir)
+}
+
+func absoluteNoSymlinks(path string) (string, error) {
+	a, err := filepath.Abs(path)
+	if err != nil {
+		return a, err
+	}
+
+	return filepath.EvalSymlinks(a)
 }
 
 // Generate converts the Scenario into a terraform module
@@ -247,6 +272,11 @@ func (g *Generator) generateModule() error {
 
 	// Write our module to disk
 	return g.write(g.TerraformModulePath(), mod.Bytes())
+}
+
+func (g *Generator) ensureOutDir() error {
+	_, err := ensureDir(g.TerraformModuleDir())
+	return err
 }
 
 // maybeWriteTerraformSettings writes any configured "terraform" settings
@@ -502,32 +532,6 @@ func (g *Generator) maybeWriteOutputs(rootBody *hclwrite.Body) error {
 		if i+1 < len(g.Scenario.Outputs) {
 			rootBody.AppendNewline()
 		}
-	}
-
-	return nil
-}
-
-func (g *Generator) ensureOutDir() error {
-	d, err := os.Open(g.TerraformModuleDir())
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-
-		if g.UI != nil {
-			g.UI.Info(fmt.Sprintf("creating directory %s", g.TerraformModuleDir()))
-		}
-
-		return os.MkdirAll(g.TerraformModuleDir(), 0o755)
-	}
-
-	info, err := d.Stat()
-	if err != nil {
-		return err
-	}
-
-	if !info.IsDir() {
-		return fmt.Errorf("out directory path (%s) is not a directory", g.TerraformModuleDir())
 	}
 
 	return nil

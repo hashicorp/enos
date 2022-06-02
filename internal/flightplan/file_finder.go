@@ -44,6 +44,7 @@ func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
 		if err != nil {
 			return err
 		}
+		defer f.Close()
 
 		bytes, err := io.ReadAll(f)
 		if err != nil {

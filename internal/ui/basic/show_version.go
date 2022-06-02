@@ -3,7 +3,7 @@ package basic
 import (
 	"fmt"
 
-	"github.com/hashicorp/enos/internal/server/status"
+	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 

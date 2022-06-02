@@ -1,14 +1,17 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/hashicorp/enos/internal/flightplan"
 	uipkg "github.com/hashicorp/enos/internal/ui"
+	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -18,7 +21,6 @@ var rootCmd = &cobra.Command{
 	Long:              "Enos is a one stop shop for defining and executing complex test scenarios",
 	PersistentPreRun:  rootCmdPreRun,
 	PersistentPostRun: rootCmdPostRun,
-	SilenceErrors:     true, // we handle this ourselves
 	CompletionOptions: cobra.CompletionOptions{DisableDescriptions: true},
 }
 
@@ -40,6 +42,8 @@ var ui uipkg.View
 func Execute() {
 	rootCmd.AddCommand(newVersionCmd())
 	rootCmd.AddCommand(newScenarioCmd())
+	rootCmd.AddCommand(newFmtCmd())
+
 	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevelC, "client-log-level", "info", "specify the log level for client output")
 	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevelS, "server-log-level", "error", "specify the log level for server output")
 	rootCmd.PersistentFlags().BoolVar(&rootArgs.noWarnings, "silence-warnings", false, "silence warnings")
@@ -49,14 +53,19 @@ func Execute() {
 	rootCmd.PersistentFlags().StringVar(&rootArgs.stderrPath, "error-out", "", "the path to write error output. If unset it uses STDERR")
 
 	if err := rootCmd.Execute(); err != nil {
-		diagErr, ok := err.(*flightplan.ErrDiagnostic)
-		if ok {
-			err = ui.ShowDiagnostics(diagErr.Diags)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+		var exitErr *status.ErrExit
+		if errors.As(err, &exitErr) {
+			os.Exit(exitErr.ExitCode)
+		}
+
+		if ui != nil {
+			var err2 error
+			var diagErr *status.ErrDiagnostic
+			if errors.As(err, &diagErr) {
+				err2 = ui.ShowDiagnostics(diagErr.Diags)
+			} else {
+				err2 = ui.ShowError(err)
 			}
-		} else {
-			err2 := ui.ShowError(err)
 			if err2 != nil {
 				fmt.Fprintf(os.Stderr, "%s: %s\n", err.Error(), err2.Error())
 			}
@@ -111,7 +120,15 @@ func setupCLIUI() error {
 }
 
 func rootCmdPreRun(cmd *cobra.Command, args []string) {
+	cmd.SilenceErrors = true // we handle this ourselves
+
 	err := setupCLIUI()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	enosServer, enosClient, err = startGRPCServer(context.Background(), 5*time.Second)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)

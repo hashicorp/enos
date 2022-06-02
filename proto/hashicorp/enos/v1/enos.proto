@@ -16,6 +16,7 @@ service EnosService {
   rpc RunScenarios(RunScenariosRequest) returns (RunScenariosResponse) {}
   rpc ExecScenarios(ExecScenariosRequest) returns (ExecScenariosResponse) {}
   rpc OutputScenarios(OutputScenariosRequest) returns (OutputScenariosResponse) {}
+  rpc Format(FormatRequest) returns (FormatResponse) {}
 }
 
 // UI contains messages related to the UI calling the server. This information
@@ -439,4 +440,34 @@ message OutputScenariosRequest {
 message OutputScenariosResponse {
   repeated Diagnostic diagnostics = 1;
   repeated Scenario.Command.Output.Response responses = 2;
+}
+
+message FormatRequest {
+  repeated File files = 1;
+  Config config = 2;
+
+  message File {
+    string path = 1;
+    bytes body = 2;
+  }
+
+  message Config {
+    bool write = 1;
+    bool list = 2;
+    bool check = 3;
+    bool diff = 4;
+  }
+}
+
+message FormatResponse {
+  repeated Diagnostic diagnostics = 1;
+  repeated Response responses = 2;
+
+  message Response {
+    repeated Diagnostic diagnostics = 1;
+    string path = 2;
+    bool changed = 3;
+    string diff = 4;
+    string body = 5; // Used for formatted STDIN
+  }
 }

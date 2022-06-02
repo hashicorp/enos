@@ -23,9 +23,9 @@ func newScenarioDestroyCmd() *cobra.Command {
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "don't wait for terraform state lock")
-	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "terraform scenario parallelism")
-	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "duration to wait for terraform lock")
+	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "Don't wait for Terraform state lock")
+	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "The Terraform scenario parallelism")
+	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "The duration to wait for a Terraform lock")
 
 	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 

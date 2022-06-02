@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/enos/internal/execute/terraform"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/server"
+	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/hcl/v2"
 )
@@ -101,11 +102,6 @@ func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	enosServer, enosClient, err = startGRPCServer(context.Background(), 5*time.Second)
-	if err != nil {
-		return err
-	}
-
 	return decodeFlightPlan(cmd)
 }
 
@@ -162,7 +158,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 
 	diags = diags.Extend(decoder.Parse())
 	if diags.HasErrors() {
-		return &flightplan.ErrDiagnostic{
+		return &status.ErrDiagnostic{
 			Diags: diagnostics.FromHCL(decoder.ParserFiles(), diags),
 		}
 	}
@@ -176,7 +172,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 			return nil
 		}
 
-		return &flightplan.ErrDiagnostic{
+		return &status.ErrDiagnostic{
 			Diags: diagnostics.FromHCL(decoder.ParserFiles(), diags),
 		}
 	}

@@ -20,14 +20,14 @@ func newFmtCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fmt [ARGS] [PATH]",
 		Short: "Format Enos configuration",
-		Long:  "Format Enos configuration or variables files. When given a path Enos will format the file or files in the given directory. If not path exists and no matching files are found it will assume STDIN as the source. When given the check flag it will return 3 if a diff exists.",
+		Long:  "Format Enos configuration or variables files. When given a path to a file Enos will format it. When given a path to a directory it will search for files that match enos.hcl, enos.vars.hcl, or enos-*.hcl. If no path is given it will perform a file search from the current working directly. If no files are found or - is passed as the path it will assume STDIN is the source to be formatted.",
 		RunE:  runFmtCmd,
 		Args:  cobra.MaximumNArgs(1),
 	}
 
 	cmd.PersistentFlags().BoolVarP(&fmtCfg.Write, "write", "w", true, "Write changes to files. Always disabled if using STDIN or --check")
 	cmd.PersistentFlags().BoolVarP(&fmtCfg.List, "list", "l", true, "List changed files. Always disabled if using STDIN")
-	cmd.PersistentFlags().BoolVarP(&fmtCfg.Check, "check", "c", false, "Check if the input is formatted. Exit will be 0 for success, 1 for an error, 3 for success but changed files")
+	cmd.PersistentFlags().BoolVarP(&fmtCfg.Check, "check", "c", false, "Check if the input is formatted. Exit will be 0 for success, 1 for an error, 3 for success but files would be changed")
 	cmd.PersistentFlags().BoolVarP(&fmtCfg.Diff, "diff", "d", false, "Display the unified diff for files that change")
 
 	return cmd

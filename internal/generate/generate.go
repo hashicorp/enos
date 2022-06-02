@@ -652,7 +652,7 @@ func stepProviderTokens(providers map[string]*flightplan.Provider) hclwrite.Toke
 	return tokens
 }
 
-// dependsOnTokens takes the names of module traversal target and returns the
+// dependsOnTokens takes the names of module traversal targets and returns the
 // tokens necessary to write the HCL. We do this manually because hclwrite
 // does not include a helper for converting cty.Values that contain an absolute
 // traversal into an expression.

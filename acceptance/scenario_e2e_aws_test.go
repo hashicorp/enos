@@ -31,17 +31,25 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 	for _, test := range []struct {
 		dir      string
 		name     string
-		variants map[string][][]string
+		variants []struct {
+			uid      string
+			variants [][]string
+		}
 	}{
 		{
-			"scenario_e2e_aws",
-			"e2e",
-			map[string][][]string{
-				fmt.Sprintf("%x", sha256.Sum256([]byte("e2e [aws_region:east distro:rhel]"))): {
-					{"aws_region", "east"}, {"distro", "rhel"},
+			dir:  "scenario_e2e_aws",
+			name: "e2e",
+			variants: []struct {
+				uid      string
+				variants [][]string
+			}{
+				{
+					fmt.Sprintf("%x", sha256.Sum256([]byte("e2e [aws_region:east distro:rhel]"))),
+					[][]string{{"aws_region", "east"}, {"distro", "rhel"}},
 				},
-				fmt.Sprintf("%x", sha256.Sum256([]byte("e2e [aws_region:west distro:ubuntu]"))): {
-					{"aws_region", "west"}, {"distro", "ubuntu"},
+				{
+					fmt.Sprintf("%x", sha256.Sum256([]byte("e2e [aws_region:west distro:ubuntu]"))),
+					[][]string{{"aws_region", "west"}, {"distro", "ubuntu"}},
 				},
 			},
 		},
@@ -64,19 +72,19 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 
 				// Since we failed lets output something useful that might help
 				// us debug the problem
-				for uid := range test.variants {
-					bytes, err := os.ReadFile(filepath.Join(outDir, uid, "scenario.tf"))
+				for _, variant := range test.variants {
+					bytes, err := os.ReadFile(filepath.Join(outDir, variant.uid, "scenario.tf"))
 					if err != nil {
 						t.Logf("unable to read failed scenario's generated module: %s", err.Error())
 					} else {
-						t.Logf("%s/scenario.tf\n (%s) %s", uid, test.name, string(bytes))
+						t.Logf("%s/scenario.tf\n (%s) %s", variant.uid, test.name, string(bytes))
 					}
 
-					bytes, err = os.ReadFile(filepath.Join(outDir, uid, "terraform.rc"))
+					bytes, err = os.ReadFile(filepath.Join(outDir, variant.uid, "terraform.rc"))
 					if err != nil {
 						t.Logf("unable to read failed scenario's generated cli config: %s", err.Error())
 					} else {
-						t.Logf("%s/terraform.rc (%s)\n %s", uid, test.name, string(bytes))
+						t.Logf("%s/terraform.rc (%s)\n %s", variant.uid, test.name, string(bytes))
 					}
 				}
 
@@ -89,24 +97,24 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 			expected := &pb.RunScenariosResponse{
 				Responses: []*pb.Scenario_Command_Run_Response{},
 			}
-			for uid, variants := range test.variants {
+			for _, variant := range test.variants {
 				elements := []*pb.Scenario_Filter_Element{}
-				for _, variant := range variants {
+				for _, v := range variant.variants {
 					elements = append(elements, &pb.Scenario_Filter_Element{
-						Key:   variant[0],
-						Value: variant[1],
+						Key:   v[0],
+						Value: v[1],
 					})
 				}
 
 				res := &pb.Scenario_Command_Run_Response{
 					Generate: &pb.Scenario_Command_Generate_Response{
 						TerraformModule: &pb.Terraform_Module{
-							ModulePath: filepath.Join(outDir, uid, "scenario.tf"),
-							RcPath:     filepath.Join(outDir, uid, "terraform.rc"),
+							ModulePath: filepath.Join(outDir, variant.uid, "scenario.tf"),
+							RcPath:     filepath.Join(outDir, variant.uid, "terraform.rc"),
 							ScenarioRef: &pb.Ref_Scenario{
 								Id: &pb.Scenario_ID{
 									Name: test.name,
-									Uid:  uid,
+									Uid:  variant.uid,
 									Variants: &pb.Scenario_Filter_Vector{
 										Elements: elements,
 									},

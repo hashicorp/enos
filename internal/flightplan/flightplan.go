@@ -666,7 +666,7 @@ func filterTerraformMetaAttrs(in hcl.Attributes) (hcl.Attributes, hcl.Diagnostic
 		case "count", "for_each", "depends_on":
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "invalid module attribute",
+				Summary:  "invalid attribute",
 				Detail:   fmt.Sprintf(`Terraform meta-arguments "%s" are not valid`, attr.Name),
 				Subject:  attr.NameRange.Ptr(),
 				Context:  hcl.RangeBetween(attr.NameRange, attr.Range).Ptr(),

@@ -2,6 +2,10 @@ variable "project" {
   type = string
 }
 
+module "setupize" {
+  source = "./modules/setupize"
+}
+
 module "infra" {
   source = "./modules/infra"
   az     = "us-east-1"
@@ -17,11 +21,19 @@ scenario "step_vars" {
     arch   = ["arm", "amd"]
   }
 
+  step "setup" {
+    module = module.setupize
+  }
+
   step "infra_default" {
+    depends_on = ["setup"]
+
     module = module.infra
   }
 
   step "infra_west" {
+    depends_on = [step.setup]
+
     module = module.infra
 
     variables {
@@ -31,6 +43,7 @@ scenario "step_vars" {
 
   step "target" {
     module = module.target
+    depends_on = concat([step.setup], [matrix.distro == "ubuntu" ? step.infra_west : step.infra_default])
 
     variables {
       ami = step.infra_default.amis[matrix.distro][matrix.arch]

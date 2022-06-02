@@ -291,8 +291,245 @@ scenario "backend" {
 `, modulePath),
 		},
 		{
+			desc: "step depends_on invalid string",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = ["nope"]
+    module = module.one
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "step depends_on valid string twice",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = ["one", "one"]
+    module = module.one
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "step depends_on invalid step ref",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = [step.nope]
+    module = module.one
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "step depends_on valid ref twice",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = [step.one, step.one]
+    module = module.one
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "step depends_on valid string and ref mixed",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = ["one", step.one]
+    module = module.one
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "step depends_on valid string",
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = ["one"]
+    module = module.one
+  }
+
+  step "three" {
+    depends_on = ["one", "two"]
+    module = module.one
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "one",
+						Source: modulePath,
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "depends_on",
+						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name: "one",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+								},
+							},
+							{
+								Name: "two",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+								},
+								DependsOn: []string{"one"},
+							},
+							{
+								Name: "three",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+								},
+								DependsOn: []string{"one", "two"},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "step depends_on valid ref",
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on" {
+  step "one" {
+    module = module.one
+  }
+
+  step "two" {
+    depends_on = [step.one]
+    module = module.one
+  }
+
+  step "three" {
+    depends_on = [step.one, step.two]
+    module = module.one
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "one",
+						Source: modulePath,
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "depends_on",
+						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name: "one",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+								},
+							},
+							{
+								Name: "two",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+								},
+								DependsOn: []string{"one"},
+							},
+							{
+								Name: "three",
+								Module: &Module{
+									Name:   "one",
+									Source: modulePath,
+								},
+								DependsOn: []string{"one", "two"},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			desc: "step variables",
 			hcl: fmt.Sprintf(`
+variable "something" {
+  default = "somethingval"
+  type = string
+}
+
 module "one" {
   source = "%s"
 
@@ -329,6 +566,7 @@ scenario "step_vars" {
 	  oneattr            = step.one.oneattr
 	  matrixconcrete     = matrix.input
 	  matrixinherited    = step.one.matrixinput
+	  fromvariables      = var.something
 	}
   }
 }
@@ -384,6 +622,7 @@ scenario "step_vars" {
 										"oneattr":            testMakeStepVarValue(cty.StringVal("oneattrval")),
 										"matrixconcrete":     testMakeStepVarValue(cty.StringVal("matrixinput")),
 										"matrixinherited":    testMakeStepVarValue(cty.StringVal("matrixinput")),
+										"fromvariables":      testMakeStepVarValue(cty.StringVal("somethingval")),
 									},
 								},
 							},

@@ -90,6 +90,16 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			}},
 			fail: true,
 		},
+		{
+			desc: "variables",
+			body: `val = var.aws_availability_zones`,
+			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
+				"var": cty.ObjectVal(map[string]cty.Value{
+					"aws_availability_zones": cty.ListVal([]cty.Value{cty.StringVal("*")}),
+				}),
+			}},
+			value: testMakeStepVarValue(cty.ListVal([]cty.Value{cty.StringVal("*")})),
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			file, diags := hclsyntax.ParseConfig([]byte(test.body), "", hcl.Pos{Line: 1, Column: 1})

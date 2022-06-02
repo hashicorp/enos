@@ -3,6 +3,7 @@ package flightplan
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
@@ -17,6 +18,7 @@ var scenarioStepSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
 		{Name: "module", Required: true},
 		{Name: "providers", Required: false},
+		{Name: "depends_on", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeVariables},
@@ -28,6 +30,7 @@ type ScenarioStep struct {
 	Name      string
 	Module    *Module
 	Providers map[string]*Provider
+	DependsOn []string
 }
 
 // NewScenarioStep returns a new Scenario step
@@ -56,6 +59,13 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 
 	// Decode our name
 	ss.Name = block.Labels[0]
+
+	// Decode depends_on
+	moreDiags = ss.decodeAndValidateDependsOn(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
 
 	// Decode the step module reference
 	moduleAttr, moreDiags := ss.decodeModuleAttribute(block, content, ctx)
@@ -336,6 +346,119 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 	return moduleVal, diags
 }
 
+// decodeAndValidateDependsOn decodess the depends_on attribute and ensures that
+// that the values reference known steps.
+func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	depends, ok := content.Attributes["depends_on"]
+	if !ok {
+		return diags
+	}
+
+	ss.DependsOn = []string{}
+	dependsOnSet := map[string]struct{}{}
+
+	dependsVal, moreDiags := depends.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
+	}
+
+	if dependsVal.IsNull() || !dependsVal.IsWhollyKnown() || !dependsVal.CanIterateElements() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "depends value must be a known object",
+			Subject:  depends.Expr.Range().Ptr(),
+			Context:  depends.Range.Ptr(),
+		})
+	}
+
+	// Get our defined steps from the eval context
+	definedSteps, err := findEvalContextVariable("step", ctx)
+	if err != nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "No prior steps have been defined. You cannot depend_on an undefined step",
+			Detail:   err.Error(),
+			Subject:  depends.Expr.Range().Ptr(),
+			Context:  depends.Range.Ptr(),
+		})
+	}
+
+	// For each depends_on, make sure a matching step is defined and
+	// matches
+	for _, depV := range dependsVal.AsValueSlice() {
+		if depV.Type().Equals(cty.String) {
+			depName := depV.AsString()
+			// We've been given a string value for our dep so it must be
+			// an address to a step. Make sure it's defined.
+			_, ok := definedSteps.AsValueMap()[depName]
+			if !ok {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "step has not been defined",
+					Detail:   fmt.Sprintf("cannot depend_on step %s as it has not been defined", depName),
+					Subject:  depends.Expr.Range().Ptr(),
+					Context:  depends.Range.Ptr(),
+				})
+				continue
+			}
+
+			if _, exists := dependsOnSet[depName]; exists {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "cannot depend on the same step more than once",
+					Detail:   fmt.Sprintf("cannot depend_on step %s more than once", depName),
+					Subject:  depends.Expr.Range().Ptr(),
+					Context:  depends.Range.Ptr(),
+				})
+				continue
+			}
+
+			dependsOnSet[depName] = struct{}{}
+			continue
+		}
+
+		// We've been given some other value. Make sure it's a refernce to an
+		// an existing step, which exists in the eval context as a module value.
+		step := NewModule()
+		err := step.FromCtyValue(depV)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "value of depends_on attribute is not a step",
+				Detail:   err.Error(),
+				Subject:  depends.Expr.Range().Ptr(),
+				Context:  depends.Range.Ptr(),
+			})
+			continue
+		}
+
+		if _, exists := dependsOnSet[step.Name]; exists {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "cannot depend on the same step more than once",
+				Detail:   fmt.Sprintf("cannot depend_on step %s more than once", step.Name),
+				Subject:  depends.Expr.Range().Ptr(),
+				Context:  depends.Range.Ptr(),
+			})
+			continue
+		}
+
+		dependsOnSet[step.Name] = struct{}{}
+		continue
+
+	}
+
+	for name := range dependsOnSet {
+		ss.DependsOn = append(ss.DependsOn, name)
+	}
+	sort.Strings(ss.DependsOn)
+
+	return diags
+}
+
 // decodeAndValidateProvidersAttribute decodess the providers attribute
 // from the content and validates that each sub-attribute references a defined
 // provider.
@@ -588,7 +711,19 @@ func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
 		steps = stepVal.AsValueMap()
 	}
 
-	steps[ss.Name] = cty.ObjectVal(ss.Module.Attrs)
+	vals := map[string]cty.Value{
+		"source": cty.StringVal(ss.Module.Source),
+		"name":   cty.StringVal(ss.Name),
+	}
+	if ss.Module.Version != "" {
+		vals["version"] = cty.StringVal(ss.Module.Version)
+	}
+
+	for k, v := range ss.Module.Attrs {
+		vals[k] = v
+	}
+
+	steps[ss.Name] = cty.ObjectVal(vals)
 	if ctx.Variables == nil {
 		ctx.Variables = map[string]cty.Value{}
 	}

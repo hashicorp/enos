@@ -89,6 +89,10 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 				Key:      v,
 			}}, traversal...)
 			expr = t.Collection
+		case *hclsyntax.ConditionalExpr:
+			// We've hit some logic that likely points to a traversal. Set our
+			// next expression to the truthy side.
+			expr = t.TrueResult
 		default:
 			// Alright, we can't get an absolute value, an absolute traversal, or
 			// an absolute traversal that's been expanded from the eval context.

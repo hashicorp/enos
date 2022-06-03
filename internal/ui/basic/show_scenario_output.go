@@ -15,7 +15,7 @@ func (v *View) ShowScenarioOutput(res *pb.OutputScenariosResponse) error {
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
 
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		v.writeOutputResponse(out.GetOutput())
+		_ = v.writeOutputResponse(out.GetOutput())
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())

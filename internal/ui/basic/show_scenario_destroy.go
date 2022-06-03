@@ -15,7 +15,7 @@ func (v *View) ShowScenarioDestroy(res *pb.DestroyScenariosResponse) error {
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
 
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		v.writeDestroyResponse(out.GetDestroy())
+		_ = v.writeDestroyResponse(out.GetDestroy())
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())

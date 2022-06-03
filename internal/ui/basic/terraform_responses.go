@@ -11,17 +11,23 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-func (v *View) writeInitResponse(init *pb.Terraform_Command_Init_Response) {
+func (v *View) writeInitResponse(init *pb.Terraform_Command_Init_Response) bool {
 	if init == nil {
-		return
+		return true
 	}
 
-	v.writePlainTextResponse("init", init.GetStderr(), init.GetDiagnostics())
+	return v.writePlainTextResponse("init", init.GetStderr(), init.GetDiagnostics())
 }
 
-func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Response) {
+func (v *View) initResponseWriter(init *pb.Terraform_Command_Init_Response) func() bool {
+	return func() bool {
+		return v.writeInitResponse(init)
+	}
+}
+
+func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Response) bool {
 	if validate == nil {
-		return
+		return false
 	}
 
 	if len(validate.GetDiagnostics()) > 0 || !validate.GetValid() {
@@ -34,7 +40,8 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 		v.ui.Error(fmt.Sprintf("  Validation warnings: %d", validate.GetWarningCount()))
 		v.ui.Debug(fmt.Sprintf("  Validation format: %s", validate.GetFormatVersion()))
 		v.WriteDiagnostics(validate.GetDiagnostics())
-		return
+
+		return true
 	}
 
 	msg := "  Validate: success!"
@@ -45,35 +52,61 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 	v.ui.Debug(fmt.Sprintf("  Validation errors: %d", validate.GetErrorCount()))
 	v.ui.Debug(fmt.Sprintf("  Validation warnings: %d", validate.GetWarningCount()))
 	v.ui.Debug(fmt.Sprintf("  Validation format: %s", validate.GetFormatVersion()))
+
+	return false
 }
 
-func (v *View) writePlanResponse(plan *pb.Terraform_Command_Plan_Response) {
+func (v *View) validateResponseWriter(validate *pb.Terraform_Command_Validate_Response) func() bool {
+	return func() bool {
+		return v.writeValidateResponse(validate)
+	}
+}
+
+func (v *View) writePlanResponse(plan *pb.Terraform_Command_Plan_Response) bool {
 	if plan == nil {
-		return
+		return false
 	}
 
-	v.writePlainTextResponse("plan", plan.GetStderr(), plan.GetDiagnostics())
+	return v.writePlainTextResponse("plan", plan.GetStderr(), plan.GetDiagnostics())
 }
 
-func (v *View) writeApplyResponse(apply *pb.Terraform_Command_Apply_Response) {
+func (v *View) planResponseWriter(plan *pb.Terraform_Command_Plan_Response) func() bool {
+	return func() bool {
+		return v.writePlanResponse(plan)
+	}
+}
+
+func (v *View) writeApplyResponse(apply *pb.Terraform_Command_Apply_Response) bool {
 	if apply == nil {
-		return
+		return false
 	}
 
-	v.writePlainTextResponse("apply", apply.GetStderr(), apply.GetDiagnostics())
+	return v.writePlainTextResponse("apply", apply.GetStderr(), apply.GetDiagnostics())
 }
 
-func (v *View) writeDestroyResponse(destroy *pb.Terraform_Command_Destroy_Response) {
+func (v *View) applyResponseWriter(apply *pb.Terraform_Command_Apply_Response) func() bool {
+	return func() bool {
+		return v.writeApplyResponse(apply)
+	}
+}
+
+func (v *View) writeDestroyResponse(destroy *pb.Terraform_Command_Destroy_Response) bool {
 	if destroy == nil {
-		return
+		return false
 	}
 
-	v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy.GetDiagnostics())
+	return v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy.GetDiagnostics())
 }
 
-func (v *View) writeExecResponse(subCmd string, exec *pb.Terraform_Command_Exec_Response) {
+func (v *View) destroyResponseWriter(destroy *pb.Terraform_Command_Destroy_Response) func() bool {
+	return func() bool {
+		return v.writeDestroyResponse(destroy)
+	}
+}
+
+func (v *View) writeExecResponse(subCmd string, exec *pb.Terraform_Command_Exec_Response) bool {
 	if exec == nil {
-		return
+		return false
 	}
 
 	if len(exec.GetDiagnostics()) > 0 {
@@ -90,16 +123,19 @@ func (v *View) writeExecResponse(subCmd string, exec *pb.Terraform_Command_Exec_
 			v.ui.Error(stderr)
 		}
 		v.WriteDiagnostics(exec.GetDiagnostics())
-		return
+
+		return true
 	}
 
 	v.ui.Info(exec.GetStdout())
 	v.ui.Debug(fmt.Sprintf("  Sub-command: %s", subCmd))
+
+	return false
 }
 
-func (v *View) writeOutputResponse(out *pb.Terraform_Command_Output_Response) {
+func (v *View) writeOutputResponse(out *pb.Terraform_Command_Output_Response) bool {
 	if out == nil {
-		return
+		return false
 	}
 
 	if len(out.GetDiagnostics()) > 0 {
@@ -109,20 +145,25 @@ func (v *View) writeOutputResponse(out *pb.Terraform_Command_Output_Response) {
 		}
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
-		return
+
+		return true
 	}
 
+	failed := false
 	for _, meta := range out.GetMeta() {
 		s, err := format.TerraformOutput(meta, 2)
 		if err != nil {
+			failed = true
 			v.WriteDiagnostics(diagnostics.FromErr(err))
 		} else {
 			v.ui.Info(fmt.Sprintf("  %s = %s", meta.GetName(), s))
 		}
 	}
+
+	return failed
 }
 
-func (v *View) writePlainTextResponse(cmd string, stderr string, diagnotsics []*pb.Diagnostic) {
+func (v *View) writePlainTextResponse(cmd string, stderr string, diagnotsics []*pb.Diagnostic) bool {
 	cmd = cases.Title(language.English).String(cmd)
 	if len(diagnotsics) > 0 {
 		msg := fmt.Sprintf("  %s: failed!", cmd)
@@ -134,7 +175,7 @@ func (v *View) writePlainTextResponse(cmd string, stderr string, diagnotsics []*
 			v.ui.Error(stderr)
 		}
 		v.WriteDiagnostics(diagnotsics)
-		return
+		return true
 	}
 
 	msg := fmt.Sprintf("  %s: success!", cmd)
@@ -142,4 +183,13 @@ func (v *View) writePlainTextResponse(cmd string, stderr string, diagnotsics []*
 		msg = fmt.Sprintf("  %s: ✅", cmd)
 	}
 	v.ui.Info(msg)
+	return false
+}
+
+func (v *View) writeUntilFailure(fs []func() bool) {
+	for _, f := range fs {
+		if failed := f(); failed {
+			return
+		}
+	}
 }

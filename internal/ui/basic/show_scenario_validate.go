@@ -15,10 +15,12 @@ func (v *View) ShowScenarioValidate(res *pb.ValidateScenariosResponse) error {
 		scenario.FromRef(out.GetGenerate().GetTerraformModule().GetScenarioRef())
 
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		v.writeGenerateResponse(out.GetGenerate())
-		v.writeInitResponse(out.GetInit())
-		v.writeValidateResponse(out.GetValidate())
-		v.writePlanResponse(out.GetPlan())
+		v.writeUntilFailure([]func() bool{
+			v.generateResponseWriter(out.GetGenerate()),
+			v.initResponseWriter(out.GetInit()),
+			v.validateResponseWriter(out.GetValidate()),
+			v.planResponseWriter(out.GetPlan()),
+		})
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())

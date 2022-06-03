@@ -91,6 +91,35 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			fail: true,
 		},
 		{
+			desc: "complex expression to step variable known value",
+			body: `val = matrix.backend == "consul" ? step.consul.thing : null`,
+			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
+				"matrix": cty.ObjectVal(map[string]cty.Value{
+					"backend": cty.StringVal("consul"),
+				}),
+				"step": cty.ObjectVal(map[string]cty.Value{
+					"consul": cty.ObjectVal(map[string]cty.Value{
+						"thing": testMakeStepVarValue(cty.StringVal("thingval")),
+					}),
+				}),
+			}},
+			value: testMakeStepVarValue(cty.StringVal("thingval")),
+		},
+		{
+			desc: "complex expression to step variable traversal",
+			body: `val = matrix.backend == "consul" ? step.consul.thing : null`,
+			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
+				"matrix": cty.ObjectVal(map[string]cty.Value{
+					"backend": cty.StringVal("consul"),
+				}),
+				"step": cty.ObjectVal(map[string]cty.Value{
+					"consul": cty.ObjectVal(map[string]cty.Value{}),
+				}),
+			}},
+			value:           testMakeStepVarTraversal("step", "consul", "thing"),
+			expectTraversal: true,
+		},
+		{
 			desc: "variables",
 			body: `val = var.aws_availability_zones`,
 			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
@@ -102,7 +131,7 @@ func Test_StepVariableType_Decode(t *testing.T) {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			file, diags := hclsyntax.ParseConfig([]byte(test.body), "", hcl.Pos{Line: 1, Column: 1})
+			file, diags := hclsyntax.ParseConfig([]byte(test.body), "in.hcl", hcl.Pos{Line: 1, Column: 1})
 			if diags.HasErrors() {
 				t.Fatal(diags.Error())
 			}
@@ -116,7 +145,11 @@ func Test_StepVariableType_Decode(t *testing.T) {
 
 			val, diags := hcldec.Decode(file.Body, spec, test.ctx)
 			if diags.HasErrors() != test.fail {
-				t.Fatalf("expected: %t, got: %t, err: %s", test.fail, diags.HasErrors(), diags.Error())
+				t.Fatalf("expected: %t, got: %t, err: %s",
+					test.fail, diags.HasErrors(), testDiagsToError(
+						map[string]*hcl.File{"in.hcl": file}, diags,
+					),
+				)
 			}
 
 			if test.expectValue {

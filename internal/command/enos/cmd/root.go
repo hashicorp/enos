@@ -17,21 +17,20 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:               "enos",
-	Short:             "Enos is your friendly neighborhood test runner",
-	Long:              "Enos is a one stop shop for defining and executing complex test scenarios",
+	Short:             "Enos is a tool for powering Software Quality as Code",
+	Long:              "Enos is a tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language",
 	PersistentPreRun:  rootCmdPreRun,
 	PersistentPostRun: rootCmdPostRun,
 	CompletionOptions: cobra.CompletionOptions{DisableDescriptions: true},
 }
 
 var rootArgs struct {
-	logLevelC  string // client log level
-	logLevelS  string // server log level
-	noWarnings bool
-	listenGRPC string
-	format     string
-	stderrPath string
-	stdoutPath string
+	logLevel       string // client log level
+	logLevelServer string // server log level
+	listenGRPC     string
+	format         string
+	stderrPath     string
+	stdoutPath     string
 }
 
 // ui is our default CLI UI for things that have not been migrated to use
@@ -44,13 +43,13 @@ func Execute() {
 	rootCmd.AddCommand(newScenarioCmd())
 	rootCmd.AddCommand(newFmtCmd())
 
-	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevelC, "client-log-level", "info", "specify the log level for client output")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevelS, "server-log-level", "error", "specify the log level for server output")
-	rootCmd.PersistentFlags().BoolVar(&rootArgs.noWarnings, "silence-warnings", false, "silence warnings")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.listenGRPC, "listen-grpc", "http://localhost:3205", "the gRPC server listen address")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.format, "format", "text", "the output format to use: text or json")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.stdoutPath, "out", "", "the path to write output. If unset it uses STDOUT")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.stderrPath, "error-out", "", "the path to write error output. If unset it uses STDERR")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevel, "log-level", "info", "Log level for client output")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevelServer, "server-log-level", "error", "The log level for server output")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.listenGRPC, "listen-grpc", "http://localhost:3205", "The gRPC server listen address")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.format, "format", "text", "Output format to use: text or json")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.stdoutPath, "out", "", "Path to write output. (default $STDOUT)")
+	rootCmd.PersistentFlags().StringVar(&rootArgs.stderrPath, "error-out", "", "Path to write error output. (default $STDERR)")
+	rootCmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagsnostics are created")
 
 	if err := rootCmd.Execute(); err != nil {
 		var exitErr *status.ErrExit
@@ -77,8 +76,9 @@ func Execute() {
 
 func setupCLIUI() error {
 	uiCfg := &pb.UI_Settings{
-		Width:  78,
-		Format: pb.UI_Settings_FORMAT_BASIC_TEXT,
+		Width:          78,
+		Format:         pb.UI_Settings_FORMAT_BASIC_TEXT,
+		FailOnWarnings: scenarioCfg.tfConfig.FailOnWarnings,
 	}
 
 	if rootArgs.format == "json" {
@@ -102,7 +102,7 @@ func setupCLIUI() error {
 		uiCfg.StdoutPath = rootArgs.stdoutPath
 	}
 
-	switch rootArgs.logLevelC {
+	switch rootArgs.logLevel {
 	case "debug", "DEBUG", "Debug", "d":
 		uiCfg.Level = pb.UI_Settings_LEVEL_DEBUG
 	case "error", "ERROR", "Error", "e", "err":

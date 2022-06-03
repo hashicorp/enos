@@ -25,5 +25,5 @@ func (v *View) ShowScenarioValidate(res *pb.ValidateScenariosResponse) error {
 
 	v.WriteDiagnostics(res.GetDiagnostics())
 
-	return status.ValidateScenarios(res)
+	return status.ValidateScenarios(v.settings.GetFailOnWarnings(), res)
 }

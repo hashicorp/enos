@@ -20,7 +20,7 @@ func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
 
 	v.WriteDiagnostics(res.GetDiagnostics())
 
-	return status.GenerateScenarios(res)
+	return status.GenerateScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response) bool {
@@ -28,7 +28,8 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response)
 		return false
 	}
 
-	if len(out.GetDiagnostics()) > 0 {
+	diags := out.GetDiagnostics()
+	if diagnostics.HasErrors(diags) || (diagnostics.HasWarnings(diags) && v.settings.FailOnWarnings) {
 		msg := "  Generate: failed!"
 		if v.settings.IsTty {
 			msg = "  Generate: ❌"
@@ -37,14 +38,22 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response)
 		v.ui.Error(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
-
 		return true
 	}
 
-	msg := "  Generate: success!"
-	if v.settings.IsTty {
-		msg = "  Generate: ✅"
+	var msg string
+	if diagnostics.HasWarnings(diags) {
+		msg = "  Generate: success! (warnings present)"
+		if v.settings.IsTty {
+			msg = "  Generate: ⚠️"
+		}
+	} else {
+		msg = "  Generate: success!"
+		if v.settings.IsTty {
+			msg = "  Generate: ✅"
+		}
 	}
+
 	v.ui.Info(msg)
 	v.ui.Debug(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
 	v.ui.Debug(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))

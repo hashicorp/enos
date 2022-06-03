@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/execute"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -18,30 +19,30 @@ func (s *ServiceV1) ValidateScenarios(
 	error,
 ) {
 	res := &pb.ValidateScenariosResponse{}
-	mods, diags, err := decodeAndGenerate(
-		req.GetWorkspace(), req.GetFilter(),
-	)
-	res.Diagnostics = diags
-	if err != nil {
-		for _, mod := range mods {
+
+	genRes := decodeAndGenerate(req.GetWorkspace(), req.GetFilter())
+	res.Diagnostics = genRes.GetDiagnostics()
+	if diagnostics.HasErrors(res.GetDiagnostics()) ||
+		(req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings() && diagnostics.HasWarnings(res.GetDiagnostics())) {
+		for _, gres := range genRes.GetResponses() {
 			res.Responses = append(res.Responses, &pb.Scenario_Command_Validate_Response{
-				Generate: mod,
+				Generate: gres,
 			})
 		}
 
-		return res, err
+		return res, nil
 	}
 
-	for _, mod := range mods {
-		res.Responses = append(res.Responses,
-			execute.NewExecutor(
-				execute.WithProtoModuleAndConfig(
-					mod.GetTerraformModule(),
-					req.GetWorkspace().GetTfExecCfg(),
-				),
-			).Validate(ctx),
-		)
+	for _, gres := range genRes.GetResponses() {
+		execRes := execute.NewExecutor(
+			execute.WithProtoModuleAndConfig(
+				gres.GetTerraformModule(),
+				req.GetWorkspace().GetTfExecCfg(),
+			),
+		).Validate(ctx)
+		execRes.Generate = gres
+		res.Responses = append(res.Responses, execRes)
 	}
 
-	return res, err
+	return res, nil
 }

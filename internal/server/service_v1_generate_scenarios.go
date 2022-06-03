@@ -14,13 +14,5 @@ func (s *ServiceV1) GenerateScenarios(
 	*pb.GenerateScenariosResponse,
 	error,
 ) {
-	resps, diags, err := decodeAndGenerate(
-		req.GetWorkspace(),
-		req.GetFilter(),
-	)
-
-	return &pb.GenerateScenariosResponse{
-		Diagnostics: diags,
-		Responses:   resps,
-	}, err
+	return decodeAndGenerate(req.GetWorkspace(), req.GetFilter()), nil
 }

@@ -37,5 +37,5 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	v.ui.RenderTable(header, rows)
 	v.WriteDiagnostics(res.GetDiagnostics())
 
-	return status.ListScenarios(res)
+	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)
 }

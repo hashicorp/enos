@@ -18,14 +18,15 @@ import (
 
 // Config is the Terraform CLI executor configuration
 type Config struct {
-	UI         *terminal.UI      // UI to use for input/output
-	BinPath    string            // where terraform binary is
-	ConfigPath string            // where the terraformrc config is
-	DirPath    string            // what directory to execute the command in
-	Env        map[string]string // envrionment variables
-	ExecSubCmd string            // raw command to run
-	OutputName string            // output name
-	Flags      *pb.Terraform_Executor_Config_Flags
+	UI             *terminal.UI      // UI to use for input/output
+	BinPath        string            // where terraform binary is
+	ConfigPath     string            // where the terraformrc config is
+	DirPath        string            // what directory to execute the command in
+	Env            map[string]string // envrionment variables
+	ExecSubCmd     string            // raw command to run
+	OutputName     string            // output name
+	FailOnWarnings bool              // fail on warning diagnostics
+	Flags          *pb.Terraform_Executor_Config_Flags
 }
 
 // Proto returns the instance of config as proto terraform executor config
@@ -38,6 +39,7 @@ func (c *Config) Proto() *pb.Terraform_Executor_Config {
 		Env:            c.Env,
 		UserSubCommand: c.ExecSubCmd,
 		OutputFilter:   c.OutputName,
+		FailOnWarnings: c.FailOnWarnings,
 	}
 }
 
@@ -51,6 +53,7 @@ func (c *Config) FromProto(pcfg *pb.Terraform_Executor_Config) {
 	c.Env = pcfg.GetEnv()
 	c.ExecSubCmd = pcfg.GetUserSubCommand()
 	c.OutputName = pcfg.GetOutputFilter()
+	c.FailOnWarnings = pcfg.GetFailOnWarnings()
 }
 
 func (c *Config) tfPath() (string, error) {

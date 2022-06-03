@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -16,13 +17,10 @@ func (s *ServiceV1) ListScenarios(
 ) {
 	res := &pb.ListScenariosResponse{}
 
-	scenarios, diags, err := decodeAndFilter(
-		req.GetWorkspace().GetFlightplan(),
-		req.GetFilter(),
-	)
+	scenarios, diags := decodeAndFilter(req.GetWorkspace().GetFlightplan(), req.GetFilter())
 	res.Diagnostics = diags
-	if err != nil {
-		return res, err
+	if diagnostics.HasErrors(diags) {
+		return res, nil
 	}
 
 	if len(scenarios) > 0 {

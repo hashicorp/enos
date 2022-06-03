@@ -20,28 +20,32 @@ import (
 )
 
 // HasErrors returns true if any diagnostic has an error severity.
-func HasErrors(diags []*pb.Diagnostic) bool {
-	if len(diags) < 1 {
-		return false
-	}
-
-	for _, diag := range diags {
-		if diag.Severity == pb.Diagnostic_SEVERITY_ERROR {
-			return true
-		}
-	}
-
-	return false
+func HasErrors(diags ...[]*pb.Diagnostic) bool {
+	return hasSeverity(pb.Diagnostic_SEVERITY_ERROR, diags...)
 }
 
 // HasWarnings returns true if any diagnostic has a warning severity.
-func HasWarnings(diags []*pb.Diagnostic) bool {
+func HasWarnings(diags ...[]*pb.Diagnostic) bool {
+	return hasSeverity(pb.Diagnostic_SEVERITY_WARNING, diags...)
+}
+
+func hasSeverity(sev pb.Diagnostic_Severity, diags ...[]*pb.Diagnostic) bool {
 	if len(diags) < 1 {
 		return false
 	}
 
-	for _, diag := range diags {
-		if diag.Severity == pb.Diagnostic_SEVERITY_WARNING {
+	// Default to error diags if we're given a severity we don't understand
+	if sev != pb.Diagnostic_SEVERITY_WARNING {
+		sev = pb.Diagnostic_SEVERITY_ERROR
+	}
+
+	combined := []*pb.Diagnostic{}
+	for i := range diags {
+		combined = append(combined, diags[i]...)
+	}
+
+	for _, diag := range combined {
+		if diag.Severity == sev {
 			return true
 		}
 	}

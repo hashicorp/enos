@@ -168,7 +168,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 	scenarioCfg.fp = fp
 
 	if len(diags) > 0 {
-		if rootArgs.noWarnings && !diags.HasErrors() {
+		if !diags.HasErrors() && !scenarioCfg.tfConfig.FailOnWarnings {
 			return nil
 		}
 

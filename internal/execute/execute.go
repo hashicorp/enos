@@ -38,11 +38,6 @@ type TextOutput struct {
 	Stderr *strings.Builder
 }
 
-// RunResponse is the response output from the run command
-type RunResponse struct {
-	ValidateResponse *pb.Scenario_Command_Validate_Response
-}
-
 // NewExecutor takes options and returns a new validated generator
 func NewExecutor(opts ...Opt) *Executor {
 	ex := &Executor{}
@@ -107,6 +102,10 @@ func (e *Executor) Validate(ctx context.Context) *pb.Scenario_Command_Validate_R
 		res.Validate.ErrorCount = int64(jsonOut.ErrorCount)
 		res.Validate.WarningCount = int64(jsonOut.WarningCount)
 		res.Validate.Diagnostics = append(res.Validate.Diagnostics, diagnostics.FromTFJSON(jsonOut.Diagnostics)...)
+
+		if e.TFConfig.FailOnWarnings && !res.Validate.Valid {
+			return res
+		}
 	}
 
 	planOut := NewTextOutput()
@@ -146,7 +145,23 @@ func (e *Executor) Launch(ctx context.Context) *pb.Scenario_Command_Launch_Respo
 	res.Validate = validateRes.GetValidate()
 	res.Plan = validateRes.GetPlan()
 
-	if len(res.GetDiagnostics()) > 0 {
+	if diagnostics.HasErrors(
+		res.GetDiagnostics(),
+		res.GetGenerate().GetDiagnostics(),
+		res.GetInit().GetDiagnostics(),
+		res.GetValidate().GetDiagnostics(),
+		res.GetPlan().GetDiagnostics(),
+	) {
+		return res
+	}
+
+	if e.TFConfig.FailOnWarnings && diagnostics.HasWarnings(
+		res.GetDiagnostics(),
+		res.GetGenerate().GetDiagnostics(),
+		res.GetInit().GetDiagnostics(),
+		res.GetValidate().GetDiagnostics(),
+		res.GetPlan().GetDiagnostics(),
+	) {
 		return res
 	}
 
@@ -204,7 +219,25 @@ func (e *Executor) Run(ctx context.Context) *pb.Scenario_Command_Run_Response {
 	res.Plan = launchRes.GetPlan()
 	res.Apply = launchRes.GetApply()
 
-	if len(res.GetDiagnostics()) > 0 {
+	if diagnostics.HasErrors(
+		res.GetDiagnostics(),
+		res.GetGenerate().GetDiagnostics(),
+		res.GetInit().GetDiagnostics(),
+		res.GetValidate().GetDiagnostics(),
+		res.GetPlan().GetDiagnostics(),
+		res.GetApply().GetDiagnostics(),
+	) {
+		return res
+	}
+
+	if e.TFConfig.FailOnWarnings && diagnostics.HasWarnings(
+		res.GetDiagnostics(),
+		res.GetGenerate().GetDiagnostics(),
+		res.GetInit().GetDiagnostics(),
+		res.GetValidate().GetDiagnostics(),
+		res.GetPlan().GetDiagnostics(),
+		res.GetApply().GetDiagnostics(),
+	) {
 		return res
 	}
 

@@ -6,19 +6,19 @@ import (
 )
 
 var (
-	// The git commit that was compiled. These will be filled in by the
-	// compiler.
+	// GitCommit is the git commit that was compiled. These will be filled in by the
+	// linker during compilation.
 	GitCommit string
 
-	// The main version number that is being run at the moment.
+	// Version is the main version number that is being run at the moment.
 	//
 	// Version must conform to the format expected by github.com/hashicorp/go-version
 	// for tests to work.
-	Version = "0.0.4"
+	Version = "0.0.5"
 
-	// A pre-release marker for the version. If this is "" (empty string)
-	// then it means that it is a final release. Otherwise, this is a pre-release
-	// such as "dev" (in development), "beta", "rc1", etc.
+	// VersionPrerelease is a pre-release marker for the version. If this is ""
+	// (empty string) then it means that it is a final release. Otherwise, this
+	// is a pre-release such as "dev" (in development), "beta", "rc1", etc.
 	VersionPrerelease = ""
 )
 

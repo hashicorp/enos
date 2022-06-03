@@ -28,25 +28,16 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 		name string
 		// We assume the variants will result in one variant for each test
 		variants [][]string
-		uid      string
 	}{
 		{
 			"scenario_generate_pass_0",
 			"test",
-			[][]string{{"foo", "matrixfoo"}},
-			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixfoo]"))),
-		},
-		{
-			"scenario_generate_pass_0",
-			"test",
-			[][]string{{"foo", "matrixbar"}},
-			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixbar]"))),
+			[][]string{{"foo", "matrixbar"}, {"foo", "matrixfoo"}},
 		},
 		{
 			"scenario_generate_complex_module_source",
 			"path",
-			[][]string{},
-			fmt.Sprintf("%x", sha256.Sum256([]byte("path"))),
+			[][]string{{"skip", "keep"}, {"skip", "skip"}},
 		},
 	} {
 		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
@@ -58,44 +49,47 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
 			require.NoError(t, err)
 
-			filter := test.name
-			elements := []*pb.Scenario_Filter_Element{}
-			for _, variant := range test.variants {
-				filter = fmt.Sprintf("%s %s:%s", filter, variant[0], variant[1])
-				elements = append(elements, &pb.Scenario_Filter_Element{
-					Key:   variant[0],
-					Value: variant[1],
-				})
-			}
-
-			cmd := fmt.Sprintf("scenario validate --chdir %s --out %s --format json %s", path, outDir, filter)
+			cmd := fmt.Sprintf("scenario validate --chdir %s --out %s --format json", path, outDir)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			expected := &pb.ValidateScenariosResponse{
-				Responses: []*pb.Scenario_Command_Validate_Response{
-					{
-						Generate: &pb.Scenario_Command_Generate_Response{
-							TerraformModule: &pb.Terraform_Module{
-								ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
-								RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),
-								ScenarioRef: &pb.Ref_Scenario{
-									Id: &pb.Scenario_ID{
-										Name: test.name,
-										Uid:  test.uid,
-										Variants: &pb.Scenario_Filter_Vector{
-											Elements: elements,
-										},
+				Responses: []*pb.Scenario_Command_Validate_Response{},
+			}
+
+			for _, variant := range test.variants {
+				name := test.name
+				elements := []*pb.Scenario_Filter_Element{}
+				if len(variant) == 2 {
+					name = fmt.Sprintf("%s [%s:%s]", name, variant[0], variant[1])
+					elements = append(elements, &pb.Scenario_Filter_Element{
+						Key:   variant[0],
+						Value: variant[1],
+					})
+				}
+				uid := fmt.Sprintf("%x", sha256.Sum256([]byte(name)))
+
+				expected.Responses = append(expected.Responses, &pb.Scenario_Command_Validate_Response{
+					Generate: &pb.Scenario_Command_Generate_Response{
+						TerraformModule: &pb.Terraform_Module{
+							ModulePath: filepath.Join(outDir, uid, "scenario.tf"),
+							RcPath:     filepath.Join(outDir, uid, "terraform.rc"),
+							ScenarioRef: &pb.Ref_Scenario{
+								Id: &pb.Scenario_ID{
+									Name: test.name,
+									Uid:  uid,
+									Variants: &pb.Scenario_Filter_Vector{
+										Elements: elements,
 									},
 								},
 							},
 						},
-						Validate: &pb.Terraform_Command_Validate_Response{
-							Valid:         true,
-							FormatVersion: "1.0",
-						},
 					},
-				},
+					Validate: &pb.Terraform_Command_Validate_Response{
+						Valid:         true,
+						FormatVersion: "1.0",
+					},
+				})
 			}
 
 			got := &pb.ValidateScenariosResponse{}

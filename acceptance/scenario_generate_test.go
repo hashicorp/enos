@@ -63,8 +63,8 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 		{
 			"scenario_generate_complex_module_source",
 			"path",
-			[][]string{},
-			fmt.Sprintf("%x", sha256.Sum256([]byte("path"))),
+			[][]string{{"skip", "keep"}},
+			fmt.Sprintf("%x", sha256.Sum256([]byte("path [skip:keep]"))),
 		},
 	} {
 		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {

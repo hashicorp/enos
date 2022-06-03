@@ -19,6 +19,7 @@ var scenarioStepSchema = &hcl.BodySchema{
 		{Name: "module", Required: true},
 		{Name: "providers", Required: false},
 		{Name: "depends_on", Required: false},
+		{Name: "skip_step", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeVariables},
@@ -31,6 +32,7 @@ type ScenarioStep struct {
 	Module    *Module
 	Providers map[string]*Provider
 	DependsOn []string
+	Skip      bool
 }
 
 // NewScenarioStep returns a new Scenario step
@@ -59,6 +61,14 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 
 	// Decode our name
 	ss.Name = block.Labels[0]
+
+	// Decode skip
+	moreDiags, shouldSkip := ss.decodeSkip(content, ctx)
+	diags = diags.Extend(moreDiags)
+	ss.Skip = shouldSkip
+	if moreDiags.HasErrors() || shouldSkip {
+		return diags
+	}
 
 	// Decode depends_on
 	moreDiags = ss.decodeAndValidateDependsOn(content, ctx)
@@ -99,10 +109,63 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 	return diags
 }
 
+// decodeSkip decodes the the "skip_step" attribute and returns a boolean and
+// diagnostics of whether or not the step should be skipped.
+func (ss *ScenarioStep) decodeSkip(
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) (
+	hcl.Diagnostics,
+	bool,
+) {
+	var diags hcl.Diagnostics
+
+	skip, ok := content.Attributes["skip_step"]
+	if !ok {
+		return diags, false
+	}
+
+	val, moreDiags := skip.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags, false
+	}
+
+	if val.IsNull() || !val.IsWhollyKnown() {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "skip_step must be a known value",
+			Subject:  skip.Expr.Range().Ptr(),
+		})
+	}
+
+	if val.Type() != cty.Bool {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "skip_step must be a bool",
+			Detail:   fmt.Sprintf("skip_step must be a bool, not %s", val.Type().FriendlyName()),
+			Subject:  skip.Expr.Range().Ptr(),
+		})
+	}
+
+	if diags.HasErrors() {
+		return diags, false
+	}
+
+	return diags, val.True()
+}
+
 // decodeModuleAttribute decodes the module attribute from the content and ensures
 // that it has the required source and name fields. It returns the HCL attribute
 // for further validation later.
-func (ss *ScenarioStep) decodeModuleAttribute(block *hcl.Block, content *hcl.BodyContent, ctx *hcl.EvalContext) (*hcl.Attribute, hcl.Diagnostics) {
+func (ss *ScenarioStep) decodeModuleAttribute(
+	block *hcl.Block,
+	content *hcl.BodyContent,
+	ctx *hcl.EvalContext,
+) (
+	*hcl.Attribute,
+	hcl.Diagnostics,
+) {
 	var diags hcl.Diagnostics
 
 	module, ok := content.Attributes["module"]

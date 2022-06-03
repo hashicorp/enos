@@ -7,8 +7,13 @@ module "backward" {
 }
 
 scenario "path" {
+  matrix {
+    skip = ["skip", "keep"]
+  }
+
   step "forward" {
-    module = module.forward
+    skip_step = matrix.skip == "skip"
+    module    = module.forward
   }
 
   step "backward" {

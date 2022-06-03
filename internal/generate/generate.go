@@ -414,6 +414,10 @@ func (g *Generator) maybeWriteProviderConfig(rootBody *hclwrite.Body) {
 func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 	// module for each step
 	for i, step := range g.Scenario.Steps {
+		if step.Skip {
+			continue
+		}
+
 		block := rootBody.AppendNewBlock("module", []string{step.Name})
 		body := block.Body()
 

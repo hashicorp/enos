@@ -291,6 +291,61 @@ scenario "backend" {
 `, modulePath),
 		},
 		{
+			desc: "step skip invalid value",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "skipper" {
+  step "one" {
+    skip_step = "mayonaise"
+    module = module.one
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "step skip valid",
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "skipper" {
+  step "one" {
+    skip_step = true
+    module = module.one
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "one",
+						Source: modulePath,
+					},
+				},
+				Scenarios: []*Scenario{
+					{
+						Name:         "skipper",
+						TerraformCLI: DefaultTerraformCLI(),
+						Steps: []*ScenarioStep{
+							{
+								Name:   "one",
+								Skip:   true,
+								Module: NewModule(),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			desc: "step depends_on invalid string",
 			fail: true,
 			hcl: fmt.Sprintf(`

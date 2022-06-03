@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 
-	"github.com/hashicorp/enos/internal/version"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/version"
 )
 
 // GetVersion returns the version information
@@ -17,6 +17,6 @@ func (s *ServiceV1) GetVersion(
 ) {
 	return &pb.GetVersionResponse{
 		Version: version.Version,
-		GitSha:  version.GitSHA,
+		GitSha:  version.GitCommit,
 	}, nil
 }

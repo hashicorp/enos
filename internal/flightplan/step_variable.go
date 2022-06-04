@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/customdecode"
@@ -90,9 +91,50 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 			}}, traversal...)
 			expr = t.Collection
 		case *hclsyntax.ConditionalExpr:
-			// We've hit some logic that likely points to a traversal. Set our
-			// next expression to the truthy side.
-			expr = t.TrueResult
+			// We've hit a conditional expression that cannot be fully known.
+			// If we're able to determine the result of the conditional we
+			// can set our expression to the correct result and try and determine
+			// if it's a valid step reference.
+			condResult, moreDiags := t.Condition.Value(ctx)
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				// Return the core expression diags to help troubleshooting
+				_, moreDiags := expr.Value(ctx)
+				return traversal, diags.Extend(moreDiags)
+			}
+
+			if condResult.IsNull() || !condResult.IsKnown() {
+				return traversal, diags.Append(&hcl.Diagnostic{
+					Severity:    hcl.DiagError,
+					Summary:     "unknown or null condition",
+					Detail:      "The condition value is null or unknown. Conditions must either be true or false.",
+					Subject:     t.Condition.Range().Ptr(),
+					Context:     t.SrcRange.Ptr(),
+					Expression:  t.Condition,
+					EvalContext: ctx,
+				})
+			}
+
+			condResult, err := convert.Convert(condResult, cty.Bool)
+			if err != nil {
+				return traversal, diags.Append(&hcl.Diagnostic{
+					Severity:    hcl.DiagError,
+					Summary:     "Incorrect condition type",
+					Detail:      "The condition expression must be of type bool.",
+					Subject:     t.Condition.Range().Ptr(),
+					Context:     t.SrcRange.Ptr(),
+					Expression:  t.Condition,
+					EvalContext: ctx,
+				})
+			}
+
+			// Unmark result before testing for truthiness
+			condResult, _ = condResult.UnmarkDeep()
+			if condResult.True() {
+				expr = t.TrueResult
+			} else {
+				expr = t.FalseResult
+			}
 		default:
 			// Alright, we can't get an absolute value, an absolute traversal, or
 			// an absolute traversal that's been expanded from the eval context.

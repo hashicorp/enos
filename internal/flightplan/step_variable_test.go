@@ -91,7 +91,7 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "complex expression to step variable known value",
+			desc: "complex expression to step variable known value true",
 			body: `val = matrix.backend == "consul" ? step.consul.thing : null`,
 			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
 				"matrix": cty.ObjectVal(map[string]cty.Value{
@@ -106,11 +106,40 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			value: testMakeStepVarValue(cty.StringVal("thingval")),
 		},
 		{
-			desc: "complex expression to step variable traversal",
+			desc: "complex expression to step variable traversal true",
 			body: `val = matrix.backend == "consul" ? step.consul.thing : null`,
 			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
 				"matrix": cty.ObjectVal(map[string]cty.Value{
 					"backend": cty.StringVal("consul"),
+				}),
+				"step": cty.ObjectVal(map[string]cty.Value{
+					"consul": cty.ObjectVal(map[string]cty.Value{}),
+				}),
+			}},
+			value:           testMakeStepVarTraversal("step", "consul", "thing"),
+			expectTraversal: true,
+		},
+		{
+			desc: "complex expression to step variable known value false",
+			body: `val = matrix.backend == "consul" ? null : step.consul.thing`,
+			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
+				"matrix": cty.ObjectVal(map[string]cty.Value{
+					"backend": cty.StringVal("raft"),
+				}),
+				"step": cty.ObjectVal(map[string]cty.Value{
+					"consul": cty.ObjectVal(map[string]cty.Value{
+						"thing": testMakeStepVarValue(cty.StringVal("thingval")),
+					}),
+				}),
+			}},
+			value: testMakeStepVarValue(cty.StringVal("thingval")),
+		},
+		{
+			desc: "complex expression to step variable traversal false",
+			body: `val = matrix.backend == "consul" ? null : step.consul.thing`,
+			ctx: &hcl.EvalContext{Variables: map[string]cty.Value{
+				"matrix": cty.ObjectVal(map[string]cty.Value{
+					"backend": cty.StringVal("raft"),
 				}),
 				"step": cty.ObjectVal(map[string]cty.Value{
 					"consul": cty.ObjectVal(map[string]cty.Value{}),

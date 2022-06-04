@@ -82,26 +82,6 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 		d := &pb.Diagnostic{
 			Summary: din.Summary,
 			Detail:  din.Detail,
-			Range: &pb.Range{
-				Filename: din.Range.Filename,
-				Start: &pb.Range_Pos{
-					Line:   int64(din.Range.Start.Line),
-					Column: int64(din.Range.Start.Column),
-					Byte:   int64(din.Range.Start.Byte),
-				},
-				End: &pb.Range_Pos{
-					Line:   int64(din.Range.End.Line),
-					Column: int64(din.Range.End.Column),
-					Byte:   int64(din.Range.End.Byte),
-				},
-			},
-			Snippet: &pb.Diagnostic_Snippet{
-				Context:              *din.Snippet.Context,
-				Code:                 din.Snippet.Code,
-				StartLine:            int64(din.Snippet.StartLine),
-				HighlightStartOffset: int64(din.Snippet.HighlightStartOffset),
-				HighlightEndOffset:   int64(din.Snippet.HighlightEndOffset),
-			},
 		}
 
 		switch din.Severity {
@@ -113,24 +93,49 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 			d.Severity = pb.Diagnostic_SEVERITY_UNKNOWN
 		}
 
-		snippet := &pb.Diagnostic_Snippet{
-			Context:              *din.Snippet.Context,
-			Code:                 din.Snippet.Code,
-			StartLine:            int64(din.Snippet.StartLine),
-			HighlightStartOffset: int64(din.Snippet.HighlightStartOffset),
-			HighlightEndOffset:   int64(din.Snippet.HighlightEndOffset),
-			Values:               []*pb.Diagnostic_ExpressionValue{},
-		}
-		for i, expr := range din.Snippet.Values {
-			if i == 0 {
-				snippet.Values = []*pb.Diagnostic_ExpressionValue{}
+		if din.Range != nil {
+			d.Range = &pb.Range{
+				Filename: din.Range.Filename,
 			}
-			snippet.Values = append(snippet.Values, &pb.Diagnostic_ExpressionValue{
-				Traversal: expr.Traversal,
-				Statement: expr.Statement,
-			})
+
+			if d.Range.Start != nil {
+				d.Range.Start = &pb.Range_Pos{
+					Line:   int64(din.Range.Start.Line),
+					Column: int64(din.Range.Start.Column),
+					Byte:   int64(din.Range.Start.Byte),
+				}
+			}
+			if d.Range.End != nil {
+				d.Range.End = &pb.Range_Pos{
+					Line:   int64(din.Range.End.Line),
+					Column: int64(din.Range.End.Column),
+					Byte:   int64(din.Range.End.Byte),
+				}
+			}
 		}
-		d.Snippet = snippet
+
+		if din.Snippet != nil {
+			d.Snippet = &pb.Diagnostic_Snippet{
+				Code:                 din.Snippet.Code,
+				StartLine:            int64(din.Snippet.StartLine),
+				HighlightStartOffset: int64(din.Snippet.HighlightStartOffset),
+				HighlightEndOffset:   int64(din.Snippet.HighlightEndOffset),
+			}
+
+			if din.Snippet.Context != nil {
+				d.Snippet.Context = *din.Snippet.Context
+			}
+
+			for i, expr := range din.Snippet.Values {
+				if i == 0 {
+					d.Snippet.Values = []*pb.Diagnostic_ExpressionValue{}
+				}
+				d.Snippet.Values = append(d.Snippet.Values, &pb.Diagnostic_ExpressionValue{
+					Traversal: expr.Traversal,
+					Statement: expr.Statement,
+				})
+			}
+		}
 
 		out = append(out, d)
 	}

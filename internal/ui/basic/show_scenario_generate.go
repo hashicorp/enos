@@ -3,6 +3,7 @@ package basic
 import (
 	"fmt"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -14,7 +15,7 @@ func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		v.writeGenerateResponse(out)
+		_ = v.writeGenerateResponse(out)
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())
@@ -22,9 +23,9 @@ func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
 	return status.GenerateScenarios(res)
 }
 
-func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response) {
+func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response) bool {
 	if out == nil {
-		return
+		return false
 	}
 
 	if len(out.GetDiagnostics()) > 0 {
@@ -36,7 +37,8 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response)
 		v.ui.Error(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
-		return
+
+		return true
 	}
 
 	msg := "  Generate: success!"
@@ -47,4 +49,12 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Command_Generate_Response)
 	v.ui.Debug(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
 	v.ui.Debug(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 	v.WriteDiagnostics(out.GetDiagnostics())
+
+	return diagnostics.HasErrors(out.GetDiagnostics())
+}
+
+func (v *View) generateResponseWriter(res *pb.Scenario_Command_Generate_Response) func() bool {
+	return func() bool {
+		return v.writeGenerateResponse(res)
+	}
 }

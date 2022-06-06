@@ -7,7 +7,7 @@ variable "tags" {
 terraform_cli "default" {
   provider_installation {
     network_mirror {
-      url = "https://enos-provider-current.s3.amazonaws.com/"
+      url     = "https://enos-provider-current.s3.amazonaws.com/"
       include = ["hashicorp.com/qti/enos"]
     }
     direct {
@@ -95,7 +95,7 @@ scenario "e2e" {
 
   terraform_cli = terraform_cli.default
   terraform     = terraform.default
-  providers     = [
+  providers = [
     local.aws_provider[matrix.aws_region],
     local.enos_provider[matrix.distro],
   ]

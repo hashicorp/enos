@@ -434,83 +434,75 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 }
 
 func appendSourceSnippets(buf *bytes.Buffer, diag *pb.Diagnostic, color *colorstring.Colorize) {
-	if diag.Range == nil {
+	if diag.GetRange() == nil {
+		fmt.Fprintf(buf, "  (source code not available)\n")
 		return
 	}
 
-	if diag.Snippet == nil {
-		// This should generally not happen, as long as sources are always
-		// loaded through the main loader. We may load things in other
-		// ways in weird cases, so we'll tolerate it at the expense of
-		// a not-so-helpful error message.
-		fmt.Fprintf(buf, "  on %s line %d:\n  (source code not available)\n", diag.Range.Filename, diag.Range.Start.Line)
-	} else {
-		snippet := diag.Snippet
-		code := snippet.Code
+	code := diag.GetSnippet().GetCode()
 
-		var contextStr string
-		if snippet.Context != "" {
-			contextStr = fmt.Sprintf(", in %s", snippet.Context)
-		}
-		fmt.Fprintf(buf, "  on %s line %d%s:\n", diag.Range.Filename, diag.Range.Start.Line, contextStr)
+	var contextStr string
+	if diag.GetSnippet().GetContext() != "" {
+		contextStr = fmt.Sprintf(", in %s", diag.GetSnippet().GetContext())
+	}
+	fmt.Fprintf(buf, "  on %s line %d%s:\n", diag.GetRange().GetFilename(), diag.GetRange().GetStart().GetLine(), contextStr)
 
-		// Split the snippet and render the highlighted section with underlines
-		start := int(snippet.HighlightStartOffset)
-		end := int(snippet.HighlightEndOffset)
+	// Split the snippet and render the highlighted section with underlines
+	start := int(diag.GetSnippet().GetHighlightStartOffset())
+	end := int(diag.GetSnippet().GetHighlightEndOffset())
 
-		// Only buggy diagnostics can have an end range before the start, but
-		// we need to ensure we don't crash here if that happens.
-		if end < start {
-			end = start + 1
-			if end > len(code) {
-				end = len(code)
-			}
-		}
-
-		// If either start or end is out of range for the code buffer then
-		// we'll cap them at the bounds just to avoid a panic, although
-		// this would happen only if there's a bug in the code generating
-		// the snippet objects.
-		if start < 0 {
-			start = 0
-		} else if start > len(code) {
-			start = len(code)
-		}
-		if end < 0 {
-			end = 0
-		} else if end > len(code) {
+	// Only buggy diagnostics can have an end range before the start, but
+	// we need to ensure we don't crash here if that happens.
+	if end < start {
+		end = start + 1
+		if end > len(code) {
 			end = len(code)
 		}
+	}
 
-		before, highlight, after := code[0:start], code[start:end], code[end:]
-		code = fmt.Sprintf(color.Color("%s[underline]%s[reset]%s"), before, highlight, after)
+	// If either start or end is out of range for the code buffer then
+	// we'll cap them at the bounds just to avoid a panic, although
+	// this would happen only if there's a bug in the code generating
+	// the snippet objects.
+	if start < 0 {
+		start = 0
+	} else if start > len(code) {
+		start = len(code)
+	}
+	if end < 0 {
+		end = 0
+	} else if end > len(code) {
+		end = len(code)
+	}
 
-		// Split the snippet into lines and render one at a time
-		lines := strings.Split(code, "\n")
-		for i, line := range lines {
-			fmt.Fprintf(
-				buf, "%4d: %s\n",
-				int(snippet.StartLine)+i,
-				line,
-			)
-		}
+	before, highlight, after := code[0:start], code[start:end], code[end:]
+	code = fmt.Sprintf(color.Color("%s[underline]%s[reset]%s"), before, highlight, after)
 
-		if len(snippet.Values) > 0 {
-			// The diagnostic may also have information about the dynamic
-			// values of relevant variables at the point of evaluation.
-			// This is particularly useful for expressions that get evaluated
-			// multiple times with different values, such as blocks using
-			// "count" and "for_each", or within "for" expressions.
-			values := make([]*pb.Diagnostic_ExpressionValue, len(snippet.Values))
-			copy(values, snippet.Values)
-			sort.Slice(values, func(i, j int) bool {
-				return values[i].Traversal < values[j].Traversal
-			})
+	// Split the snippet into lines and render one at a time
+	lines := strings.Split(code, "\n")
+	for i, line := range lines {
+		fmt.Fprintf(
+			buf, "%4d: %s\n",
+			int(diag.GetSnippet().GetStartLine())+i,
+			line,
+		)
+	}
 
-			fmt.Fprint(buf, color.Color("    [dark_gray]├────────────────[reset]\n"))
-			for _, value := range values {
-				fmt.Fprintf(buf, color.Color("    [dark_gray]│[reset] [bold]%s[reset] %s\n"), value.Traversal, value.Statement)
-			}
+	if len(diag.GetSnippet().GetValues()) > 0 {
+		// The diagnostic may also have information about the dynamic
+		// values of relevant variables at the point of evaluation.
+		// This is particularly useful for expressions that get evaluated
+		// multiple times with different values, such as blocks using
+		// "count" and "for_each", or within "for" expressions.
+		values := make([]*pb.Diagnostic_ExpressionValue, len(diag.GetSnippet().GetValues()))
+		copy(values, diag.GetSnippet().GetValues())
+		sort.Slice(values, func(i, j int) bool {
+			return values[i].GetTraversal() < values[j].GetTraversal()
+		})
+
+		fmt.Fprint(buf, color.Color("    [dark_gray]├────────────────[reset]\n"))
+		for _, value := range values {
+			fmt.Fprintf(buf, color.Color("    [dark_gray]│[reset] [bold]%s[reset] %s\n"), value.GetTraversal(), value.GetStatement())
 		}
 	}
 

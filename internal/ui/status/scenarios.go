@@ -1,8 +1,6 @@
 package status
 
 import (
-	"google.golang.org/grpc/codes"
-
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -17,11 +15,11 @@ func GenerateScenarios(failOnWarn bool, res *pb.GenerateScenariosResponse) error
 		}
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("unable to generate scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to generate scenarios", err)
 	}
 
 	return err
@@ -29,8 +27,8 @@ func GenerateScenarios(failOnWarn bool, res *pb.GenerateScenariosResponse) error
 
 // ListScenarios returns the status response for a scenario list
 func ListScenarios(failOnWarn bool, res *pb.ListScenariosResponse) error {
-	if HasFailed(failOnWarn, res) {
-		return Error("unable to list scenarios", codes.Internal)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		return Error("failed to list scenarios")
 	}
 
 	return nil
@@ -52,11 +50,11 @@ func ValidateScenarios(failOnWarn bool, res *pb.ValidateScenariosResponse) error
 
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetGenerate().GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("unable to validate scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to validate scenarios", err)
 	}
 
 	return err
@@ -79,11 +77,11 @@ func LaunchScenarios(failOnWarn bool, res *pb.LaunchScenariosResponse) error {
 
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetGenerate().GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("unable to launch scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to launch scenarios", err)
 	}
 
 	return err
@@ -107,11 +105,11 @@ func RunScenarios(failOnWarn bool, res *pb.RunScenariosResponse) error {
 
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetGenerate().GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("unable to run scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to run scenarios", err)
 	}
 
 	return err
@@ -127,11 +125,11 @@ func DestroyScenarios(failOnWarn bool, res *pb.DestroyScenariosResponse) error {
 		}
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("failed to destroy scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to destroy scenarios", err)
 	}
 
 	return err
@@ -147,11 +145,11 @@ func ExecScenarios(failOnWarn bool, res *pb.ExecScenariosResponse) error {
 		}
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("unable to execute scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to execute command in context of scenarios", err)
 	}
 
 	return err
@@ -167,11 +165,11 @@ func OutputScenarios(failOnWarn bool, res *pb.OutputScenariosResponse) error {
 		}
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
-		err = Error(scenario.String(), codes.Internal, err)
+		err = Error(scenario.String(), err)
 	}
 
-	if HasFailed(failOnWarn, res) {
-		err = Error("unable to output scenarios", codes.Internal, err)
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		err = Error("failed to output scenario outputs", err)
 	}
 
 	return err

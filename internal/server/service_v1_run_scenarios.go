@@ -19,15 +19,19 @@ func (s *ServiceV1) RunScenarios(
 	error,
 ) {
 	res := &pb.RunScenariosResponse{
-		Responses: []*pb.Scenario_Command_Run_Response{},
+		Responses: []*pb.Scenario_Operation_Run_Response{},
 	}
 
 	genRes := decodeAndGenerate(req.GetWorkspace(), req.GetFilter())
 	res.Diagnostics = genRes.GetDiagnostics()
-	if diagnostics.HasErrors(res.GetDiagnostics()) ||
-		(req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings() && diagnostics.HasWarnings(res.GetDiagnostics())) {
+	res.Decode = genRes.GetDecode()
+	if diagnostics.HasFailed(
+		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
+		res.GetDiagnostics(),
+		res.GetDecode().GetDiagnostics(),
+	) {
 		for _, mod := range genRes.GetResponses() {
-			res.Responses = append(res.Responses, &pb.Scenario_Command_Run_Response{
+			res.Responses = append(res.Responses, &pb.Scenario_Operation_Run_Response{
 				Generate: mod,
 			})
 		}

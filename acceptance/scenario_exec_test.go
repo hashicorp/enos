@@ -71,7 +71,7 @@ func TestAcc_Cmd_Scenario_Exec(t *testing.T) {
 			require.NoError(t, err, string(out))
 
 			expected := &pb.ExecScenariosResponse{
-				Responses: []*pb.Scenario_Command_Exec_Response{
+				Responses: []*pb.Scenario_Operation_Exec_Response{
 					{
 						SubCommand: "validate",
 						TerraformModule: &pb.Terraform_Module{

@@ -17,9 +17,12 @@ func (s *ServiceV1) ListScenarios(
 ) {
 	res := &pb.ListScenariosResponse{}
 
-	scenarios, diags := decodeAndFilter(req.GetWorkspace().GetFlightplan(), req.GetFilter())
-	res.Diagnostics = diags
-	if diagnostics.HasErrors(diags) {
+	scenarios, decRes := decodeAndFilter(req.GetWorkspace().GetFlightplan(), req.GetFilter())
+	res.Decode = decRes
+	if diagnostics.HasFailed(
+		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
+		decRes.GetDiagnostics(),
+	) {
 		return res, nil
 	}
 

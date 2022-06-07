@@ -3,8 +3,6 @@ package status
 import (
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -22,18 +20,17 @@ func Format(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error {
 			continue
 		}
 
-		err = Error(fmt.Sprintf("formatting %s failed", out.GetPath()), codes.Internal, err)
+		err = Error(fmt.Sprintf("formatting %s failed", out.GetPath()), err)
 	}
 
 	if HasErrorDiags(res) {
-		err = Error("unable to format configuration", codes.Internal, err)
+		err = Error("unable to format configuration", err)
 	}
 
 	if checkFailed {
 		return &ErrExit{
 			ExitCode: 3,
 			Err:      err,
-			Code:     codes.Internal,
 			Msg:      "check failed",
 		}
 	}

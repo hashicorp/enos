@@ -403,7 +403,9 @@ func (g *Generator) maybeWriteProviderConfig(rootBody *hclwrite.Body) {
 		for name, val := range provider.Attrs {
 			body.SetAttributeValue(name, val)
 		}
-		if provider.Alias != "" {
+		// Don't alias "default" providers to ensure that step modules inherit
+		// their configuration by default.
+		if provider.Alias != "" && provider.Alias != "default" {
 			body.SetAttributeValue("alias", cty.StringVal(provider.Alias))
 		}
 	}

@@ -64,9 +64,9 @@ func WithProtoModuleAndConfig(mod *pb.Terraform_Module, cfg *pb.Terraform_Execut
 
 // Validate validates the generated Terraform module by installing any required
 // providers or modules and planning it.
-func (e *Executor) Validate(ctx context.Context) *pb.Scenario_Command_Validate_Response {
-	res := &pb.Scenario_Command_Validate_Response{
-		Generate: &pb.Scenario_Command_Generate_Response{
+func (e *Executor) Validate(ctx context.Context) *pb.Scenario_Operation_Validate_Response {
+	res := &pb.Scenario_Operation_Validate_Response{
+		Generate: &pb.Scenario_Operation_Generate_Response{
 			TerraformModule: e.Module,
 		},
 	}
@@ -125,9 +125,9 @@ func (e *Executor) Validate(ctx context.Context) *pb.Scenario_Command_Validate_R
 }
 
 // Launch execute the Terraform plan.
-func (e *Executor) Launch(ctx context.Context) *pb.Scenario_Command_Launch_Response {
-	res := &pb.Scenario_Command_Launch_Response{
-		Generate: &pb.Scenario_Command_Generate_Response{
+func (e *Executor) Launch(ctx context.Context) *pb.Scenario_Operation_Launch_Response {
+	res := &pb.Scenario_Operation_Launch_Response{
+		Generate: &pb.Scenario_Operation_Generate_Response{
 			TerraformModule: e.Module,
 		},
 	}
@@ -178,8 +178,8 @@ func (e *Executor) Launch(ctx context.Context) *pb.Scenario_Command_Launch_Respo
 }
 
 // Destroy destroys the Terraform plan.
-func (e *Executor) Destroy(ctx context.Context) *pb.Scenario_Command_Destroy_Response {
-	res := &pb.Scenario_Command_Destroy_Response{
+func (e *Executor) Destroy(ctx context.Context) *pb.Scenario_Operation_Destroy_Response {
+	res := &pb.Scenario_Operation_Destroy_Response{
 		TerraformModule: e.Module,
 	}
 
@@ -204,9 +204,9 @@ func (e *Executor) Destroy(ctx context.Context) *pb.Scenario_Command_Destroy_Res
 }
 
 // Run performs an entire scenario execution cycle
-func (e *Executor) Run(ctx context.Context) *pb.Scenario_Command_Run_Response {
-	res := &pb.Scenario_Command_Run_Response{
-		Generate: &pb.Scenario_Command_Generate_Response{
+func (e *Executor) Run(ctx context.Context) *pb.Scenario_Operation_Run_Response {
+	res := &pb.Scenario_Operation_Run_Response{
+		Generate: &pb.Scenario_Operation_Generate_Response{
 			TerraformModule: e.Module,
 		},
 	}
@@ -249,7 +249,7 @@ func (e *Executor) Run(ctx context.Context) *pb.Scenario_Command_Run_Response {
 }
 
 // Exec executes a raw terraform sub command
-func (e *Executor) Exec(ctx context.Context) *pb.Scenario_Command_Exec_Response {
+func (e *Executor) Exec(ctx context.Context) *pb.Scenario_Operation_Exec_Response {
 	execOut := NewTextOutput()
 	stdout := &strings.Builder{}
 	execOut.Stdout = stdout
@@ -260,7 +260,7 @@ func (e *Executor) Exec(ctx context.Context) *pb.Scenario_Command_Exec_Response 
 	})
 
 	_, err := cmd.Run(ctx)
-	return &pb.Scenario_Command_Exec_Response{
+	return &pb.Scenario_Operation_Exec_Response{
 		TerraformModule: e.Module,
 		SubCommand:      e.TFConfig.ExecSubCmd,
 		Exec: &pb.Terraform_Command_Exec_Response{
@@ -272,8 +272,8 @@ func (e *Executor) Exec(ctx context.Context) *pb.Scenario_Command_Exec_Response 
 }
 
 // Output returns the state output
-func (e *Executor) Output(ctx context.Context) *pb.Scenario_Command_Output_Response {
-	res := &pb.Scenario_Command_Output_Response{
+func (e *Executor) Output(ctx context.Context) *pb.Scenario_Operation_Output_Response {
+	res := &pb.Scenario_Operation_Output_Response{
 		TerraformModule: e.Module,
 		Output: &pb.Terraform_Command_Output_Response{
 			Meta: []*pb.Terraform_Command_Output_Response_Meta{},

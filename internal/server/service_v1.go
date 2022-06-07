@@ -12,10 +12,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/go-hclog"
@@ -150,7 +148,7 @@ func (s *ServiceV1) start(ctx context.Context) error {
 	var err error
 	s.gprcListener, err = net.Listen(s.grpcListenAddr.Network(), s.grpcListenAddr.String())
 	if err != nil {
-		return status.Error(codes.FailedPrecondition, err.Error())
+		return err
 	}
 
 	return s.gprcServer.Serve(s.gprcListener)

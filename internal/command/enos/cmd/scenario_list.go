@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -15,10 +14,11 @@ import (
 // newScenarioListCmd returns a new 'scenario list' sub-command
 func newScenarioListCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "list [FILTER]",
-		Short: "List scenarios",
-		Long:  "List scenarios",
-		RunE:  runScenarioListCmd,
+		Use:               "list [FILTER]",
+		Short:             "List scenarios",
+		Long:              "List all scenario and variant combinations",
+		RunE:              runScenarioListCmd,
+		ValidArgsFunction: scenarioNameCompletion,
 	}
 }
 
@@ -29,12 +29,16 @@ func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 
 	sf, err := flightplan.ParseScenarioFilter(args)
 	if err != nil {
-		return status.Error(codes.InvalidArgument, err.Error())
+		return ui.ShowScenarioList(&pb.ListScenariosResponse{
+			Decode: &pb.Scenario_Operation_Decode_Response{
+				Diagnostics: diagnostics.FromErr(err),
+			},
+		})
 	}
 
-	res, err := enosClient.ListScenarios(ctx, &pb.ListScenariosRequest{
+	res, err := rootState.enosClient.ListScenarios(ctx, &pb.ListScenariosRequest{
 		Workspace: &pb.Workspace{
-			Flightplan: flightPlan,
+			Flightplan: scenarioState.protoFp,
 		},
 		Filter: sf.Proto(),
 	})

@@ -10,6 +10,8 @@ import (
 
 // ShowScenarioLaunch shows scenario launch view
 func (v *View) ShowScenarioLaunch(res *pb.LaunchScenariosResponse) error {
+	v.writeDecodeResponse(res.GetDecode())
+
 	for _, out := range res.GetResponses() {
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetGenerate().GetTerraformModule().GetScenarioRef())

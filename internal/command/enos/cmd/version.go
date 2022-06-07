@@ -18,7 +18,7 @@ func newVersionCmd() *cobra.Command {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			defer cancel()
 
-			res, err := enosClient.GetVersion(ctx, &pb.GetVersionRequest{})
+			res, err := rootState.enosClient.GetVersion(ctx, &pb.GetVersionRequest{})
 			if err != nil {
 				return err
 			}

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/hashicorp/enos/internal/server"
 	uipkg "github.com/hashicorp/enos/internal/ui"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -19,18 +20,20 @@ var rootCmd = &cobra.Command{
 	Use:               "enos",
 	Short:             "Enos is a tool for powering Software Quality as Code",
 	Long:              "Enos is a tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language",
-	PersistentPreRun:  rootCmdPreRun,
+	PersistentPreRunE: rootCmdPreRun,
 	PersistentPostRun: rootCmdPostRun,
 	CompletionOptions: cobra.CompletionOptions{DisableDescriptions: true},
 }
 
-var rootArgs struct {
+var rootState struct {
 	logLevel       string // client log level
 	logLevelServer string // server log level
 	listenGRPC     string
 	format         string
 	stderrPath     string
 	stdoutPath     string
+	enosServer     *server.ServiceV1
+	enosClient     pb.EnosServiceClient
 }
 
 // ui is our default CLI UI for things that have not been migrated to use
@@ -43,14 +46,12 @@ func Execute() {
 	rootCmd.AddCommand(newScenarioCmd())
 	rootCmd.AddCommand(newFmtCmd())
 
-	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevel, "log-level", "info", "Log level for client output")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.logLevelServer, "server-log-level", "error", "The log level for server output")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.listenGRPC, "listen-grpc", "http://localhost:3205", "The gRPC server listen address")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.format, "format", "text", "Output format to use: text or json")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.stdoutPath, "out", "", "Path to write output. (default $STDOUT)")
-	rootCmd.PersistentFlags().StringVar(&rootArgs.stderrPath, "error-out", "", "Path to write error output. (default $STDERR)")
-	rootCmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagsnostics are created")
-
+	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "Log level for client output")
+	rootCmd.PersistentFlags().StringVar(&rootState.logLevelServer, "server-log-level", "error", "The log level for server output")
+	rootCmd.PersistentFlags().StringVar(&rootState.listenGRPC, "listen-grpc", "http://localhost:3205", "The gRPC server listen address")
+	rootCmd.PersistentFlags().StringVar(&rootState.format, "format", "text", "Output format to use: text or json")
+	rootCmd.PersistentFlags().StringVar(&rootState.stdoutPath, "stdout", "", "Path to write output. (default $STDOUT)")
+	rootCmd.PersistentFlags().StringVar(&rootState.stderrPath, "stderr", "", "Path to write error output. (default $STDERR)")
 	if err := rootCmd.Execute(); err != nil {
 		var exitErr *status.ErrExit
 		if errors.As(err, &exitErr) {
@@ -78,10 +79,10 @@ func setupCLIUI() error {
 	uiCfg := &pb.UI_Settings{
 		Width:          78,
 		Format:         pb.UI_Settings_FORMAT_BASIC_TEXT,
-		FailOnWarnings: scenarioCfg.tfConfig.FailOnWarnings,
+		FailOnWarnings: scenarioState.tfConfig.FailOnWarnings,
 	}
 
-	if rootArgs.format == "json" {
+	if rootState.format == "json" {
 		uiCfg.Format = pb.UI_Settings_FORMAT_JSON
 	}
 
@@ -94,15 +95,15 @@ func setupCLIUI() error {
 		}
 	}
 
-	if rootArgs.stderrPath != "" {
-		uiCfg.StderrPath = rootArgs.stderrPath
+	if rootState.stderrPath != "" {
+		uiCfg.StderrPath = rootState.stderrPath
 	}
 
-	if rootArgs.stdoutPath != "" {
-		uiCfg.StdoutPath = rootArgs.stdoutPath
+	if rootState.stdoutPath != "" {
+		uiCfg.StdoutPath = rootState.stdoutPath
 	}
 
-	switch rootArgs.logLevel {
+	switch rootState.logLevel {
 	case "debug", "DEBUG", "Debug", "d":
 		uiCfg.Level = pb.UI_Settings_LEVEL_DEBUG
 	case "error", "ERROR", "Error", "e", "err":
@@ -119,22 +120,31 @@ func setupCLIUI() error {
 	return err
 }
 
-func rootCmdPreRun(cmd *cobra.Command, args []string) {
+func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 	cmd.SilenceErrors = true // we handle this ourselves
 
+	// Setup our UI configuration first
 	err := setupCLIUI()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
 	}
 
-	enosServer, enosClient, err = startGRPCServer(context.Background(), 5*time.Second)
+	// Create our gRPC server and client
+	rootState.enosServer, rootState.enosClient, err = startGRPCServer(context.Background(), 5*time.Second)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
 	}
+
+	// If we're this far they've given use valid usage and we'll handle it
+	cmd.SilenceUsage = true
+
+	return err
 }
 
 func rootCmdPostRun(cmd *cobra.Command, args []string) {
+	if rootState.enosServer != nil {
+		rootState.enosServer.Stop()
+	}
+
 	ui.Close()
 }

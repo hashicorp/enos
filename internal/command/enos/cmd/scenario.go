@@ -13,30 +13,24 @@ import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/execute/terraform"
 	"github.com/hashicorp/enos/internal/flightplan"
-	"github.com/hashicorp/enos/internal/server"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/hcl/v2"
 )
 
 // scenarioConfig is the 'scenario' sub-command configuration type
-type scenarioConfig struct {
+type scenarioStateType struct {
 	baseDir     string
 	outDir      string
 	fp          *flightplan.FlightPlan
+	protoFp     *pb.FlightPlan
 	timeout     time.Duration
 	tfConfig    *terraform.Config
 	lockTimeout time.Duration
 }
 
-var (
-	flightPlan *pb.FlightPlan
-	enosServer *server.ServiceV1
-	enosClient pb.EnosServiceClient
-)
-
-// scenarioCfg is the 'scenario' sub-command configuration
-var scenarioCfg = scenarioConfig{
+// scenarioState is the 'scenario' sub-command configuration
+var scenarioState = scenarioStateType{
 	tfConfig: terraform.NewConfig(),
 }
 
@@ -59,16 +53,17 @@ FILTER = '[SCENARIO NAME] [...VARIANT SUBFILTER]'`
 // newScenarioCmd returns a new instance of the 'scenario' sub-command
 func newScenarioCmd() *cobra.Command {
 	scenarioCmd := &cobra.Command{
-		Use:                "scenario",
-		Short:              "Enos quality requirement scenarios",
-		Long:               "Enos quality requirement scenarios",
-		PersistentPreRunE:  scenarioCmdPreRun,
-		PersistentPostRunE: scenarioCmdPostRun,
+		Use:               "scenario",
+		Short:             "Enos quality requirement scenarios",
+		Long:              "Enos quality requirement scenarios",
+		PersistentPreRunE: scenarioCmdPreRun,
+		PersistentPostRun: scenarioCmdPostRun,
 	}
 
-	scenarioCmd.PersistentFlags().StringVarP(&scenarioCfg.baseDir, "chdir", "d", "", "use the given directory as the working directory")
-	scenarioCmd.PersistentFlags().StringVarP(&scenarioCfg.outDir, "out", "o", "", "base directory where generated modules will be created")
-	scenarioCmd.PersistentFlags().DurationVar(&scenarioCfg.timeout, "timeout", 15*time.Minute, "the command timeout")
+	scenarioCmd.PersistentFlags().DurationVar(&scenarioState.timeout, "timeout", 15*time.Minute, "the command timeout")
+	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagsnostics are created")
+	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "use the given directory as the working directory")
+	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "base directory where generated modules will be created")
 
 	scenarioCmd.AddCommand(newScenarioListCmd())
 	scenarioCmd.AddCommand(newScenarioGenerateCmd())
@@ -85,54 +80,51 @@ func newScenarioCmd() *cobra.Command {
 // scenarioCmdPreRun is the scenario sub-command pre-run. We'll use it to initialize
 // the program and decode the enos flight plan.
 func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
-	var err error
-	rootCmdPreRun(cmd, args)
+	err := rootCmdPreRun(cmd, args)
+	if err != nil {
+		return err
+	}
 
 	// Convert arguments that cobra flags can't handle
-	scenarioCfg.tfConfig.Flags.LockTimeout = durationpb.New(scenarioCfg.lockTimeout)
+	scenarioState.tfConfig.Flags.LockTimeout = durationpb.New(scenarioState.lockTimeout)
 
-	// Determine our default base directory and out directory
+	// Determine our default configuration
 	err = setupDefaultScenarioCfg()
 	if err != nil {
 		return err
 	}
 
-	flightPlan, err = readFlightPlanConfig(scenarioCfg.baseDir)
-	if err != nil {
-		return err
-	}
-
-	return decodeFlightPlan(cmd)
+	// Load the configuration from our working dir
+	scenarioState.protoFp, err = readFlightPlanConfig(scenarioState.baseDir)
+	return err
 }
 
 // scenarioCmdPostRun is the scenario sub-command post-run. We'll use it to shut
 // down the server.
-func scenarioCmdPostRun(cmd *cobra.Command, args []string) error {
-	if enosServer != nil {
-		enosServer.Stop()
+func scenarioCmdPostRun(cmd *cobra.Command, args []string) {
+	if rootState.enosServer != nil {
+		rootState.enosServer.Stop()
 	}
-
-	return nil
 }
 
 // setupDefaultScenarioCfg sets up default scenario configuration
 func setupDefaultScenarioCfg() error {
 	var err error
 
-	if scenarioCfg.baseDir != "" {
-		scenarioCfg.baseDir, err = filepath.Abs(scenarioCfg.baseDir)
+	if scenarioState.baseDir != "" {
+		scenarioState.baseDir, err = filepath.Abs(scenarioState.baseDir)
 		if err != nil {
 			return fmt.Errorf("unable to get absolute path from given working directory: %w", err)
 		}
 	} else {
-		scenarioCfg.baseDir, err = os.Getwd()
+		scenarioState.baseDir, err = os.Getwd()
 		if err != nil {
 			return fmt.Errorf("unable to determine current working directory: %w", err)
 		}
 	}
 
-	if scenarioCfg.outDir != "" {
-		scenarioCfg.outDir, err = filepath.Abs(scenarioCfg.outDir)
+	if scenarioState.outDir != "" {
+		scenarioState.outDir, err = filepath.Abs(scenarioState.outDir)
 		if err != nil {
 			return fmt.Errorf("unable to get absolute path from given working directory: %w", err)
 		}
@@ -146,7 +138,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 	diags := hcl.Diagnostics{}
 
 	decoder, err := flightplan.NewDecoder(
-		flightplan.WithDecoderBaseDir(scenarioCfg.baseDir),
+		flightplan.WithDecoderBaseDir(scenarioState.baseDir),
 	)
 	if err != nil {
 		return fmt.Errorf("unable to create new flight plan decoder: %w", err)
@@ -165,10 +157,10 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 
 	fp, moreDiags := decoder.Decode()
 	diags = diags.Extend(moreDiags)
-	scenarioCfg.fp = fp
+	scenarioState.fp = fp
 
 	if len(diags) > 0 {
-		if !diags.HasErrors() && !scenarioCfg.tfConfig.FailOnWarnings {
+		if !diags.HasErrors() && !scenarioState.tfConfig.FailOnWarnings {
 			return nil
 		}
 
@@ -193,12 +185,12 @@ func scenarioNameCompletion(cmd *cobra.Command, args []string, toComplete string
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	if len(scenarioCfg.fp.Scenarios) == 0 {
+	if len(scenarioState.fp.Scenarios) == 0 {
 		return nil, cobra.ShellCompDirectiveDefault
 	}
 
 	names := []string{}
-	for _, s := range scenarioCfg.fp.Scenarios {
+	for _, s := range scenarioState.fp.Scenarios {
 		names = append(names, s.Name)
 	}
 
@@ -210,8 +202,8 @@ func scenarioNameCompletion(cmd *cobra.Command, args []string, toComplete string
 func scenarioTimeoutContext() (context.Context, func()) {
 	var cancel func()
 	ctx := context.Background()
-	if scenarioCfg.timeout != 0 {
-		return context.WithTimeout(ctx, scenarioCfg.timeout)
+	if scenarioState.timeout != 0 {
+		return context.WithTimeout(ctx, scenarioState.timeout)
 	}
 
 	return ctx, cancel

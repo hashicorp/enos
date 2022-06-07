@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -19,13 +18,12 @@ func newScenarioRunCmd() *cobra.Command {
 		Short:             "Run Terraform modules from matching scenarios",
 		Long:              fmt.Sprintf("Run Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioRunCmd,
-		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
-	cmd.PersistentFlags().BoolVar(&scenarioCfg.tfConfig.Flags.NoLock, "no-lock", false, "Don't wait for the Terraform state lock")
-	cmd.PersistentFlags().Uint32Var(&scenarioCfg.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "The Terraform scenario parallelism")
-	cmd.PersistentFlags().DurationVar(&scenarioCfg.lockTimeout, "lock-timeout", 1*time.Minute, "The Duration to wait for the Terraform lock")
+	cmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.Flags.NoLock, "no-lock", false, "Don't wait for the Terraform state lock")
+	cmd.PersistentFlags().Uint32Var(&scenarioState.tfConfig.Flags.Parallelism, "tf-parallelism", 10, "The Terraform scenario parallelism")
+	cmd.PersistentFlags().DurationVar(&scenarioState.lockTimeout, "lock-timeout", 1*time.Minute, "The Duration to wait for the Terraform lock")
 
 	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 
@@ -39,14 +37,18 @@ func runScenarioRunCmd(cmd *cobra.Command, args []string) error {
 
 	sf, err := flightplan.ParseScenarioFilter(args)
 	if err != nil {
-		return status.Error(codes.InvalidArgument, err.Error())
+		return ui.ShowScenarioRun(&pb.RunScenariosResponse{
+			Decode: &pb.Scenario_Operation_Decode_Response{
+				Diagnostics: diagnostics.FromErr(err),
+			},
+		})
 	}
 
-	res, err := enosClient.RunScenarios(ctx, &pb.RunScenariosRequest{
+	res, err := rootState.enosClient.RunScenarios(ctx, &pb.RunScenariosRequest{
 		Workspace: &pb.Workspace{
-			Flightplan: flightPlan,
-			OutDir:     scenarioCfg.outDir,
-			TfExecCfg:  scenarioCfg.tfConfig.Proto(),
+			Flightplan: scenarioState.protoFp,
+			OutDir:     scenarioState.outDir,
+			TfExecCfg:  scenarioState.tfConfig.Proto(),
 		},
 		Filter: sf.Proto(),
 	})

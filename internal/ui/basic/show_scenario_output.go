@@ -10,12 +10,16 @@ import (
 
 // ShowScenarioOutput shows the scenario outputs
 func (v *View) ShowScenarioOutput(res *pb.OutputScenariosResponse) error {
+	v.writeDecodeResponse(res.GetDecode())
+
 	for _, out := range res.GetResponses() {
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
 
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		_ = v.writeOutputResponse(out.GetOutput())
+		v.writeUntilFailure([]func() bool{
+			v.outputResponseWriter(out.GetOutput()),
+		})
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())

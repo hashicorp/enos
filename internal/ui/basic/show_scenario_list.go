@@ -34,7 +34,10 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 		}
 	}
 
-	v.ui.RenderTable(header, rows)
+	if len(rows) > 1 {
+		v.ui.RenderTable(header, rows)
+	}
+	v.WriteDiagnostics(res.GetDecode().GetDiagnostics())
 	v.WriteDiagnostics(res.GetDiagnostics())
 
 	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)

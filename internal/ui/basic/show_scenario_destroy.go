@@ -10,12 +10,16 @@ import (
 
 // ShowScenarioDestroy shows scenario destroy view
 func (v *View) ShowScenarioDestroy(res *pb.DestroyScenariosResponse) error {
+	v.writeDecodeResponse(res.GetDecode())
+
 	for _, out := range res.GetResponses() {
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
 
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		_ = v.writeDestroyResponse(out.GetDestroy())
+		v.writeUntilFailure([]func() bool{
+			v.destroyResponseWriter(out.GetDestroy()),
+		})
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())

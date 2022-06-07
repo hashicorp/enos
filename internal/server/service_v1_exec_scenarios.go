@@ -17,12 +17,17 @@ func (s *ServiceV1) ExecScenarios(
 	error,
 ) {
 	res := &pb.ExecScenariosResponse{
-		Responses: []*pb.Scenario_Command_Exec_Response{},
+		Responses: []*pb.Scenario_Operation_Exec_Response{},
 	}
 
 	genRef := decodeAndGetGenRef(req.GetWorkspace(), req.GetFilter())
 	res.Diagnostics = genRef.GetDiagnostics()
-	if diagnostics.HasErrors(res.Diagnostics) {
+	res.Decode = genRef.GetDecode()
+	if diagnostics.HasFailed(
+		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
+		res.GetDiagnostics(),
+		res.GetDecode().GetDiagnostics(),
+	) {
 		return res, nil
 	}
 

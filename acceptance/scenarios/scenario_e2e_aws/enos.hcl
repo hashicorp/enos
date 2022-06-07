@@ -33,7 +33,7 @@ terraform "default" {
   }
 }
 
-provider "aws" "east_1" {
+provider "aws" "default" {
   region = "us-east-1"
 }
 
@@ -88,7 +88,7 @@ scenario "e2e" {
     }
 
     aws_provider = {
-      east = provider.aws.east_1
+      east = provider.aws.default // should cause a warning since it's a default
       west = provider.aws.west_2
     }
   }

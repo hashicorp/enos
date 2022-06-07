@@ -6,8 +6,6 @@ import (
 	"io"
 	"os"
 
-	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -44,7 +42,7 @@ func NewErrUnsupportedEncodingFormat(format pb.UI_Settings_Format) error {
 	if !ok {
 		msg = fmt.Sprintf("%s: %s", msg, friendlyName)
 	}
-	return grpcstatus.Error(codes.FailedPrecondition, msg)
+	return fmt.Errorf(msg)
 }
 
 // New takes options and returns a new basic.View
@@ -106,7 +104,7 @@ func (v *View) Close() error {
 	if v.stderr != nil {
 		err := v.stderr.Close()
 		if err != nil {
-			return grpcstatus.Error(codes.Internal, err.Error())
+			return err
 		}
 	}
 
@@ -116,7 +114,7 @@ func (v *View) Close() error {
 
 	err := v.stdout.Close()
 	if err != nil {
-		return grpcstatus.Error(codes.Internal, err.Error())
+		return err
 	}
 
 	return nil
@@ -277,21 +275,18 @@ func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 		bytes, err := json.Marshal(msg)
 		if err != nil {
 			_, _ = v.ui.Stderr.Write([]byte(err.Error()))
-			return grpcstatus.Error(codes.Internal, err.Error())
+			return err
 		}
 
 		_, err = v.ui.Stderr.Write(bytes)
-		if err != nil {
-			return grpcstatus.Error(codes.Internal, err.Error())
-		}
 
-		return nil
+		return err
 	}
 
 	tryPlainText := func(err error) error {
 		_, err2 := v.ui.Stderr.Write([]byte(err.Error()))
 		if err2 != nil {
-			return grpcstatus.Errorf(codes.Internal, "%s: %s", err.Error(), err2.Error())
+			return fmt.Errorf("%w: %s", err, err2.Error())
 		}
 
 		return nil
@@ -325,16 +320,12 @@ func (v *View) write(msg proto.Message) error {
 	case pb.UI_Settings_FORMAT_JSON:
 		bytes, err = protojson.Marshal(msg)
 		if err != nil {
-			return grpcstatus.Error(codes.Internal, err.Error())
+			return err
 		}
 	default:
 		return NewErrUnsupportedEncodingFormat(v.settings.GetFormat())
 	}
 
 	_, err = v.ui.Stdout.Write(bytes)
-	if err != nil {
-		return grpcstatus.Error(codes.Internal, err.Error())
-	}
-
-	return nil
+	return err
 }

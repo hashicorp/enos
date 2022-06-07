@@ -17,12 +17,17 @@ func (s *ServiceV1) DestroyScenarios(
 	error,
 ) {
 	res := &pb.DestroyScenariosResponse{
-		Responses: []*pb.Scenario_Command_Destroy_Response{},
+		Responses: []*pb.Scenario_Operation_Destroy_Response{},
 	}
 
 	genRef := decodeAndGetGenRef(req.GetWorkspace(), req.GetFilter())
 	res.Diagnostics = genRef.GetDiagnostics()
-	if diagnostics.HasErrors(res.Diagnostics) {
+	res.Decode = genRef.GetDecode()
+	if diagnostics.HasFailed(
+		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
+		res.GetDiagnostics(),
+		res.GetDecode().GetDiagnostics(),
+	) {
 		return res, nil
 	}
 

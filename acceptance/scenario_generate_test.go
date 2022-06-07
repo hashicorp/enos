@@ -91,7 +91,7 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 			require.NoErrorf(t, err, string(out))
 
 			expected := &pb.GenerateScenariosResponse{
-				Responses: []*pb.Scenario_Command_Generate_Response{
+				Responses: []*pb.Scenario_Operation_Generate_Response{
 					{
 						TerraformModule: &pb.Terraform_Module{
 							ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),

@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -18,11 +17,10 @@ func newScenarioOutputCmd() *cobra.Command {
 		Short:             "Show the output of selected scenarios",
 		Long:              fmt.Sprintf("Show the output of selected scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioOutputCmd,
-		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
-	cmd.PersistentFlags().StringVar(&scenarioCfg.tfConfig.OutputName, "name", "", "The Terraform state value to show")
+	cmd.PersistentFlags().StringVar(&scenarioState.tfConfig.OutputName, "name", "", "The Terraform state value to show")
 
 	_ = cmd.Flags().MarkHidden("out") // Allow passing out for testing but mark it hidden
 
@@ -36,14 +34,18 @@ func runScenarioOutputCmd(cmd *cobra.Command, args []string) error {
 
 	sf, err := flightplan.ParseScenarioFilter(args)
 	if err != nil {
-		return status.Error(codes.InvalidArgument, err.Error())
+		return ui.ShowScenarioOutput(&pb.OutputScenariosResponse{
+			Decode: &pb.Scenario_Operation_Decode_Response{
+				Diagnostics: diagnostics.FromErr(err),
+			},
+		})
 	}
 
-	res, err := enosClient.OutputScenarios(ctx, &pb.OutputScenariosRequest{
+	res, err := rootState.enosClient.OutputScenarios(ctx, &pb.OutputScenariosRequest{
 		Workspace: &pb.Workspace{
-			Flightplan: flightPlan,
-			OutDir:     scenarioCfg.outDir,
-			TfExecCfg:  scenarioCfg.tfConfig.Proto(),
+			Flightplan: scenarioState.protoFp,
+			OutDir:     scenarioState.outDir,
+			TfExecCfg:  scenarioState.tfConfig.Proto(),
 		},
 		Filter: sf.Proto(),
 	})

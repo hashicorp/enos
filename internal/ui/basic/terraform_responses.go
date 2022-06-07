@@ -61,7 +61,6 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 	v.ui.Debug(fmt.Sprintf("  Validation errors: %d", validate.GetErrorCount()))
 	v.ui.Debug(fmt.Sprintf("  Validation warnings: %d", validate.GetWarningCount()))
 	v.ui.Debug(fmt.Sprintf("  Validation format: %s", validate.GetFormatVersion()))
-	v.WriteDiagnostics(validate.GetDiagnostics())
 
 	return false
 }
@@ -144,6 +143,12 @@ func (v *View) writeExecResponse(subCmd string, exec *pb.Terraform_Command_Exec_
 	return false
 }
 
+func (v *View) execResponseWriter(subCmd string, exec *pb.Terraform_Command_Exec_Response) func() bool {
+	return func() bool {
+		return v.writeExecResponse(subCmd, exec)
+	}
+}
+
 func (v *View) writeOutputResponse(out *pb.Terraform_Command_Output_Response) bool {
 	if out == nil {
 		return false
@@ -173,6 +178,12 @@ func (v *View) writeOutputResponse(out *pb.Terraform_Command_Output_Response) bo
 	v.WriteDiagnostics(diags)
 
 	return false
+}
+
+func (v *View) outputResponseWriter(out *pb.Terraform_Command_Output_Response) func() bool {
+	return func() bool {
+		return v.writeOutputResponse(out)
+	}
 }
 
 func (v *View) writePlainTextResponse(cmd string, stderr string, res status.ResWithDiags) bool {

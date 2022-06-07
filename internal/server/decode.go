@@ -3,9 +3,6 @@ package server
 import (
 	"path/filepath"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/generate"
@@ -18,15 +15,15 @@ func decodeAndGenerate(
 	ws *pb.Workspace,
 	filter *pb.Scenario_Filter,
 ) *pb.GenerateScenariosResponse {
-	res := &pb.GenerateScenariosResponse{}
-
-	scenarios, diags := decodeAndFilter(
+	scenarios, decRes := decodeAndFilter(
 		ws.GetFlightplan(),
 		filter,
 	)
-	if diagnostics.HasErrors(diags) {
-		res.Diagnostics = diags
-		return res
+
+	if diagnostics.HasFailed(ws.GetTfExecCfg().GetFailOnWarnings(), decRes.GetDiagnostics()) {
+		return &pb.GenerateScenariosResponse{
+			Decode: decRes,
+		}
 	}
 
 	outDir := ws.GetOutDir()
@@ -34,11 +31,14 @@ func decodeAndGenerate(
 		outDir = outDirForWorkspace(ws)
 	}
 
-	return generateScenarioModules(
+	modRes := generateScenarioModules(
 		scenarios,
 		ws.GetFlightplan().GetBaseDir(),
 		outDir,
 	)
+	modRes.Decode = decRes
+
+	return modRes
 }
 
 func outDirForWorkspace(w *pb.Workspace) string {
@@ -51,7 +51,7 @@ func generateScenarioModules(
 	outDir string,
 ) *pb.GenerateScenariosResponse {
 	res := &pb.GenerateScenariosResponse{
-		Responses: []*pb.Scenario_Command_Generate_Response{},
+		Responses: []*pb.Scenario_Operation_Generate_Response{},
 	}
 
 	if len(scenarios) == 0 {
@@ -71,7 +71,7 @@ func generateScenarioModules(
 	}
 
 	for _, scenario := range scenarios {
-		gres := &pb.Scenario_Command_Generate_Response{}
+		gres := &pb.Scenario_Operation_Generate_Response{}
 		gen, err := generate.NewGenerator(
 			generate.WithScenario(scenario),
 			generate.WithScenarioBaseDirectory(baseDir),
@@ -102,10 +102,7 @@ func generateScenarioModules(
 
 func isAbs(path string) (string, error) {
 	if !filepath.IsAbs(path) {
-		abs, err := filepath.Abs(path)
-		if err != nil {
-			return abs, status.Errorf(codes.InvalidArgument, err.Error())
-		}
+		return filepath.Abs(path)
 	}
 
 	return path, nil
@@ -118,19 +115,17 @@ func decodeAndFilter(
 	filter *pb.Scenario_Filter,
 ) (
 	[]*flightplan.Scenario,
-	[]*pb.Diagnostic,
+	*pb.Scenario_Operation_Decode_Response,
 ) {
-	fp, diags := decodeFlightPlan(pfp)
-	if diagnostics.HasErrors(diags) {
-		return nil, diags
+	fp, decRes := decodeFlightPlan(pfp)
+	if diagnostics.HasErrors(decRes.GetDiagnostics()) {
+		return nil, decRes
 	}
 
-	scenarios, diags := filterScenarios(fp, filter)
-	if diagnostics.HasErrors(diags) {
-		return nil, diags
-	}
+	scenarios, moreDiags := filterScenarios(fp, filter)
+	decRes.Diagnostics = append(decRes.GetDiagnostics(), moreDiags...)
 
-	return scenarios, diags
+	return scenarios, decRes
 }
 
 func decodeAndGetGenRef(
@@ -138,15 +133,15 @@ func decodeAndGetGenRef(
 	f *pb.Scenario_Filter,
 ) *pb.GenerateScenariosResponse {
 	res := &pb.GenerateScenariosResponse{
-		Responses: []*pb.Scenario_Command_Generate_Response{},
+		Responses: []*pb.Scenario_Operation_Generate_Response{},
 	}
 
-	scenarios, diags := decodeAndFilter(
+	scenarios, decRes := decodeAndFilter(
 		ws.GetFlightplan(),
 		f,
 	)
-	res.Diagnostics = diags
-	if diagnostics.HasErrors(diags) || len(scenarios) == 0 {
+	res.Decode = decRes
+	if diagnostics.HasFailed(ws.GetTfExecCfg().GetFailOnWarnings(), decRes.GetDiagnostics()) || len(scenarios) == 0 {
 		return res
 	}
 
@@ -168,7 +163,7 @@ func decodeAndGetGenRef(
 	}
 
 	for _, scenario := range scenarios {
-		gres := &pb.Scenario_Command_Generate_Response{}
+		gres := &pb.Scenario_Operation_Generate_Response{}
 		gen, err := generate.NewGenerator(
 			generate.WithScenario(scenario),
 			generate.WithScenarioBaseDirectory(baseDir),

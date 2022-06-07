@@ -209,14 +209,6 @@ func scenarioTimeoutContext() (context.Context, func()) {
 	return ctx, cancel
 }
 
-// scenarioFilterArgs is our own cobra.PositionsArgs implementation that
-// validates that the arguments given to a scenario command are a valid scenario
-// filter.
-func scenarioFilterArgs(cmd *cobra.Command, args []string) error {
-	_, err := flightplan.ParseScenarioFilter(args)
-	return err
-}
-
 // readFlightPlanConfig scans a directory for Enos flight plan configuration and returns
 // a new instance of FlightPlan.
 func readFlightPlanConfig(dir string) (*pb.FlightPlan, error) {

@@ -20,5 +20,5 @@ func (v *View) ShowScenarioOutput(res *pb.OutputScenariosResponse) error {
 
 	v.WriteDiagnostics(res.GetDiagnostics())
 
-	return status.OutputScenarios(res)
+	return status.OutputScenarios(v.settings.GetFailOnWarnings(), res)
 }

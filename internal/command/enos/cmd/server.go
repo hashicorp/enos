@@ -24,7 +24,7 @@ func startGRPCServer(ctx context.Context, timeout time.Duration) (*server.Servic
 
 	log := hclog.New(&hclog.LoggerOptions{
 		Name:  "enos",
-		Level: hclog.LevelFromString(rootArgs.logLevelS),
+		Level: hclog.LevelFromString(rootArgs.logLevelServer),
 	})
 
 	svr, err := server.New(

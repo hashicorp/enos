@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/execute"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -19,25 +20,21 @@ func (s *ServiceV1) DestroyScenarios(
 		Responses: []*pb.Scenario_Command_Destroy_Response{},
 	}
 
-	mods, diags, err := decodeAndGetGenRef(
-		req.GetWorkspace(),
-		req.GetFilter(),
-	)
-
-	res.Diagnostics = diags
-	if err != nil {
-		return res, err
+	genRef := decodeAndGetGenRef(req.GetWorkspace(), req.GetFilter())
+	res.Diagnostics = genRef.GetDiagnostics()
+	if diagnostics.HasErrors(res.Diagnostics) {
+		return res, nil
 	}
 
-	for _, mod := range mods {
-		res.Responses = append(res.Responses,
-			execute.NewExecutor(
-				execute.WithProtoModuleAndConfig(
-					mod.GetTerraformModule(),
-					req.GetWorkspace().GetTfExecCfg(),
-				),
-			).Destroy(ctx),
-		)
+	for _, gref := range genRef.GetResponses() {
+		destroyRes := execute.NewExecutor(
+			execute.WithProtoModuleAndConfig(
+				gref.GetTerraformModule(),
+				req.GetWorkspace().GetTfExecCfg(),
+			),
+		).Destroy(ctx)
+		destroyRes.TerraformModule = gref.GetTerraformModule()
+		res.Responses = append(res.Responses, destroyRes)
 	}
 
 	return res, nil

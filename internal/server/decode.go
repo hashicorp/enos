@@ -17,13 +17,16 @@ import (
 func decodeAndGenerate(
 	ws *pb.Workspace,
 	filter *pb.Scenario_Filter,
-) ([]*pb.Scenario_Command_Generate_Response, []*pb.Diagnostic, error) {
-	scenarios, diags, err := decodeAndFilter(
+) *pb.GenerateScenariosResponse {
+	res := &pb.GenerateScenariosResponse{}
+
+	scenarios, diags := decodeAndFilter(
 		ws.GetFlightplan(),
 		filter,
 	)
-	if err != nil {
-		return nil, diags, err
+	if diagnostics.HasErrors(diags) {
+		res.Diagnostics = diags
+		return res
 	}
 
 	outDir := ws.GetOutDir()
@@ -31,13 +34,11 @@ func decodeAndGenerate(
 		outDir = outDirForWorkspace(ws)
 	}
 
-	mods, err := generateScenarioModules(
+	return generateScenarioModules(
 		scenarios,
 		ws.GetFlightplan().GetBaseDir(),
 		outDir,
 	)
-
-	return mods, diags, err
 }
 
 func outDirForWorkspace(w *pb.Workspace) string {
@@ -48,52 +49,55 @@ func generateScenarioModules(
 	scenarios []*flightplan.Scenario,
 	baseDir string,
 	outDir string,
-) ([]*pb.Scenario_Command_Generate_Response, error) {
-	var err error
-	responses := []*pb.Scenario_Command_Generate_Response{}
-
-	if len(scenarios) == 0 {
-		return responses, nil
+) *pb.GenerateScenariosResponse {
+	res := &pb.GenerateScenariosResponse{
+		Responses: []*pb.Scenario_Command_Generate_Response{},
 	}
 
-	baseDir, err = isAbs(baseDir)
+	if len(scenarios) == 0 {
+		return res
+	}
+
+	baseDir, err := isAbs(baseDir)
 	if err != nil {
-		return responses, err
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
 	}
 
 	outDir, err = isAbs(outDir)
 	if err != nil {
-		return responses, err
+		res.Diagnostics = diagnostics.FromErr(err)
+		return res
 	}
 
 	for _, scenario := range scenarios {
-		res := &pb.Scenario_Command_Generate_Response{}
+		gres := &pb.Scenario_Command_Generate_Response{}
 		gen, err := generate.NewGenerator(
 			generate.WithScenario(scenario),
 			generate.WithScenarioBaseDirectory(baseDir),
 			generate.WithOutBaseDirectory(outDir),
 		)
 		if err != nil {
-			res.Diagnostics = diagnostics.FromErr(err)
-			responses = append(responses, res)
+			gres.Diagnostics = diagnostics.FromErr(err)
+			res.Responses = append(res.Responses, gres)
 			continue
 		}
 
 		err = gen.Generate()
 		if err != nil {
-			res.Diagnostics = diagnostics.FromErr(err)
-			responses = append(responses, res)
+			gres.Diagnostics = diagnostics.FromErr(err)
+			res.Responses = append(res.Responses, gres)
 			continue
 		}
-		res.TerraformModule = &pb.Terraform_Module{
+		gres.TerraformModule = &pb.Terraform_Module{
 			ModulePath:  gen.TerraformModulePath(),
 			RcPath:      gen.TerraformRCPath(),
 			ScenarioRef: scenario.Ref(),
 		}
-		responses = append(responses, res)
+		res.Responses = append(res.Responses, gres)
 	}
 
-	return responses, nil
+	return res
 }
 
 func isAbs(path string) (string, error) {
@@ -112,73 +116,77 @@ func isAbs(path string) (string, error) {
 func decodeAndFilter(
 	pfp *pb.FlightPlan,
 	filter *pb.Scenario_Filter,
-) ([]*flightplan.Scenario, []*pb.Diagnostic, error) {
+) (
+	[]*flightplan.Scenario,
+	[]*pb.Diagnostic,
+) {
 	fp, diags := decodeFlightPlan(pfp)
-	if len(diags) > 0 {
-		return nil, diags, status.Error(codes.InvalidArgument, "unable to decode flight plan")
+	if diagnostics.HasErrors(diags) {
+		return nil, diags
 	}
 
 	scenarios, diags := filterScenarios(fp, filter)
-	if len(diags) > 0 {
-		return nil, diags, status.Error(codes.InvalidArgument, "unable to filter scenarios")
+	if diagnostics.HasErrors(diags) {
+		return nil, diags
 	}
 
-	return scenarios, diags, nil
+	return scenarios, diags
 }
 
 func decodeAndGetGenRef(
 	ws *pb.Workspace,
 	f *pb.Scenario_Filter,
-) (
-	[]*pb.Scenario_Command_Generate_Response,
-	[]*pb.Diagnostic,
-	error,
-) {
-	scenarios, diags, err := decodeAndFilter(
+) *pb.GenerateScenariosResponse {
+	res := &pb.GenerateScenariosResponse{
+		Responses: []*pb.Scenario_Command_Generate_Response{},
+	}
+
+	scenarios, diags := decodeAndFilter(
 		ws.GetFlightplan(),
 		f,
 	)
-	if err != nil || len(diags) > 0 || len(scenarios) == 0 {
-		return nil, diags, err
+	res.Diagnostics = diags
+	if diagnostics.HasErrors(diags) || len(scenarios) == 0 {
+		return res
 	}
 
 	outDir := ws.GetOutDir()
 	if outDir == "" {
 		outDir = outDirForWorkspace(ws)
 	}
-	outDir, err = isAbs(outDir)
+	outDir, err := isAbs(outDir)
 	if err != nil {
-		return nil, diags, status.Errorf(codes.InvalidArgument, "unable to decode flight plan: %s", err.Error())
+		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		return res
 	}
 
 	baseDir := ws.GetFlightplan().GetBaseDir()
 	baseDir, err = isAbs(baseDir)
 	if err != nil {
-		return nil, diags, status.Errorf(codes.InvalidArgument, "unable to decode flight plan: %s", err.Error())
+		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		return res
 	}
 
-	responses := []*pb.Scenario_Command_Generate_Response{}
-
 	for _, scenario := range scenarios {
-		res := &pb.Scenario_Command_Generate_Response{}
+		gres := &pb.Scenario_Command_Generate_Response{}
 		gen, err := generate.NewGenerator(
 			generate.WithScenario(scenario),
 			generate.WithScenarioBaseDirectory(baseDir),
 			generate.WithOutBaseDirectory(outDir),
 		)
 		if err != nil {
-			res.Diagnostics = diagnostics.FromErr(err)
-			responses = append(responses, res)
+			gres.Diagnostics = diagnostics.FromErr(err)
+			res.Responses = append(res.Responses, gres)
 			continue
 		}
 
-		res.TerraformModule = &pb.Terraform_Module{
+		gres.TerraformModule = &pb.Terraform_Module{
 			ModulePath:  gen.TerraformModulePath(),
 			RcPath:      gen.TerraformRCPath(),
 			ScenarioRef: scenario.Ref(),
 		}
-		responses = append(responses, res)
+		res.Responses = append(res.Responses, gres)
 	}
 
-	return responses, nil, nil
+	return res
 }

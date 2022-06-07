@@ -3,17 +3,16 @@ package status
 import (
 	"google.golang.org/grpc/codes"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // GenerateScenarios returns the status response for a scenario generate
-func GenerateScenarios(res *pb.GenerateScenariosResponse) error {
+func GenerateScenarios(failOnWarn bool, res *pb.GenerateScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !HasErrorDiags(out) {
+		if !HasFailed(failOnWarn, out) {
 			continue
 		}
 		scenario := flightplan.NewScenario()
@@ -21,7 +20,7 @@ func GenerateScenarios(res *pb.GenerateScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("unable to generate scenarios", codes.Internal, err)
 	}
 
@@ -29,8 +28,8 @@ func GenerateScenarios(res *pb.GenerateScenariosResponse) error {
 }
 
 // ListScenarios returns the status response for a scenario list
-func ListScenarios(res *pb.ListScenariosResponse) error {
-	if HasErrorDiags(res) {
+func ListScenarios(failOnWarn bool, res *pb.ListScenariosResponse) error {
+	if HasFailed(failOnWarn, res) {
 		return Error("unable to list scenarios", codes.Internal)
 	}
 
@@ -38,16 +37,16 @@ func ListScenarios(res *pb.ListScenariosResponse) error {
 }
 
 // ValidateScenarios returns the status response for a scenario launch
-func ValidateScenarios(res *pb.ValidateScenariosResponse) error {
+func ValidateScenarios(failOnWarn bool, res *pb.ValidateScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !diagnostics.HasErrors(diagnostics.Concat(
-			out.GetGenerate().GetDiagnostics(),
-			out.GetInit().GetDiagnostics(),
-			out.GetValidate().GetDiagnostics(),
-			out.GetPlan().GetDiagnostics(),
-		)) {
+		if !HasFailed(failOnWarn,
+			out.GetGenerate(),
+			out.GetInit(),
+			out.GetValidate(),
+			out.GetPlan(),
+		) {
 			continue
 		}
 
@@ -56,7 +55,7 @@ func ValidateScenarios(res *pb.ValidateScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("unable to validate scenarios", codes.Internal, err)
 	}
 
@@ -64,17 +63,17 @@ func ValidateScenarios(res *pb.ValidateScenariosResponse) error {
 }
 
 // LaunchScenarios returns the status response for a scenario launch
-func LaunchScenarios(res *pb.LaunchScenariosResponse) error {
+func LaunchScenarios(failOnWarn bool, res *pb.LaunchScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !diagnostics.HasErrors(diagnostics.Concat(
-			out.GetGenerate().GetDiagnostics(),
-			out.GetInit().GetDiagnostics(),
-			out.GetValidate().GetDiagnostics(),
-			out.GetPlan().GetDiagnostics(),
-			out.GetApply().GetDiagnostics(),
-		)) {
+		if !HasFailed(failOnWarn,
+			out.GetGenerate(),
+			out.GetInit(),
+			out.GetValidate(),
+			out.GetPlan(),
+			out.GetApply(),
+		) {
 			continue
 		}
 
@@ -83,7 +82,7 @@ func LaunchScenarios(res *pb.LaunchScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("unable to launch scenarios", codes.Internal, err)
 	}
 
@@ -91,18 +90,18 @@ func LaunchScenarios(res *pb.LaunchScenariosResponse) error {
 }
 
 // RunScenarios returns the status response for a scenario run
-func RunScenarios(res *pb.RunScenariosResponse) error {
+func RunScenarios(failOnWarn bool, res *pb.RunScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !diagnostics.HasErrors(diagnostics.Concat(
-			out.GetGenerate().GetDiagnostics(),
-			out.GetInit().GetDiagnostics(),
-			out.GetValidate().GetDiagnostics(),
-			out.GetPlan().GetDiagnostics(),
-			out.GetApply().GetDiagnostics(),
-			out.GetDestroy().GetDiagnostics(),
-		)) {
+		if !HasFailed(failOnWarn,
+			out.GetGenerate(),
+			out.GetInit(),
+			out.GetValidate(),
+			out.GetPlan(),
+			out.GetApply(),
+			out.GetDestroy(),
+		) {
 			continue
 		}
 
@@ -111,7 +110,7 @@ func RunScenarios(res *pb.RunScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("unable to run scenarios", codes.Internal, err)
 	}
 
@@ -119,11 +118,11 @@ func RunScenarios(res *pb.RunScenariosResponse) error {
 }
 
 // DestroyScenarios returns the status response for a scenario destroy
-func DestroyScenarios(res *pb.DestroyScenariosResponse) error {
+func DestroyScenarios(failOnWarn bool, res *pb.DestroyScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !HasErrorDiags(out) {
+		if !HasFailed(failOnWarn, out) {
 			continue
 		}
 		scenario := flightplan.NewScenario()
@@ -131,7 +130,7 @@ func DestroyScenarios(res *pb.DestroyScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("failed to destroy scenarios", codes.Internal, err)
 	}
 
@@ -139,11 +138,11 @@ func DestroyScenarios(res *pb.DestroyScenariosResponse) error {
 }
 
 // ExecScenarios returns the status response for a scenario exec
-func ExecScenarios(res *pb.ExecScenariosResponse) error {
+func ExecScenarios(failOnWarn bool, res *pb.ExecScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !HasErrorDiags(out) {
+		if !HasFailed(true, res) {
 			continue
 		}
 		scenario := flightplan.NewScenario()
@@ -151,7 +150,7 @@ func ExecScenarios(res *pb.ExecScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("unable to execute scenarios", codes.Internal, err)
 	}
 
@@ -159,11 +158,11 @@ func ExecScenarios(res *pb.ExecScenariosResponse) error {
 }
 
 // OutputScenarios returns the status response for a scenario output
-func OutputScenarios(res *pb.OutputScenariosResponse) error {
+func OutputScenarios(failOnWarn bool, res *pb.OutputScenariosResponse) error {
 	var err error
 
 	for _, out := range res.GetResponses() {
-		if !HasErrorDiags(out) {
+		if !HasFailed(failOnWarn, out) {
 			continue
 		}
 		scenario := flightplan.NewScenario()
@@ -171,7 +170,7 @@ func OutputScenarios(res *pb.OutputScenariosResponse) error {
 		err = Error(scenario.String(), codes.Internal, err)
 	}
 
-	if HasErrorDiags(res) {
+	if HasFailed(failOnWarn, res) {
 		err = Error("unable to output scenarios", codes.Internal, err)
 	}
 

@@ -153,7 +153,7 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.ListScenarios(res)
+	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioGenerate shows the scenario generation output
@@ -161,7 +161,7 @@ func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.GenerateScenarios(res)
+	return status.GenerateScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioValidate shows the scenario validate output
@@ -169,7 +169,7 @@ func (v *View) ShowScenarioValidate(res *pb.ValidateScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.ValidateScenarios(res)
+	return status.ValidateScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioLaunch shows the scenario launch output
@@ -177,7 +177,7 @@ func (v *View) ShowScenarioLaunch(res *pb.LaunchScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.LaunchScenarios(res)
+	return status.LaunchScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioDestroy shows the scenario destroy output
@@ -185,7 +185,7 @@ func (v *View) ShowScenarioDestroy(res *pb.DestroyScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.DestroyScenarios(res)
+	return status.DestroyScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioRun shows the scenario run output
@@ -193,7 +193,7 @@ func (v *View) ShowScenarioRun(res *pb.RunScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.RunScenarios(res)
+	return status.RunScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioExec shows the scenario exec output
@@ -201,7 +201,7 @@ func (v *View) ShowScenarioExec(res *pb.ExecScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.ExecScenarios(res)
+	return status.ExecScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // ShowScenarioOutput shows the scenario outputs output
@@ -210,7 +210,7 @@ func (v *View) ShowScenarioOutput(res *pb.OutputScenariosResponse) error {
 		return err
 	}
 
-	return status.OutputScenarios(res)
+	return status.OutputScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
 // writeError does our best to write the given error to our stderr

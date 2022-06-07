@@ -35,6 +35,8 @@ message UI {
     // stderr_path if defined, we'll write our stderr messages to a file in
     // the given path
     string stderr_path = 7;
+    // Render warnings as failures
+    bool fail_on_warnings = 8;
 
     enum Format {
       FORMAT_UNSPECIFIED = 0;
@@ -323,6 +325,8 @@ message Terraform {
       string user_sub_command = 6;
       // Output filter
       string output_filter = 7;
+      // Fail on warnings
+      bool fail_on_warnings = 8;
 
       // Flags are a subset of the Terraform flags that we allow to be settable.
       message Flags {

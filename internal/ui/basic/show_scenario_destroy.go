@@ -20,5 +20,5 @@ func (v *View) ShowScenarioDestroy(res *pb.DestroyScenariosResponse) error {
 
 	v.WriteDiagnostics(res.GetDiagnostics())
 
-	return status.DestroyScenarios(res)
+	return status.DestroyScenarios(v.settings.GetFailOnWarnings(), res)
 }

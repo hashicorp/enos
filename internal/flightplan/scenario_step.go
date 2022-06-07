@@ -644,8 +644,8 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 			if parts[1] == "default" {
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagWarning,
-					Summary:  "default provider used as an aliased value",
-					Detail:   fmt.Sprintf("%s.%s is unnecessarily specified a step provider alias. Default providers are not aliased and will be used by steps automatically unless overriden by an non-default provider", parts[0], parts[1]),
+					Summary:  "cannot use default provider as alias value",
+					Detail:   fmt.Sprintf(`provider alias %s has been set to %s.%s. Providers that have been labeled as "default" cannot be used as aliases because they are always available to scenario`, providerImportName, parts[0], parts[1]),
 					Subject:  providers.Expr.Range().Ptr(),
 					Context:  providers.Range.Ptr(),
 				})
@@ -696,8 +696,8 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 		if provider.Alias == "default" {
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagWarning,
-				Summary:  "default provider used as an aliased value",
-				Detail:   fmt.Sprintf("%s.%s is unnecessarily specified a step provider alias. Default providers are not aliased and will be used by steps automatically unless overriden by an non-default provider", provider.Type, provider.Alias),
+				Summary:  "cannot use default provider as alias value",
+				Detail:   fmt.Sprintf(`provider alias %s has been set to %s.%s. Providers that have been labeled as "default" cannot be used as aliases because they are always available to scenario`, providerImportName, provider.Type, provider.Alias),
 				Subject:  providers.Expr.Range().Ptr(),
 				Context:  providers.Range.Ptr(),
 			})

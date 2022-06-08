@@ -50,6 +50,14 @@ func WithDecoderVarFiles(files RawFiles) DecoderOpt {
 	}
 }
 
+// WithDecoderEnv sets flight plan variables from env vars
+func WithDecoderEnv(vars []string) DecoderOpt {
+	return func(fp *Decoder) error {
+		fp.varEnvVars = vars
+		return nil
+	}
+}
+
 // WithDecoderBaseDir sets the flight plan base directory
 func WithDecoderBaseDir(path string) DecoderOpt {
 	return func(fp *Decoder) error {
@@ -66,6 +74,7 @@ type Decoder struct {
 	VarsParser *hclparse.Parser
 	fpFiles    RawFiles
 	varFiles   RawFiles
+	varEnvVars []string
 	dir        string
 }
 
@@ -273,5 +282,12 @@ func (d *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 		})
 	}
 
-	return fp, diags.Extend(fp.Decode(d.baseEvalContext(), d.FPParser.Files(), d.VarsParser.Files()))
+	return fp, diags.Extend(
+		fp.Decode(
+			d.baseEvalContext(),
+			d.FPParser.Files(),
+			d.VarsParser.Files(),
+			d.varEnvVars,
+		),
+	)
 }

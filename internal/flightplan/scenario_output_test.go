@@ -25,6 +25,11 @@ func Test_Decode_Scenario_Output(t *testing.T) {
 		{
 			desc: "valid outputs",
 			hcl: fmt.Sprintf(`
+variable "input" {
+  type    = string
+  default = "defaultval"
+}
+
 module "backend" {
   source = "%s"
 }
@@ -38,6 +43,11 @@ scenario "basic" {
     description = "static output"
     sensitive   = true
     value       = "veryknown"
+  }
+
+  output "var" {
+    description = "from variable"
+    value = var.input
   }
 
   output "step_ref" {
@@ -77,6 +87,11 @@ scenario "basic" {
 								Description: "static output",
 								Sensitive:   true,
 								Value:       testMakeStepVarValue(cty.StringVal("veryknown")),
+							},
+							{
+								Name:        "var",
+								Description: "from variable",
+								Value:       testMakeStepVarValue(cty.StringVal("fromenv")),
 							},
 							{
 								Name:        "step_ref",
@@ -175,7 +190,7 @@ scenario "backend" {
 		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), "ENOS_VAR_input=fromenv")
 			if test.fail {
 				require.Error(t, err)
 				return

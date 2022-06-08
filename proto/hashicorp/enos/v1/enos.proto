@@ -120,6 +120,7 @@ message FlightPlan {
   string base_dir = 1;
   map<string, bytes> enos_hcl = 2;
   map<string, bytes> enos_vars_hcl = 3;
+  repeated string enos_vars_env = 4;
 }
 
 // Scenario is an Enos scenario.

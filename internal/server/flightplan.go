@@ -13,6 +13,7 @@ func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.Scenario_
 		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),
 		flightplan.WithDecoderFPFiles(pfp.GetEnosHcl()),
 		flightplan.WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
+		flightplan.WithDecoderEnv(pfp.GetEnosVarsEnv()),
 	)
 	if err != nil {
 		res.Diagnostics = diagnostics.FromErr(err)

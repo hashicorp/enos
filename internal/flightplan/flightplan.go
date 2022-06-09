@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
@@ -100,7 +101,12 @@ type FlightPlan struct {
 // continually expanding the evaluation context as more sub-sections are
 // decoded. It returns HCL diagnostics that are collected over the course of
 // decoding.
-func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, fpFiles, varsFiles map[string]*hcl.File) hcl.Diagnostics {
+func (fp *FlightPlan) Decode(
+	ctx *hcl.EvalContext,
+	fpFiles map[string]*hcl.File,
+	varsFiles map[string]*hcl.File,
+	envVars []string,
+) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	if fp.BaseDir == "" {
@@ -129,7 +135,7 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, fpFiles, varsFiles map[string
 
 	// Decode and validate our variables. They'll be added to eval context for
 	// access in later decoding.
-	diags = diags.Extend(fp.decodeVariables(ctx, varsFiles))
+	diags = diags.Extend(fp.decodeVariables(ctx, varsFiles, envVars))
 
 	// Decode child blocks. Each child block decoder is responsible for
 	// extending the evaluation context.
@@ -144,8 +150,12 @@ func (fp *FlightPlan) Decode(ctx *hcl.EvalContext, fpFiles, varsFiles map[string
 
 // decodeVariables decodes "variable" blocks that are defined in the
 // top-level schema and sets/validates values that might have been passed
-// in via enos.vars.hcl files.
-func (fp *FlightPlan) decodeVariables(ctx *hcl.EvalContext, varFiles map[string]*hcl.File) hcl.Diagnostics {
+// in via enos.vars.hcl or ENOS_VAR_ environment variables.
+func (fp *FlightPlan) decodeVariables(
+	ctx *hcl.EvalContext,
+	varFiles map[string]*hcl.File,
+	envVars []string,
+) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 	values := map[string]*VariableValue{}
 	vars := map[string]cty.Value{}
@@ -190,15 +200,34 @@ func (fp *FlightPlan) decodeVariables(ctx *hcl.EvalContext, varFiles map[string]
 	}
 
 	for _, val := range vals {
-		ctyVal, moreDiags := val.Expr.Value(nil) // variable values don't have access to anything
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		values[val.Name] = &VariableValue{
+			Expr:   val.Expr,
+			Range:  val.Range,
+			Source: VariableValueSourceVarsFile,
+		}
+	}
+
+	// Now set any values that have been set from env vars. We do this last to
+	// ensure that environment variables have the highest precedence.
+	for _, envVar := range envVars {
+		if !strings.HasPrefix(envVar, EnvVarPrefix) {
 			continue
 		}
 
-		values[val.Name] = &VariableValue{
-			Value: ctyVal,
-			Range: val.Range,
+		trimmed := envVar[len(EnvVarPrefix):]
+		idx := strings.Index(trimmed, "=")
+		if idx == -1 {
+			continue
+		}
+
+		values[trimmed[:idx]] = &VariableValue{
+			EnvVarRaw: trimmed[idx+1:],
+			Source:    VariableValueSourceEnvVar,
+			Range: hcl.Range{
+				Filename: "environment_variables",
+				Start:    hcl.InitialPos,
+				End:      hcl.InitialPos,
+			},
 		}
 	}
 
@@ -222,10 +251,9 @@ func (fp *FlightPlan) decodeVariables(ctx *hcl.EvalContext, varFiles map[string]
 		vars[variable.Name] = variable.Value()
 	}
 
-	// NOTE: At this point we're putting the variables into the eval context and
-	// forgetting about their parsed values. That means we're losing "sensitive"
-	// data and the like but that should be fine for now as we're not doing output
-	// yet.
+	// NOTE: We only keep track of variable values in the eval context. That is
+	// fine for now but if we ever want to handle things like "sensitive" we'll
+	// have to keep them around in the flight plan.
 	ctx.Variables["var"] = cty.ObjectVal(vars)
 
 	return diags

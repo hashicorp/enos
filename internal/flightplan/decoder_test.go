@@ -28,11 +28,11 @@ func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 	return fmt.Errorf(msg.String())
 }
 
-func testDecodeHCL(t *testing.T, hcl []byte) (*FlightPlan, error) {
+func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error) {
 	t.Helper()
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
-	decoder, err := NewDecoder(WithDecoderBaseDir(cwd))
+	decoder, err := NewDecoder(WithDecoderBaseDir(cwd), WithDecoderEnv(env))
 	require.NoError(t, err)
 	_, diags := decoder.FPParser.ParseHCL(hcl, "decoder-test.hcl")
 	require.False(t, diags.HasErrors(), testDiagsToError(decoder.ParserFiles(), diags))

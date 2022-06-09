@@ -9,6 +9,7 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
 var variableSchema = &hcl.BodySchema{
@@ -36,9 +37,21 @@ type Variable struct {
 
 // VariableValue is a user supplied variable value
 type VariableValue struct {
-	Value cty.Value
-	Range hcl.Range
+	Expr      hcl.Expression
+	Range     hcl.Range
+	Source    VariableValueSource
+	EnvVarRaw string
 }
+
+type VariableValueSource int
+
+const (
+	VariableValueSourceUnknown VariableValueSource = iota
+	VariableValueSourceVarsFile
+	VariableValueSourceEnvVar
+)
+
+const EnvVarPrefix = "ENOS_VAR_"
 
 // NewVariable returns a new Variable
 func NewVariable() *Variable {
@@ -102,10 +115,44 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 	}
 
 	if setVal, ok := values[v.Name]; ok {
-		val := setVal.Value
+		switch setVal.Source {
+		case VariableValueSourceEnvVar:
+			// Env vars are tricky. They might be a string or a complex type.
+			// If we know they're a string we'll decode them as a string literal.
+			// If we don't know the type information we'll try the expression
+			// and if it fails then we'll assume it's a string literal.
+			if v.Type == cty.String || v.ConstraintType == cty.String {
+				v.SetValue = cty.StringVal(setVal.EnvVarRaw)
+			} else {
+				expr, exprDiags := hclsyntax.ParseExpression(
+					[]byte(setVal.EnvVarRaw),
+					setVal.Range.Filename,
+					hcl.InitialPos,
+				)
+
+				val, moreExprDiags := expr.Value(nil)
+				exprDiags = exprDiags.Extend(moreExprDiags)
+				if !exprDiags.HasErrors() {
+					v.SetValue = val
+				} else {
+					v.SetValue = cty.StringVal(setVal.EnvVarRaw)
+				}
+			}
+		default:
+			// We have a value that isn't from the environment so we'll get
+			// the value of the expression.
+			val, moreDiags := setVal.Expr.Value(nil)
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				v.SetValue = cty.DynamicVal
+				return diags
+			}
+			v.SetValue = val
+		}
+
 		if v.ConstraintType != cty.NilType {
-			var err error
-			val, err = convert.Convert(setVal.Value, v.ConstraintType)
+			val, err := convert.Convert(v.SetValue, v.ConstraintType)
+			v.SetValue = val
 			if err != nil {
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
@@ -113,11 +160,9 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
 					Subject:  setVal.Range.Ptr(),
 				})
-				val = cty.DynamicVal
+				v.SetValue = cty.DynamicVal
 			}
 		}
-
-		v.SetValue = val
 	}
 
 	return diags

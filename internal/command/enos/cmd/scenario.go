@@ -139,6 +139,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 
 	decoder, err := flightplan.NewDecoder(
 		flightplan.WithDecoderBaseDir(scenarioState.baseDir),
+		flightplan.WithDecoderEnv(os.Environ()),
 	)
 	if err != nil {
 		return fmt.Errorf("unable to create new flight plan decoder: %w", err)
@@ -213,7 +214,8 @@ func scenarioTimeoutContext() (context.Context, func()) {
 // a new instance of FlightPlan.
 func readFlightPlanConfig(dir string) (*pb.FlightPlan, error) {
 	fp := &pb.FlightPlan{
-		BaseDir: dir,
+		BaseDir:     dir,
+		EnosVarsEnv: os.Environ(),
 	}
 
 	cfgFiles, err := flightplan.FindRawFiles(dir, flightplan.FlightPlanFileNamePattern)

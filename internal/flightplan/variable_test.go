@@ -25,22 +25,6 @@ func Test_Decode_Variable(t *testing.T) {
 		fail     bool
 	}{
 		{
-			desc: "set",
-			vars: map[string]*VariableValue{
-				"astring": {
-					Value: cty.StringVal("stringval"),
-				},
-			},
-			enosCfg: `
-variable "astring" {
-  description = "astring desc"
-  type = string
-  default = "defaultval"
-}
-`,
-			expected: cty.StringVal("stringval"),
-		},
-		{
 			desc: "default",
 			enosCfg: `
 variable "astring" {
@@ -55,9 +39,10 @@ variable "astring" {
 			desc: "invalid value",
 			vars: map[string]*VariableValue{
 				"astring": {
-					Value: cty.ObjectVal(map[string]cty.Value{
+					Source: VariableValueSourceVarsFile,
+					Expr: hcl.StaticExpr(cty.ObjectVal(map[string]cty.Value{
 						"invalid": cty.StringVal("val"),
-					}),
+					}), fakeRng),
 					Range: fakeRng,
 				},
 			},
@@ -72,15 +57,78 @@ variable "astring" {
 			fail: true,
 		},
 		{
-			desc: "complex set",
+			desc: "set string from env",
+			vars: map[string]*VariableValue{
+				"astring": {
+					Source:    VariableValueSourceEnvVar,
+					EnvVarRaw: "stringval",
+				},
+			},
+			enosCfg: `
+variable "astring" {
+  description = "astring desc"
+  type = string
+  default = "defaultval"
+}
+`,
+			expected: cty.StringVal("stringval"),
+		},
+		{
+			desc: "set string from file",
+			vars: map[string]*VariableValue{
+				"astring": {
+					Source: VariableValueSourceVarsFile,
+					Expr:   hcl.StaticExpr(cty.StringVal("stringval"), fakeRng),
+					Range:  fakeRng,
+				},
+			},
+			enosCfg: `
+variable "astring" {
+  description = "astring desc"
+  type = string
+  default = "defaultval"
+}
+`,
+			expected: cty.StringVal("stringval"),
+		},
+		{
+			desc: "complex set from env",
 			vars: map[string]*VariableValue{
 				"complex": {
-					Value: cty.ObjectVal(map[string]cty.Value{
+					Source:    VariableValueSourceEnvVar,
+					EnvVarRaw: `{nested = {numlist = ["foo"]}, abool = true}`,
+				},
+			},
+			enosCfg: `
+variable "complex" {
+  description = "complex desc"
+  type = object({
+    nested = object({
+      numlist = list(string)
+	})
+	abool = bool
+  })
+  default = null
+}
+`,
+			expected: cty.ObjectVal(map[string]cty.Value{
+				"nested": cty.ObjectVal(map[string]cty.Value{
+					"numlist": cty.ListVal([]cty.Value{cty.StringVal("foo")}),
+				}),
+				"abool": cty.BoolVal(true),
+			}),
+		},
+		{
+			desc: "complex set from file",
+			vars: map[string]*VariableValue{
+				"complex": {
+					Source: VariableValueSourceVarsFile,
+					Expr: hcl.StaticExpr(cty.ObjectVal(map[string]cty.Value{
 						"nested": cty.ObjectVal(map[string]cty.Value{
 							"numlist": cty.ListVal([]cty.Value{cty.StringVal("foo")}),
 						}),
 						"abool": cty.BoolVal(true),
-					}),
+					}), fakeRng),
 				},
 			},
 			enosCfg: `
@@ -117,7 +165,7 @@ variable "complex" {
 			variable := NewVariable()
 			diags = variable.decode(block, test.vars)
 			if test.fail {
-				require.Error(t, diags.Errs()[0])
+				require.True(t, diags.HasErrors(), diags.Error())
 			} else {
 				require.False(t, diags.HasErrors(), diags.Error())
 				require.Equal(t, test.expected, variable.Value())

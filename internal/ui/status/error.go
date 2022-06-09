@@ -3,8 +3,6 @@ package status
 import (
 	"strings"
 
-	"google.golang.org/grpc/codes"
-
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -14,7 +12,6 @@ type ErrExit struct {
 	Err      error
 	ExitCode int
 	Msg      string
-	Code     codes.Code
 }
 
 func (e *ErrExit) Unwrap() error {
@@ -22,7 +19,7 @@ func (e *ErrExit) Unwrap() error {
 }
 
 func (e *ErrExit) Error() string {
-	return Error(e.Msg, e.Code, e.Err).Error()
+	return Error(e.Msg, e.Err).Error()
 }
 
 // ErrDiagnostic is an error that can carry diagnostics information

@@ -95,7 +95,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 			})
 
 			expected := &pb.RunScenariosResponse{
-				Responses: []*pb.Scenario_Command_Run_Response{},
+				Responses: []*pb.Scenario_Operation_Run_Response{},
 			}
 			for _, variant := range test.variants {
 				elements := []*pb.Scenario_Filter_Element{}
@@ -106,8 +106,8 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 					})
 				}
 
-				res := &pb.Scenario_Command_Run_Response{
-					Generate: &pb.Scenario_Command_Generate_Response{
+				res := &pb.Scenario_Operation_Run_Response{
+					Generate: &pb.Scenario_Operation_Generate_Response{
 						TerraformModule: &pb.Terraform_Module{
 							ModulePath: filepath.Join(outDir, variant.uid, "scenario.tf"),
 							RcPath:     filepath.Join(outDir, variant.uid, "terraform.rc"),

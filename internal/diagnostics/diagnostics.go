@@ -29,6 +29,20 @@ func HasWarnings(diags ...[]*pb.Diagnostic) bool {
 	return hasSeverity(pb.Diagnostic_SEVERITY_WARNING, diags...)
 }
 
+// HasFailed takes a bool about warnings as errors and a set of diagnostic and
+// returns a bool if a failure has occurred.
+func HasFailed(failOnWarn bool, diags ...[]*pb.Diagnostic) bool {
+	if hasSeverity(pb.Diagnostic_SEVERITY_ERROR) {
+		return true
+	}
+
+	if failOnWarn {
+		return hasSeverity(pb.Diagnostic_SEVERITY_WARNING)
+	}
+
+	return false
+}
+
 func hasSeverity(sev pb.Diagnostic_Severity, diags ...[]*pb.Diagnostic) bool {
 	if len(diags) < 1 {
 		return false

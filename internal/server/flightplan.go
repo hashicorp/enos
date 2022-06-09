@@ -6,25 +6,34 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-func decodeFlightPlan(rfp *pb.FlightPlan) (*flightplan.FlightPlan, []*pb.Diagnostic) {
+func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.Scenario_Operation_Decode_Response) {
+	res := &pb.Scenario_Operation_Decode_Response{Diagnostics: []*pb.Diagnostic{}}
+
 	dec, err := flightplan.NewDecoder(
-		flightplan.WithDecoderBaseDir(rfp.GetBaseDir()),
-		flightplan.WithDecoderFPFiles(rfp.GetEnosHcl()),
-		flightplan.WithDecoderVarFiles(rfp.GetEnosVarsHcl()),
+		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),
+		flightplan.WithDecoderFPFiles(pfp.GetEnosHcl()),
+		flightplan.WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
 	)
 	if err != nil {
-		return nil, diagnostics.FromErr(err)
+		res.Diagnostics = diagnostics.FromErr(err)
+		return nil, res
 	}
 
-	diags := dec.Parse()
-	if diags.HasErrors() {
-		return nil, diagnostics.FromHCL(dec.ParserFiles(), diags)
+	hclDiags := dec.Parse()
+	if len(hclDiags) > 0 {
+		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
 	}
 
-	fp, moreDiags := dec.Decode()
-	diags = diags.Extend(moreDiags)
+	if diagnostics.HasErrors(res.GetDiagnostics()) {
+		return nil, res
+	}
 
-	return fp, diagnostics.FromHCL(dec.ParserFiles(), diags)
+	fp, hclDiags := dec.Decode()
+	if len(hclDiags) > 0 {
+		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
+	}
+
+	return fp, res
 }
 
 // filterScenarios takes CLI arguments that may contain a scenario filter and

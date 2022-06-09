@@ -10,12 +10,16 @@ import (
 
 // ShowScenarioExec shows scenario exec view
 func (v *View) ShowScenarioExec(res *pb.ExecScenariosResponse) error {
+	v.writeDecodeResponse(res.GetDecode())
+
 	for _, out := range res.GetResponses() {
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetTerraformModule().GetScenarioRef())
 
 		v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
-		_ = v.writeExecResponse(out.GetSubCommand(), out.GetExec())
+		v.writeUntilFailure([]func() bool{
+			v.execResponseWriter(out.GetSubCommand(), out.GetExec()),
+		})
 	}
 
 	v.WriteDiagnostics(res.GetDiagnostics())

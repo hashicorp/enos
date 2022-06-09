@@ -54,7 +54,7 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			require.NoError(t, err, string(out))
 
 			expected := &pb.ValidateScenariosResponse{
-				Responses: []*pb.Scenario_Command_Validate_Response{},
+				Responses: []*pb.Scenario_Operation_Validate_Response{},
 			}
 
 			for _, variant := range test.variants {
@@ -69,8 +69,8 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 				}
 				uid := fmt.Sprintf("%x", sha256.Sum256([]byte(name)))
 
-				expected.Responses = append(expected.Responses, &pb.Scenario_Command_Validate_Response{
-					Generate: &pb.Scenario_Command_Generate_Response{
+				expected.Responses = append(expected.Responses, &pb.Scenario_Operation_Validate_Response{
+					Generate: &pb.Scenario_Operation_Generate_Response{
 						TerraformModule: &pb.Terraform_Module{
 							ModulePath: filepath.Join(outDir, uid, "scenario.tf"),
 							RcPath:     filepath.Join(outDir, uid, "terraform.rc"),
@@ -143,7 +143,7 @@ func TestAcc_Cmd_Scenario_Validate_WithWarnings(t *testing.T) {
 			require.NoError(t, err, string(out))
 
 			expected := &pb.ValidateScenariosResponse{
-				Responses: []*pb.Scenario_Command_Validate_Response{},
+				Responses: []*pb.Scenario_Operation_Validate_Response{},
 			}
 
 			for _, variant := range []string{"has_warning", "valid"} {
@@ -155,8 +155,8 @@ func TestAcc_Cmd_Scenario_Validate_WithWarnings(t *testing.T) {
 				})
 				uid := fmt.Sprintf("%x", sha256.Sum256([]byte(name)))
 
-				expected.Responses = append(expected.Responses, &pb.Scenario_Command_Validate_Response{
-					Generate: &pb.Scenario_Command_Generate_Response{
+				expected.Responses = append(expected.Responses, &pb.Scenario_Operation_Validate_Response{
+					Generate: &pb.Scenario_Operation_Generate_Response{
 						TerraformModule: &pb.Terraform_Module{
 							ModulePath: filepath.Join(outDir, uid, "scenario.tf"),
 							RcPath:     filepath.Join(outDir, uid, "terraform.rc"),

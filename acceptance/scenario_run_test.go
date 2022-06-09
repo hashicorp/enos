@@ -67,9 +67,9 @@ func TestAcc_Cmd_Scenario_Run(t *testing.T) {
 			require.NoError(t, err, string(out))
 
 			expected := &pb.RunScenariosResponse{
-				Responses: []*pb.Scenario_Command_Run_Response{
+				Responses: []*pb.Scenario_Operation_Run_Response{
 					{
-						Generate: &pb.Scenario_Command_Generate_Response{
+						Generate: &pb.Scenario_Operation_Generate_Response{
 							TerraformModule: &pb.Terraform_Module{
 								ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
 								RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),

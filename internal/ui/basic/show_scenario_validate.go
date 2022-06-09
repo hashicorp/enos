@@ -10,6 +10,8 @@ import (
 
 // ShowScenarioValidate shows scenario generate view
 func (v *View) ShowScenarioValidate(res *pb.ValidateScenariosResponse) error {
+	v.writeDecodeResponse(res.GetDecode())
+
 	for _, out := range res.GetResponses() {
 		scenario := flightplan.NewScenario()
 		scenario.FromRef(out.GetGenerate().GetTerraformModule().GetScenarioRef())

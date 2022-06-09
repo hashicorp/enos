@@ -167,8 +167,14 @@ message Scenario {
     }
   }
 
-  // Command is an enos scenario command.
-  message Command {
+  // Operation is an enos scenario operation.
+  message Operation {
+    message Decode {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+      }
+    }
+
     message Generate {
       message Response {
         repeated Diagnostic diagnostics = 1;
@@ -373,7 +379,8 @@ message ListScenariosRequest {
 
 message ListScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Ref.Scenario scenarios = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Ref.Scenario scenarios = 3;
 }
 
 message GenerateScenariosRequest {
@@ -383,7 +390,8 @@ message GenerateScenariosRequest {
 
 message GenerateScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Generate.Response responses = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Generate.Response responses = 3;
 }
 
 message ValidateScenariosRequest {
@@ -393,7 +401,8 @@ message ValidateScenariosRequest {
 
 message ValidateScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Validate.Response responses = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Validate.Response responses = 3;
 }
 
 message LaunchScenariosRequest {
@@ -403,7 +412,8 @@ message LaunchScenariosRequest {
 
 message LaunchScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Launch.Response responses = 3;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Launch.Response responses = 3;
 }
 
 message DestroyScenariosRequest {
@@ -413,7 +423,8 @@ message DestroyScenariosRequest {
 
 message DestroyScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Destroy.Response responses = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Destroy.Response responses = 3;
 }
 
 message RunScenariosRequest {
@@ -423,7 +434,8 @@ message RunScenariosRequest {
 
 message RunScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Run.Response responses = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Run.Response responses = 3;
 }
 
 message ExecScenariosRequest {
@@ -433,7 +445,8 @@ message ExecScenariosRequest {
 
 message ExecScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Exec.Response responses = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Exec.Response responses = 3;
 }
 
 message OutputScenariosRequest {
@@ -443,7 +456,8 @@ message OutputScenariosRequest {
 
 message OutputScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  repeated Scenario.Command.Output.Response responses = 2;
+  Scenario.Operation.Decode.Response decode = 2;
+  repeated Scenario.Operation.Output.Response responses = 3;
 }
 
 message FormatRequest {

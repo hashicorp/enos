@@ -636,6 +636,22 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 				continue
 			}
 
+			// Make sure we're not importing a "default" provider since they
+			// don't have aliases and thus cannot be used as a provider alias
+			// value. It is also not necessary as the provider will be rendered
+			// as the default with no alias and thus the step/module will use
+			// it by default.
+			if parts[1] == "default" {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagWarning,
+					Summary:  "cannot use default provider as alias value",
+					Detail:   fmt.Sprintf(`provider alias %s has been set to %s.%s. Providers that have been labeled as "default" cannot be used as aliases because they are always available to scenario`, providerImportName, parts[0], parts[1]),
+					Subject:  providers.Expr.Range().Ptr(),
+					Context:  providers.Range.Ptr(),
+				})
+				continue
+			}
+
 			// Marshal our provider value into our instance and add it to the providers
 			// list.
 			err := provider.FromCtyValue(providerVal)
@@ -669,6 +685,22 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 		alias, moreDiags := findProvider(provider.Type, provider.Alias)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
+			continue
+		}
+
+		// Make sure we're not importing a "default" provider since they
+		// don't have aliases and thus cannot be used as a provider alias
+		// value. It is also not necessary as the provider will be rendered
+		// as the default with no alias and thus the step/module will use
+		// it by default.
+		if provider.Alias == "default" {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "cannot use default provider as alias value",
+				Detail:   fmt.Sprintf(`provider alias %s has been set to %s.%s. Providers that have been labeled as "default" cannot be used as aliases because they are always available to scenario`, providerImportName, provider.Type, provider.Alias),
+				Subject:  providers.Expr.Range().Ptr(),
+				Context:  providers.Range.Ptr(),
+			})
 			continue
 		}
 

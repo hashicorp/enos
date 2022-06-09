@@ -71,7 +71,7 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 			require.NoError(t, err, string(out))
 
 			expected := &pb.DestroyScenariosResponse{
-				Responses: []*pb.Scenario_Command_Destroy_Response{
+				Responses: []*pb.Scenario_Operation_Destroy_Response{
 					{
 						TerraformModule: &pb.Terraform_Module{
 							ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),

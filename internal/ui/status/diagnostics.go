@@ -3,9 +3,6 @@ package status
 import (
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
-
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -33,23 +30,23 @@ func HasWarningDiags(res ...ResWithDiags) bool {
 	return diagnostics.HasWarnings(combinedResWithDiags(res))
 }
 
-// Error takes a message, gRPC error code, and an optional error to wrap
-// and returns a new error
-func Error(msg string, code codes.Code, errs ...error) error {
-	for _, err := range errs {
-		if err != nil {
-			msg = fmt.Sprintf("%s: %s", msg, err.Error())
+// Error takes a message and optional errors to wrap and returns a new error
+func Error(msg string, errs ...error) error {
+	err := fmt.Errorf(msg)
+	for _, err2 := range errs {
+		if err2 != nil {
+			err = fmt.Errorf("%s: %w", err.Error(), err2)
 		}
 	}
 
-	return grpcstatus.Errorf(code, msg)
+	return err
 }
 
 // HasFailed takes a boolean which determines whether or not the diagnostics
 // failed or not.
 func HasFailed(failOnWarn bool, res ...ResWithDiags) bool {
 	if HasErrorDiags(res...) {
-		return false
+		return true
 	}
 
 	return failOnWarn && HasWarningDiags(res...)

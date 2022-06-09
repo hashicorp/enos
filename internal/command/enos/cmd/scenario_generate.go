@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -18,7 +17,6 @@ func newScenarioGenerateCmd() *cobra.Command {
 		Short:             "Generate Terraform modules from matching scenarios",
 		Long:              fmt.Sprintf("Generate a Terraform modules from matching scenarios. %s", scenarioFilterDesc),
 		RunE:              runScenarioGenerateCmd,
-		Args:              scenarioFilterArgs,
 		ValidArgsFunction: scenarioNameCompletion,
 		Hidden:            true, // This is hidden because it is intended for debug only
 	}
@@ -33,13 +31,17 @@ func runScenarioGenerateCmd(cmd *cobra.Command, args []string) error {
 
 	sf, err := flightplan.ParseScenarioFilter(args)
 	if err != nil {
-		return status.Error(codes.InvalidArgument, err.Error())
+		return ui.ShowScenarioGenerate(&pb.GenerateScenariosResponse{
+			Decode: &pb.Scenario_Operation_Decode_Response{
+				Diagnostics: diagnostics.FromErr(err),
+			},
+		})
 	}
 
-	res, err := enosClient.GenerateScenarios(ctx, &pb.GenerateScenariosRequest{
+	res, err := rootState.enosClient.GenerateScenarios(ctx, &pb.GenerateScenariosRequest{
 		Workspace: &pb.Workspace{
-			Flightplan: flightPlan,
-			OutDir:     scenarioCfg.outDir,
+			Flightplan: scenarioState.protoFp,
+			OutDir:     scenarioState.outDir,
 		},
 		Filter: sf.Proto(),
 	})

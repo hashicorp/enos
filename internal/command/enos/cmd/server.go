@@ -2,11 +2,9 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"time"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/enos/internal/client"
 	"github.com/hashicorp/enos/internal/server"
@@ -17,14 +15,14 @@ import (
 // startGRPCServer starts the enos gRPC server and returns the instance and client to
 // the server.
 func startGRPCServer(ctx context.Context, timeout time.Duration) (*server.ServiceV1, pb.EnosServiceClient, error) {
-	url, err := url.Parse(rootArgs.listenGRPC)
+	url, err := url.Parse(rootState.listenGRPC)
 	if err != nil {
-		return nil, nil, status.Errorf(codes.InvalidArgument, "parsing listen-grpc value: %s", err.Error())
+		return nil, nil, fmt.Errorf("parsing listen-grpc value: %w", err)
 	}
 
 	log := hclog.New(&hclog.LoggerOptions{
 		Name:  "enos",
-		Level: hclog.LevelFromString(rootArgs.logLevelServer),
+		Level: hclog.LevelFromString(rootState.logLevelServer),
 	})
 
 	svr, err := server.New(
@@ -32,7 +30,7 @@ func startGRPCServer(ctx context.Context, timeout time.Duration) (*server.Servic
 		server.WithLogger(log),
 	)
 	if err != nil {
-		return nil, nil, status.Error(codes.Internal, err.Error())
+		return nil, nil, err
 	}
 
 	go func() {
@@ -46,13 +44,13 @@ func startGRPCServer(ctx context.Context, timeout time.Duration) (*server.Servic
 	for {
 		select {
 		case <-waitCtx.Done():
-			return nil, nil, status.Errorf(codes.DeadlineExceeded, "waiting for server to start: %s", err)
+			return nil, nil, fmt.Errorf("waiting for server to start: %w", err)
 		default:
 		}
 
 		select {
 		case <-waitCtx.Done():
-			return nil, nil, status.Errorf(codes.DeadlineExceeded, "waiting for server to start: %s", err)
+			return nil, nil, fmt.Errorf("waiting for server to start: %w", err)
 		case <-ticker.C:
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 			defer cancel()

@@ -199,6 +199,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"coalescelist":           stdlib.CoalesceListFunc,
 			"compact":                stdlib.CompactFunc,
 			"concat":                 stdlib.ConcatFunc,
+			"contains":               stdlib.ContainsFunc,
 			"distinct":               stdlib.DistinctFunc,
 			"divide":                 stdlib.DivideFunc,
 			"element":                stdlib.ElementFunc,

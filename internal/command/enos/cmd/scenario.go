@@ -20,13 +20,14 @@ import (
 
 // scenarioConfig is the 'scenario' sub-command configuration type
 type scenarioStateType struct {
-	baseDir     string
-	outDir      string
-	fp          *flightplan.FlightPlan
-	protoFp     *pb.FlightPlan
-	timeout     time.Duration
-	tfConfig    *terraform.Config
-	lockTimeout time.Duration
+	baseDir        string
+	outDir         string
+	fp             *flightplan.FlightPlan
+	protoFp        *pb.FlightPlan
+	timeout        time.Duration
+	tfConfig       *terraform.Config
+	lockTimeout    time.Duration
+	varsFilesPaths []string
 }
 
 // scenarioState is the 'scenario' sub-command configuration
@@ -64,6 +65,7 @@ func newScenarioCmd() *cobra.Command {
 	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagsnostics are created")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "use the given directory as the working directory")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "base directory where generated modules will be created")
+	scenarioCmd.PersistentFlags().StringSliceVar(&scenarioState.varsFilesPaths, "var-file", []string{}, "path to use for variable values files (default will load all enos*.vars.hcl files in the working directory)")
 
 	scenarioCmd.AddCommand(newScenarioListCmd())
 	scenarioCmd.AddCommand(newScenarioGenerateCmd())
@@ -95,7 +97,7 @@ func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load the configuration from our working dir
-	scenarioState.protoFp, err = readFlightPlanConfig(scenarioState.baseDir)
+	scenarioState.protoFp, err = readFlightPlanConfig(scenarioState.baseDir, scenarioState.varsFilesPaths)
 	return err
 }
 
@@ -137,12 +139,19 @@ func setupDefaultScenarioCfg() error {
 func decodeFlightPlan(cmd *cobra.Command) error {
 	diags := hcl.Diagnostics{}
 
+	pfp, err := readFlightPlanConfig(scenarioState.baseDir, scenarioState.varsFilesPaths)
+	if err != nil {
+		return err
+	}
+
 	decoder, err := flightplan.NewDecoder(
-		flightplan.WithDecoderBaseDir(scenarioState.baseDir),
-		flightplan.WithDecoderEnv(os.Environ()),
+		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),
+		flightplan.WithDecoderFPFiles(pfp.GetEnosHcl()),
+		flightplan.WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
+		flightplan.WithDecoderEnv(pfp.GetEnosVarsEnv()),
 	)
 	if err != nil {
-		return fmt.Errorf("unable to create new flight plan decoder: %w", err)
+		return err
 	}
 
 	// At this point we don't need to pass usage because it's likely an issue
@@ -212,7 +221,7 @@ func scenarioTimeoutContext() (context.Context, func()) {
 
 // readFlightPlanConfig scans a directory for Enos flight plan configuration and returns
 // a new instance of FlightPlan.
-func readFlightPlanConfig(dir string) (*pb.FlightPlan, error) {
+func readFlightPlanConfig(dir string, varFilePaths []string) (*pb.FlightPlan, error) {
 	fp := &pb.FlightPlan{
 		BaseDir:     dir,
 		EnosVarsEnv: os.Environ(),
@@ -223,7 +232,12 @@ func readFlightPlanConfig(dir string) (*pb.FlightPlan, error) {
 		return nil, err
 	}
 
-	varsFiles, err := flightplan.FindRawFiles(dir, flightplan.VariablesNamePattern)
+	var varsFiles flightplan.RawFiles
+	if len(varFilePaths) == 0 {
+		varsFiles, err = flightplan.FindRawFiles(dir, flightplan.VariablesNamePattern)
+	} else {
+		varsFiles, err = flightplan.LoadRawFiles(varFilePaths)
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -150,53 +150,6 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 	}
 }
 
-// Test_Decoder_parseDir tests loading enos configuration from a directory
-func Test_Decoder_parseDir(t *testing.T) {
-	t.Helper()
-	t.Parallel()
-
-	newDecoder := func(dir string) *Decoder {
-		t.Helper()
-		path, err := filepath.Abs(filepath.Join("./tests", dir))
-		require.NoError(t, err)
-
-		d, err := NewDecoder(
-			WithDecoderBaseDir(path),
-		)
-		require.NoError(t, err)
-
-		return d
-	}
-
-	t.Run("malformed enos.hcl", func(t *testing.T) {
-		decoder := newDecoder("parse_dir_fail_malformed_config")
-		diags := decoder.Parse()
-		require.True(t, diags.HasErrors())
-		require.Equal(t, hcl.DiagError, diags[0].Severity)
-	})
-
-	t.Run("no matching configuration files", func(t *testing.T) {
-		decoder := newDecoder("parse_dir_pass_no_matching_names")
-		diags := decoder.Parse()
-		require.False(t, diags.HasErrors(), diags.Error())
-		require.Equal(t, 0, len(decoder.ParserFiles()))
-	})
-
-	t.Run("two matching files", func(t *testing.T) {
-		decoder := newDecoder("parse_dir_pass_two_matching_names")
-		diags := decoder.Parse()
-		require.False(t, diags.HasErrors(), diags.Error())
-		require.Equal(t, 2, len(decoder.ParserFiles()))
-	})
-
-	t.Run("vars and configs", func(t *testing.T) {
-		decoder := newDecoder("parse_dir_pass_vars_and_config")
-		diags := decoder.Parse()
-		require.False(t, diags.HasErrors(), diags.Error())
-		require.Equal(t, 3, len(decoder.ParserFiles()))
-	})
-}
-
 // Test_Decode_FlightPlan tests decoding a flight plan
 func Test_Decode_FlightPlan(t *testing.T) {
 	t.Helper()

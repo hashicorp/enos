@@ -18,7 +18,8 @@ var (
 // RawFiles are a map of flightplan configuration files and their contents
 type RawFiles map[string][]byte
 
-// FindRawFiles scans a directory and returns
+// FindRawFiles scans a directory for files matching the given pattern and
+// returns the loaded raw files
 func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
 	var err error
 	files := RawFiles{}
@@ -56,4 +57,38 @@ func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
 	})
 
 	return files, err
+}
+
+// LoadRawFiles takes a slice of paths and returns the loaded raw files
+func LoadRawFiles(paths []string) (RawFiles, error) {
+	rawFiles := RawFiles{}
+	var err error
+
+	for _, path := range paths {
+		if !filepath.IsAbs(path) {
+			path, err = filepath.Abs(path)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		path, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return nil, err
+		}
+
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		bytes, err := io.ReadAll(f)
+		if err != nil {
+			return nil, err
+		}
+		rawFiles[path] = bytes
+	}
+
+	return rawFiles, nil
 }

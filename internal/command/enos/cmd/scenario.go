@@ -65,7 +65,7 @@ func newScenarioCmd() *cobra.Command {
 	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagsnostics are created")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "use the given directory as the working directory")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "base directory where generated modules will be created")
-	scenarioCmd.PersistentFlags().StringSliceVar(&scenarioState.varsFilesPaths, "var-file", []string{}, "one or more paths to use for variable values (default will load all enos*.vars.hcl files)")
+	scenarioCmd.PersistentFlags().StringSliceVar(&scenarioState.varsFilesPaths, "var-file", []string{}, "path to use for variable values files (default will load all enos*.vars.hcl files in the working directory)")
 
 	scenarioCmd.AddCommand(newScenarioListCmd())
 	scenarioCmd.AddCommand(newScenarioGenerateCmd())

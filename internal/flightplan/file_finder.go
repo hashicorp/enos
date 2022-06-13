@@ -72,6 +72,11 @@ func LoadRawFiles(paths []string) (RawFiles, error) {
 			}
 		}
 
+		path, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return nil, err
+		}
+
 		f, err := os.Open(path)
 		if err != nil {
 			return nil, err

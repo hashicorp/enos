@@ -2,7 +2,6 @@ package flightplan
 
 import (
 	"fmt"
-	"io/fs"
 	"path/filepath"
 
 	"github.com/zclconf/go-cty/cty"
@@ -83,11 +82,7 @@ func (d *Decoder) Parse() hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	// Parse and raw configuration bytes we've been configured with
-	diags = diags.Extend(d.parseRawFiles())
-
-	// Parse the given directory, eventually we'll need to also look in the user
-	// configuration directory as well.
-	return diags.Extend(d.parseDir(d.dir))
+	return diags.Extend(d.parseRawFiles())
 }
 
 func (d *Decoder) parseRawFiles() hcl.Diagnostics {
@@ -102,64 +97,6 @@ func (d *Decoder) parseRawFiles() hcl.Diagnostics {
 		_, moreDiags := d.VarsParser.ParseHCL(bytes, path)
 		diags = diags.Extend(moreDiags)
 	}
-
-	return diags
-}
-
-// parseDir walks the directory and parses any Enos HCL or variables files.
-func (d *Decoder) parseDir(path string) hcl.Diagnostics {
-	var diags hcl.Diagnostics
-
-	if path == "" {
-		return diags
-	}
-
-	// We can ignore the error returned from Walk() because we're aggregating
-	// all errors and warnings into diags, which we'll handle afterwards.
-	_ = filepath.Walk(d.dir, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			d := hcl.Diagnostics{
-				{
-					Severity: hcl.DiagError,
-					Summary:  "Failed to read directory",
-					Detail:   fmt.Sprintf("Failed to load file information for %s: %s", path, err.Error()),
-				},
-			}
-			diags = diags.Extend(d)
-
-			return d
-		}
-
-		// We're only going a single level deep for now so we can ingnore directories
-		if info.IsDir() {
-			// Always skip the directory unless it's the root we're walking
-			if path != d.dir {
-				return filepath.SkipDir
-			}
-		}
-
-		if VariablesNamePattern.MatchString(info.Name()) {
-			_, pDiags := d.VarsParser.ParseHCLFile(path)
-			diags = diags.Extend(pDiags)
-			if pDiags.HasErrors() {
-				return pDiags
-			}
-
-			return nil
-		}
-
-		if FlightPlanFileNamePattern.MatchString(info.Name()) {
-			_, pDiags := d.FPParser.ParseHCLFile(path)
-			diags = diags.Extend(pDiags)
-			if pDiags.HasErrors() {
-				return pDiags
-			}
-
-			return nil
-		}
-
-		return nil
-	})
 
 	return diags
 }

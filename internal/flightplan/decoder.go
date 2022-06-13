@@ -258,6 +258,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"strlen":                 stdlib.StrlenFunc,
 			"substr":                 stdlib.SubstrFunc,
 			"subtract":               stdlib.SubtractFunc,
+			"timeadd":                stdlib.TimeAddFunc,
 			"title":                  stdlib.TitleFunc,
 			"trim":                   stdlib.TrimFunc,
 			"trimprefix":             stdlib.TrimPrefixFunc,

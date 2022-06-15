@@ -8,6 +8,37 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
+// Test_ScenarioFilter_WithScenarioFilterFromScenarioRef tests selecting
+// scenarios based
+func Test_ScenarioFilter_WithScenarioFilterFromScenarioRe(t *testing.T) {
+	ref := &pb.Ref_Scenario{
+		Id: &pb.Scenario_ID{
+			Name: "foo",
+			Variants: &pb.Scenario_Filter_Vector{
+				Elements: []*pb.Scenario_Filter_Element{
+					{Key: "backend", Value: "raft"},
+					{Key: "cloud", Value: "aws"},
+				},
+			},
+		},
+	}
+	expected := &ScenarioFilter{
+		Name: "foo",
+		Include: Vector{
+			NewElement("backend", "raft"),
+			NewElement("cloud", "aws"),
+		},
+	}
+	sf, err := NewScenarioFilter(WithScenarioFilterFromScenarioRef(ref))
+	require.NoError(t, err)
+	require.Equal(t, expected.Name, sf.Name)
+	require.Len(t, sf.Include, 2)
+	require.Equal(t, expected.Include[0].Key, sf.Include[0].Key)
+	require.Equal(t, expected.Include[0].Val, sf.Include[0].Val)
+	require.Equal(t, expected.Include[1].Key, sf.Include[1].Key)
+	require.Equal(t, expected.Include[1].Val, sf.Include[1].Val)
+}
+
 // Test_ScenarioFilter_ScenariosSelect tests that a flight plan returns the
 // scenarios when selecting with a filter.
 func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {

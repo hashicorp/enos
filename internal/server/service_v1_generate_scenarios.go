@@ -14,5 +14,13 @@ func (s *ServiceV1) GenerateScenarios(
 	*pb.GenerateScenariosResponse,
 	error,
 ) {
-	return decodeAndGenerate(req.GetWorkspace(), req.GetFilter()), nil
+	res := &pb.GenerateScenariosResponse{}
+	res.Diagnostics, res.Decode, res.Operations = s.dispatch(
+		req.GetFilter(),
+		&pb.Operation_Request{
+			Workspace: req.GetWorkspace(),
+			Value:     &pb.Operation_Request_Generate_{},
+		},
+	)
+	return res, nil
 }

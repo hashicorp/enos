@@ -30,18 +30,18 @@ func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 	sf, err := flightplan.ParseScenarioFilter(args)
 	if err != nil {
 		return ui.ShowScenarioList(&pb.ListScenariosResponse{
-			Decode: &pb.Scenario_Operation_Decode_Response{
-				Diagnostics: diagnostics.FromErr(err),
-			},
+			Diagnostics: diagnostics.FromErr(err),
 		})
 	}
 
-	res, err := rootState.enosClient.ListScenarios(ctx, &pb.ListScenariosRequest{
-		Workspace: &pb.Workspace{
-			Flightplan: scenarioState.protoFp,
+	res, err := rootState.enosConnection.Client.ListScenarios(
+		ctx, &pb.ListScenariosRequest{
+			Workspace: &pb.Workspace{
+				Flightplan: scenarioState.protoFp,
+			},
+			Filter: sf.Proto(),
 		},
-		Filter: sf.Proto(),
-	})
+	)
 	if err != nil {
 		return err
 	}

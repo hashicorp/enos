@@ -154,61 +154,56 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
-// ShowScenarioGenerate shows the scenario generation output
-func (v *View) ShowScenarioGenerate(res *pb.GenerateScenariosResponse) error {
+// ShowDecode shows the decode response unless it's a incremental update
+func (v *View) ShowDecode(res *pb.DecodeResponse, incremental bool) error {
+	if incremental {
+		// machine output doesn't show incremental update so we early return
+		return nil
+	}
+
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.GenerateScenarios(v.settings.GetFailOnWarnings(), res)
+
+	return status.Decode(v.Settings().GetFailOnWarnings(), res)
 }
 
-// ShowScenarioValidate shows the scenario validate output
-func (v *View) ShowScenarioValidate(res *pb.ValidateScenariosResponse) error {
-	if err := v.write(res); err != nil {
+// ShowOutput shows output response
+func (v *View) ShowOutput(out *pb.OperationResponses) error {
+	if err := v.write(out); err != nil {
 		return err
 	}
-	return status.ValidateScenarios(v.settings.GetFailOnWarnings(), res)
+
+	return status.OperationResponses(v.Settings().GetFailOnWarnings(), out)
 }
 
-// ShowScenarioLaunch shows the scenario launch output
-func (v *View) ShowScenarioLaunch(res *pb.LaunchScenariosResponse) error {
-	if err := v.write(res); err != nil {
-		return err
-	}
-	return status.LaunchScenarios(v.settings.GetFailOnWarnings(), res)
+// ShowOperationEvent does nothing as the machine output doesn't stream events
+func (v *View) ShowOperationEvent(*pb.Operation_Event) {
 }
 
-// ShowScenarioDestroy shows the scenario destroy output
-func (v *View) ShowScenarioDestroy(res *pb.DestroyScenariosResponse) error {
+// ShowOperationResponse shows an operation response
+func (v *View) ShowOperationResponse(res *pb.Operation_Response) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
-	return status.DestroyScenarios(v.settings.GetFailOnWarnings(), res)
+
+	return status.OperationResponses(
+		v.settings.GetFailOnWarnings(),
+		&pb.OperationResponses{
+			Responses: []*pb.Operation_Response{
+				res,
+			},
+		},
+	)
 }
 
-// ShowScenarioRun shows the scenario run output
-func (v *View) ShowScenarioRun(res *pb.RunScenariosResponse) error {
-	if err := v.write(res); err != nil {
-		return err
-	}
-	return status.RunScenarios(v.settings.GetFailOnWarnings(), res)
-}
-
-// ShowScenarioExec shows the scenario exec output
-func (v *View) ShowScenarioExec(res *pb.ExecScenariosResponse) error {
-	if err := v.write(res); err != nil {
-		return err
-	}
-	return status.ExecScenarios(v.settings.GetFailOnWarnings(), res)
-}
-
-// ShowScenarioOutput shows the scenario outputs output
-func (v *View) ShowScenarioOutput(res *pb.OutputScenariosResponse) error {
+// ShowOperationResponses shows the results of multiple operations
+func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
 
-	return status.OutputScenarios(v.settings.GetFailOnWarnings(), res)
+	return status.OperationResponses(v.settings.GetFailOnWarnings(), res)
 }
 
 // writeError does our best to write the given error to our stderr

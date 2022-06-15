@@ -140,7 +140,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	res, err = rootState.enosClient.Format(ctx, req)
+	res, err = rootState.enosConnection.Client.Format(ctx, req)
 	if err != nil {
 		return err
 	}

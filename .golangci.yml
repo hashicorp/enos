@@ -92,7 +92,7 @@ linters-settings:
     # [deprecated] comma-separated list of pairs of the form pkg:regex
     # the regex is used to ignore names within pkg. (default "fmt:.*").
     # see https://github.com/kisielk/errcheck#the-deprecated-method for details
-    ignore: fmt:.*,io/ioutil:^Read.*
+    # ignore: fmt:.*,io/ioutil:^Read.*
 
     # path to a file containing a list of functions to exclude from checking
     # see https://github.com/kisielk/errcheck#excluding-functions for details
@@ -148,15 +148,15 @@ linters-settings:
 
   staticcheck:
     # Select the Go version to target. The default is '1.13'.
-    go: "1.18"
+    go: "1.19"
 
   stylecheck:
     # Select the Go version to target. The default is '1.13'.
-    go: "1.18"
+    go: "1.19"
 
   unused:
     # Select the Go version to target. The default is '1.13'.
-    go: "1.18"
+    go: "1.19"
 
 linters:
   enable:

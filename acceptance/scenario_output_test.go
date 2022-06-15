@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -55,6 +54,22 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 				})
 			}
 
+			scenarioRef := &pb.Ref_Scenario{
+				Id: &pb.Scenario_ID{
+					Name: test.name,
+					Uid:  test.uid,
+					Variants: &pb.Scenario_Filter_Vector{
+						Elements: elements,
+					},
+				},
+			}
+
+			t.Cleanup(func() {
+				cmd := fmt.Sprintf("scenario destroy --chdir %s --out %s %s", path, outDir, filter)
+				out, err := enos.run(context.Background(), cmd)
+				require.NoError(t, err, string(out))
+			})
+
 			cmd := fmt.Sprintf("scenario launch --chdir %s --out %s %s", path, outDir, filter)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
@@ -63,26 +78,26 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 			out, err = enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
-			expected := &pb.OutputScenariosResponse{
-				Responses: []*pb.Scenario_Operation_Output_Response{
+			expected := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{
 					{
-						TerraformModule: &pb.Terraform_Module{
-							ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
-							RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),
-							ScenarioRef: &pb.Ref_Scenario{
-								Id: &pb.Scenario_ID{
-									Name: test.name,
-									Uid:  test.uid,
-									Variants: &pb.Scenario_Filter_Vector{
-										Elements: elements,
-									},
-								},
-							},
+						Op: &pb.Ref_Operation{
+							Scenario: scenarioRef,
 						},
-						Output: &pb.Terraform_Command_Output_Response{
-							Meta: []*pb.Terraform_Command_Output_Response_Meta{
-								{
-									Name: "step_reference_unknown",
+						Status: pb.Operation_STATUS_COMPLETED,
+						Value: &pb.Operation_Response_Output_{
+							Output: &pb.Operation_Response_Output{
+								TerraformModule: &pb.Terraform_Module{
+									ModulePath:  filepath.Join(outDir, test.uid, "scenario.tf"),
+									RcPath:      filepath.Join(outDir, test.uid, "terraform.rc"),
+									ScenarioRef: scenarioRef,
+								},
+								Output: &pb.Terraform_Command_Output_Response{
+									Meta: []*pb.Terraform_Command_Output_Response_Meta{
+										{
+											Name: "step_reference_unknown",
+										},
+									},
 								},
 							},
 						},
@@ -90,20 +105,7 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 				},
 			}
 
-			got := &pb.OutputScenariosResponse{}
-			require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-			require.Len(t, got.GetResponses(), len(expected.GetResponses()))
-			for i := range expected.Responses {
-				got := got.Responses[i]
-				expected := expected.Responses[i]
-
-				require.Equal(t, expected.TerraformModule.ModulePath, got.TerraformModule.ModulePath)
-				require.Equal(t, expected.TerraformModule.RcPath, got.TerraformModule.RcPath)
-				require.Equal(t, expected.TerraformModule.ScenarioRef.String(), got.TerraformModule.ScenarioRef.String())
-				require.Equal(t, expected.Output.Meta[0].Name, got.Output.Meta[0].Name)
-				require.NotEmpty(t, got.Output.Meta[0].Type)
-				require.NotEmpty(t, got.Output.Meta[0].Value)
-			}
+			requireEqualOperationResponses(t, expected, out)
 		})
 	}
 }

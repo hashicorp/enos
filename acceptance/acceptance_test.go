@@ -6,11 +6,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 func ensureAcc(t *testing.T) {
@@ -208,4 +214,138 @@ func (r *acceptanceRunner) validate(t *testing.T) {
 	if r.skipUnlessExtEnabled {
 		ensureExt(t)
 	}
+}
+
+func sortResponses(r []*pb.Operation_Response) {
+	sort.Slice(r, func(i, j int) bool {
+		is := flightplan.NewScenario()
+		is.FromRef(r[i].GetOp().GetScenario())
+
+		js := flightplan.NewScenario()
+		js.FromRef(r[j].GetOp().GetScenario())
+
+		return is.String() < js.String()
+	})
+}
+
+func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponses, out []byte) {
+	got := &pb.OperationResponses{}
+	require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
+	require.Len(t, got.GetResponses(), len(expected.GetResponses()))
+	expectedResponses := expected.GetResponses()
+	gotResponses := got.GetResponses()
+	sortResponses(expectedResponses)
+	sortResponses(gotResponses)
+
+	for i := range expected.Responses {
+		got := gotResponses[i]
+		expected := expectedResponses[i]
+
+		// Scenario reference
+		require.Equal(t, expected.GetOp().GetScenario().String(), got.GetOp().GetScenario().String())
+
+		// Status
+		require.Equalf(t,
+			expected.GetStatus(), got.GetStatus(),
+			"expected status %s, got %s",
+			pb.Operation_Status_name[int32(expected.GetStatus())],
+			pb.Operation_Status_name[int32(got.GetStatus())],
+		)
+
+		// Generate response type
+		requireEqualGenerateResponse(t, expected.GetGenerate(), got.GetGenerate())
+
+		// Check response type
+		requireEqualGenerateResponse(t, expected.GetCheck().GetGenerate(), got.GetCheck().GetGenerate())
+		requireEqualInitReponse(t, expected.GetCheck().GetInit(), got.GetCheck().GetInit())
+		requireEqualValidate(t, expected.GetCheck().GetValidate(), got.GetCheck().GetValidate())
+		requireEqualPlan(t, expected.GetCheck().GetPlan(), got.GetCheck().GetPlan())
+
+		// Launch response type
+		requireEqualGenerateResponse(t, expected.GetLaunch().GetGenerate(), got.GetLaunch().GetGenerate())
+		requireEqualInitReponse(t, expected.GetLaunch().GetInit(), got.GetLaunch().GetInit())
+		requireEqualValidate(t, expected.GetLaunch().GetValidate(), got.GetLaunch().GetValidate())
+		requireEqualPlan(t, expected.GetLaunch().GetPlan(), got.GetLaunch().GetPlan())
+		requireEqualApply(t, expected.GetLaunch().GetApply(), got.GetLaunch().GetApply())
+
+		// Destroy response type
+		requireEqualGenerateResponse(t, expected.GetDestroy().GetGenerate(), got.GetDestroy().GetGenerate())
+		requireEqualDestroy(t, expected.GetDestroy().GetDestroy(), got.GetDestroy().GetDestroy())
+
+		// Run response type
+		requireEqualGenerateResponse(t, expected.GetRun().GetGenerate(), got.GetRun().GetGenerate())
+		requireEqualInitReponse(t, expected.GetRun().GetInit(), got.GetRun().GetInit())
+		requireEqualValidate(t, expected.GetRun().GetValidate(), got.GetRun().GetValidate())
+		requireEqualPlan(t, expected.GetRun().GetPlan(), got.GetRun().GetPlan())
+		requireEqualApply(t, expected.GetRun().GetApply(), got.GetRun().GetApply())
+		requireEqualDestroy(t, expected.GetRun().GetDestroy(), got.GetRun().GetDestroy())
+
+		// Output response type
+		requireEqualOutput(t, expected.GetOutput().GetOutput(), got.GetOutput().GetOutput())
+
+		// Exec response type
+		requireEqualExec(t, expected.GetExec().GetExec(), got.GetExec().GetExec())
+	}
+}
+
+func requireEqualGenerateResponse(t *testing.T, expected, got *pb.Operation_Response_Generate) {
+	if expected.GetTerraformModule().GetModulePath() != "" {
+		require.Equal(t, expected.GetTerraformModule().GetModulePath(),
+			got.GetTerraformModule().GetModulePath(),
+		)
+	}
+	if expected.GetTerraformModule().GetRcPath() != "" {
+		require.Equal(t, expected.GetTerraformModule().GetRcPath(),
+			got.GetTerraformModule().GetRcPath(),
+		)
+	}
+	require.Equal(t, expected.GetTerraformModule().GetScenarioRef().String(),
+		got.GetTerraformModule().GetScenarioRef().String(),
+	)
+}
+
+func requireEqualInitReponse(t *testing.T, expected, got *pb.Terraform_Command_Init_Response) {
+	require.Equal(t, expected.GetStderr(), got.GetStderr())
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
+}
+
+func requireEqualValidate(t *testing.T, expected, got *pb.Terraform_Command_Validate_Response) {
+	require.Equal(t, expected.GetValid(), got.GetValid())
+	require.Equal(t, expected.GetWarningCount(), got.GetWarningCount())
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
+}
+
+func requireEqualPlan(t *testing.T, expected, got *pb.Terraform_Command_Plan_Response) {
+	require.Equal(t, expected.GetChangesPresent(), got.GetChangesPresent())
+	require.Equal(t, expected.GetStderr(), got.GetStderr())
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
+}
+
+func requireEqualApply(t *testing.T, expected, got *pb.Terraform_Command_Apply_Response) {
+	require.Equal(t, expected.GetStderr(), got.GetStderr())
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
+}
+
+func requireEqualDestroy(t *testing.T, expected, got *pb.Terraform_Command_Destroy_Response) {
+	require.Equal(t, expected.GetStderr(), got.GetStderr())
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
+}
+
+func requireEqualOutput(t *testing.T, expected, got *pb.Terraform_Command_Output_Response) {
+	require.Len(t, expected.GetMeta(), len(got.GetMeta()))
+	for i := range expected.GetMeta() {
+		require.Equal(t, expected.GetMeta()[i].GetName(), got.GetMeta()[i].GetName())
+		// Skip the type and the value by default since they're encoded
+		// require.Equal(t, expected.GetMeta()[i].GetType(), got.GetMeta()[i].GetType())
+		// require.Equal(t, expected.GetMeta()[i].GetValue(), got.GetMeta()[i].GetValue())
+		require.Equal(t, expected.GetMeta()[i].GetSensitive(), got.GetMeta()[i].GetSensitive())
+		require.Equal(t, expected.GetMeta()[i].GetStderr(), got.GetMeta()[i].GetStderr())
+	}
+	require.Equal(t, expected.GetDiagnostics(), got.GetDiagnostics())
+}
+
+func requireEqualExec(t *testing.T, expected, got *pb.Terraform_Command_Exec_Response) {
+	require.Equal(t, expected.GetSubCommand(), got.GetSubCommand())
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
+	// NOTE: we don't check stderr since anything we could test would be brittle
 }

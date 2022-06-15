@@ -32,15 +32,15 @@ func HasWarnings(diags ...[]*pb.Diagnostic) bool {
 // HasFailed takes a bool about warnings as errors and a set of diagnostic and
 // returns a bool if a failure has occurred.
 func HasFailed(failOnWarn bool, diags ...[]*pb.Diagnostic) bool {
-	if hasSeverity(pb.Diagnostic_SEVERITY_ERROR) {
+	if hasSeverity(pb.Diagnostic_SEVERITY_ERROR, diags...) {
 		return true
 	}
 
-	if failOnWarn {
-		return hasSeverity(pb.Diagnostic_SEVERITY_WARNING)
+	if !failOnWarn {
+		return false
 	}
 
-	return false
+	return hasSeverity(pb.Diagnostic_SEVERITY_WARNING, diags...)
 }
 
 func hasSeverity(sev pb.Diagnostic_Severity, diags ...[]*pb.Diagnostic) bool {
@@ -184,7 +184,7 @@ func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic
 			pbDiag.Severity = pb.Diagnostic_SEVERITY_UNKNOWN
 		}
 
-		// If we actually have a file that matches our diag subjec5t
+		// If we actually have a file that matches our diag subject
 		if diag.Subject != nil {
 			highlightRange := *diag.Subject
 
@@ -392,13 +392,13 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 		leftRuleLine = cfg.color.Color("[red]│[reset] ")
 		leftRuleStart = cfg.color.Color("[red]╷[reset]")
 		leftRuleEnd = cfg.color.Color("[red]╵[reset]")
-		leftRuleWidth = 2
+		leftRuleWidth = 4
 	case pb.Diagnostic_SEVERITY_WARNING:
 		buf.WriteString(cfg.color.Color("[bold][yellow]Warning: [reset]"))
 		leftRuleLine = cfg.color.Color("[yellow]│[reset] ")
 		leftRuleStart = cfg.color.Color("[yellow]╷[reset]")
 		leftRuleEnd = cfg.color.Color("[yellow]╵[reset]")
-		leftRuleWidth = 2
+		leftRuleWidth = 4
 	default:
 		buf.WriteString(cfg.color.Color("\n[reset]"))
 	}
@@ -448,7 +448,7 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 	ruleBuf.WriteString(leftRuleEnd)
 	ruleBuf.WriteByte('\n')
 
-	return ruleBuf.String()
+	return strings.TrimSpace(ruleBuf.String())
 }
 
 func appendSourceSnippets(buf *bytes.Buffer, diag *pb.Diagnostic, color *colorstring.Colorize) {

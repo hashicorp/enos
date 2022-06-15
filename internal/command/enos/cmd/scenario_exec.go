@@ -5,8 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -32,26 +30,20 @@ func runScenarioExecCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()
 
-	sf, err := flightplan.ParseScenarioFilter(args)
-	if err != nil {
-		return ui.ShowScenarioExec(&pb.ExecScenariosResponse{
-			Decode: &pb.Scenario_Operation_Decode_Response{
-				Diagnostics: diagnostics.FromErr(err),
-			},
-		})
-	}
-
-	res, err := rootState.enosClient.ExecScenarios(ctx, &pb.ExecScenariosRequest{
-		Workspace: &pb.Workspace{
-			Flightplan: scenarioState.protoFp,
-			OutDir:     scenarioState.outDir,
-			TfExecCfg:  scenarioState.tfConfig.Proto(),
-		},
-		Filter: sf.Proto(),
-	})
+	sf, ws, err := prepareScenarioOpReq(args)
 	if err != nil {
 		return err
 	}
 
-	return ui.ShowScenarioExec(res)
+	res, err := rootState.enosConnection.Client.ExecScenarios(
+		ctx, &pb.ExecScenariosRequest{
+			Workspace: ws,
+			Filter:    sf,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return ui.ShowOperationResponses(rootState.enosConnection.StreamOperations(ctx, res, ws, ui))
 }

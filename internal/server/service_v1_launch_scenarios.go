@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/execute"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -18,37 +16,13 @@ func (s *ServiceV1) LaunchScenarios(
 	*pb.LaunchScenariosResponse,
 	error,
 ) {
-	res := &pb.LaunchScenariosResponse{
-		Responses: []*pb.Scenario_Operation_Launch_Response{},
-	}
-
-	genRes := decodeAndGenerate(req.GetWorkspace(), req.GetFilter())
-	res.Diagnostics = genRes.GetDiagnostics()
-	res.Decode = genRes.GetDecode()
-	if diagnostics.HasFailed(
-		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
-		res.GetDiagnostics(),
-		res.GetDecode().GetDiagnostics(),
-	) {
-		for _, gres := range genRes.GetResponses() {
-			res.Responses = append(res.Responses, &pb.Scenario_Operation_Launch_Response{
-				Generate: gres,
-			})
-		}
-
-		return res, nil
-	}
-
-	for _, gres := range genRes.GetResponses() {
-		launchRes := execute.NewExecutor(
-			execute.WithProtoModuleAndConfig(
-				gres.GetTerraformModule(),
-				req.GetWorkspace().GetTfExecCfg(),
-			),
-		).Launch(ctx)
-		launchRes.Generate = gres
-		res.Responses = append(res.Responses, launchRes)
-	}
-
+	res := &pb.LaunchScenariosResponse{}
+	res.Diagnostics, res.Decode, res.Operations = s.dispatch(
+		req.GetFilter(),
+		&pb.Operation_Request{
+			Workspace: req.GetWorkspace(),
+			Value:     &pb.Operation_Request_Launch_{},
+		},
+	)
 	return res, nil
 }

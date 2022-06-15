@@ -20,19 +20,16 @@ var (
 type View interface {
 	io.Closer
 	Settings() *pb.UI_Settings
-
 	ShowError(error) error
 	ShowDiagnostics([]*pb.Diagnostic) error
 	ShowVersion(all bool, res *pb.GetVersionResponse) error
 	ShowFormat(*pb.FormatRequest_Config, *pb.FormatResponse) error
 	ShowScenarioList(*pb.ListScenariosResponse) error
-	ShowScenarioGenerate(*pb.GenerateScenariosResponse) error
-	ShowScenarioValidate(*pb.ValidateScenariosResponse) error
-	ShowScenarioLaunch(*pb.LaunchScenariosResponse) error
-	ShowScenarioDestroy(*pb.DestroyScenariosResponse) error
-	ShowScenarioRun(*pb.RunScenariosResponse) error
-	ShowScenarioExec(*pb.ExecScenariosResponse) error
-	ShowScenarioOutput(*pb.OutputScenariosResponse) error
+	ShowDecode(*pb.DecodeResponse, bool) error
+	ShowOutput(*pb.OperationResponses) error
+	ShowOperationEvent(*pb.Operation_Event)
+	ShowOperationResponse(*pb.Operation_Response) error
+	ShowOperationResponses(*pb.OperationResponses) error
 }
 
 // New takes a UI configuration settings and returns a new view

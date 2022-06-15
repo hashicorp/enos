@@ -11,8 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/execute/terraform"
 	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/internal/operation/terraform"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/hcl/v2"
@@ -62,14 +62,14 @@ func newScenarioCmd() *cobra.Command {
 	}
 
 	scenarioCmd.PersistentFlags().DurationVar(&scenarioState.timeout, "timeout", 15*time.Minute, "the command timeout")
-	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagsnostics are created")
+	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagnostics are created")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "use the given directory as the working directory")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "base directory where generated modules will be created")
 	scenarioCmd.PersistentFlags().StringSliceVar(&scenarioState.varsFilesPaths, "var-file", []string{}, "path to use for variable values files (default will load all enos*.vars.hcl files in the working directory)")
 
 	scenarioCmd.AddCommand(newScenarioListCmd())
 	scenarioCmd.AddCommand(newScenarioGenerateCmd())
-	scenarioCmd.AddCommand(newScenarioValidateCmd())
+	scenarioCmd.AddCommand(newScenarioCheckCmd())
 	scenarioCmd.AddCommand(newScenarioLaunchCmd())
 	scenarioCmd.AddCommand(newScenarioDestroyCmd())
 	scenarioCmd.AddCommand(newScenarioRunCmd())
@@ -105,7 +105,10 @@ func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
 // down the server.
 func scenarioCmdPostRun(cmd *cobra.Command, args []string) {
 	if rootState.enosServer != nil {
-		rootState.enosServer.Stop()
+		err := rootState.enosServer.Stop()
+		if err != nil {
+			_ = ui.ShowError(err)
+		}
 	}
 }
 
@@ -246,4 +249,31 @@ func readFlightPlanConfig(dir string, varFilePaths []string) (*pb.FlightPlan, er
 	fp.EnosVarsHcl = varsFiles
 
 	return fp, nil
+}
+
+// prepareScenarioOpReq takes commands args, parses them to build a filter, and
+// returns a proto filter and proto workspace to use in requests.
+func prepareScenarioOpReq(
+	args []string,
+) (
+	*pb.Scenario_Filter,
+	*pb.Workspace,
+	error,
+) {
+	sf, err := flightplan.ParseScenarioFilter(args)
+	if err != nil {
+		ui.ShowOperationEvent(&pb.Operation_Event{
+			Diagnostics: diagnostics.FromErr(err),
+			Value:       &pb.Operation_Event_Decode{},
+		})
+		return nil, nil, err
+	}
+
+	ws := &pb.Workspace{
+		Flightplan: scenarioState.protoFp,
+		OutDir:     scenarioState.outDir,
+		TfExecCfg:  scenarioState.tfConfig.Proto(),
+	}
+
+	return sf.Proto(), ws, nil
 }

@@ -10,7 +10,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"github.com/hashicorp/enos/internal/execute/command"
+	"github.com/hashicorp/enos/internal/operation/command"
 	"github.com/hashicorp/enos/internal/ui/terminal"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/terraform-exec/tfexec"
@@ -26,12 +26,12 @@ type Config struct {
 	ExecSubCmd     string            // raw command to run
 	OutputName     string            // output name
 	FailOnWarnings bool              // fail on warning diagnostics
-	Flags          *pb.Terraform_Executor_Config_Flags
+	Flags          *pb.Terraform_Runner_Config_Flags
 }
 
 // Proto returns the instance of config as proto terraform executor config
-func (c *Config) Proto() *pb.Terraform_Executor_Config {
-	return &pb.Terraform_Executor_Config{
+func (c *Config) Proto() *pb.Terraform_Runner_Config {
+	return &pb.Terraform_Runner_Config{
 		Flags:          c.Flags,
 		BinPath:        c.BinPath,
 		ConfigPath:     c.ConfigPath,
@@ -45,7 +45,7 @@ func (c *Config) Proto() *pb.Terraform_Executor_Config {
 
 // FromProto unmarshals and instance of a proto terraform executor configuration
 // into itself.
-func (c *Config) FromProto(pcfg *pb.Terraform_Executor_Config) {
+func (c *Config) FromProto(pcfg *pb.Terraform_Runner_Config) {
 	c.Flags = pcfg.GetFlags()
 	c.BinPath = pcfg.GetBinPath()
 	c.ConfigPath = pcfg.GetConfigPath()
@@ -54,6 +54,15 @@ func (c *Config) FromProto(pcfg *pb.Terraform_Executor_Config) {
 	c.ExecSubCmd = pcfg.GetUserSubCommand()
 	c.OutputName = pcfg.GetOutputFilter()
 	c.FailOnWarnings = pcfg.GetFailOnWarnings()
+}
+
+// WithModule updates the configuration with that of a
+func (c *Config) WithModule(mod *pb.Terraform_Module) {
+	if mod == nil {
+		return
+	}
+	c.DirPath = filepath.Dir(mod.GetModulePath())
+	c.ConfigPath = mod.GetRcPath()
 }
 
 func (c *Config) tfPath() (string, error) {
@@ -150,7 +159,7 @@ type (
 func NewConfig(opts ...ConfigOpt) *Config {
 	cfg := &Config{
 		Env:   map[string]string{},
-		Flags: &pb.Terraform_Executor_Config_Flags{},
+		Flags: &pb.Terraform_Runner_Config_Flags{},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -258,7 +267,7 @@ func WithUpgrade() ConfigOpt {
 }
 
 // WithProtoConfig sets configuration from a proto config
-func WithProtoConfig(pcfg *pb.Terraform_Executor_Config) ConfigOpt {
+func WithProtoConfig(pcfg *pb.Terraform_Runner_Config) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.FromProto(pcfg)
 	}

@@ -5,9 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/go-multierror"
 )
 
 // newScenarioOutputCmd returns a new 'scenario output' command
@@ -32,26 +31,28 @@ func runScenarioOutputCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()
 
-	sf, err := flightplan.ParseScenarioFilter(args)
-	if err != nil {
-		return ui.ShowScenarioOutput(&pb.OutputScenariosResponse{
-			Decode: &pb.Scenario_Operation_Decode_Response{
-				Diagnostics: diagnostics.FromErr(err),
-			},
-		})
-	}
-
-	res, err := rootState.enosClient.OutputScenarios(ctx, &pb.OutputScenariosRequest{
-		Workspace: &pb.Workspace{
-			Flightplan: scenarioState.protoFp,
-			OutDir:     scenarioState.outDir,
-			TfExecCfg:  scenarioState.tfConfig.Proto(),
-		},
-		Filter: sf.Proto(),
-	})
+	sf, ws, err := prepareScenarioOpReq(args)
 	if err != nil {
 		return err
 	}
 
-	return ui.ShowScenarioOutput(res)
+	res, err := rootState.enosConnection.Client.OutputScenarios(
+		ctx, &pb.OutputScenariosRequest{
+			Workspace: ws,
+			Filter:    sf,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	// Stream the operations to wait until all outputs have been run and the
+	// display them
+	opRes := rootState.enosConnection.StreamOperations(ctx, res, ws, ui)
+
+	var merr *multierror.Error
+	merr = multierror.Append(merr, ui.ShowDecode(opRes.GetDecode(), true))
+	merr = multierror.Append(merr, ui.ShowOutput(opRes))
+
+	return merr.ErrorOrNil()
 }

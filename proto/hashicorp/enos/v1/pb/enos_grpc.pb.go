@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type EnosServiceClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
 	ListScenarios(ctx context.Context, in *ListScenariosRequest, opts ...grpc.CallOption) (*ListScenariosResponse, error)
-	ValidateScenarios(ctx context.Context, in *ValidateScenariosRequest, opts ...grpc.CallOption) (*ValidateScenariosResponse, error)
+	CheckScenarios(ctx context.Context, in *CheckScenariosRequest, opts ...grpc.CallOption) (*CheckScenariosResponse, error)
 	GenerateScenarios(ctx context.Context, in *GenerateScenariosRequest, opts ...grpc.CallOption) (*GenerateScenariosResponse, error)
 	LaunchScenarios(ctx context.Context, in *LaunchScenariosRequest, opts ...grpc.CallOption) (*LaunchScenariosResponse, error)
 	DestroyScenarios(ctx context.Context, in *DestroyScenariosRequest, opts ...grpc.CallOption) (*DestroyScenariosResponse, error)
@@ -32,6 +32,8 @@ type EnosServiceClient interface {
 	ExecScenarios(ctx context.Context, in *ExecScenariosRequest, opts ...grpc.CallOption) (*ExecScenariosResponse, error)
 	OutputScenarios(ctx context.Context, in *OutputScenariosRequest, opts ...grpc.CallOption) (*OutputScenariosResponse, error)
 	Format(ctx context.Context, in *FormatRequest, opts ...grpc.CallOption) (*FormatResponse, error)
+	OperationEventStream(ctx context.Context, in *OperationEventStreamRequest, opts ...grpc.CallOption) (EnosService_OperationEventStreamClient, error)
+	Operation(ctx context.Context, in *OperationRequest, opts ...grpc.CallOption) (*OperationResponse, error)
 }
 
 type enosServiceClient struct {
@@ -60,9 +62,9 @@ func (c *enosServiceClient) ListScenarios(ctx context.Context, in *ListScenarios
 	return out, nil
 }
 
-func (c *enosServiceClient) ValidateScenarios(ctx context.Context, in *ValidateScenariosRequest, opts ...grpc.CallOption) (*ValidateScenariosResponse, error) {
-	out := new(ValidateScenariosResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.enos.v1.EnosService/ValidateScenarios", in, out, opts...)
+func (c *enosServiceClient) CheckScenarios(ctx context.Context, in *CheckScenariosRequest, opts ...grpc.CallOption) (*CheckScenariosResponse, error) {
+	out := new(CheckScenariosResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.enos.v1.EnosService/CheckScenarios", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +134,54 @@ func (c *enosServiceClient) Format(ctx context.Context, in *FormatRequest, opts 
 	return out, nil
 }
 
+func (c *enosServiceClient) OperationEventStream(ctx context.Context, in *OperationEventStreamRequest, opts ...grpc.CallOption) (EnosService_OperationEventStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &EnosService_ServiceDesc.Streams[0], "/hashicorp.enos.v1.EnosService/OperationEventStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &enosServiceOperationEventStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type EnosService_OperationEventStreamClient interface {
+	Recv() (*OperationEventStreamResponse, error)
+	grpc.ClientStream
+}
+
+type enosServiceOperationEventStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *enosServiceOperationEventStreamClient) Recv() (*OperationEventStreamResponse, error) {
+	m := new(OperationEventStreamResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *enosServiceClient) Operation(ctx context.Context, in *OperationRequest, opts ...grpc.CallOption) (*OperationResponse, error) {
+	out := new(OperationResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.enos.v1.EnosService/Operation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EnosServiceServer is the server API for EnosService service.
 // All implementations should embed UnimplementedEnosServiceServer
 // for forward compatibility
 type EnosServiceServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
 	ListScenarios(context.Context, *ListScenariosRequest) (*ListScenariosResponse, error)
-	ValidateScenarios(context.Context, *ValidateScenariosRequest) (*ValidateScenariosResponse, error)
+	CheckScenarios(context.Context, *CheckScenariosRequest) (*CheckScenariosResponse, error)
 	GenerateScenarios(context.Context, *GenerateScenariosRequest) (*GenerateScenariosResponse, error)
 	LaunchScenarios(context.Context, *LaunchScenariosRequest) (*LaunchScenariosResponse, error)
 	DestroyScenarios(context.Context, *DestroyScenariosRequest) (*DestroyScenariosResponse, error)
@@ -146,6 +189,8 @@ type EnosServiceServer interface {
 	ExecScenarios(context.Context, *ExecScenariosRequest) (*ExecScenariosResponse, error)
 	OutputScenarios(context.Context, *OutputScenariosRequest) (*OutputScenariosResponse, error)
 	Format(context.Context, *FormatRequest) (*FormatResponse, error)
+	OperationEventStream(*OperationEventStreamRequest, EnosService_OperationEventStreamServer) error
+	Operation(context.Context, *OperationRequest) (*OperationResponse, error)
 }
 
 // UnimplementedEnosServiceServer should be embedded to have forward compatible implementations.
@@ -158,8 +203,8 @@ func (UnimplementedEnosServiceServer) GetVersion(context.Context, *GetVersionReq
 func (UnimplementedEnosServiceServer) ListScenarios(context.Context, *ListScenariosRequest) (*ListScenariosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListScenarios not implemented")
 }
-func (UnimplementedEnosServiceServer) ValidateScenarios(context.Context, *ValidateScenariosRequest) (*ValidateScenariosResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidateScenarios not implemented")
+func (UnimplementedEnosServiceServer) CheckScenarios(context.Context, *CheckScenariosRequest) (*CheckScenariosResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckScenarios not implemented")
 }
 func (UnimplementedEnosServiceServer) GenerateScenarios(context.Context, *GenerateScenariosRequest) (*GenerateScenariosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateScenarios not implemented")
@@ -181,6 +226,12 @@ func (UnimplementedEnosServiceServer) OutputScenarios(context.Context, *OutputSc
 }
 func (UnimplementedEnosServiceServer) Format(context.Context, *FormatRequest) (*FormatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Format not implemented")
+}
+func (UnimplementedEnosServiceServer) OperationEventStream(*OperationEventStreamRequest, EnosService_OperationEventStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method OperationEventStream not implemented")
+}
+func (UnimplementedEnosServiceServer) Operation(context.Context, *OperationRequest) (*OperationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Operation not implemented")
 }
 
 // UnsafeEnosServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -230,20 +281,20 @@ func _EnosService_ListScenarios_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EnosService_ValidateScenarios_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ValidateScenariosRequest)
+func _EnosService_CheckScenarios_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckScenariosRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EnosServiceServer).ValidateScenarios(ctx, in)
+		return srv.(EnosServiceServer).CheckScenarios(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.enos.v1.EnosService/ValidateScenarios",
+		FullMethod: "/hashicorp.enos.v1.EnosService/CheckScenarios",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EnosServiceServer).ValidateScenarios(ctx, req.(*ValidateScenariosRequest))
+		return srv.(EnosServiceServer).CheckScenarios(ctx, req.(*CheckScenariosRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -374,6 +425,45 @@ func _EnosService_Format_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EnosService_OperationEventStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(OperationEventStreamRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(EnosServiceServer).OperationEventStream(m, &enosServiceOperationEventStreamServer{stream})
+}
+
+type EnosService_OperationEventStreamServer interface {
+	Send(*OperationEventStreamResponse) error
+	grpc.ServerStream
+}
+
+type enosServiceOperationEventStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *enosServiceOperationEventStreamServer) Send(m *OperationEventStreamResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _EnosService_Operation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OperationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnosServiceServer).Operation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.enos.v1.EnosService/Operation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnosServiceServer).Operation(ctx, req.(*OperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EnosService_ServiceDesc is the grpc.ServiceDesc for EnosService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -390,8 +480,8 @@ var EnosService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _EnosService_ListScenarios_Handler,
 		},
 		{
-			MethodName: "ValidateScenarios",
-			Handler:    _EnosService_ValidateScenarios_Handler,
+			MethodName: "CheckScenarios",
+			Handler:    _EnosService_CheckScenarios_Handler,
 		},
 		{
 			MethodName: "GenerateScenarios",
@@ -421,7 +511,17 @@ var EnosService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Format",
 			Handler:    _EnosService_Format_Handler,
 		},
+		{
+			MethodName: "Operation",
+			Handler:    _EnosService_Operation_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "OperationEventStream",
+			Handler:       _EnosService_OperationEventStream_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "enos.proto",
 }

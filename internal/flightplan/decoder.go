@@ -123,7 +123,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 		},
 		Functions: map[string]function.Function{
 			"absolute":               stdlib.AbsoluteFunc,
-			"abspath":                funcs.AbsPathFunc,
+			"abspath":                funcs.AbsPathFunc(d.dir),
 			"add":                    stdlib.AddFunc,
 			"and":                    stdlib.AndFunc,
 			"byteslen":               stdlib.BytesLenFunc,
@@ -141,6 +141,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"divide":                 stdlib.DivideFunc,
 			"element":                stdlib.ElementFunc,
 			"equal":                  stdlib.EqualFunc,
+			"file":                   funcs.FileFunc,
 			"flatten":                stdlib.FlattenFunc,
 			"floor":                  stdlib.FloorFunc,
 			"format":                 stdlib.FormatFunc,

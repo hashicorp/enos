@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -69,7 +68,7 @@ func (s *ServiceV1) Format(
 		}
 
 		if file.GetPath() != "STDIN" && req.GetConfig().GetWrite() && !req.GetConfig().GetCheck() {
-			f, err := os.OpenFile(file.GetPath(), os.O_RDWR, 0o755)
+			f, err := os.OpenFile(file.GetPath(), os.O_RDWR|os.O_TRUNC, 0o755)
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
 				res.Responses = append(res.Responses, r)
@@ -77,7 +76,7 @@ func (s *ServiceV1) Format(
 			}
 			defer f.Close()
 
-			_, err = io.Copy(f, bytes.NewReader(formatted))
+			_, err = f.Write(formatted)
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
 				res.Responses = append(res.Responses, r)

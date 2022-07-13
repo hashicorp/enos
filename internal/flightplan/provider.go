@@ -13,15 +13,15 @@ import (
 
 // Provider is a Enos transport configuration
 type Provider struct {
-	Type  string               `cty:"type"`
-	Alias string               `cty:"alias"`
-	Attrs map[string]cty.Value `cty:"attrs"`
+	Type   string           `cty:"type"`
+	Alias  string           `cty:"alias"`
+	Config *SchemalessBlock `cty:"config"`
 }
 
 // NewProvider returns a new Provider
 func NewProvider() *Provider {
 	return &Provider{
-		Attrs: map[string]cty.Value{},
+		Config: NewSchemalessBlock(),
 	}
 }
 
@@ -36,26 +36,18 @@ func (p *Provider) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 
 	if p.Type == "enos" {
 		// Since we know the schema for the "enos" provider we can more fine
-		// grained decoding.
+		// grained decoding and validation.
 		moreDiags := p.decodeEnosProvider(block, ctx)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			return diags
 		}
 	} else {
-		attrs, moreDiags := block.Body.JustAttributes()
+		// Decode the entire provider block as a schemaless block
+		moreDiags := p.Config.Decode(block, ctx)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			return diags
-		}
-
-		for name, attr := range attrs {
-			val, moreDiags := attr.Expr.Value(ctx)
-			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
-				continue
-			}
-			p.Attrs[name] = val
 		}
 	}
 
@@ -64,23 +56,18 @@ func (p *Provider) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 
 // ToCtyValue returns the provider contents as an object cty.Value.
 func (p *Provider) ToCtyValue() cty.Value {
-	vals := map[string]cty.Value{
-		"type":  cty.StringVal(p.Type),
-		"alias": cty.StringVal(p.Alias),
-	}
-
-	if len(p.Attrs) > 0 {
-		vals["attrs"] = cty.ObjectVal(p.Attrs)
-	} else {
-		vals["attrs"] = cty.NullVal(cty.EmptyObject)
-	}
-
-	return cty.ObjectVal(vals)
+	return cty.ObjectVal(map[string]cty.Value{
+		"type":   cty.StringVal(p.Type),
+		"alias":  cty.StringVal(p.Alias),
+		"config": p.Config.ToCtyValue(),
+	})
 }
 
 // FromCtyValue takes a cty.Value and unmarshals it onto itself. It expects
 // a valid object created from ToCtyValue()
 func (p *Provider) FromCtyValue(val cty.Value) error {
+	var err error
+
 	if val.IsNull() {
 		return nil
 	}
@@ -105,13 +92,10 @@ func (p *Provider) FromCtyValue(val cty.Value) error {
 				return fmt.Errorf("provider alias must be a string ")
 			}
 			p.Alias = val.AsString()
-		case "attrs":
-			if !val.CanIterateElements() {
-				return fmt.Errorf("provider attrs must a map of attributes")
-			}
-
-			for k, v := range val.AsValueMap() {
-				p.Attrs[k] = v
+		case "config":
+			err = p.Config.FromCtyValue(val)
+			if err != nil {
+				return err
 			}
 		default:
 			return fmt.Errorf("unknown key in value object: %s", key)
@@ -141,7 +125,17 @@ func (p *Provider) decodeEnosProvider(block *hcl.Block, ctx *hcl.EvalContext) hc
 					"user", "host", "private_key", "private_key_path",
 					"passphrase", "passphrase_path",
 				}),
-			}, []string{"ssh"}),
+				"kubernetes": cty.ObjectWithOptionalAttrs(map[string]cty.Type{
+					"kubeconfig_base64": cty.String,
+					"context_name":      cty.String,
+					"namespace":         cty.String,
+					"pod":               cty.String,
+					"container":         cty.String,
+				}, []string{
+					"kubeconfig_base64", "context_name", "namespace", "pod",
+					"container",
+				}),
+			}, []string{"ssh", "kubernetes"}),
 		},
 	}
 
@@ -164,8 +158,14 @@ func (p *Provider) decodeEnosProvider(block *hcl.Block, ctx *hcl.EvalContext) hc
 		return diags
 	}
 
+	// We should have either a valid k8s or ssh transport.
+	p.Config.Type = "provider"
+	p.Config.Labels = []string{p.Type, p.Alias}
+	p.Config.Attrs["transport"] = trans
+
 	ssh, ok := trans.AsValueMap()["ssh"]
 	if !ok {
+		// We're done, we're not going to do anything else with k8s
 		return diags
 	}
 
@@ -173,6 +173,8 @@ func (p *Provider) decodeEnosProvider(block *hcl.Block, ctx *hcl.EvalContext) hc
 		return diags
 	}
 
+	// We have an ssh transport. Make sure any of the paths that we've been
+	// given exist.
 	sshVals := map[string]cty.Value{}
 	for name, val := range ssh.AsValueMap() {
 		// Only pass through known values
@@ -224,7 +226,7 @@ func (p *Provider) decodeEnosProvider(block *hcl.Block, ctx *hcl.EvalContext) hc
 		}
 	}
 
-	p.Attrs["transport"] = cty.ObjectVal(map[string]cty.Value{
+	p.Config.Attrs["transport"] = cty.ObjectVal(map[string]cty.Value{
 		"ssh": cty.ObjectVal(sshVals),
 	})
 

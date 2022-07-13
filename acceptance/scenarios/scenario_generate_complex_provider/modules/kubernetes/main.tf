@@ -1,0 +1,3 @@
+output "random" {
+  value = "notactuallyrandom"
+}

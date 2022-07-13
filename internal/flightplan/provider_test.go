@@ -247,7 +247,6 @@ module "k8s_deploy" {
   driver = "k8s"
 }
 
-/*
 scenario "copy_to_east" {
   providers = [
     provider.aws.west,
@@ -262,7 +261,7 @@ scenario "copy_to_east" {
     }
   }
 }
-*/
+
 scenario "copy_to_eu" {
   providers = [
     provider.aws.east,
@@ -383,76 +382,74 @@ scenario "k8s" {
 					},
 				},
 				Scenarios: []*Scenario{
-					/*
-						{
-							Name:         "copy_to_east",
-							TerraformCLI: DefaultTerraformCLI(),
-							Providers: []*Provider{
-								{
-									Type:  "aws",
-									Alias: "west",
-									Config: &SchemalessBlock{
-										Type:   "provider",
-										Labels: []string{"aws", "west"},
-										Attrs: map[string]cty.Value{
-											"region": cty.StringVal("us-west-1"),
-										},
-										Children: []*SchemalessBlock{},
+					{
+						Name:         "copy_to_east",
+						TerraformCLI: DefaultTerraformCLI(),
+						Providers: []*Provider{
+							{
+								Type:  "aws",
+								Alias: "west",
+								Config: &SchemalessBlock{
+									Type:   "provider",
+									Labels: []string{"aws", "west"},
+									Attrs: map[string]cty.Value{
+										"region": cty.StringVal("us-west-1"),
 									},
-								},
-								{
-									Type:  "aws",
-									Alias: "east",
-									Config: &SchemalessBlock{
-										Type:   "provider",
-										Labels: []string{"aws", "east"},
-										Attrs: map[string]cty.Value{
-											"region": cty.StringVal("us-east-1"),
-										},
-										Children: []*SchemalessBlock{},
-									},
+									Children: []*SchemalessBlock{},
 								},
 							},
-							Steps: []*ScenarioStep{
-								{
-									Name: "copy",
-									Module: &Module{
-										Name:   "copy",
-										Source: modulePath,
-										Attrs: map[string]cty.Value{
-											"driver": testMakeStepVarValue(cty.StringVal("s3")),
+							{
+								Type:  "aws",
+								Alias: "east",
+								Config: &SchemalessBlock{
+									Type:   "provider",
+									Labels: []string{"aws", "east"},
+									Attrs: map[string]cty.Value{
+										"region": cty.StringVal("us-east-1"),
+									},
+									Children: []*SchemalessBlock{},
+								},
+							},
+						},
+						Steps: []*ScenarioStep{
+							{
+								Name: "copy",
+								Module: &Module{
+									Name:   "copy",
+									Source: modulePath,
+									Attrs: map[string]cty.Value{
+										"driver": testMakeStepVarValue(cty.StringVal("s3")),
+									},
+								},
+								Providers: map[string]*Provider{
+									"src": {
+										Type:  "aws",
+										Alias: "west",
+										Config: &SchemalessBlock{
+											Type:   "provider",
+											Labels: []string{"aws", "west"},
+											Attrs: map[string]cty.Value{
+												"region": cty.StringVal("us-west-1"),
+											},
+											Children: []*SchemalessBlock{},
 										},
 									},
-									Providers: map[string]*Provider{
-										"src": {
-											Type:  "aws",
-											Alias: "west",
-											Config: &SchemalessBlock{
-												Type:   "provider",
-												Labels: []string{"aws", "west"},
-												Attrs: map[string]cty.Value{
-													"region": cty.StringVal("us-west-1"),
-												},
-												Children: []*SchemalessBlock{},
+									"dst": {
+										Type:  "aws",
+										Alias: "east",
+										Config: &SchemalessBlock{
+											Type:   "provider",
+											Labels: []string{"aws", "east"},
+											Attrs: map[string]cty.Value{
+												"region": cty.StringVal("us-east-1"),
 											},
-										},
-										"dst": {
-											Type:  "aws",
-											Alias: "east",
-											Config: &SchemalessBlock{
-												Type:   "provider",
-												Labels: []string{"aws", "east"},
-												Attrs: map[string]cty.Value{
-													"region": cty.StringVal("us-east-1"),
-												},
-												Children: []*SchemalessBlock{},
-											},
+											Children: []*SchemalessBlock{},
 										},
 									},
 								},
 							},
 						},
-					*/
+					},
 					{
 						Name:         "copy_to_eu",
 						TerraformCLI: DefaultTerraformCLI(),

@@ -71,7 +71,7 @@ func (s *SchemalessBlock) Decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Dia
 	return diags
 }
 
-// ToCtyValue returns the provider block contents as an object cty.Value.
+// ToCtyValue returns the schemaless block contents as an object cty.Value.
 func (s *SchemalessBlock) ToCtyValue() cty.Value {
 	vals := map[string]cty.Value{
 		"type":   cty.StringVal(s.Type),

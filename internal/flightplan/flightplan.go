@@ -328,7 +328,7 @@ func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics 
 // top-level schema.
 func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
 	var diags hcl.Diagnostics
-	// type -> map of aliases -> provider object
+	// provider type -> alias name -> provider object value
 	providers := map[string]map[string]cty.Value{}
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeProvider) {

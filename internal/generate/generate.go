@@ -387,22 +387,45 @@ func (g *Generator) maybeWriteTerraformSettings(rootBody *hclwrite.Body) {
 	rootBody.AppendNewline()
 }
 
+func (g *Generator) writeSchemalessBlocks(
+	body *hclwrite.Body,
+	blocks []*flightplan.SchemalessBlock,
+) {
+	for count, block := range blocks {
+		if count > 0 {
+			body.AppendNewline()
+		}
+		hclBlock := body.AppendNewBlock(block.Type, block.Labels)
+		blockBody := hclBlock.Body()
+
+		for name, val := range block.Attrs {
+			blockBody.SetAttributeValue(name, val)
+		}
+
+		if len(block.Children) > 0 {
+			g.writeSchemalessBlocks(blockBody, block.Children)
+		}
+	}
+}
+
 func (g *Generator) maybeWriteProviderConfig(rootBody *hclwrite.Body) {
 	if len(g.Scenario.Providers) == 0 {
 		return
 	}
 
-	count := 0
-	for _, provider := range g.Scenario.Providers {
-		if count > 0 {
+	for i, provider := range g.Scenario.Providers {
+		if i > 0 {
 			rootBody.AppendNewline()
 		}
-		count++
 		block := rootBody.AppendNewBlock("provider", []string{provider.Type})
 		body := block.Body()
-		for name, val := range provider.Attrs {
+
+		for name, val := range provider.Config.Attrs {
 			body.SetAttributeValue(name, val)
 		}
+
+		g.writeSchemalessBlocks(body, provider.Config.Children)
+
 		// Don't alias "default" providers to ensure that step modules inherit
 		// their configuration by default.
 		if provider.Alias != "" && provider.Alias != "default" {

@@ -25,10 +25,12 @@ func (e Runner) moduleGenerate(
 		},
 	}
 
+	log := e.log.With(RequestDebugArgs(req))
+
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
 		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
-		e.log.Error("failed to create reference from request", "error", err)
+		log.Error("failed to create reference from request", "error", err)
 		return resVal
 	}
 
@@ -38,7 +40,7 @@ func (e Runner) moduleGenerate(
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
 		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
-		e.log.Error("failed to send event", "error", err)
+		log.Error("failed to send event", "error", err)
 		return resVal
 	}
 
@@ -52,8 +54,16 @@ func (e Runner) moduleGenerate(
 
 		if err := events.Publish(event); err != nil {
 			resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
-			e.log.Error("failed to send event", "error", err)
+			log.Error("failed to send event", "error", err)
 		}
+	}
+
+	// Make sure our context isn't done before we continue
+	select {
+	case <-ctx.Done():
+		notifyFail(diagnostics.FromErr(ctx.Err()))
+		return resVal
+	default:
 	}
 
 	// Decode our scenario and create our module generator
@@ -90,9 +100,9 @@ func (e Runner) moduleGenerate(
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
 		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
-		e.log.Error("failed to send event", "error", err)
+		log.Error("failed to send event", "error", err)
 	}
-	e.log.Debug("finished generate", RequestDebugArgs(req)...)
+	log.Debug("finished generate")
 
 	return resVal
 }

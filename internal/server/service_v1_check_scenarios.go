@@ -26,5 +26,3 @@ func (s *ServiceV1) CheckScenarios(
 	)
 	return res, nil
 }
-
-// TODO update docs for validate becoming check

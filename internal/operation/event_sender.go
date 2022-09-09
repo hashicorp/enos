@@ -37,7 +37,5 @@ func (e *EventSender) PublishResponse(res *pb.Operation_Response) error {
 		return err
 	}
 
-	e.events <- event
-
-	return nil
+	return e.Publish(event)
 }

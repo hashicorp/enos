@@ -135,6 +135,8 @@ func (r *LocalOperator) Dispatch(
 	*pb.Ref_Operation,
 	[]*pb.Diagnostic,
 ) {
+	log := r.log.With(RequestDebugArgs(req)...)
+
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
 		return ref, diagnostics.FromErr(err)
@@ -145,9 +147,7 @@ func (r *LocalOperator) Dispatch(
 
 	opUUID, err := uuid.NewRandom()
 	if err != nil {
-		r.log.Error("failed to generate operation id",
-			append(RequestDebugArgs(req), "err", err)...,
-		)
+		log.Error("failed to generate operation id", "error", err)
 		return ref, diagnostics.FromErr(err)
 	}
 
@@ -158,9 +158,7 @@ func (r *LocalOperator) Dispatch(
 	// Create our worker request
 	workReq, err := newWorkReqForOpReq(req)
 	if err != nil {
-		r.log.Error("failed to determine operation func for request",
-			append(RequestDebugArgs(req), "err", err)...,
-		)
+		log.Error("failed to determine operation func for request", "error", err)
 		return ref, diagnostics.FromErr(err)
 	}
 
@@ -168,31 +166,25 @@ func (r *LocalOperator) Dispatch(
 	// stream
 	queueRes, err := NewResponseFromRequest(req)
 	if err != nil {
-		r.log.Error("unable to create new response for request",
-			ResponseDebugArgs(queueRes)...,
-		)
+		log.Error("unable to create new response for request")
 		return ref, diagnostics.FromErr(err)
 	}
 	queueRes.Op = ref
 
 	err = r.state.UpsertOperationResponse(queueRes)
 	if err != nil {
-		r.log.Error("failed to commit operation response",
-			append(ResponseDebugArgs(queueRes), "err", err)...,
-		)
+		log.Error("failed to commit operation response", "error", err)
 		return ref, diagnostics.FromErr(err)
 	}
 
 	// Dispatch our work request to our worker channel
 	select {
 	case r.workRequests <- workReq:
-		r.log.Debug("queued operation", RequestDebugArgs(workReq.req)...)
+		log.Debug("queued operation")
 	default:
 		queueRes.Op = ref
 		queueRes.Status = pb.Operation_STATUS_FAILED
-		r.log.Error("failed to queue work request",
-			ResponseDebugArgs(queueRes)...,
-		)
+		log.Error("failed to queue work request")
 		diags := diagnostics.FromErr(err)
 
 		err := r.state.UpsertOperationResponse(queueRes)
@@ -266,20 +258,18 @@ func (r *LocalOperator) startEventHandler(ctx context.Context) {
 				log.Debug("stopped")
 				return
 			case event := <-r.workEvents:
+				log := log.With(EventDebugArgs(event)...)
+
 				// Add our event to our event history
 				err := r.state.AppendOperationEvent(event)
 				if err != nil {
-					log.Error("failed to append event to state", append(
-						EventDebugArgs(event), "error", err)...,
-					)
+					log.Error("failed to append event to state", "error", err)
 				}
 
 				// Publish our updates to any stream subscribers
 				err = r.publisher.Publish(event)
 				if err != nil {
-					log.Error("failed to publish event to listeners", append(
-						EventDebugArgs(event), "error", err)...,
-					)
+					log.Error("failed to publish event to state", "error", err)
 				}
 			}
 		}

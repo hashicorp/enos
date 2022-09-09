@@ -87,7 +87,8 @@ func (p *Publisher) Publish(event *pb.Operation_Event) error {
 	if event == nil {
 		return nil
 	}
-	p.log.Debug("publishing event", EventDebugArgs(event)...)
+	log := p.log.With(EventDebugArgs(event)...)
+	log.Debug("publishing event")
 
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -106,9 +107,7 @@ func (p *Publisher) Publish(event *pb.Operation_Event) error {
 		newEvent := &pb.Operation_Event{}
 		err := proto.Copy(event, newEvent)
 		if err != nil {
-			p.log.Error("unable to copy operation", append(
-				EventDebugArgs(event), "err", err)...,
-			)
+			log.Error("unable to copy operation", "err", err)
 			return err
 		}
 

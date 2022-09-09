@@ -4,9 +4,9 @@ import "github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 
 // State is our server state
 type State interface {
-	// GetOperation the most recent committed operation response.
+	// GetOperationResponse returns the most recent committed operation response.
 	GetOperationResponse(*pb.Ref_Operation) (*pb.Operation_Response, error)
-	// UpsertOperation updates or inserts the operation response.
+	// UpsertOperationResponse updates or inserts the operation response.
 	UpsertOperationResponse(*pb.Operation_Response) error
 	// GetOperationEvents returns an event history for the operation
 	GetOperationEvents(*pb.Ref_Operation) ([]*pb.Operation_Event, error)

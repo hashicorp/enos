@@ -63,9 +63,12 @@ func (i *InMemoryState) UpsertOperationResponse(res *pb.Operation_Response) erro
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	scenario := flightplan.NewScenario()
-	scenario.FromRef(res.GetOp().GetScenario())
-	sid := scenario.UID()
+	var sid string
+	if ref := res.GetOp().GetScenario(); ref != nil {
+		scenario := flightplan.NewScenario()
+		scenario.FromRef(ref)
+		sid = scenario.UID()
+	}
 	if sid == "" {
 		return fmt.Errorf("invalid scenario id")
 	}
@@ -81,16 +84,9 @@ func (i *InMemoryState) UpsertOperationResponse(res *pb.Operation_Response) erro
 		return fmt.Errorf("invalid operation id")
 	}
 
-	scenarioResponseState, ok := i.responses[sid]
+	_, ok := i.responses[sid]
 	if !ok {
 		i.responses[sid] = map[string]*pb.Operation_Response{oid: resCopy}
-
-		return nil
-	}
-
-	_, ok = scenarioResponseState[resCopy.GetOp().GetId()]
-	if !ok {
-		i.responses[sid][oid] = resCopy
 
 		return nil
 	}
@@ -106,9 +102,12 @@ func (i *InMemoryState) AppendOperationEvent(event *pb.Operation_Event) error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	scenario := flightplan.NewScenario()
-	scenario.FromRef(event.GetOp().GetScenario())
-	sid := scenario.UID()
+	var sid string
+	if ref := event.GetOp().GetScenario(); ref != nil {
+		scenario := flightplan.NewScenario()
+		scenario.FromRef(ref)
+		sid = scenario.UID()
+	}
 	if sid == "" {
 		return fmt.Errorf("invalid scenario id")
 	}
@@ -131,7 +130,7 @@ func (i *InMemoryState) AppendOperationEvent(event *pb.Operation_Event) error {
 		return nil
 	}
 
-	eventHistory, ok := eventsHistory[event.GetOp().GetId()]
+	eventHistory, ok := eventsHistory[eid]
 	if !ok {
 		i.events[sid][eid] = []*pb.Operation_Event{eventCopy}
 

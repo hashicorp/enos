@@ -118,6 +118,7 @@ func (w *worker) runRequest(req *workReq) {
 	resC := make(chan *pb.Operation_Response, 1)
 	eWg := sync.WaitGroup{}
 	rWg := sync.WaitGroup{}
+	log := w.log.With(RequestDebugArgs(req.req)...)
 
 	// Start the event sender
 	eWg.Add(1)
@@ -158,7 +159,7 @@ func (w *worker) runRequest(req *workReq) {
 	go func() {
 		defer rWg.Done()
 
-		w.log.Debug("running", RequestDebugArgs(req.req)...)
+		log.Debug("running operation")
 		select {
 		case <-workCtx.Done():
 			return
@@ -168,7 +169,7 @@ func (w *worker) runRequest(req *workReq) {
 		select {
 		case <-workCtx.Done():
 			return
-		case resC <- req.f(w.ctx, eventC, w.log.Named(req.req.GetId())):
+		case resC <- req.f(w.ctx, eventC, log.Named(req.req.GetId())):
 			return
 		}
 	}()
@@ -185,18 +186,27 @@ func (w *worker) runRequest(req *workReq) {
 	select {
 	case res := <-resC:
 		if res == nil {
-			res, _ = NewResponseFromRequest(req.req)
+			res, err := NewResponseFromRequest(req.req)
+			if err != nil {
+				err = fmt.Errorf("work request did not return a response: %w", err)
+			} else {
+				err = fmt.Errorf("work request did not return a response")
+			}
 			res.Status = pb.Operation_STATUS_FAILED
-			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(
-				fmt.Errorf("work request did not return a response"),
-			)...)
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		}
 		w.completeRequest(res)
-		w.log.Debug("worker operation completed", RequestDebugArgs(req.req)...)
+		log.Debug("worker operation completed")
 	default:
-		w.log.Debug("worker operation cancelled", RequestDebugArgs(req.req)...)
-		res, _ := NewResponseFromRequest(req.req)
+		log.Debug("worker operation cancelled")
+		res, err := NewResponseFromRequest(req.req)
+		if err != nil {
+			err = fmt.Errorf("work request did not return a response: %w", err)
+		} else {
+			err = fmt.Errorf("work request did not return a response")
+		}
 		res.Status = pb.Operation_STATUS_CANCELLED
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		w.completeRequest(res)
 	}
 }
@@ -205,10 +215,9 @@ func (w *worker) runRequest(req *workReq) {
 // the state and sending the done event.
 func (w *worker) completeRequest(res *pb.Operation_Response) {
 	err := w.saveState(res)
+	log := w.log.With(ResponseDebugArgs(res)...)
 	if err != nil {
-		w.log.Error("unable to save response state", append(
-			ResponseDebugArgs(res), "error", err,
-		)...)
+		log.Error("unable to save response state", "error", err)
 		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 	}
 

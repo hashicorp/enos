@@ -19,11 +19,12 @@ func (e *Runner) terraformExec(
 	res := &pb.Terraform_Command_Exec_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
+	log := e.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
-		e.log.Error("failed to create reference from request", "error", err)
+		log.Error("failed to create reference from request", "error", err)
 		return res
 	}
 
@@ -33,7 +34,7 @@ func (e *Runner) terraformExec(
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
-		e.log.Error("failed to publish event", "error", err)
+		log.Error("failed to publish event", "error", err)
 	}
 
 	// notifyFail prepares the response for failure and sends a failure
@@ -46,7 +47,7 @@ func (e *Runner) terraformExec(
 
 		if err := events.Publish(event); err != nil {
 			res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
-			e.log.Error("failed to publish event", "error", err)
+			log.Error("failed to publish event", "error", err)
 		}
 	}
 
@@ -78,10 +79,10 @@ func (e *Runner) terraformExec(
 
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
-		e.log.Error("failed to send event", "error", err)
+		log.Error("failed to send event", "error", err)
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 	}
-	e.log.Debug("finished exec", RequestDebugArgs(req)...)
+	log.Debug("finished exec")
 
 	return res
 }

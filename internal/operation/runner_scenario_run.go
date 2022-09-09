@@ -16,14 +16,15 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 		eventC chan *pb.Operation_Event,
 		log hclog.Logger,
 	) *pb.Operation_Response {
+		log = log.With(RequestDebugArgs(req))
 		events := NewEventSender(eventC)
 
 		// Create our new response from our request.
 		res, err := NewResponseFromRequest(req)
 		if err != nil {
-			log.Debug("failed to create response", RequestDebugArgs(req)...)
+			log.Debug("failed to create response")
 			if err = events.PublishResponse(res); err != nil {
-				log.Error("failed to send event", ResponseDebugArgs(res)...)
+				log.Error("failed to send event", "error", err)
 			}
 			return res
 		}
@@ -50,7 +51,7 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 		if hasFailedStatus(res.Status) {
 			if err := events.PublishResponse(res); err != nil {
 				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
-				log.Error("failed to send event", ResponseDebugArgs(res)...)
+				log.Error("failed to send event", "error", err)
 			}
 
 			return res

@@ -24,7 +24,6 @@ var (
 	// can be queued before being processed by the error logger. In most cases
 	// server errors will be returned the client when possible as diagnostics
 	// so the error logging isn't critical for user feedback.
-	DefaultOperatorMaxErrorQueue = 100
 )
 
 // Operator is the server operation handler.

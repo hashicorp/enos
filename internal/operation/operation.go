@@ -43,10 +43,12 @@ func EventDebugArgs(event *pb.Operation_Event) []any {
 	}
 	args := []any{}
 
-	scenario := flightplan.NewScenario()
-	scenario.FromRef(event.GetOp().GetScenario())
-	if s := scenario.String(); s != "" {
-		args = append(args, "scenario", s)
+	if ref := event.GetOp().GetScenario(); ref != nil {
+		scenario := flightplan.NewScenario()
+		scenario.FromRef(ref)
+		if s := scenario.String(); s != "" {
+			args = append(args, "scenario", s)
+		}
 	}
 
 	if eventType := EventTypeString(event); eventType != "" {
@@ -84,10 +86,12 @@ func ResponseDebugArgs(res *pb.Operation_Response) []any {
 	}
 	args := []any{}
 
-	scenario := flightplan.NewScenario()
-	scenario.FromRef(res.GetOp().GetScenario())
-	if s := scenario.String(); s != "" {
-		args = append(args, "scenario", s)
+	if ref := res.GetOp().GetScenario(); ref != nil {
+		scenario := flightplan.NewScenario()
+		scenario.FromRef(ref)
+		if s := scenario.String(); s != "" {
+			args = append(args, "scenario", s)
+		}
 	}
 
 	if opType := ResponseTypeString(res); opType != "" {
@@ -121,10 +125,12 @@ func ReferenceDebugArgs(ref *pb.Ref_Operation) []any {
 	}
 	args := []any{}
 
-	scenario := flightplan.NewScenario()
-	scenario.FromRef(ref.GetScenario())
-	if s := scenario.String(); s != "" {
-		args = append(args, "scenario", s)
+	if sref := ref.GetScenario(); sref != nil {
+		scenario := flightplan.NewScenario()
+		scenario.FromRef(sref)
+		if s := scenario.String(); s != "" {
+			args = append(args, "scenario", s)
+		}
 	}
 
 	if i := ref.GetId(); i != "" {

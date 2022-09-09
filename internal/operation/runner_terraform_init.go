@@ -16,6 +16,7 @@ func (e *Runner) terrafromInit(
 	res := &pb.Terraform_Command_Init_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
+	log := e.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -30,7 +31,7 @@ func (e *Runner) terrafromInit(
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
-		e.log.Error("failed to publish event", "error", err)
+		log.Error("failed to publish event", "error", err)
 	}
 
 	// notifyFail prepares the response for failure and sends a failure
@@ -43,7 +44,7 @@ func (e *Runner) terrafromInit(
 
 		if err := events.Publish(event); err != nil {
 			res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
-			e.log.Error("failed to publish event", "error", err)
+			log.Error("failed to publish event", "error", err)
 		}
 	}
 
@@ -72,10 +73,10 @@ func (e *Runner) terrafromInit(
 
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
-		e.log.Error("failed to send event", "error", err)
+		log.Error("failed to send event", "error", err)
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 	}
-	e.log.Debug("finished init", RequestDebugArgs(req)...)
+	log.Debug("finished init")
 
 	return res
 }

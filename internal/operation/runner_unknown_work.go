@@ -19,15 +19,16 @@ func UnknownWorkFunc(req *pb.Operation_Request) (WorkFunc, error) {
 		events chan *pb.Operation_Event,
 		log hclog.Logger,
 	) *pb.Operation_Response {
+		log = log.With(RequestDebugArgs(req)...)
 		// Create our new response from our request.
 		res, err := NewResponseFromRequest(req)
 		if err != nil {
-			log.Debug("failed to create response", RequestDebugArgs(req)...)
+			log.Debug("failed to create response")
 			event, err := NewEventFromResponse(res)
 			if err == nil {
 				events <- event
 			} else {
-				log.Debug("failed to event", RequestDebugArgs(req)...)
+				log.Debug("failed to event")
 			}
 
 			return res

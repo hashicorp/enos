@@ -69,7 +69,7 @@ func (s *Subscriber) Close() {
 	defer s.mu.Unlock()
 	s.active = false
 	s.once.Do(func() { close(s.Events) })
-	s.log.Debug("stopped")
+	s.log.Debug("closed", "subscriber_id", s.ID)
 }
 
 // Send sends an event to the subscribers event channel. Send will block until

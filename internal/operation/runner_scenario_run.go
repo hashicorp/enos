@@ -16,7 +16,7 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 		eventC chan *pb.Operation_Event,
 		log hclog.Logger,
 	) *pb.Operation_Response {
-		log = log.With(RequestDebugArgs(req))
+		log = log.With(RequestDebugArgs(req)...)
 		events := NewEventSender(eventC)
 
 		// Create our new response from our request.
@@ -101,6 +101,7 @@ func (e *Runner) scenarioRun(
 		res.Run.Init.GetDiagnostics(),
 		res.Run.Validate.GetDiagnostics(),
 		res.Run.Plan.GetDiagnostics(),
+		res.Run.Apply.GetDiagnostics(),
 	) {
 		return res
 	}

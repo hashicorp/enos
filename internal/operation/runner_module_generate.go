@@ -25,7 +25,7 @@ func (e Runner) moduleGenerate(
 		},
 	}
 
-	log := e.log.With(RequestDebugArgs(req))
+	log := e.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {

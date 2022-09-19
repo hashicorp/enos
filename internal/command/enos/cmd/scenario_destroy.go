@@ -48,5 +48,5 @@ func runScenarioDestroyCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return ui.ShowOperationResponses(rootState.enosConnection.StreamOperations(ctx, res, ws, ui))
+	return ui.ShowOperationResponses(rootState.enosConnection.StreamOperations(ctx, res, ui))
 }

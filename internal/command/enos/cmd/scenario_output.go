@@ -48,7 +48,7 @@ func runScenarioOutputCmd(cmd *cobra.Command, args []string) error {
 
 	// Stream the operations to wait until all outputs have been run and the
 	// display them
-	opRes := rootState.enosConnection.StreamOperations(ctx, res, ws, ui)
+	opRes := rootState.enosConnection.StreamOperations(ctx, res, ui)
 
 	var merr *multierror.Error
 	merr = multierror.Append(merr, ui.ShowDecode(opRes.GetDecode(), true))

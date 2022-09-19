@@ -79,7 +79,7 @@ func (e *Runner) scenarioCheck(
 	}
 
 	// initialize our Terraform module
-	res.Check.Init = e.terrafromInit(ctx, req, events)
+	res.Check.Init = e.terraformInit(ctx, req, events)
 
 	// Return early if we failed to initialize our module
 	if diagnostics.HasFailed(e.TFConfig.FailOnWarnings, res.Check.Init.GetDiagnostics()) {

@@ -28,7 +28,7 @@ func UnknownWorkFunc(req *pb.Operation_Request) (WorkFunc, error) {
 			if err == nil {
 				events <- event
 			} else {
-				log.Debug("failed to event")
+				log.Debug("failed to publish event")
 			}
 
 			return res

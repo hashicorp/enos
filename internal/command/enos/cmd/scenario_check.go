@@ -15,7 +15,7 @@ func newScenarioCheckCmd() *cobra.Command {
 		Use:               "check [FILTER]",
 		Aliases:           []string{"validate"}, // old name of the check command
 		Short:             "Check that scenarios are valid",
-		Long:              fmt.Sprintf("Check that scenarios are valid. %s", scenarioFilterDesc),
+		Long:              fmt.Sprintf("Check that scenarios are valid by generating the Scenario's Terraform Root Module, initializing it, validating it, and planning. %s", scenarioFilterDesc),
 		RunE:              runScenarioCheckCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
@@ -55,5 +55,5 @@ func runScenarioCheckCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return ui.ShowOperationResponses(rootState.enosConnection.StreamOperations(ctx, res, ws, ui))
+	return ui.ShowOperationResponses(rootState.enosConnection.StreamOperations(ctx, res, ui))
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// terrafromInit initializes a Terraform module
-func (e *Runner) terrafromInit(
+// terraformInit initializes a Terraform module
+func (e *Runner) terraformInit(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,

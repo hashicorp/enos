@@ -15,13 +15,13 @@ func (s *ServiceV1) OperationEventStream(
 	req *pb.OperationEventStreamRequest,
 	stream pb.EnosService_OperationEventStreamServer,
 ) error {
+	log := s.log.With(operation.ReferenceDebugArgs(req.GetOp())...)
+
 	sub, unsub, err := s.operator.Stream(req.GetOp())
+	log = log.With("subscriber_id", sub.ID)
+
 	if err != nil {
-		s.log.Error("failed to initialize stream", append(
-			operation.ReferenceDebugArgs(req.GetOp()),
-			"subscriber_id", sub.ID,
-			"err", err,
-		)...)
+		log.Error("failed to initialize stream", "error", err)
 
 		return stream.Send(&pb.OperationEventStreamResponse{
 			Diagnostics: diagnostics.FromErr(err),
@@ -29,21 +29,14 @@ func (s *ServiceV1) OperationEventStream(
 	}
 	defer unsub()
 
-	s.log.Debug("starting stream", append(
-		operation.ReferenceDebugArgs(req.GetOp()),
-		"subscriber_id", sub.ID,
-	)...)
+	log.Debug("starting stream")
 
 	for event := range sub.Events {
 		err = stream.Send(&pb.OperationEventStreamResponse{
 			Event: event,
 		})
 		if err != nil {
-			s.log.Debug("failed to send event", append(
-				operation.ReferenceDebugArgs(req.GetOp()),
-				"subscriber_id", sub.ID,
-				"err", err,
-			)...)
+			log.Debug("failed to send event", "error", err)
 
 			return err
 		}
@@ -52,10 +45,7 @@ func (s *ServiceV1) OperationEventStream(
 		}
 	}
 
-	s.log.Debug("stream completed", append(
-		operation.ReferenceDebugArgs(req.GetOp()),
-		"subscriber_id", sub.ID,
-	)...)
+	log.Debug("stream completed")
 
 	return nil
 }

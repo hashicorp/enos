@@ -56,7 +56,8 @@ func (c *Config) FromProto(pcfg *pb.Terraform_Runner_Config) {
 	c.FailOnWarnings = pcfg.GetFailOnWarnings()
 }
 
-// WithModule updates the configuration with that of a
+// WithModule updates the module directory and config path of the Terraform config
+// file with that of a Terraform_Module.
 func (c *Config) WithModule(mod *pb.Terraform_Module) {
 	if mod == nil {
 		return

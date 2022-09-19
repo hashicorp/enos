@@ -70,7 +70,7 @@ func (e *Runner) terraformValidate(
 
 		if e.TFConfig.FailOnWarnings && !res.Valid {
 			err = fmt.Errorf("failing on validation warnings")
-			// exit after we update our event handler with validation info
+			// We'll handle this error below and exit after notifyFail
 		}
 	}
 	if err != nil {

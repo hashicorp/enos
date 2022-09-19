@@ -20,10 +20,6 @@ var (
 	// that can be queued before being persisted in the state by the event
 	// handler.
 	DefaultOperatorMaxOperationEventQueue = 1000
-	// DefaultOperatorMaxErrorQueue is the maximum number of server errors that
-	// can be queued before being processed by the error logger. In most cases
-	// server errors will be returned the client when possible as diagnostics
-	// so the error logging isn't critical for user feedback.
 )
 
 // Operator is the server operation handler.

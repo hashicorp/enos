@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -81,64 +82,72 @@ func WithLocalOperatorConfig(cfg *pb.Operator_Config) LocalOperatorOpt {
 }
 
 // Start starts the operator.
-func (r *LocalOperator) Start(ctx context.Context) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (o *LocalOperator) Start(ctx context.Context) error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 
-	if r.running {
+	if o.running {
 		return fmt.Errorf("already running")
 	}
-	r.log.Info("starting")
-	ctx, r.ctxCancel = context.WithCancel(ctx)
-	r.startEventHandler(ctx)
+	o.log.Info("starting")
+	ctx, o.ctxCancel = context.WithCancel(ctx)
+	o.startEventHandler(ctx)
 
-	for i := int32(0); i < r.workerCount; i++ {
+	for i := int32(0); i < o.workerCount; i++ {
 		go newWorker(
 			ctx,
 			fmt.Sprintf("%d", i),
-			r.workRequests,
-			r.workEvents,
-			r.log.Named("worker").Named(fmt.Sprintf("%d", i)),
+			o.workRequests,
+			o.workEvents,
+			o.log.Named("worker").Named(fmt.Sprintf("%d", i)),
 			func(res *pb.Operation_Response) error {
-				return r.state.UpsertOperationResponse(res)
+				return o.state.UpsertOperationResponse(res)
 			},
 		).run()
 	}
 
-	r.running = true
+	o.running = true
 
 	return nil
 }
 
 // Stop stops the operator. It attempts to gracefully terminate all operations.
-func (r *LocalOperator) Stop() error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	r.publisher.Stop()
-	r.running = false
-	r.ctxCancel()
+func (o *LocalOperator) Stop() error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.running = false     // Prevent new work requests from being dispatched
+	o.drainWorkReqQueue() // Drain any queued operations
+	o.ctxCancel()         // Cancel in-flight operations, kill operation workers, drain the event queue
+	o.publisher.Stop()    // Turn off event publisher
 	return nil
 }
 
 // State returns the operators state
-func (r *LocalOperator) State() state.State {
-	return r.state
+func (o *LocalOperator) State() state.State {
+	return o.state
 }
 
-// Dispatch dispatches an  If successful it will return a reference
-// to an operation including its ID and any diagnostics encountered when attempting
-// to dispatch the
-func (r *LocalOperator) Dispatch(
+// Dispatch takes an operation request and attempts to dispatch it for execution
+// by the operators worker pool. If the request is successfully coverted into
+// a work operation and queued it will return a reference for the operation to
+// the caller.
+func (o *LocalOperator) Dispatch(
 	req *pb.Operation_Request,
 ) (
 	*pb.Ref_Operation,
 	[]*pb.Diagnostic,
 ) {
-	log := r.log.With(RequestDebugArgs(req)...)
+	log := o.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
+		log.Error("failed to generate scenario reference from request", "error", err)
+		return ref, diagnostics.FromErr(err)
+	}
+
+	if !o.running {
+		err = fmt.Errorf("unable to dispatch new operations as operator is not running")
+		log.Error("failed to dispatch operation", "error", err)
 		return ref, diagnostics.FromErr(err)
 	}
 
@@ -171,7 +180,7 @@ func (r *LocalOperator) Dispatch(
 	}
 	queueRes.Op = ref
 
-	err = r.state.UpsertOperationResponse(queueRes)
+	err = o.state.UpsertOperationResponse(queueRes)
 	if err != nil {
 		log.Error("failed to commit operation response", "error", err)
 		return ref, diagnostics.FromErr(err)
@@ -179,15 +188,16 @@ func (r *LocalOperator) Dispatch(
 
 	// Dispatch our work request to our worker channel
 	select {
-	case r.workRequests <- workReq:
+	case o.workRequests <- workReq:
 		log.Debug("queued operation")
 	default:
 		queueRes.Op = ref
 		queueRes.Status = pb.Operation_STATUS_FAILED
-		log.Error("failed to queue work request")
+		err = fmt.Errorf("failed to queue work request because the queue was full")
+		log.Error("failed to queue work request", "error", err)
 		diags := diagnostics.FromErr(err)
 
-		err := r.state.UpsertOperationResponse(queueRes)
+		err := o.state.UpsertOperationResponse(queueRes)
 		diags = append(diags, diagnostics.FromErr(err)...)
 
 		return ref, diags
@@ -196,37 +206,36 @@ func (r *LocalOperator) Dispatch(
 	return ref, nil
 }
 
-// Stream takes a reference to an operation and returns channels where operation
-// events are returned, along with an Unsubscriber function that can be called
-// to close the stream on the operator. The stream will remain active and until
-// the Unsubscriber is called.
-func (r *LocalOperator) Stream(
-	op *pb.Ref_Operation,
-) (*Subscriber, Unsubscriber, error) {
+// Stream takes a reference to an operation and returns an event subscriber for
+// the operation, an unsubscriber function, and an error. The subscriber can be
+// used to publish and receive events from the event stream. When the unsubscriber
+// function is called the operators event handler will stop publishing events to
+// to the subscriber.
+func (o *LocalOperator) Stream(op *pb.Ref_Operation) (*Subscriber, Unsubscriber, error) {
 	sub, err := NewSubscriber(op,
-		WithSubscriberLog(r.log.Named("subscriber").Named(op.GetId())),
+		WithSubscriberLog(o.log.Named("subscriber").Named(op.GetId())),
 	)
 	if err != nil {
-		r.log.Error("unable to create new operation subscriber", "error", err)
+		o.log.Error("unable to create new operation subscriber", "error", err)
 		return nil, nil, err
 	}
 
-	unsubscribe := r.publisher.Subscribe(sub)
+	unsubscribe := o.publisher.Subscribe(sub)
 
 	// Send any existing events to the events channel
-	events, err := r.state.GetOperationEvents(op)
+	events, err := o.state.GetOperationEvents(op)
 	if err != nil {
 		return sub, unsubscribe, err
 	}
 	go func() {
 		var err error
 		for _, event := range events {
-			r.log.Debug("publishing historical event to stream",
+			o.log.Debug("publishing historical event to stream",
 				EventDebugArgs(event)...,
 			)
-			err = r.publisher.Publish(event)
+			err = o.publisher.Publish(event)
 			if err != nil {
-				r.log.Error("unable to publish event", "error", err)
+				o.log.Error("unable to publish event", "error", err)
 			}
 		}
 	}()
@@ -236,41 +245,129 @@ func (r *LocalOperator) Stream(
 
 // Response takes a reference to an operation and retuns the response. If no
 // response is found nil will be returned.
-func (r *LocalOperator) Response(op *pb.Ref_Operation) (*pb.Operation_Response, error) {
-	return r.state.GetOperationResponse(op)
+func (o *LocalOperator) Response(op *pb.Ref_Operation) (*pb.Operation_Response, error) {
+	return o.state.GetOperationResponse(op)
 }
 
-func (r *LocalOperator) startEventHandler(ctx context.Context) {
-	log := r.log.Named("event_handler")
+func (o *LocalOperator) drainWorkReqQueue() {
+	cancelWorkReq := func(req *workReq) {
+		log := o.log.With(RequestDebugArgs(req.req)...)
+
+		log.Debug("worker operation cancelled")
+		res, err := NewResponseFromRequest(req.req)
+		if err != nil {
+			err = fmt.Errorf("work request did not return a response: %w", err)
+		} else {
+			err = fmt.Errorf("work request did not return a response")
+		}
+		res.Status = pb.Operation_STATUS_CANCELLED
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+
+		if err != nil {
+			log.Error("unable to create response from request", "error", err)
+		}
+
+		err = o.state.UpsertOperationResponse(res)
+		if err != nil {
+			log.Error("unable to save response state", "error", err)
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+		}
+
+		event, err := NewEventFromResponse(res)
+		if err != nil {
+			log.Error("unable to create event from response", "error", err)
+			return
+		}
+
+		// Send the cancelled event
+		o.workEvents <- event
+
+		// Send the done event
+		event.Done = true
+		o.workEvents <- event
+	}
+
+	gracefulCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	for {
+		select {
+		case <-gracefulCtx.Done():
+			o.log.Error("failed to drain work request queue")
+			return
+		default:
+		}
+
+		select {
+		case <-gracefulCtx.Done():
+			o.log.Error("failed to drain work request queue")
+			return
+		case event := <-o.workRequests:
+			cancelWorkReq(event)
+		default:
+			return
+		}
+	}
+}
+
+func (o *LocalOperator) startEventHandler(ctx context.Context) {
+	log := o.log.Named("event_handler")
 	log.Debug("starting")
 
-	go func() {
+	handleEvent := func(event *pb.Operation_Event) {
+		log := log.With(EventDebugArgs(event)...)
+
+		// Add our event to our event history
+		err := o.state.AppendOperationEvent(event)
+		if err != nil {
+			log.Error("failed to append event to state", "error", err)
+		}
+
+		// Publish our updates to any stream subscribers
+		err = o.publisher.Publish(event)
+		if err != nil {
+			log.Error("failed to publish event to state", "error", err)
+		}
+	}
+
+	drainEventQueue := func() {
+		gracefulCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
 		for {
 			select {
-			case <-ctx.Done():
-				log.Debug("stopped")
+			case <-gracefulCtx.Done():
+				log.Error("failed to drain event queue, stopping")
 				return
 			default:
 			}
 
 			select {
-			case <-ctx.Done():
+			case <-gracefulCtx.Done():
+				log.Error("failed to drain event queue, stopping")
+				return
+			case event := <-o.workEvents:
+				handleEvent(event)
+			default:
 				log.Debug("stopped")
 				return
-			case event := <-r.workEvents:
-				log := log.With(EventDebugArgs(event)...)
+			}
+		}
+	}
 
-				// Add our event to our event history
-				err := r.state.AppendOperationEvent(event)
-				if err != nil {
-					log.Error("failed to append event to state", "error", err)
-				}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				drainEventQueue()
+			default:
+			}
 
-				// Publish our updates to any stream subscribers
-				err = r.publisher.Publish(event)
-				if err != nil {
-					log.Error("failed to publish event to state", "error", err)
-				}
+			select {
+			case <-ctx.Done():
+				drainEventQueue()
+			case event := <-o.workEvents:
+				handleEvent(event)
 			}
 		}
 	}()

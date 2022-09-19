@@ -23,7 +23,6 @@ type opRes interface {
 func (c *Connection) StreamOperations(
 	ctx context.Context,
 	opRes opRes,
-	ws *pb.Workspace,
 	ui uipkg.View,
 ) *pb.OperationResponses {
 	res := &pb.OperationResponses{
@@ -40,7 +39,7 @@ func (c *Connection) StreamOperations(
 	}
 
 	var err error
-	res.Responses, err = c.streamResponses(ctx, ws, opRes.GetOperations(), ui)
+	res.Responses, err = c.streamResponses(ctx, opRes.GetOperations(), ui)
 	if err != nil {
 		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 	}
@@ -50,10 +49,9 @@ func (c *Connection) StreamOperations(
 
 // streamResponses takes a context, workspace, and slice of operation references
 // and streams operation events to the ui. It will return a slice of operation
-// reponses for each stream that completes.
+// responses for each stream that completes.
 func (c *Connection) streamResponses(
 	ctx context.Context,
-	ws *pb.Workspace,
 	refs []*pb.Ref_Operation,
 	ui uipkg.View,
 ) (
@@ -106,9 +104,11 @@ func (c *Connection) streamResponses(
 						return
 					}
 
-					if event := eventRes.GetEvent(); err == nil && eventRes != nil {
-						eventC <- event
+					if eventRes == nil {
+						continue
 					}
+
+					eventC <- eventRes.GetEvent()
 				}
 			}()
 

@@ -25,7 +25,7 @@ func (e *Runner) terraformApply(
 		return res
 	}
 
-	// Notify running validate
+	// Notify running apply
 	eventVal := &pb.Operation_Event_Apply{}
 	event := newEvent(ref, pb.Operation_STATUS_RUNNING)
 	event.Value = eventVal

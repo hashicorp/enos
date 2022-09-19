@@ -92,29 +92,3 @@ func eventDiags(e *pb.Operation_Event) []*pb.Diagnostic {
 		e.GetOutput().GetDiagnostics(),
 	)
 }
-
-func updateFinalStatus(failOnWarn bool, res *pb.Operation_Response) {
-	res.Status = pb.Operation_STATUS_COMPLETED
-
-	if OpResFailed(failOnWarn, res) {
-		res.Status = pb.Operation_STATUS_FAILED
-		return
-	}
-
-	if OpResWarnings(res) {
-		res.Status = pb.Operation_STATUS_COMPLETED_WARNING
-		return
-	}
-}
-
-func updateRunningStatus(failOnWarn bool, res *pb.Operation_Response) {
-	if OpResFailed(failOnWarn, res) {
-		res.Status = pb.Operation_STATUS_FAILED
-		return
-	}
-
-	if OpResWarnings(res) {
-		res.Status = pb.Operation_STATUS_RUNNING_WARNING
-		return
-	}
-}

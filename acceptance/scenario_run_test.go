@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -62,48 +61,50 @@ func TestAcc_Cmd_Scenario_Run(t *testing.T) {
 				})
 			}
 
-			cmd := fmt.Sprintf("scenario launch --chdir %s --out %s --format json %s", path, outDir, filter)
+			scenarioRef := &pb.Ref_Scenario{
+				Id: &pb.Scenario_ID{
+					Name: test.name,
+					Uid:  test.uid,
+					Variants: &pb.Scenario_Filter_Vector{
+						Elements: elements,
+					},
+				},
+			}
+
+			cmd := fmt.Sprintf("scenario run --chdir %s --out %s --format json %s", path, outDir, filter)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
-			expected := &pb.RunScenariosResponse{
-				Responses: []*pb.Scenario_Operation_Run_Response{
+			expected := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{
 					{
-						Generate: &pb.Scenario_Operation_Generate_Response{
-							TerraformModule: &pb.Terraform_Module{
-								ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
-								RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),
-								ScenarioRef: &pb.Ref_Scenario{
-									Id: &pb.Scenario_ID{
-										Name: test.name,
-										Uid:  test.uid,
-										Variants: &pb.Scenario_Filter_Vector{
-											Elements: elements,
-										},
+						Op: &pb.Ref_Operation{
+							Scenario: scenarioRef,
+						},
+						Status: pb.Operation_STATUS_COMPLETED,
+						Value: &pb.Operation_Response_Run_{
+							Run: &pb.Operation_Response_Run{
+								Generate: &pb.Operation_Response_Generate{
+									TerraformModule: &pb.Terraform_Module{
+										ModulePath:  filepath.Join(outDir, test.uid, "scenario.tf"),
+										RcPath:      filepath.Join(outDir, test.uid, "terraform.rc"),
+										ScenarioRef: scenarioRef,
 									},
 								},
+								Validate: &pb.Terraform_Command_Validate_Response{
+									Valid:         true,
+									FormatVersion: "1.0",
+								},
+								Plan: &pb.Terraform_Command_Plan_Response{
+									ChangesPresent: false,
+								},
 							},
-						},
-						Validate: &pb.Terraform_Command_Validate_Response{
-							Valid:         true,
-							FormatVersion: "1.0",
 						},
 					},
 				},
 			}
 
-			got := &pb.RunScenariosResponse{}
-			require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-			require.Len(t, got.GetResponses(), len(expected.GetResponses()))
-			for i := range expected.Responses {
-				got := got.Responses[i]
-				expected := expected.Responses[i]
-
-				require.Equal(t, expected.Generate.TerraformModule.ModulePath, got.Generate.TerraformModule.ModulePath)
-				require.Equal(t, expected.Generate.TerraformModule.RcPath, got.Generate.TerraformModule.RcPath)
-				require.Equal(t, expected.Generate.TerraformModule.ScenarioRef.String(), got.Generate.TerraformModule.ScenarioRef.String())
-				require.Equal(t, expected.Validate.Valid, got.Validate.Valid)
-			}
+			requireEqualOperationResponses(t, expected, out)
 		})
 	}
 }

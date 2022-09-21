@@ -1,12 +1,14 @@
 module github.com/hashicorp/enos
 
-go 1.18
+go 1.19
 
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/aws/aws-sdk-go-v2/config v1.12.0
+	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-hclog v1.2.0
-	github.com/hashicorp/hcl/v2 v2.11.1
+	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/hcl/v2 v2.11.2-0.20220222190041-a26ee4fafe12
 	github.com/hashicorp/terraform-exec v0.16.1
 	github.com/hashicorp/terraform-json v0.13.0
 	github.com/hexops/gotextdiff v1.0.3
@@ -44,9 +46,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
-	github.com/google/uuid v1.1.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.4.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect

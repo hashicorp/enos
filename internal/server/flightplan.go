@@ -6,8 +6,10 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.Scenario_Operation_Decode_Response) {
-	res := &pb.Scenario_Operation_Decode_Response{Diagnostics: []*pb.Diagnostic{}}
+func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeResponse) {
+	res := &pb.DecodeResponse{
+		Diagnostics: []*pb.Diagnostic{},
+	}
 
 	dec, err := flightplan.NewDecoder(
 		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),

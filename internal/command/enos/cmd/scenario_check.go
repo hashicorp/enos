@@ -6,18 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioValidateCmd returns a new 'scenario validate' sub-command
-func newScenarioValidateCmd() *cobra.Command {
+// newScenarioCheckCmd returns a new 'scenario check' sub-command
+func newScenarioCheckCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "validate [FILTER]",
-		Short:             "Validates a Terraform module from matching scenarios",
-		Long:              fmt.Sprintf("Validates a Terraform module from matching scenarios. %s", scenarioFilterDesc),
-		RunE:              runScenarioValidateCmd,
+		Use:               "check [FILTER]",
+		Aliases:           []string{"validate"}, // old name of the check command
+		Short:             "Check that scenarios are valid",
+		Long:              fmt.Sprintf("Check that scenarios are valid by generating the Scenario's Terraform Root Module, initializing it, validating it, and planning. %s", scenarioFilterDesc),
+		RunE:              runScenarioCheckCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
 
@@ -35,31 +34,26 @@ func newScenarioValidateCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioValidateCmd is the function that validates scenarios
-func runScenarioValidateCmd(cmd *cobra.Command, args []string) error {
+// runScenarioCheckCmd is the function that checks scenarios
+func runScenarioCheckCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()
 
-	sf, err := flightplan.ParseScenarioFilter(args)
-	if err != nil {
-		return ui.ShowScenarioValidate(&pb.ValidateScenariosResponse{
-			Decode: &pb.Scenario_Operation_Decode_Response{
-				Diagnostics: diagnostics.FromErr(err),
-			},
-		})
-	}
-
-	res, err := rootState.enosClient.ValidateScenarios(ctx, &pb.ValidateScenariosRequest{
-		Workspace: &pb.Workspace{
-			Flightplan: scenarioState.protoFp,
-			OutDir:     scenarioState.outDir,
-			TfExecCfg:  scenarioState.tfConfig.Proto(),
-		},
-		Filter: sf.Proto(),
-	})
+	sf, ws, err := prepareScenarioOpReq(args)
 	if err != nil {
 		return err
 	}
 
-	return ui.ShowScenarioValidate(res)
+	res, err := rootState.enosConnection.Client.CheckScenarios(
+		ctx,
+		&pb.CheckScenariosRequest{
+			Workspace: ws,
+			Filter:    sf,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return ui.ShowOperationResponses(rootState.enosConnection.StreamOperations(ctx, res, ui))
 }

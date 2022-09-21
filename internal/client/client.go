@@ -16,18 +16,20 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// Config is the client configuration
-type Config struct {
-	Addr net.Addr
-	Log  hclog.Logger
+// Connection is a client connection to the enos server
+type Connection struct {
+	Addr   net.Addr
+	Client pb.EnosServiceClient
+	Log    hclog.Logger
+	Level  pb.UI_Settings_Level
 }
 
-// Opt is a client configuration option
-type Opt func(*Config) error
+// Opt is a client connection option
+type Opt func(*Connection) error
 
 // WithGRPCListenURL sets the listener address from a URL
 func WithGRPCListenURL(url *url.URL) Opt {
-	return func(c *Config) error {
+	return func(c *Connection) error {
 		var err error
 		c.Addr, err = server.ListenAddr(url)
 		return err
@@ -36,16 +38,31 @@ func WithGRPCListenURL(url *url.URL) Opt {
 
 // WithLogger sets client logger
 func WithLogger(log hclog.Logger) Opt {
-	return func(c *Config) error {
+	return func(c *Connection) error {
 		c.Log = log
 		return nil
 	}
 }
 
-// Connect takes a context and options and returns a new enos.v1 client
-func Connect(ctx context.Context, opts ...Opt) (pb.EnosServiceClient, error) {
-	c := &Config{
-		Log: hclog.NewNullLogger(),
+// WithLogLevel sets client log level
+func WithLogLevel(lvl pb.UI_Settings_Level) Opt {
+	return func(c *Connection) error {
+		c.Level = lvl
+		return nil
+	}
+}
+
+// Trace writes an hclog.Logger style message at a "trace" level
+func (c *Connection) Trace(msg string, args ...any) {
+	if c.Level == pb.UI_Settings_LEVEL_TRACE {
+		c.Log.Debug(msg, args...)
+	}
+}
+
+// Connect takes a context and options and returns a new connection
+func Connect(ctx context.Context, opts ...Opt) (*Connection, error) {
+	c := &Connection{
+		Log: hclog.NewNullLogger().Named("client"),
 	}
 
 	var err error
@@ -71,11 +88,12 @@ func Connect(ctx context.Context, opts ...Opt) (pb.EnosServiceClient, error) {
 		),
 	}
 
-	c.Log.Named("client").Debug("connecting to server", "addr", c.Addr.String())
+	c.Trace("connecting to server", "addr", c.Addr.String())
 	conn, err := grpc.DialContext(ctx, c.Addr.String(), grpcOpts...)
 	if err != nil {
 		return nil, err
 	}
+	c.Client = pb.NewEnosServiceClient(conn)
 
-	return pb.NewEnosServiceClient(conn), nil
+	return c, nil
 }

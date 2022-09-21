@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/internal/execute"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -16,31 +14,13 @@ func (s *ServiceV1) DestroyScenarios(
 	*pb.DestroyScenariosResponse,
 	error,
 ) {
-	res := &pb.DestroyScenariosResponse{
-		Responses: []*pb.Scenario_Operation_Destroy_Response{},
-	}
-
-	genRef := decodeAndGetGenRef(req.GetWorkspace(), req.GetFilter())
-	res.Diagnostics = genRef.GetDiagnostics()
-	res.Decode = genRef.GetDecode()
-	if diagnostics.HasFailed(
-		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
-		res.GetDiagnostics(),
-		res.GetDecode().GetDiagnostics(),
-	) {
-		return res, nil
-	}
-
-	for _, gref := range genRef.GetResponses() {
-		destroyRes := execute.NewExecutor(
-			execute.WithProtoModuleAndConfig(
-				gref.GetTerraformModule(),
-				req.GetWorkspace().GetTfExecCfg(),
-			),
-		).Destroy(ctx)
-		destroyRes.TerraformModule = gref.GetTerraformModule()
-		res.Responses = append(res.Responses, destroyRes)
-	}
-
+	res := &pb.DestroyScenariosResponse{}
+	res.Diagnostics, res.Decode, res.Operations = s.dispatch(
+		req.GetFilter(),
+		&pb.Operation_Request{
+			Workspace: req.GetWorkspace(),
+			Value:     &pb.Operation_Request_Destroy_{},
+		},
+	)
 	return res, nil
 }

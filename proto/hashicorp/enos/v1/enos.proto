@@ -3,13 +3,14 @@ syntax = "proto3";
 package hashicorp.enos.v1;
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/hashicorp/enos/internal/pb;pb";
 
 service EnosService {
   rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {}
   rpc ListScenarios(ListScenariosRequest) returns (ListScenariosResponse) {}
-  rpc ValidateScenarios(ValidateScenariosRequest) returns (ValidateScenariosResponse) {}
+  rpc CheckScenarios(CheckScenariosRequest) returns (CheckScenariosResponse) {}
   rpc GenerateScenarios(GenerateScenariosRequest) returns (GenerateScenariosResponse) {}
   rpc LaunchScenarios(LaunchScenariosRequest) returns (LaunchScenariosResponse) {}
   rpc DestroyScenarios(DestroyScenariosRequest) returns (DestroyScenariosResponse) {}
@@ -17,6 +18,8 @@ service EnosService {
   rpc ExecScenarios(ExecScenariosRequest) returns (ExecScenariosResponse) {}
   rpc OutputScenarios(OutputScenariosRequest) returns (OutputScenariosResponse) {}
   rpc Format(FormatRequest) returns (FormatResponse) {}
+  rpc OperationEventStream(OperationEventStreamRequest) returns (stream OperationEventStreamResponse) {}
+  rpc Operation(OperationRequest) returns (OperationResponse) {}
 }
 
 // UI contains messages related to the UI calling the server. This information
@@ -50,6 +53,7 @@ message UI {
       LEVEL_WARN = 2;
       LEVEL_INFO = 3;
       LEVEL_DEBUG = 4;
+      LEVEL_TRACE = 5;
     }
   }
 }
@@ -105,7 +109,7 @@ message Workspace {
   FlightPlan flightplan = 1;
   // terraform_exec contains our default and override Terraform execution
   // configuration.
-  Terraform.Executor.Config tf_exec_cfg = 4;
+  Terraform.Runner.Config tf_exec_cfg = 4;
   // dir is our workspaces directory. This will default to the current working
   // directory.
   string dir = 5;
@@ -121,6 +125,11 @@ message FlightPlan {
   map<string, bytes> enos_hcl = 2;
   map<string, bytes> enos_vars_hcl = 3;
   repeated string enos_vars_env = 4;
+}
+
+message DecodeResponse {
+  repeated Diagnostic diagnostics = 1;
+  FlightPlan flightplan = 2;
 }
 
 // Scenario is an Enos scenario.
@@ -167,79 +176,155 @@ message Scenario {
       }
     }
   }
+}
 
-  // Operation is an enos scenario operation.
-  message Operation {
-    message Decode {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-      }
+// Operator is our operation operator
+message Operator {
+  Config config = 1;
+
+  message Config {
+    // How many operation workers to run
+    int32 worker_count = 1;
+  }
+}
+
+// Operation is our primary schema for a scenario operation.
+message Operation {
+  // Request is an operation request. This is passed when making requests to
+  // a server.
+  message Request {
+    Ref.Scenario scenario = 1;
+    Workspace workspace = 2;
+    string id = 3;
+
+    oneof value {
+      Generate generate = 11;
+      Check check = 12;
+      Launch launch = 13;
+      Destroy destroy = 14;
+      Run run = 15;
+      Exec exec = 16;
+      Output output = 17;
+    }
+
+    message Generate {}
+    message Check {}
+    message Launch {}
+    message Destroy {}
+    message Run {}
+    message Exec {}
+    message Output {}
+  }
+
+  // Response is an operation response from a server. The value of the response
+  // will either be the full response for the operation type or a partial
+  // event update.
+  message Response {
+    repeated Diagnostic diagnostics = 1;
+    Ref.Operation op = 2;
+    hashicorp.enos.v1.Operation.Status status = 3;
+
+    // NOTE: If you add a new value type be sure to update the operation helpers
+    // in the diagnostics package and the response writer in the ui package.
+    oneof value {
+      Generate generate = 11;
+      Check check = 12;
+      Launch launch = 13;
+      Destroy destroy = 14;
+      Run run = 15;
+      Exec exec = 16;
+      Output output = 17;
     }
 
     message Generate {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
-      }
+      repeated Diagnostic diagnostics = 1;
+      Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
     }
 
-    message Validate {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        Generate.Response generate = 2;
-        Terraform.Command.Init.Response init = 3;
-        Terraform.Command.Validate.Response validate = 4;
-        Terraform.Command.Plan.Response plan = 5;
-      }
+    message Check {
+      repeated Diagnostic diagnostics = 1;
+      Operation.Response.Generate generate = 2;
+      Terraform.Command.Init.Response init = 3;
+      Terraform.Command.Validate.Response validate = 4;
+      Terraform.Command.Plan.Response plan = 5;
     }
 
     message Launch {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        Generate.Response generate = 2;
-        Terraform.Command.Init.Response init = 3;
-        Terraform.Command.Validate.Response validate = 4;
-        Terraform.Command.Plan.Response plan = 5;
-        Terraform.Command.Apply.Response apply = 6;
-      }
+      repeated Diagnostic diagnostics = 1;
+      Operation.Response.Generate generate = 2;
+      Terraform.Command.Init.Response init = 3;
+      Terraform.Command.Validate.Response validate = 4;
+      Terraform.Command.Plan.Response plan = 5;
+      Terraform.Command.Apply.Response apply = 6;
     }
 
     message Destroy {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
-        Terraform.Command.Destroy.Response destroy = 3;
-      }
+      repeated Diagnostic diagnostics = 1;
+      Operation.Response.Generate generate = 2;
+      Terraform.Command.Destroy.Response destroy = 3;
     }
 
     message Run {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        Generate.Response generate = 2;
-        Terraform.Command.Init.Response init = 3;
-        Terraform.Command.Validate.Response validate = 4;
-        Terraform.Command.Plan.Response plan = 5;
-        Terraform.Command.Apply.Response apply = 6;
-        Terraform.Command.Destroy.Response destroy = 7;
-      }
+      repeated Diagnostic diagnostics = 1;
+      Operation.Response.Generate generate = 2;
+      Terraform.Command.Init.Response init = 3;
+      Terraform.Command.Validate.Response validate = 4;
+      Terraform.Command.Plan.Response plan = 5;
+      Terraform.Command.Apply.Response apply = 6;
+      Terraform.Command.Destroy.Response destroy = 7;
     }
 
     message Exec {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        string sub_command = 2 [json_name = "sub_command"];
-        Terraform.Module terraform_module = 3 [json_name = "terraform_module"];
-        Terraform.Command.Exec.Response exec = 4;
-      }
+      repeated Diagnostic diagnostics = 1;
+      Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
+      Terraform.Command.Exec.Response exec = 3;
     }
 
     message Output {
-      message Response {
-        repeated Diagnostic diagnostics = 1;
-        Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
-        Terraform.Command.Output.Response output = 3;
-      }
+      repeated Diagnostic diagnostics = 1;
+      Terraform.Module terraform_module = 2 [json_name = "terraform_module"];
+      Terraform.Command.Output.Response output = 3;
     }
+  }
+
+  // Events operation updates that can be streamed to the client while an operation
+  // is in progress
+  message Event {
+    repeated Diagnostic diagnostics = 1;
+    Ref.Operation op = 2;
+    hashicorp.enos.v1.Operation.Status status = 3;
+    // done is how we tell event listeners that event stream is completed. The
+    // worker running the operation is responsible for setting this field when
+    // the associated workFunc is completed.
+    bool done = 4;
+    google.protobuf.Timestamp published_at = 5;
+
+    // NOTE: If you add a new value type you need to make sure you update the
+    // diagnostics and ui packages to handle the new event types.
+    oneof value {
+      DecodeResponse decode = 10;
+      Operation.Response.Generate generate = 11;
+      Terraform.Command.Init.Response init = 12;
+      Terraform.Command.Validate.Response validate = 13;
+      Terraform.Command.Plan.Response plan = 14;
+      Terraform.Command.Apply.Response apply = 15;
+      Terraform.Command.Destroy.Response destroy = 16;
+      Terraform.Command.Exec.Response exec = 17;
+      Terraform.Command.Output.Response output = 18;
+    }
+  }
+
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_UNKNOWN = 1;
+    STATUS_QUEUED = 2;
+    STATUS_WAITING = 3;
+    STATUS_RUNNING = 4;
+    STATUS_RUNNING_WARNING = 6;
+    STATUS_FAILED = 7;
+    STATUS_COMPLETED = 8;
+    STATUS_COMPLETED_WARNING = 9;
+    STATUS_CANCELLED = 10;
   }
 }
 
@@ -293,8 +378,9 @@ message Terraform {
     message Exec {
       message Response {
         repeated Diagnostic diagnostics = 1;
-        string stderr = 2;
-        string stdout = 3;
+        string sub_command = 2 [json_name = "sub_command"];
+        string stderr = 3;
+        string stdout = 4;
       }
     }
 
@@ -314,7 +400,7 @@ message Terraform {
     }
   }
 
-  message Executor {
+  message Runner {
     Config config = 1;
 
     message Config {
@@ -364,6 +450,11 @@ message Ref {
   message Scenario {
     hashicorp.enos.v1.Scenario.ID id = 1;
   }
+
+  message Operation {
+    string id = 1;
+    Scenario scenario = 2;
+  }
 }
 
 message GetVersionRequest {}
@@ -380,7 +471,7 @@ message ListScenariosRequest {
 
 message ListScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
+  DecodeResponse decode = 2;
   repeated Ref.Scenario scenarios = 3;
 }
 
@@ -391,19 +482,19 @@ message GenerateScenariosRequest {
 
 message GenerateScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Generate.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
-message ValidateScenariosRequest {
+message CheckScenariosRequest {
   Workspace workspace = 1;
   Scenario.Filter filter = 2;
 }
 
-message ValidateScenariosResponse {
+message CheckScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Validate.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
 message LaunchScenariosRequest {
@@ -413,8 +504,8 @@ message LaunchScenariosRequest {
 
 message LaunchScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Launch.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
 message DestroyScenariosRequest {
@@ -424,8 +515,8 @@ message DestroyScenariosRequest {
 
 message DestroyScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Destroy.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
 message RunScenariosRequest {
@@ -435,8 +526,8 @@ message RunScenariosRequest {
 
 message RunScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Run.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
 message ExecScenariosRequest {
@@ -446,8 +537,8 @@ message ExecScenariosRequest {
 
 message ExecScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Exec.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
 message OutputScenariosRequest {
@@ -457,8 +548,8 @@ message OutputScenariosRequest {
 
 message OutputScenariosResponse {
   repeated Diagnostic diagnostics = 1;
-  Scenario.Operation.Decode.Response decode = 2;
-  repeated Scenario.Operation.Output.Response responses = 3;
+  DecodeResponse decode = 2;
+  repeated Ref.Operation operations = 3;
 }
 
 message FormatRequest {
@@ -489,4 +580,28 @@ message FormatResponse {
     string diff = 4;
     string body = 5; // Used for formatted STDIN
   }
+}
+
+message OperationEventStreamRequest {
+  Ref.Operation op = 1;
+}
+
+message OperationEventStreamResponse {
+  repeated Diagnostic diagnostics = 1;
+  Operation.Event event = 2;
+}
+
+message OperationRequest {
+  Ref.Operation op = 1;
+}
+
+message OperationResponse {
+  repeated Diagnostic diagnostics = 1;
+  Operation.Response response = 2;
+}
+
+message OperationResponses {
+  repeated Diagnostic diagnostics = 1;
+  DecodeResponse decode = 2;
+  repeated Operation.Response responses = 3;
 }

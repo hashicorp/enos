@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -15,8 +16,12 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
+	"github.com/hashicorp/enos/internal/operation"
+	"github.com/hashicorp/enos/internal/proto"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
 )
 
 var _ pb.EnosServiceServer = (*ServiceV1)(nil)
@@ -28,6 +33,8 @@ type ServiceV1 struct {
 	grpcListenAddr net.Addr
 	gprcListener   net.Listener
 	gprcServer     *grpc.Server
+
+	operator operation.Operator
 }
 
 // Opt is a functional option
@@ -50,6 +57,14 @@ func WithLogger(log hclog.Logger) Opt {
 	}
 }
 
+// WithOperator configures the servers operation operator
+func WithOperator(op operation.Operator) Opt {
+	return func(s *ServiceV1) error {
+		s.operator = op
+		return nil
+	}
+}
+
 // ListenAddr returns a server listen address from a URL
 func ListenAddr(url *url.URL) (net.Addr, error) {
 	switch url.Scheme {
@@ -67,7 +82,8 @@ func ListenAddr(url *url.URL) (net.Addr, error) {
 // New takes options and returns an instance of ServiceV1
 func New(opts ...Opt) (*ServiceV1, error) {
 	svc := &ServiceV1{
-		log: hclog.NewNullLogger(),
+		log:      hclog.NewNullLogger(),
+		operator: operation.NewLocalOperator(),
 	}
 
 	var err error
@@ -101,8 +117,6 @@ func New(opts ...Opt) (*ServiceV1, error) {
 // Start takes a context and starts the server. It will block until an error
 // is encountered.
 func (s *ServiceV1) Start(ctx context.Context) error {
-	log := s.log.Named("server")
-
 	// Only interrupt and kill are guaranteed on all OSes. We'll pipe through
 	// unix signals we care about until such a time as we cannot.
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGTERM)
@@ -113,7 +127,7 @@ func (s *ServiceV1) Start(ctx context.Context) error {
 	errC := make(chan error, 1)
 	wg.Add(1)
 	go func() {
-		errC <- s.start(ctx)
+		errC <- s.serve(ctx)
 		wg.Done()
 	}()
 	defer wg.Wait()
@@ -121,18 +135,20 @@ func (s *ServiceV1) Start(ctx context.Context) error {
 	select {
 	case err := <-errC:
 		if err != nil {
-			log.Error("server encountered an error", "error", err)
+			s.log.Error("server encountered an error", "error", err)
 		}
 		return err
 	case <-ctx.Done():
-		s.Stop()
-		log.Error(ctx.Err().Error())
-		return ctx.Err()
+		err := multierror.Append(ctx.Err(), s.Stop()).ErrorOrNil()
+		if err != nil {
+			s.log.Error(err.Error())
+		}
+		return err
 	}
 }
 
-// Start starts the service
-func (s *ServiceV1) start(ctx context.Context) error {
+// Serve start the gRPC server and operator
+func (s *ServiceV1) serve(ctx context.Context) error {
 	// Reflection makes it easy to see what methods are on a server via
 	// grpcurl.
 	reflection.Register(s.gprcServer)
@@ -141,7 +157,7 @@ func (s *ServiceV1) start(ctx context.Context) error {
 	pb.RegisterEnosServiceServer(s.gprcServer, s)
 
 	// Start our listener
-	s.log.Named("server").Info("starting gRPC server",
+	s.log.Info("starting gRPC server",
 		"network", s.grpcListenAddr.Network(),
 		"addr", s.grpcListenAddr.String(),
 	)
@@ -151,25 +167,108 @@ func (s *ServiceV1) start(ctx context.Context) error {
 		return err
 	}
 
+	err = s.operator.Start(ctx)
+	if err != nil {
+		return err
+	}
+
 	return s.gprcServer.Serve(s.gprcListener)
 }
 
 // Stop stops the service
-func (s *ServiceV1) Stop() {
-	log := s.log.Named("server")
-
+func (s *ServiceV1) Stop() error {
+	var wg sync.WaitGroup
+	var err error
 	stopC := make(chan struct{})
+
 	go func() {
 		defer close(stopC)
-		log.Debug("Attemping graceful stop")
+		s.log.Info("Attemping graceful gRPC server stop")
 		s.gprcServer.GracefulStop()
 	}()
 
-	select {
-	case <-stopC:
-		log.Debug("Server gracefully stopped")
-	case <-time.After(5 * time.Second):
-		log.Debug("Forcing stop because 5 second deadline has elapsed")
-		s.gprcServer.Stop()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if s.operator != nil {
+			s.log.Info("Stopping operator")
+			err = s.operator.Stop()
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		select {
+		case <-stopC:
+			s.log.Info("Server gracefully stopped")
+		case <-time.After(5 * time.Second):
+			s.log.Info("Forcing stop because 5 second deadline has elapsed")
+			s.gprcServer.Stop()
+		}
+	}()
+
+	wg.Wait()
+
+	return err
+}
+
+// dispatch takes a workspace, filter, and base operation request. It decodes,
+// the flightplan, filters the scenarios, and dispatches an operation for each
+// scenario that matches the filter. It returns the decoder response, a slice
+// of operation references, and any diagnostics if dispatching isn't possible.
+// The base operation must include a valid operation type.
+func (s *ServiceV1) dispatch(
+	f *pb.Scenario_Filter,
+	baseReq *pb.Operation_Request,
+) (
+	[]*pb.Diagnostic,
+	*pb.DecodeResponse,
+	[]*pb.Ref_Operation,
+) {
+	diags := []*pb.Diagnostic{}
+	refs := []*pb.Ref_Operation{}
+
+	ws := baseReq.GetWorkspace()
+	if ws == nil {
+		diags = append(diags, diagnostics.FromErr(fmt.Errorf(
+			"unable to dispatch operations for requests without the required workspace",
+		))...)
 	}
+
+	scenarios, decRes := decodeAndFilter(
+		ws.GetFlightplan(),
+		f,
+	)
+
+	if baseReq.GetValue() == nil {
+		diags = append(diags, diagnostics.FromErr(fmt.Errorf(
+			"failed to dispatch operation because operation request value has not been set",
+		))...)
+	}
+
+	if diagnostics.HasFailed(
+		ws.GetTfExecCfg().GetFailOnWarnings(),
+		diagnostics.Concat(diags, decRes.GetDiagnostics()),
+	) || len(scenarios) == 0 {
+		return diags, decRes, refs
+	}
+
+	for _, scenario := range scenarios {
+		req := &pb.Operation_Request{}
+		err := proto.Copy(baseReq, req)
+		if err != nil {
+			diags = append(diags, diagnostics.FromErr(err)...)
+			continue
+		}
+
+		req.Scenario = scenario.Ref()
+		ref, moreDiags := s.operator.Dispatch(req)
+		diags = append(diags, moreDiags...)
+		if ref != nil {
+			refs = append(refs, ref)
+		}
+	}
+
+	return diags, decRes, refs
 }

@@ -3,16 +3,15 @@ package basic
 import (
 	"fmt"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // writeDecodeResponse takes a scenario decode response and writes human
 // readable output.
-func (v *View) writeDecodeResponse(out *pb.Scenario_Operation_Decode_Response) bool {
+func (v *View) writeDecodeResponse(out *pb.DecodeResponse) {
 	if out == nil {
-		return false
+		return
 	}
 
 	if status.HasFailed(v.settings.GetFailOnWarnings(), out) {
@@ -22,7 +21,7 @@ func (v *View) writeDecodeResponse(out *pb.Scenario_Operation_Decode_Response) b
 		}
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
-		return true
+		return
 	}
 
 	var msg string
@@ -41,15 +40,13 @@ func (v *View) writeDecodeResponse(out *pb.Scenario_Operation_Decode_Response) b
 	}
 
 	v.WriteDiagnostics(out.GetDiagnostics())
-
-	return diagnostics.HasErrors(out.GetDiagnostics())
 }
 
 // writeGenerateResponse takes a scenario generate response and writes human
 // readable output.
-func (v *View) writeGenerateResponse(out *pb.Scenario_Operation_Generate_Response) bool {
+func (v *View) writeGenerateResponse(out *pb.Operation_Response_Generate) {
 	if out == nil {
-		return false
+		return
 	}
 
 	if status.HasFailed(v.settings.GetFailOnWarnings(), out) {
@@ -61,7 +58,7 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Operation_Generate_Respons
 		v.ui.Error(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
-		return true
+		return
 	}
 
 	var msg string
@@ -81,12 +78,4 @@ func (v *View) writeGenerateResponse(out *pb.Scenario_Operation_Generate_Respons
 	v.ui.Debug(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
 	v.ui.Debug(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 	v.WriteDiagnostics(out.GetDiagnostics())
-
-	return diagnostics.HasErrors(out.GetDiagnostics())
-}
-
-func (v *View) generateResponseWriter(out *pb.Scenario_Operation_Generate_Response) func() bool {
-	return func() bool {
-		return v.writeGenerateResponse(out)
-	}
 }

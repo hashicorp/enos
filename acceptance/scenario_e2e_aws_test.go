@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -94,8 +93,8 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 				assert.NoErrorf(t, err, string(out))
 			})
 
-			expected := &pb.RunScenariosResponse{
-				Responses: []*pb.Scenario_Operation_Run_Response{},
+			expected := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{},
 			}
 			for _, variant := range test.variants {
 				elements := []*pb.Scenario_Filter_Element{}
@@ -106,25 +105,38 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 					})
 				}
 
-				res := &pb.Scenario_Operation_Run_Response{
-					Generate: &pb.Scenario_Operation_Generate_Response{
-						TerraformModule: &pb.Terraform_Module{
-							ModulePath: filepath.Join(outDir, variant.uid, "scenario.tf"),
-							RcPath:     filepath.Join(outDir, variant.uid, "terraform.rc"),
-							ScenarioRef: &pb.Ref_Scenario{
-								Id: &pb.Scenario_ID{
-									Name: test.name,
-									Uid:  variant.uid,
-									Variants: &pb.Scenario_Filter_Vector{
-										Elements: elements,
-									},
-								},
-							},
+				scenarioRef := &pb.Ref_Scenario{
+					Id: &pb.Scenario_ID{
+						Name: test.name,
+						Uid:  variant.uid,
+						Variants: &pb.Scenario_Filter_Vector{
+							Elements: elements,
 						},
 					},
-					Validate: &pb.Terraform_Command_Validate_Response{
-						Valid:         true,
-						FormatVersion: "1.0",
+				}
+
+				res := &pb.Operation_Response{
+					Op: &pb.Ref_Operation{
+						Scenario: scenarioRef,
+					},
+					Status: pb.Operation_STATUS_COMPLETED,
+					Value: &pb.Operation_Response_Run_{
+						Run: &pb.Operation_Response_Run{
+							Generate: &pb.Operation_Response_Generate{
+								TerraformModule: &pb.Terraform_Module{
+									ModulePath:  filepath.Join(outDir, variant.uid, "scenario.tf"),
+									RcPath:      filepath.Join(outDir, variant.uid, "terraform.rc"),
+									ScenarioRef: scenarioRef,
+								},
+							},
+							Validate: &pb.Terraform_Command_Validate_Response{
+								Valid:         true,
+								FormatVersion: "1.0",
+							},
+							Plan: &pb.Terraform_Command_Plan_Response{
+								ChangesPresent: true,
+							},
+						},
 					},
 				}
 
@@ -138,18 +150,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 			}
 			require.NoError(t, err, string(out))
 
-			got := &pb.RunScenariosResponse{}
-			require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-			require.Len(t, got.GetResponses(), len(expected.GetResponses()))
-			for i := range expected.Responses {
-				got := got.Responses[i]
-				expected := expected.Responses[i]
-
-				require.Equal(t, expected.Generate.TerraformModule.ModulePath, got.Generate.TerraformModule.ModulePath)
-				require.Equal(t, expected.Generate.TerraformModule.RcPath, got.Generate.TerraformModule.RcPath)
-				require.Equal(t, expected.Generate.TerraformModule.ScenarioRef.String(), got.Generate.TerraformModule.ScenarioRef.String())
-				require.Equal(t, expected.Validate.Valid, got.Validate.Valid)
-			}
+			requireEqualOperationResponses(t, expected, out)
 		})
 	}
 }

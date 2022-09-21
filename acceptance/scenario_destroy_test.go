@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -70,18 +69,30 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 			out, err = enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
-			expected := &pb.DestroyScenariosResponse{
-				Responses: []*pb.Scenario_Operation_Destroy_Response{
+			scenarioRef := &pb.Ref_Scenario{
+				Id: &pb.Scenario_ID{
+					Name: test.name,
+					Uid:  test.uid,
+					Variants: &pb.Scenario_Filter_Vector{
+						Elements: elements,
+					},
+				},
+			}
+
+			expected := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{
 					{
-						TerraformModule: &pb.Terraform_Module{
-							ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
-							RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),
-							ScenarioRef: &pb.Ref_Scenario{
-								Id: &pb.Scenario_ID{
-									Name: test.name,
-									Uid:  test.uid,
-									Variants: &pb.Scenario_Filter_Vector{
-										Elements: elements,
+						Op: &pb.Ref_Operation{
+							Scenario: scenarioRef,
+						},
+						Status: pb.Operation_STATUS_COMPLETED,
+						Value: &pb.Operation_Response_Destroy_{
+							Destroy: &pb.Operation_Response_Destroy{
+								Generate: &pb.Operation_Response_Generate{
+									TerraformModule: &pb.Terraform_Module{
+										ModulePath:  filepath.Join(outDir, test.uid, "scenario.tf"),
+										RcPath:      filepath.Join(outDir, test.uid, "terraform.rc"),
+										ScenarioRef: scenarioRef,
 									},
 								},
 							},
@@ -90,17 +101,7 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 				},
 			}
 
-			got := &pb.DestroyScenariosResponse{}
-			require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-			require.Len(t, got.GetResponses(), len(expected.GetResponses()))
-			for i := range expected.Responses {
-				got := got.Responses[i].TerraformModule
-				expected := expected.Responses[i].TerraformModule
-
-				require.Equal(t, expected.ModulePath, got.ModulePath)
-				require.Equal(t, expected.RcPath, got.RcPath)
-				require.Equal(t, expected.ScenarioRef.String(), got.ScenarioRef.String())
-			}
+			requireEqualOperationResponses(t, expected, out)
 		})
 	}
 }

@@ -82,6 +82,15 @@ func WithScenarioFilterDecode(filter *pb.Scenario_Filter) ScenarioFilterOpt {
 	}
 }
 
+// WithScenarioFilterFromScenarioRef takes a scenario reference and returns
+// a filter for it.
+func WithScenarioFilterFromScenarioRef(ref *pb.Ref_Scenario) ScenarioFilterOpt {
+	return func(f *ScenarioFilter) error {
+		f.FromScenarioRef(ref)
+		return nil
+	}
+}
+
 // ParseScenarioFilter takes command arguments that have been split by spaces
 // and validates that they are composed of a valid scenario filter.
 func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
@@ -171,6 +180,12 @@ func (sf *ScenarioFilter) FromProto(filter *pb.Scenario_Filter) {
 	if sa := filter.GetSelectAll(); sa != nil {
 		sf.SelectAll = true
 	}
+}
+
+// FromScenarioRef takes a reference to a scenario and returns a filter for it
+func (sf *ScenarioFilter) FromScenarioRef(ref *pb.Ref_Scenario) {
+	sf.Name = ref.GetId().GetName()
+	sf.Include = NewVectorFromProto(ref.GetId().GetVariants())
 }
 
 // ScenariosSelect takes a scenario filter and returns a slice of matching

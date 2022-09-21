@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/ui/terminal"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -83,18 +82,6 @@ func (v *View) Settings() *pb.UI_Settings {
 	return v.settings
 }
 
-// ShowError writes the error message to stdout
-func (v *View) ShowError(err error) error {
-	v.ui.Error(err.Error())
-	return nil
-}
-
-// ShowDiagnostics writes a diagnostic to stderr
-func (v *View) ShowDiagnostics(diags []*pb.Diagnostic) error {
-	v.WriteDiagnostics(diags)
-	return nil
-}
-
 // Close closes any open file handles
 func (v *View) Close() error {
 	if v.stderr != nil {
@@ -111,17 +98,83 @@ func (v *View) Close() error {
 	return v.stdout.Close()
 }
 
-// WriteDiagnostics writes diagnostics in a basic human friendly way
-func (v *View) WriteDiagnostics(diags []*pb.Diagnostic) {
-	if len(diags) < 1 {
+func (v *View) opStatusString(status pb.Operation_Status) string {
+	var res string
+	tty := v.settings.IsTty
+
+	switch status {
+	case pb.Operation_STATUS_CANCELLED:
+		res = "❌"
+		if !tty {
+			res = "cancelled!"
+		}
+	case pb.Operation_STATUS_COMPLETED:
+		res = "✅"
+		if !tty {
+			res = "success!"
+		}
+	case pb.Operation_STATUS_COMPLETED_WARNING:
+		res = "⚠️"
+		if !tty {
+			res = "success! (warnings present)"
+		}
+	case pb.Operation_STATUS_FAILED:
+		res = "❌"
+		if !tty {
+			res = "failed!"
+		}
+	case pb.Operation_STATUS_RUNNING_WARNING:
+		res = "⚠️"
+		if !tty {
+			res = "running (warnings present)"
+		}
+	case pb.Operation_STATUS_RUNNING:
+		res = "🚀"
+		if !tty {
+			res = "running"
+		}
+	case pb.Operation_STATUS_WAITING:
+		res = "⏳"
+		if !tty {
+			res = "waiting"
+		}
+	case pb.Operation_STATUS_QUEUED:
+		res = "⏳"
+		if !tty {
+			res = "queued"
+		}
+	default:
+		res = "⁉️"
+		if !tty {
+			res = "unknown"
+		}
+	}
+
+	return res
+}
+
+func (v *View) writeMsg(
+	status pb.Operation_Status,
+	msg string,
+) {
+	if msg == "" {
 		return
 	}
 
-	for _, diag := range diags {
-		v.ui.Error(diagnostics.String(
-			diag,
-			diagnostics.WithStringUISettings(v.settings),
-			diagnostics.WithStringSnippetEnabled(true),
-		))
+	if status == pb.Operation_STATUS_FAILED {
+		v.ui.Error(msg)
+		return
 	}
+
+	if status == pb.Operation_STATUS_COMPLETED_WARNING && v.settings.Level >= pb.UI_Settings_LEVEL_WARN {
+		v.ui.Warn(msg)
+		return
+	}
+
+	if v.settings.Level >= pb.UI_Settings_LEVEL_INFO {
+		v.ui.Info(msg)
+		return
+	}
+
+	v.ui.Info(msg)
 }

@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/hashicorp/enos/internal/client"
 	"github.com/hashicorp/enos/internal/server"
 	uipkg "github.com/hashicorp/enos/internal/ui"
 	"github.com/hashicorp/enos/internal/ui/status"
@@ -25,7 +27,7 @@ var rootCmd = &cobra.Command{
 	CompletionOptions: cobra.CompletionOptions{DisableDescriptions: true},
 }
 
-var rootState struct {
+type rootStateS struct {
 	logLevel       string // client log level
 	logLevelServer string // server log level
 	listenGRPC     string
@@ -33,7 +35,12 @@ var rootState struct {
 	stderrPath     string
 	stdoutPath     string
 	enosServer     *server.ServiceV1
-	enosClient     pb.EnosServiceClient
+	enosConnection *client.Connection
+	operatorConfig *pb.Operator_Config
+}
+
+var rootState = &rootStateS{
+	operatorConfig: &pb.Operator_Config{},
 }
 
 // ui is our default CLI UI for things that have not been migrated to use
@@ -46,12 +53,13 @@ func Execute() {
 	rootCmd.AddCommand(newScenarioCmd())
 	rootCmd.AddCommand(newFmtCmd())
 
-	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "Log level for client output")
-	rootCmd.PersistentFlags().StringVar(&rootState.logLevelServer, "server-log-level", "error", "The log level for server output")
+	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "Log level for client output. Supported levels are error, warn, info, debug, and trace.")
+	rootCmd.PersistentFlags().StringVar(&rootState.logLevelServer, "server-log-level", "error", "The log level for server output. Supported leves are error, warn, info, and debug")
 	rootCmd.PersistentFlags().StringVar(&rootState.listenGRPC, "listen-grpc", "http://localhost:3205", "The gRPC server listen address")
 	rootCmd.PersistentFlags().StringVar(&rootState.format, "format", "text", "Output format to use: text or json")
 	rootCmd.PersistentFlags().StringVar(&rootState.stdoutPath, "stdout", "", "Path to write output. (default $STDOUT)")
 	rootCmd.PersistentFlags().StringVar(&rootState.stderrPath, "stderr", "", "Path to write error output. (default $STDERR)")
+	rootCmd.PersistentFlags().Int32Var(&rootState.operatorConfig.WorkerCount, "worker-count", 4, "Number of scenario operation workers")
 	if err := rootCmd.Execute(); err != nil {
 		var exitErr *status.ErrExit
 		if errors.As(err, &exitErr) {
@@ -103,12 +111,14 @@ func setupCLIUI() error {
 		uiCfg.StdoutPath = rootState.stdoutPath
 	}
 
-	switch rootState.logLevel {
-	case "debug", "DEBUG", "Debug", "d":
+	switch strings.ToLower(rootState.logLevel) {
+	case "trace", "t", "a":
+		uiCfg.Level = pb.UI_Settings_LEVEL_TRACE
+	case "debug", "d":
 		uiCfg.Level = pb.UI_Settings_LEVEL_DEBUG
-	case "error", "ERROR", "Error", "e", "err":
+	case "error", "e":
 		uiCfg.Level = pb.UI_Settings_LEVEL_ERROR
-	case "warn", "WARN", "Warn", "w":
+	case "warn", "w":
 		uiCfg.Level = pb.UI_Settings_LEVEL_WARN
 	default:
 		uiCfg.Level = pb.UI_Settings_LEVEL_INFO
@@ -130,7 +140,10 @@ func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create our gRPC server and client
-	rootState.enosServer, rootState.enosClient, err = startGRPCServer(context.Background(), 5*time.Second)
+	rootState.enosServer, rootState.enosConnection, err = startServer(
+		context.Background(),
+		5*time.Second,
+	)
 	if err != nil {
 		return err
 	}
@@ -143,7 +156,10 @@ func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 
 func rootCmdPostRun(cmd *cobra.Command, args []string) {
 	if rootState.enosServer != nil {
-		rootState.enosServer.Stop()
+		err := rootState.enosServer.Stop()
+		if err != nil {
+			_ = ui.ShowError(err)
+		}
 	}
 
 	ui.Close()

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -92,23 +91,33 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 				})
 			}
 
+			scenarioRef := &pb.Ref_Scenario{
+				Id: &pb.Scenario_ID{
+					Name: test.name,
+					Uid:  test.uid,
+					Variants: &pb.Scenario_Filter_Vector{
+						Elements: elements,
+					},
+				},
+			}
+
 			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s %s --format json", path, outDir, filter)
 			out, err := enos.run(context.Background(), cmd)
 			require.NoErrorf(t, err, string(out))
 
-			expected := &pb.GenerateScenariosResponse{
-				Responses: []*pb.Scenario_Operation_Generate_Response{
+			expected := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{
 					{
-						TerraformModule: &pb.Terraform_Module{
-							ModulePath: filepath.Join(outDir, test.uid, "scenario.tf"),
-							RcPath:     filepath.Join(outDir, test.uid, "terraform.rc"),
-							ScenarioRef: &pb.Ref_Scenario{
-								Id: &pb.Scenario_ID{
-									Name: test.name,
-									Uid:  test.uid,
-									Variants: &pb.Scenario_Filter_Vector{
-										Elements: elements,
-									},
+						Op: &pb.Ref_Operation{
+							Scenario: scenarioRef,
+						},
+						Status: pb.Operation_STATUS_COMPLETED,
+						Value: &pb.Operation_Response_Generate_{
+							Generate: &pb.Operation_Response_Generate{
+								TerraformModule: &pb.Terraform_Module{
+									ModulePath:  filepath.Join(outDir, test.uid, "scenario.tf"),
+									RcPath:      filepath.Join(outDir, test.uid, "terraform.rc"),
+									ScenarioRef: scenarioRef,
 								},
 							},
 						},
@@ -116,17 +125,7 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 				},
 			}
 
-			got := &pb.GenerateScenariosResponse{}
-			require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-			require.Len(t, got.GetResponses(), len(expected.GetResponses()))
-			for i := range expected.Responses {
-				got := got.Responses[i].GetTerraformModule()
-				expected := expected.Responses[i].GetTerraformModule()
-
-				require.Equal(t, expected.ModulePath, got.ModulePath)
-				require.Equal(t, expected.RcPath, got.RcPath)
-				require.Equal(t, expected.ScenarioRef.String(), got.ScenarioRef.String())
-			}
+			requireEqualOperationResponses(t, expected, out)
 		})
 	}
 }

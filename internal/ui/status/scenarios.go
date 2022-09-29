@@ -17,6 +17,11 @@ func Decode(failOnWarn bool, res *pb.DecodeResponse) error {
 // OperationResponses returns the status multiple operations
 func OperationResponses(failOnWarn bool, res *pb.OperationResponses) error {
 	var err error
+
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		return &ErrExit{ExitCode: 1}
+	}
+
 	for _, r := range res.GetResponses() {
 		err = OperationResponse(failOnWarn, r)
 		if err != nil {

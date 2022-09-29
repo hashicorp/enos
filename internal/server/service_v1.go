@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
+	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/operation"
 	"github.com/hashicorp/enos/internal/proto"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -247,10 +248,23 @@ func (s *ServiceV1) dispatch(
 		))...)
 	}
 
+	if len(scenarios) == 0 {
+		filter, err := flightplan.NewScenarioFilter(
+			flightplan.WithScenarioFilterDecode(f),
+		)
+		if err != nil {
+			diags = append(diags, diagnostics.FromErr(err)...)
+		} else {
+			diags = append(diags, diagnostics.FromErr(fmt.Errorf(
+				"no scenarios found matching filter '%s'", filter.String(),
+			))...)
+		}
+	}
+
 	if diagnostics.HasFailed(
 		ws.GetTfExecCfg().GetFailOnWarnings(),
 		diagnostics.Concat(diags, decRes.GetDiagnostics()),
-	) || len(scenarios) == 0 {
+	) {
 		return diags, decRes, refs
 	}
 

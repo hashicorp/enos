@@ -54,6 +54,7 @@ func OperationStatus(failOnWarn bool, res *pb.Operation_Response) pb.Operation_S
 // resDiags returns all of the diagnostics that might be included in a response
 func resDiags(res *pb.Operation_Response) []*pb.Diagnostic {
 	return Concat(
+		res.GetDiagnostics(),
 		res.GetGenerate().GetDiagnostics(),
 		res.GetCheck().GetInit().GetDiagnostics(),
 		res.GetCheck().GetValidate().GetDiagnostics(),
@@ -70,6 +71,7 @@ func resDiags(res *pb.Operation_Response) []*pb.Diagnostic {
 		res.GetRun().GetApply().GetDiagnostics(),
 		res.GetRun().GetDestroy().GetDiagnostics(),
 		res.GetDestroy().GetDiagnostics(),
+		res.GetDestroy().GetInit().GetDiagnostics(),
 		res.GetDestroy().GetDestroy().GetDiagnostics(),
 		res.GetExec().GetDiagnostics(),
 		res.GetExec().GetExec().GetDiagnostics(),

@@ -57,6 +57,16 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 			return res
 		}
 
+		// Initialize the terraform module before we destroy. We do this to ensure
+		// that any scenario module has the requisitite providers and modules
+		// to properly create and execute a destroy.
+		resVal.Destroy.Init = runner.terraformInit(ctx, req, events)
+
+		// Return early if we failed to initialize our scenario
+		if diagnostics.HasFailed(runner.TFConfig.FailOnWarnings, resVal.Destroy.Init.GetDiagnostics()) {
+			return res
+		}
+
 		// Destroy the scenario
 		resVal.Destroy.Destroy = runner.terraformDestroy(ctx, req, events)
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Destroy.Destroy.GetDiagnostics()...)

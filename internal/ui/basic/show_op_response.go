@@ -96,6 +96,9 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 		}
 	case *pb.Operation_Response_Destroy_:
 		v.writeInitResponse(res.GetDestroy().GetInit())
+		if show := res.GetDestroy().GetPriorStateShow(); show != nil {
+			v.writeShowResponse(show)
+		}
 		if destroy := res.GetDestroy().GetDestroy(); destroy != nil {
 			v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy)
 		}
@@ -107,6 +110,9 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 		}
 		if apply := res.GetRun().GetApply(); apply != nil {
 			v.writePlainTextResponse("apply", apply.GetStderr(), apply)
+		}
+		if show := res.GetRun().GetPriorStateShow(); show != nil {
+			v.writeShowResponse(show)
 		}
 		if destroy := res.GetRun().GetDestroy(); destroy != nil {
 			v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy)

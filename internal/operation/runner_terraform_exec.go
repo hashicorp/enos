@@ -11,7 +11,7 @@ import (
 
 // terraformExec executes any Terraform sub-command within the context of a generated
 // module.
-func (e *Runner) terraformExec(
+func (r *Runner) terraformExec(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -19,7 +19,7 @@ func (e *Runner) terraformExec(
 	res := &pb.Terraform_Command_Exec_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -55,14 +55,14 @@ func (e *Runner) terraformExec(
 	execOut := NewTextOutput()
 	stdout := &strings.Builder{}
 	execOut.Stdout = stdout
-	cmd := e.TFConfig.NewExecSubCmd()
+	cmd := r.TFConfig.NewExecSubCmd()
 	cmd.ExecOpts = append(cmd.ExecOpts, func(ecmd *exec.Cmd) {
 		ecmd.Stderr = execOut.Stderr
 		ecmd.Stdout = execOut.Stdout
 	})
 
 	_, err = cmd.Run(ctx)
-	res.SubCommand = e.TFConfig.ExecSubCmd
+	res.SubCommand = r.TFConfig.ExecSubCmd
 	res.Stdout = stdout.String()
 	res.Stderr = execOut.Stderr.String()
 	res.Diagnostics = diagnostics.FromErr(err)
@@ -73,7 +73,7 @@ func (e *Runner) terraformExec(
 	}
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
 	event.Diagnostics = res.Diagnostics
 	eventVal.Exec = res
 

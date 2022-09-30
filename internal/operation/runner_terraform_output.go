@@ -9,7 +9,7 @@ import (
 )
 
 // terraformOutput renders the Terraform output
-func (e *Runner) terraformOutput(
+func (r *Runner) terraformOutput(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -17,7 +17,7 @@ func (e *Runner) terraformOutput(
 	res := &pb.Terraform_Command_Output_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -50,7 +50,7 @@ func (e *Runner) terraformOutput(
 	}
 
 	// Create our terraform executor
-	tf, err := e.TFConfig.Terraform()
+	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res
@@ -59,35 +59,35 @@ func (e *Runner) terraformOutput(
 	// Configure our Terraform executor to use the module that should have
 	// already been generated.
 	module, diags := moduleForReq(req)
-	if diagnostics.HasFailed(e.TFConfig.FailOnWarnings, diags) {
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, diags) {
 		notifyFail(diags)
 		return res
 	} else {
 		res.Diagnostics = append(res.GetDiagnostics(), diags...)
 	}
 
-	e.TFConfig.WithModule(module)
+	r.TFConfig.WithModule(module)
 
 	// terraform output
 	outText := NewTextOutput()
 	tf.SetStdout(outText.Stdout)
 	tf.SetStderr(outText.Stderr)
 
-	metas, err := tf.Output(ctx, e.TFConfig.OutputOptions()...)
+	metas, err := tf.Output(ctx, r.TFConfig.OutputOptions()...)
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res
 	}
 
-	if e.TFConfig.OutputName != "" {
-		meta, found := metas[e.TFConfig.OutputName]
+	if r.TFConfig.OutputName != "" {
+		meta, found := metas[r.TFConfig.OutputName]
 		if !found {
-			notifyFail(diagnostics.FromErr(fmt.Errorf("no output with key %s", e.TFConfig.OutputName)))
+			notifyFail(diagnostics.FromErr(fmt.Errorf("no output with key %s", r.TFConfig.OutputName)))
 			return res
 		}
 
 		res.Meta = append(res.Meta, &pb.Terraform_Command_Output_Response_Meta{
-			Name:      e.TFConfig.OutputName,
+			Name:      r.TFConfig.OutputName,
 			Type:      []byte(meta.Type),
 			Value:     []byte(meta.Value),
 			Sensitive: meta.Sensitive,
@@ -107,7 +107,7 @@ func (e *Runner) terraformOutput(
 	}
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
 	event.Diagnostics = res.Diagnostics
 	eventVal.Output = res
 

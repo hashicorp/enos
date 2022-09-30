@@ -5,18 +5,20 @@ import (
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	tfjson "github.com/hashicorp/terraform-json"
 )
 
 // terraformDestroy destroys resources created by the Terraform module
-func (e *Runner) terraformDestroy(
+func (r *Runner) terraformDestroy(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
+	state *tfjson.State,
 ) *pb.Terraform_Command_Destroy_Response {
 	res := &pb.Terraform_Command_Destroy_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -48,8 +50,29 @@ func (e *Runner) terraformDestroy(
 		}
 	}
 
+	// Determine if we have deletable state. If we don't this action is a no-op
+	// and we can terminate early.
+	if !hasDeleteableState(state) {
+		// We don't have deletable state, we can return.
+		log.Debug("skipping delete because state file contained no deletable values")
+
+		// Finalize our event
+		event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+		event.Diagnostics = res.Diagnostics
+		eventVal.Destroy = res
+
+		// Notify that we've finished
+		if err := events.Publish(event); err != nil {
+			log.Error("failed to send event", "error", err)
+			res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		}
+		log.Debug("finished destroy")
+
+		return res
+	}
+
 	// Create our terraform executor
-	tf, err := e.TFConfig.Terraform()
+	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res
@@ -58,7 +81,7 @@ func (e *Runner) terraformDestroy(
 	destroyOut := NewTextOutput()
 	tf.SetStdout(destroyOut.Stdout)
 	tf.SetStderr(destroyOut.Stderr)
-	err = tf.Destroy(ctx, e.TFConfig.DestroyOptions()...)
+	err = tf.Destroy(ctx, r.TFConfig.DestroyOptions()...)
 	res.Diagnostics = diagnostics.FromErr(err)
 	res.Stderr = destroyOut.Stderr.String()
 	if err != nil {
@@ -67,7 +90,7 @@ func (e *Runner) terraformDestroy(
 	}
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
 	event.Diagnostics = res.Diagnostics
 	eventVal.Destroy = res
 
@@ -79,4 +102,50 @@ func (e *Runner) terraformDestroy(
 	log.Debug("finished destroy")
 
 	return res
+}
+
+// hasDeleteableState inspects the JSON representation of a Terraform state and
+// returns a boolean of whether or not the state contains deletable values.
+func hasDeleteableState(state *tfjson.State) bool {
+	if state == nil {
+		return false
+	}
+
+	if state.Values == nil {
+		return false
+	}
+
+	// We've seen Terraform occasionally leave behind a partial set of outputs
+	// after a module has been destroyed. As such, we can't on their presence
+	// to detect whether or not we have deleteable state.
+	/*
+		if state.Values.Outputs != nil {
+			// If outputs are present we have applied but not destroyed
+			if len(state.Values.Outputs) > 0 {
+				return true
+			}
+		}
+	*/
+
+	if state.Values.RootModule == nil {
+		return false
+	}
+
+	if state.Values.RootModule.Resources != nil {
+		// If our root module has resources we have state
+		if len(state.Values.RootModule.Resources) > 0 {
+			return true
+		}
+	}
+
+	if state.Values.RootModule.ChildModules != nil {
+		for i := range state.Values.RootModule.ChildModules {
+			// If any child module has resources we have state
+			if len(state.Values.RootModule.ChildModules[i].Resources) > 0 {
+				return true
+			}
+		}
+	}
+
+	return false
 }

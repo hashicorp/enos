@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/go-hclog"
+	tfjson "github.com/hashicorp/terraform-json"
 )
 
 // RunScenario takes an operation request for generate and returns a worker
@@ -75,7 +76,7 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 
 // scenarioRun initializes, validates, plans, applies and destroys the generatedTerraform
 // Terraform module
-func (e *Runner) scenarioRun(
+func (r *Runner) scenarioRun(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -86,7 +87,7 @@ func (e *Runner) scenarioRun(
 	}
 
 	// launch the Terraform module
-	launchRes := e.scenarioLaunch(ctx, req, events)
+	launchRes := r.scenarioLaunch(ctx, req, events)
 
 	res.Run.Diagnostics = launchRes.Launch.GetDiagnostics()
 	res.Run.Init = launchRes.Launch.GetInit()
@@ -96,7 +97,7 @@ func (e *Runner) scenarioRun(
 
 	// Return early if we failed to apply our module
 	if diagnostics.HasFailed(
-		e.TFConfig.FailOnWarnings,
+		r.TFConfig.FailOnWarnings,
 		res.Run.Diagnostics,
 		res.Run.Init.GetDiagnostics(),
 		res.Run.Validate.GetDiagnostics(),
@@ -106,7 +107,21 @@ func (e *Runner) scenarioRun(
 		return res
 	}
 
-	res.Run.Destroy = e.terraformDestroy(ctx, req, events)
+	// Get the current state of the scenario because destroying requires it
+	stateVal := r.terraformShow(ctx, req, events)
+	res.Run.PriorStateShow = stateVal
+
+	state := &tfjson.State{}
+	err := state.UnmarshalJSON(stateVal.GetState())
+	if err != nil {
+		stateVal.Diagnostics = append(stateVal.GetDiagnostics(), diagnostics.FromErr(err)...)
+	}
+
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, stateVal.Diagnostics) {
+		return res
+	}
+
+	res.Run.Destroy = r.terraformDestroy(ctx, req, events, state)
 
 	return res
 }

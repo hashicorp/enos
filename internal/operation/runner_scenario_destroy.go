@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/hashicorp/go-hclog"
+	tfjson "github.com/hashicorp/terraform-json"
 )
 
 // func DestroyScenario takes an operation request for generate and returns a worker
@@ -67,8 +68,32 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 			return res
 		}
 
+		// Get the current state of the scenario, which we'll use to determine
+		// if it's even necessary to destroy it.
+		stateVal := runner.terraformShow(ctx, req, events)
+		resVal.Destroy.PriorStateShow = stateVal
+
+		state := &tfjson.State{}
+		err = state.UnmarshalJSON(stateVal.GetState())
+		if err != nil {
+			stateVal.Diagnostics = append(stateVal.GetDiagnostics(), diagnostics.FromErr(err)...)
+		}
+
+		// Determine our status
+		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, stateVal.GetDiagnostics()...)
+
+		// Return early if we failed to show our state
+		if hasFailedStatus(res.Status) {
+			if err := events.PublishResponse(res); err != nil {
+				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+				log.Error("failed to send event", ResponseDebugArgs(res)...)
+			}
+
+			return res
+		}
+
 		// Destroy the scenario
-		resVal.Destroy.Destroy = runner.terraformDestroy(ctx, req, events)
+		resVal.Destroy.Destroy = runner.terraformDestroy(ctx, req, events, state)
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Destroy.Destroy.GetDiagnostics()...)
 
 		return res

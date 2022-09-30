@@ -69,9 +69,11 @@ func resDiags(res *pb.Operation_Response) []*pb.Diagnostic {
 		res.GetRun().GetValidate().GetDiagnostics(),
 		res.GetRun().GetPlan().GetDiagnostics(),
 		res.GetRun().GetApply().GetDiagnostics(),
+		res.GetRun().GetPriorStateShow().GetDiagnostics(),
 		res.GetRun().GetDestroy().GetDiagnostics(),
 		res.GetDestroy().GetDiagnostics(),
 		res.GetDestroy().GetInit().GetDiagnostics(),
+		res.GetDestroy().GetPriorStateShow().GetDiagnostics(),
 		res.GetDestroy().GetDestroy().GetDiagnostics(),
 		res.GetExec().GetDiagnostics(),
 		res.GetExec().GetExec().GetDiagnostics(),
@@ -92,5 +94,6 @@ func eventDiags(e *pb.Operation_Event) []*pb.Diagnostic {
 		e.GetDestroy().GetDiagnostics(),
 		e.GetExec().GetDiagnostics(),
 		e.GetOutput().GetDiagnostics(),
+		e.GetShow().GetDiagnostics(),
 	)
 }

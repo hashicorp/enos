@@ -18,9 +18,6 @@ type ScenarioFilter struct {
 // String returns the scenario filter as a string
 func (sf *ScenarioFilter) String() string {
 	str := sf.Name
-	if str == "" {
-		return str
-	}
 
 	if sf.SelectAll {
 		return str

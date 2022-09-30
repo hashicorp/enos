@@ -39,6 +39,8 @@ func (v *View) ShowOperationEvent(event *pb.Operation_Event) {
 		v.writeEventDestroy(event, msg)
 	case *pb.Operation_Event_Exec:
 		v.writeEventExec(event, msg)
+	case *pb.Operation_Event_Show:
+		v.writeEventShow(event, msg)
 	case *pb.Operation_Event_Output:
 		// Don't display output events by default since outputs have their own
 		// view.

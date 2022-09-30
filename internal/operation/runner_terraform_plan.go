@@ -8,7 +8,7 @@ import (
 )
 
 // terraformPlan plans a Terraform module
-func (e *Runner) terraformPlan(
+func (r *Runner) terraformPlan(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -16,7 +16,7 @@ func (e *Runner) terraformPlan(
 	res := &pb.Terraform_Command_Plan_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -49,7 +49,7 @@ func (e *Runner) terraformPlan(
 	}
 
 	// Create our terraform executor
-	tf, err := e.TFConfig.Terraform()
+	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res
@@ -59,7 +59,7 @@ func (e *Runner) terraformPlan(
 	planOut := NewTextOutput()
 	tf.SetStdout(planOut.Stdout)
 	tf.SetStderr(planOut.Stderr)
-	changes, err := tf.Plan(ctx, e.TFConfig.PlanOptions()...)
+	changes, err := tf.Plan(ctx, r.TFConfig.PlanOptions()...)
 	res.ChangesPresent = changes
 	res.Stderr = planOut.Stderr.String()
 	if err != nil {
@@ -68,7 +68,7 @@ func (e *Runner) terraformPlan(
 	}
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
 	event.Diagnostics = res.Diagnostics
 	eventVal.Plan = res
 

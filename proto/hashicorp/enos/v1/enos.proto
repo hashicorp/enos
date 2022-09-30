@@ -261,6 +261,7 @@ message Operation {
 
     message Destroy {
       repeated Diagnostic diagnostics = 1;
+      Terraform.Command.Show.Response prior_state_show = 5;
       Operation.Response.Generate generate = 2;
       Terraform.Command.Init.Response init = 4;
       Terraform.Command.Destroy.Response destroy = 3;
@@ -273,6 +274,7 @@ message Operation {
       Terraform.Command.Validate.Response validate = 4;
       Terraform.Command.Plan.Response plan = 5;
       Terraform.Command.Apply.Response apply = 6;
+      Terraform.Command.Show.Response prior_state_show = 8;
       Terraform.Command.Destroy.Response destroy = 7;
     }
 
@@ -313,6 +315,7 @@ message Operation {
       Terraform.Command.Destroy.Response destroy = 16;
       Terraform.Command.Exec.Response exec = 17;
       Terraform.Command.Output.Response output = 18;
+      Terraform.Command.Show.Response show = 19;
     }
   }
 
@@ -398,6 +401,16 @@ message Terraform {
           bool sensitive = 4;
           string stderr = 5;
         }
+      }
+    }
+
+    message Show {
+      message Response {
+        repeated Diagnostic diagnostics = 1;
+        // For now, we pass the entire state over the wire as a tfjson.State JSON
+        // representation. You can unmarshal the value into that Go type if
+        // necessary.
+        bytes state = 2;
       }
     }
   }

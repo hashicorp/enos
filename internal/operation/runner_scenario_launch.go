@@ -74,7 +74,7 @@ func LaunchScenario(req *pb.Operation_Request) WorkFunc {
 }
 
 // scenarioLaunch initializes, validates, plans, and applies the generated Terraform module
-func (e *Runner) scenarioLaunch(
+func (r *Runner) scenarioLaunch(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -85,7 +85,7 @@ func (e *Runner) scenarioLaunch(
 	}
 
 	// check the Terraform module
-	checkRes := e.scenarioCheck(ctx, req, events)
+	checkRes := r.scenarioCheck(ctx, req, events)
 
 	res.Launch.Diagnostics = checkRes.Check.GetDiagnostics()
 	res.Launch.Init = checkRes.Check.GetInit()
@@ -94,7 +94,7 @@ func (e *Runner) scenarioLaunch(
 
 	// Return early if we failed to check our module
 	if diagnostics.HasFailed(
-		e.TFConfig.FailOnWarnings,
+		r.TFConfig.FailOnWarnings,
 		res.Launch.Diagnostics,
 		res.Launch.Init.GetDiagnostics(),
 		res.Launch.Validate.GetDiagnostics(),
@@ -103,7 +103,7 @@ func (e *Runner) scenarioLaunch(
 		return res
 	}
 
-	res.Launch.Apply = e.terraformApply(ctx, req, events)
+	res.Launch.Apply = r.terraformApply(ctx, req, events)
 
 	return res
 }

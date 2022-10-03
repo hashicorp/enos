@@ -330,3 +330,8 @@ func (c *Config) DestroyOptions() []tfexec.DestroyOption {
 func (c *Config) OutputOptions() []tfexec.OutputOption {
 	return []tfexec.OutputOption{}
 }
+
+// ShowOptions are the show command options
+func (c *Config) ShowOptions() []tfexec.ShowOption {
+	return []tfexec.ShowOption{}
+}

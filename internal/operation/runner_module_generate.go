@@ -13,7 +13,7 @@ import (
 // moduleGenerate takes a context, request and event sender and generates a Terraform
 // module. Any errors or warnings are returned as diagnostics is the response
 // value.
-func (e Runner) moduleGenerate(
+func (r *Runner) moduleGenerate(
 	ctx context.Context,
 	req *pb.Operation_Request, // for
 	events *EventSender,
@@ -25,7 +25,7 @@ func (e Runner) moduleGenerate(
 		},
 	}
 
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -90,10 +90,10 @@ func (e Runner) moduleGenerate(
 	}
 
 	// Configure our Terraform executor to use the module we generated
-	e.TFConfig.WithModule(resVal.Generate.TerraformModule)
+	r.TFConfig.WithModule(resVal.Generate.TerraformModule)
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, resVal.Generate.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, resVal.Generate.GetDiagnostics()...)
 	event.Diagnostics = resVal.Generate.GetDiagnostics()
 	eventVal.Generate = resVal.Generate
 

@@ -68,7 +68,7 @@ func CheckScenario(req *pb.Operation_Request) WorkFunc {
 }
 
 // scenarioCheck initializes, validates and plans the generated Terraform module
-func (e *Runner) scenarioCheck(
+func (r *Runner) scenarioCheck(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -79,22 +79,22 @@ func (e *Runner) scenarioCheck(
 	}
 
 	// initialize our Terraform module
-	res.Check.Init = e.terraformInit(ctx, req, events)
+	res.Check.Init = r.terraformInit(ctx, req, events)
 
 	// Return early if we failed to initialize our module
-	if diagnostics.HasFailed(e.TFConfig.FailOnWarnings, res.Check.Init.GetDiagnostics()) {
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, res.Check.Init.GetDiagnostics()) {
 		return res
 	}
 
 	// validate our Terraform module
-	res.Check.Validate = e.terraformValidate(ctx, req, events)
+	res.Check.Validate = r.terraformValidate(ctx, req, events)
 	// Return early if we failed to plan our module
-	if diagnostics.HasFailed(e.TFConfig.FailOnWarnings, res.Check.Validate.GetDiagnostics()) {
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, res.Check.Validate.GetDiagnostics()) {
 		return res
 	}
 
 	// plan our Terraform module
-	res.Check.Plan = e.terraformPlan(ctx, req, events)
+	res.Check.Plan = r.terraformPlan(ctx, req, events)
 
 	return res
 }

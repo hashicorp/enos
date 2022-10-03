@@ -15,6 +15,27 @@ type ScenarioFilter struct {
 	SelectAll bool
 }
 
+// String returns the scenario filter as a string
+func (sf *ScenarioFilter) String() string {
+	str := sf.Name
+
+	if sf.SelectAll {
+		return str
+	}
+
+	for _, i := range sf.Include {
+		str = fmt.Sprintf("%s %s", str, i.String())
+	}
+
+	for _, e := range sf.Exclude {
+		for _, elm := range e.Vector {
+			str = fmt.Sprintf("%s !%s:%s", str, elm.Key, elm.Val)
+		}
+	}
+
+	return str
+}
+
 // ScenarioFilterOpt is a scenario filter constructor functional option
 type ScenarioFilterOpt func(*ScenarioFilter) error
 

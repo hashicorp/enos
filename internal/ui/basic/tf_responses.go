@@ -120,6 +120,46 @@ func (v *View) writeOutputResponse(res *pb.Operation_Response) {
 	v.WriteDiagnostics(diags)
 }
 
+func (v *View) writeShowResponse(show *pb.Terraform_Command_Show_Response) {
+	if show == nil {
+		return
+	}
+
+	if status.HasFailed(v.settings.FailOnWarnings, show) {
+		msg := "  Read state: failed!"
+		if v.settings.IsTty {
+			msg = "  Read state: ❌"
+		}
+
+		if s := string(show.GetState()); s != "" {
+			v.ui.Error(fmt.Sprintf("  State: %s", s))
+			v.ui.Error(msg)
+		}
+
+		v.WriteDiagnostics(show.GetDiagnostics())
+		return
+	}
+
+	var msg string
+	if status.HasWarningDiags(show) {
+		msg = "  Read state: success! (warnings present)"
+		if v.settings.IsTty {
+			msg = "  Read state: ⚠️"
+		}
+	} else {
+		msg = "  Read state: success!"
+		if v.settings.IsTty {
+			msg = "  Read state: ✅"
+		}
+	}
+	v.ui.Info(msg)
+	if s := string(show.GetState()); s != "" {
+		v.ui.Debug(fmt.Sprintf("  State: %s", s))
+	}
+
+	v.WriteDiagnostics(show.GetDiagnostics())
+}
+
 func (v *View) writePlainTextResponse(cmd string, stderr string, res status.ResWithDiags) {
 	if cmd == "" {
 		return

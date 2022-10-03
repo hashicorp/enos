@@ -28,21 +28,24 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 		// We assume the variants will result in one variant for each test
 		variants [][]string
 		uid      string
+		launch   bool
 	}{
 		{
 			"scenario_generate_pass_0",
 			"test",
 			[][]string{{"foo", "matrixfoo"}},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixfoo]"))),
+			true,
 		},
 		{
 			"scenario_generate_pass_0",
 			"test",
 			[][]string{{"foo", "matrixbar"}},
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixbar]"))),
+			false,
 		},
 	} {
-		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s %s %s %t", test.dir, test.name, test.variants, test.launch), func(t *testing.T) {
 			outDir := filepath.Join(tmpDir, test.dir)
 			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
@@ -61,12 +64,15 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 				})
 			}
 
-			cmd := fmt.Sprintf("scenario launch --chdir %s --out %s %s", path, outDir, filter)
-			out, err := enos.run(context.Background(), cmd)
-			require.NoError(t, err, string(out))
+			// Test destroying a scenario with it launched or not
+			if test.launch {
+				cmd := fmt.Sprintf("scenario launch --chdir %s --out %s %s", path, outDir, filter)
+				out, err := enos.run(context.Background(), cmd)
+				require.NoError(t, err, string(out))
+			}
 
-			cmd = fmt.Sprintf("scenario destroy --chdir %s --out %s --format json %s", path, outDir, filter)
-			out, err = enos.run(context.Background(), cmd)
+			cmd := fmt.Sprintf("scenario destroy --chdir %s --out %s --format json %s", path, outDir, filter)
+			out, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			scenarioRef := &pb.Ref_Scenario{

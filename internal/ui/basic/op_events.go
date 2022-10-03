@@ -230,12 +230,27 @@ func (v *View) writeEventOutput(e *pb.Operation_Event, w *strings.Builder) {
 	v.writeDiags(diags, w)
 }
 
+func (v *View) writeEventShow(e *pb.Operation_Event, w *strings.Builder) {
+	show := e.GetShow()
+	if show == nil {
+		return
+	}
+
+	v.writeEventHeader("read state", e, pb.UI_Settings_LEVEL_INFO, w)
+
+	v.writeDiags(show.GetDiagnostics(), w)
+}
+
 func (v *View) writeEventHeader(
 	action string,
 	event *pb.Operation_Event,
 	l pb.UI_Settings_Level,
 	w *strings.Builder,
 ) {
+	if v.settings.Level < l {
+		return
+	}
+
 	// The event header can be written in different ways depending on the
 	// what information we have about the scenario and the operation. It could
 	// look like any of the following:

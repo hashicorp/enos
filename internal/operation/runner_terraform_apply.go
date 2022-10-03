@@ -8,7 +8,7 @@ import (
 )
 
 // terraformApply applys a Terraform module
-func (e *Runner) terraformApply(
+func (r *Runner) terraformApply(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -16,7 +16,7 @@ func (e *Runner) terraformApply(
 	res := &pb.Terraform_Command_Apply_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -49,7 +49,7 @@ func (e *Runner) terraformApply(
 	}
 
 	// Create our terraform executor
-	tf, err := e.TFConfig.Terraform()
+	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res
@@ -59,7 +59,7 @@ func (e *Runner) terraformApply(
 	applyOut := NewTextOutput()
 	tf.SetStdout(applyOut.Stdout)
 	tf.SetStderr(applyOut.Stderr)
-	err = tf.Apply(ctx, e.TFConfig.ApplyOptions()...)
+	err = tf.Apply(ctx, r.TFConfig.ApplyOptions()...)
 	res.Stderr = applyOut.Stderr.String()
 	res.Diagnostics = diagnostics.FromErr(err)
 	if err != nil {
@@ -68,7 +68,7 @@ func (e *Runner) terraformApply(
 	}
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
 	event.Diagnostics = res.Diagnostics
 	eventVal.Apply = res
 

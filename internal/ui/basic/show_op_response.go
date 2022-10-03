@@ -3,6 +3,7 @@ package basic
 import (
 	"fmt"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -10,6 +11,18 @@ import (
 
 // ShowOperationResponses shows an operation responses
 func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
+	// Check for request level diagnostics and fail early if they exist
+	diags := diagnostics.Concat(res.GetDecode().GetDiagnostics(), res.GetDiagnostics())
+	if diagnostics.HasFailed(v.Settings().GetFailOnWarnings(), diags) {
+		err := v.ShowDiagnostics(diags)
+		if err != nil {
+			return err
+		}
+
+		return status.OperationResponses(v.Settings().GetFailOnWarnings(), res)
+	}
+
+	// Our request didn't fail so we'll show each operations status
 	v.ui.Info("\nEnos operations finished!\n")
 
 	err := v.ShowDecode(res.GetDecode(), true)
@@ -17,7 +30,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 		return err
 	}
 
-	err = v.ShowDiagnostics(res.GetDecode().GetDiagnostics())
+	err = v.ShowDiagnostics(res.GetDiagnostics())
 	if err != nil {
 		return err
 	}
@@ -82,6 +95,10 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 			v.writePlainTextResponse("apply", apply.GetStderr(), apply)
 		}
 	case *pb.Operation_Response_Destroy_:
+		v.writeInitResponse(res.GetDestroy().GetInit())
+		if show := res.GetDestroy().GetPriorStateShow(); show != nil {
+			v.writeShowResponse(show)
+		}
 		if destroy := res.GetDestroy().GetDestroy(); destroy != nil {
 			v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy)
 		}
@@ -93,6 +110,9 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 		}
 		if apply := res.GetRun().GetApply(); apply != nil {
 			v.writePlainTextResponse("apply", apply.GetStderr(), apply)
+		}
+		if show := res.GetRun().GetPriorStateShow(); show != nil {
+			v.writeShowResponse(show)
 		}
 		if destroy := res.GetRun().GetDestroy(); destroy != nil {
 			v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy)

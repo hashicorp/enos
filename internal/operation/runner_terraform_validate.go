@@ -9,7 +9,7 @@ import (
 )
 
 // terraformValidate validates a Terraform module
-func (e *Runner) terraformValidate(
+func (r *Runner) terraformValidate(
 	ctx context.Context,
 	req *pb.Operation_Request,
 	events *EventSender,
@@ -17,7 +17,7 @@ func (e *Runner) terraformValidate(
 	res := &pb.Terraform_Command_Validate_Response{
 		Diagnostics: []*pb.Diagnostic{},
 	}
-	log := e.log.With(RequestDebugArgs(req)...)
+	log := r.log.With(RequestDebugArgs(req)...)
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
@@ -50,7 +50,7 @@ func (e *Runner) terraformValidate(
 	}
 
 	// Create our terraform executor
-	tf, err := e.TFConfig.Terraform()
+	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res
@@ -68,7 +68,7 @@ func (e *Runner) terraformValidate(
 			diagnostics.FromTFJSON(jsonOut.Diagnostics)...,
 		)
 
-		if e.TFConfig.FailOnWarnings && !res.Valid {
+		if r.TFConfig.FailOnWarnings && !res.Valid {
 			err = fmt.Errorf("failing on validation warnings")
 			// We'll handle this error below and exit after notifyFail
 		}
@@ -79,7 +79,7 @@ func (e *Runner) terraformValidate(
 	}
 
 	// Finalize our responses and event
-	event.Status = diagnostics.Status(e.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
+	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
 	eventVal.Validate = res
 
 	// Notify that we've finished

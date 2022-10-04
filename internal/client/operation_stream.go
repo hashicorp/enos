@@ -92,7 +92,6 @@ func (c *Connection) streamResponses(
 			eventC := make(chan *pb.Operation_Event)
 			errC := make(chan error)
 			ticker := time.NewTicker(5 * time.Second)
-			var mostRecentEventPublishedAt time.Time
 			var lastEvent *pb.Operation_Event
 
 			// Start the operation event stream poller
@@ -139,11 +138,13 @@ func (c *Connection) streamResponses(
 						"operation_id", ref.GetId(),
 						"published_at", event.GetPublishedAt(),
 					)
-					lastEvent = event
 
-					if mostRecent := event.GetPublishedAt().AsTime(); mostRecent.After(mostRecentEventPublishedAt) {
-						// Only publish events that are newer than our last event
-						mostRecentEventPublishedAt = mostRecent
+					if lastEvent == nil || event.GetPublishedAt().AsTime().After(lastEvent.GetPublishedAt().AsTime()) {
+						// Because our events are not guaranteed to be in order
+						// we'll only update our last event if it was published
+						// more recently. This ensures that when we "replay"
+						// events while waiting we always show the most recent.
+						lastEvent = event
 						ui.ShowOperationEvent(event)
 						ticker.Reset(5 * time.Second)
 					}

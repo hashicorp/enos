@@ -53,6 +53,5 @@ func (v *View) ShowOperationEvent(event *pb.Operation_Event) {
 		)...)
 	}
 
-	v.writeDiags(event.GetDiagnostics(), msg)
 	v.writeMsg(event.GetStatus(), msg.String())
 }

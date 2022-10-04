@@ -2,6 +2,7 @@ package basic
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
@@ -9,11 +10,41 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
+var failedIcons = []string{"🙈", "🙉", "🙊"}
+
 // ShowOperationResponses shows an operation responses
 func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
-	// Check for request level diagnostics and fail early if they exist
+	// Determine if anything failed so we can create the correct display header
 	diags := diagnostics.Concat(res.GetDecode().GetDiagnostics(), res.GetDiagnostics())
+	failed := diagnostics.HasFailed(v.Settings().GetFailOnWarnings(), diags)
+	if !failed {
+		for _, r := range res.GetResponses() {
+			if diagnostics.OpResFailed(v.Settings().GetFailOnWarnings(), r) {
+				failed = true
+				break
+			}
+		}
+	}
+
+	header := "\nEnos operations"
+	if failed {
+		if v.settings.IsTty {
+			header = fmt.Sprintf("%s failed! %s\n", header, failedIcons[rand.Intn(len(failedIcons))])
+		} else {
+			header += " failed!\n"
+		}
+	} else {
+		if v.settings.IsTty {
+			header += " finished! 🐵\n"
+		} else {
+			header += " finished!\n"
+		}
+	}
+
 	if diagnostics.HasFailed(v.Settings().GetFailOnWarnings(), diags) {
+		// Our request failed so show our header and request diagnostics
+		v.ui.Error(header)
+
 		err := v.ShowDiagnostics(diags)
 		if err != nil {
 			return err
@@ -22,8 +53,12 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 		return status.OperationResponses(v.Settings().GetFailOnWarnings(), res)
 	}
 
-	// Our request didn't fail so we'll show each operations status
-	v.ui.Info("\nEnos operations finished!\n")
+	if failed {
+		// One or more sub-requests failed
+		v.ui.Error(header)
+	} else {
+		v.ui.Info(header)
+	}
 
 	err := v.ShowDecode(res.GetDecode(), true)
 	if err != nil {

@@ -169,7 +169,7 @@ func (v *View) writePlainTextResponse(cmd string, stderr string, res status.ResW
 	if status.HasFailed(v.settings.FailOnWarnings, res) {
 		msg := fmt.Sprintf("  %s: failed!", cmd)
 		if v.settings.IsTty {
-			msg = fmt.Sprintf(" %s: ❌", cmd)
+			msg = fmt.Sprintf("  %s: ❌", cmd)
 		}
 		v.ui.Error(msg)
 		if stderr != "" {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/flightplan/funcs"
 	hcl "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/tryfunc"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
@@ -128,7 +129,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"and":                    stdlib.AndFunc,
 			"byteslen":               stdlib.BytesLenFunc,
 			"bytessclice":            stdlib.BytesSliceFunc,
-			"csvdecode":              stdlib.CSVDecodeFunc,
+			"can":                    tryfunc.CanFunc,
 			"ceil":                   stdlib.CeilFunc,
 			"chomp":                  stdlib.ChompFunc,
 			"chunklist":              stdlib.ChunklistFunc,
@@ -137,6 +138,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"compact":                stdlib.CompactFunc,
 			"concat":                 stdlib.ConcatFunc,
 			"contains":               stdlib.ContainsFunc,
+			"csvdecode":              stdlib.CSVDecodeFunc,
 			"distinct":               stdlib.DistinctFunc,
 			"divide":                 stdlib.DivideFunc,
 			"element":                stdlib.ElementFunc,
@@ -202,6 +204,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"trimprefix":             stdlib.TrimPrefixFunc,
 			"trimspace":              stdlib.TrimSpaceFunc,
 			"trimsuffix":             stdlib.TrimSuffixFunc,
+			"try":                    tryfunc.TryFunc,
 			"upper":                  stdlib.UpperFunc,
 			"values":                 stdlib.ValuesFunc,
 			"zipmap":                 stdlib.ZipmapFunc,

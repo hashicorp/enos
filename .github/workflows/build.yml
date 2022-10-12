@@ -147,6 +147,4 @@ jobs:
     with:
       artifact-name: "enos_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"
     secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}

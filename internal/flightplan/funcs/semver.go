@@ -1,7 +1,7 @@
 package funcs
 
 import (
-	"github.com/Masterminds/semver"
+	semver "github.com/Masterminds/semver/v3"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 )
@@ -21,12 +21,14 @@ var SemverConstraint = function.New(&function.Spec{
 	},
 	Type: function.StaticReturnType(cty.Bool),
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-		v, err := semver.NewVersion(args[0].AsString())
+		version, constraint := args[0].AsString(), args[1].AsString()
+
+		v, err := semver.NewVersion(version)
 		if err != nil {
 			return cty.NullVal(cty.Bool), err
 		}
 
-		c, err := semver.NewConstraint(args[1].AsString())
+		c, err := semver.NewConstraint(constraint)
 		if err != nil {
 			return cty.NullVal(cty.Bool), err
 		}

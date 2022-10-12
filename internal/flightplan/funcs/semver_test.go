@@ -15,15 +15,15 @@ func TestServerConstraint(t *testing.T) {
 		constraint string
 		expected   bool
 	}{
-		"handles leading v": {
-			"v1.13.0",
-			">=1.11.0",
-			true,
-		},
-		"does what we expect with with prerelases": {
-			"1.13.0-dev1",
+		"doesn't adhere to prerelases without a constraint range": {
+			"v1.13.0-dev1",
 			">=1.11.0",
 			false,
+		},
+		"respects prerelases with constraint range": {
+			"v1.13.0-dev1",
+			">=1.11.0-0",
+			true,
 		},
 	} {
 		t.Run(desc, func(t *testing.T) {

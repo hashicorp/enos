@@ -7,8 +7,8 @@ name: validate
 #
 # If you need a secret in this file you need to pass them from the caller
 # workflow into this. You do this by configuring secrets as if they are input
-# down below in the secrets stanza. You then need to update every calling workflow
-# to pass in the secrets.
+# down below in the secrets stanza. You then need to update every calling
+# workflow to pass in the secrets.
 
 on:
   workflow_call:
@@ -19,6 +19,11 @@ on:
     secrets:
       ENOS_CI_SSH_PRIVATE_KEY:
         required: true
+
+# These permissions are necessary for the doormat-action to function
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   lint:

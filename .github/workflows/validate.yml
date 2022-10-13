@@ -76,7 +76,7 @@ jobs:
           # it changes the output to text when we expect it to be JSON.
           terraform_wrapper: false
       - name: Assume service user role via Doormat
-        uses: hashicorp/doormat-action@v1
+        uses: hashicorp/doormat-action@main # use main for now to see see claims
         with:
           # This role, the associated policy, the workflow event types, and the
           # the allowed git refs are managed via the Terraform in the

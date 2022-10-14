@@ -267,6 +267,13 @@ func WithUpgrade() ConfigOpt {
 	}
 }
 
+// WithNoReconfigure don't reconfigure the backend during
+func WithNoReconfigure() ConfigOpt {
+	return func(cfg *Config) {
+		cfg.Flags.NoReconfigure = true
+	}
+}
+
 // WithProtoConfig sets configuration from a proto config
 func WithProtoConfig(pcfg *pb.Terraform_Runner_Config) ConfigOpt {
 	return func(cfg *Config) {
@@ -285,9 +292,10 @@ func (c *Config) lockTimeoutString() string {
 // InitOptions are the init command options
 func (c *Config) InitOptions() []tfexec.InitOption {
 	return []tfexec.InitOption{
-		tfexec.Backend(c.Flags.GetNoBackend()),
+		tfexec.Backend(!c.Flags.GetNoBackend()),
 		tfexec.Get(!c.Flags.GetNoDownload()),
-		tfexec.Upgrade(!c.Flags.GetNoLock()),
+		tfexec.Upgrade(c.Flags.GetUpgrade()),
+		tfexec.Reconfigure(!c.Flags.GetNoReconfigure()),
 	}
 }
 

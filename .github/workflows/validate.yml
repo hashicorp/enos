@@ -7,8 +7,8 @@ name: validate
 #
 # If you need a secret in this file you need to pass them from the caller
 # workflow into this. You do this by configuring secrets as if they are input
-# down below in the secrets stanza. You then need to update every calling workflow
-# to pass in the secrets.
+# down below in the secrets stanza. You then need to update every calling
+# workflow to pass in the secrets.
 
 on:
   workflow_call:
@@ -17,12 +17,13 @@ on:
         required: true
         type: string
     secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
       ENOS_CI_SSH_PRIVATE_KEY:
         required: true
+
+# These permissions are necessary for the doormat-action to function
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   lint:
@@ -74,15 +75,13 @@ jobs:
           # the terraform wrapper will break terraform execution in enos because
           # it changes the output to text when we expect it to be JSON.
           terraform_wrapper: false
-      - name: Configure AWS credentials from Test account
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Assume service user role via Doormat
+        uses: hashicorp/doormat-action@main # use main for now to see see claims
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: arn:aws:iam::147451547303:role/github_actions-Enos
-          role-skip-session-tagging: true
-          role-duration-seconds: 3600
+          # This role, the associated policy, the workflow event types, and the
+          # the allowed git refs are managed via the Terraform in the
+          # hashicorp/enos-ci repository.
+          aws-role-arn: arn:aws:iam::147451547303:role/enos
       - name: Setup Enos SSH Keys
         id: sshkey
         run: |

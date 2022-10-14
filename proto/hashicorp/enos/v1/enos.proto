@@ -456,6 +456,8 @@ message Terraform {
         bool refresh_only = 8;
         // -upgrade
         bool upgrade = 9;
+        // -reconfigure=false
+        bool no_reconfigure = 10;
       }
     }
   }

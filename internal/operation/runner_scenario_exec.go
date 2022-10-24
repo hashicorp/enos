@@ -40,8 +40,34 @@ func ExecScenario(req *pb.Operation_Request) WorkFunc {
 			WithLogger(log),
 		)
 
+		// Exec is tricky in that the sub-command may or may not actually need
+		// to execute in the context of a generated scenario Terraform module.
+		// As such, we'll try and configure it with the module but rewrite any
+		// failure diags as warnings. If the sub-command needs to the module and
+		// it doesn't exist the sub-command failure will be reported.
+
+		// Try and configure the runner with the module
+		mod, diags := moduleForReq(req)
+
+		if len(diags) > 0 {
+			// Rewrite failure diags to warnings since we might not need the module
+			for i := range diags {
+				if diags[i].Severity == pb.Diagnostic_SEVERITY_ERROR {
+					diags[i].Severity = pb.Diagnostic_SEVERITY_WARNING
+				}
+			}
+		}
+
+		resVal.Exec.Diagnostics = append(resVal.Exec.GetDiagnostics(), diags...)
+
+		// Configure our Terraform executor to use module that may or may not exist
+		runner.TFConfig.WithModule(mod)
+
+		// Execute the exec command
 		resVal.Exec.Exec = runner.terraformExec(ctx, req, events)
-		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Exec.Exec.GetDiagnostics()...)
+
+		// Determine our final status from all operations
+		res.Status = diagnostics.OperationStatus(runner.TFConfig.FailOnWarnings, res)
 
 		return res
 	}

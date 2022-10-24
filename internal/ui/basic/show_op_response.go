@@ -105,9 +105,7 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 	scenario.FromRef(res.GetOp().GetScenario())
 	v.ui.Info(fmt.Sprintf("Scenario: %s %s", scenario.String(), v.opStatusString(res.GetStatus())))
 
-	// If we have a successful operation and fullOnComplete has not been set to
-	// true we'll move on after printing a single line for the scenario.
-	if res.GetStatus() == pb.Operation_STATUS_COMPLETED && !fullOnComplete {
+	if !shouldShowFullResponse(res, fullOnComplete) {
 		return nil
 	}
 
@@ -161,4 +159,28 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 	}
 
 	return nil
+}
+
+// shouldShowFullResponse determines whether or not we should display the entire
+// operation response. We show the full response if something went wrong, if
+// a full response has been requested, or if there is operation information for
+// for sub-operations that have output like exec or output.
+func shouldShowFullResponse(res *pb.Operation_Response, fullOnComplete bool) bool {
+	if fullOnComplete {
+		return true
+	}
+
+	if res.GetStatus() != pb.Operation_STATUS_COMPLETED {
+		return true
+	}
+
+	if res.GetExec() != nil {
+		return true
+	}
+
+	if res.GetOutput() != nil {
+		return true
+	}
+
+	return false
 }

@@ -39,6 +39,8 @@ func OutputScenario(req *pb.Operation_Request) WorkFunc {
 			WithLogger(log),
 		)
 
+		// Configure the runner with the existing Terraform module. If it doesn't
+		// exit there's nothing to output.
 		mod, diags := moduleForReq(req)
 		resVal.Output.Diagnostics = append(resVal.Output.GetDiagnostics(), diags...)
 
@@ -57,7 +59,9 @@ func OutputScenario(req *pb.Operation_Request) WorkFunc {
 		// Run the output command in the context of the module that should already
 		// exist
 		resVal.Output.Output = runner.terraformOutput(ctx, req, events)
-		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Output.Output.GetDiagnostics()...)
+
+		// Determine our final status from all operations
+		res.Status = diagnostics.OperationStatus(runner.TFConfig.FailOnWarnings, res)
 
 		return res
 	}

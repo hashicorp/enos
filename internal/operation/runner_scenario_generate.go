@@ -38,7 +38,9 @@ func GenerateScenario(req *pb.Operation_Request) WorkFunc {
 		// Run generate and update the generic status
 		resVal := runner.moduleGenerate(ctx, req, events)
 		res.Value = resVal
-		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Generate.GetDiagnostics()...)
+
+		// Determine our final status from all operations
+		res.Status = diagnostics.OperationStatus(runner.TFConfig.FailOnWarnings, res)
 
 		return res
 	}

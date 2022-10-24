@@ -94,7 +94,9 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 
 		// Destroy the scenario
 		resVal.Destroy.Destroy = runner.terraformDestroy(ctx, req, events, state)
-		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Destroy.Destroy.GetDiagnostics()...)
+
+		// Determine our final status from all operations
+		res.Status = diagnostics.OperationStatus(runner.TFConfig.FailOnWarnings, res)
 
 		return res
 	}

@@ -81,6 +81,7 @@ func (v *View) writeExecResponse(exec *pb.Terraform_Command_Exec_Response) {
 	}
 
 	v.ui.Info(exec.GetStdout())
+	v.ui.Error(exec.GetStderr())
 	v.ui.Debug(fmt.Sprintf("  Sub-command: %s", exec.GetSubCommand()))
 	v.WriteDiagnostics(exec.GetDiagnostics())
 }
@@ -97,7 +98,7 @@ func (v *View) writeOutputResponse(res *pb.Operation_Response) {
 
 	scenario := flightplan.NewScenario()
 	scenario.FromRef(res.GetOp().GetScenario())
-	v.ui.Info(fmt.Sprintf("Scenario: %s", scenario.String()))
+	v.ui.Info(fmt.Sprintf("Scenario: %s %s", scenario.String(), v.opStatusString(res.GetStatus())))
 
 	if status.HasFailed(v.settings.FailOnWarnings, out) {
 		msg := "  Output: failed!"

@@ -117,8 +117,10 @@ func (o *LocalOperator) Stop() error {
 	defer o.mu.Unlock()
 	o.running = false     // Prevent new work requests from being dispatched
 	o.drainWorkReqQueue() // Drain any queued operations
-	o.ctxCancel()         // Cancel in-flight operations, kill operation workers, drain the event queue
-	o.publisher.Stop()    // Turn off event publisher
+	if o.ctxCancel != nil {
+		o.ctxCancel() // Cancel in-flight operations, kill operation workers, drain the event queue
+	}
+	o.publisher.Stop() // Turn off event publisher
 	return nil
 }
 

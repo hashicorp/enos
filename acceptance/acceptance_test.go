@@ -193,7 +193,12 @@ func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, 
 	if err != nil {
 		return nil, nil
 	}
-	cmd := exec.CommandContext(ctx, path, strings.Split(subCommand, " ")...)
+
+	cmdParts := strings.Split(subCommand, " ")
+	// Don't specify a port so we can execute tests in parallel
+	cmdParts = append(cmdParts, "--listen-grpc", "http://localhost")
+
+	cmd := exec.CommandContext(ctx, path, cmdParts...)
 	cmd.Env = os.Environ()
 	return cmd.CombinedOutput()
 }

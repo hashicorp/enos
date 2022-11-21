@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EnosServiceClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
+	ValidateScenariosConfiguration(ctx context.Context, in *ValidateScenariosConfigurationRequest, opts ...grpc.CallOption) (*ValidateScenariosConfigurationResponse, error)
 	ListScenarios(ctx context.Context, in *ListScenariosRequest, opts ...grpc.CallOption) (*ListScenariosResponse, error)
 	CheckScenarios(ctx context.Context, in *CheckScenariosRequest, opts ...grpc.CallOption) (*CheckScenariosResponse, error)
 	GenerateScenarios(ctx context.Context, in *GenerateScenariosRequest, opts ...grpc.CallOption) (*GenerateScenariosResponse, error)
@@ -47,6 +48,15 @@ func NewEnosServiceClient(cc grpc.ClientConnInterface) EnosServiceClient {
 func (c *enosServiceClient) GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error) {
 	out := new(GetVersionResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.enos.v1.EnosService/GetVersion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *enosServiceClient) ValidateScenariosConfiguration(ctx context.Context, in *ValidateScenariosConfigurationRequest, opts ...grpc.CallOption) (*ValidateScenariosConfigurationResponse, error) {
+	out := new(ValidateScenariosConfigurationResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.enos.v1.EnosService/ValidateScenariosConfiguration", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +190,7 @@ func (c *enosServiceClient) Operation(ctx context.Context, in *OperationRequest,
 // for forward compatibility
 type EnosServiceServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
+	ValidateScenariosConfiguration(context.Context, *ValidateScenariosConfigurationRequest) (*ValidateScenariosConfigurationResponse, error)
 	ListScenarios(context.Context, *ListScenariosRequest) (*ListScenariosResponse, error)
 	CheckScenarios(context.Context, *CheckScenariosRequest) (*CheckScenariosResponse, error)
 	GenerateScenarios(context.Context, *GenerateScenariosRequest) (*GenerateScenariosResponse, error)
@@ -199,6 +210,9 @@ type UnimplementedEnosServiceServer struct {
 
 func (UnimplementedEnosServiceServer) GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
+}
+func (UnimplementedEnosServiceServer) ValidateScenariosConfiguration(context.Context, *ValidateScenariosConfigurationRequest) (*ValidateScenariosConfigurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateScenariosConfiguration not implemented")
 }
 func (UnimplementedEnosServiceServer) ListScenarios(context.Context, *ListScenariosRequest) (*ListScenariosResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListScenarios not implemented")
@@ -259,6 +273,24 @@ func _EnosService_GetVersion_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(EnosServiceServer).GetVersion(ctx, req.(*GetVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnosService_ValidateScenariosConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidateScenariosConfigurationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnosServiceServer).ValidateScenariosConfiguration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.enos.v1.EnosService/ValidateScenariosConfiguration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnosServiceServer).ValidateScenariosConfiguration(ctx, req.(*ValidateScenariosConfigurationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -474,6 +506,10 @@ var EnosService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetVersion",
 			Handler:    _EnosService_GetVersion_Handler,
+		},
+		{
+			MethodName: "ValidateScenariosConfiguration",
+			Handler:    _EnosService_ValidateScenariosConfiguration_Handler,
 		},
 		{
 			MethodName: "ListScenarios",

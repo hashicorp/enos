@@ -8,19 +8,19 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ListScenarios returns the version information
-func (s *ServiceV1) ListScenarios(
+// ValidateScenariosConfiguration validates a flight plan config
+func (s *ServiceV1) ValidateScenariosConfiguration(
 	ctx context.Context,
-	req *pb.ListScenariosRequest,
+	req *pb.ValidateScenariosConfigurationRequest,
 ) (
-	*pb.ListScenariosResponse,
+	*pb.ValidateScenariosConfigurationResponse,
 	error,
 ) {
-	res := &pb.ListScenariosResponse{}
+	res := &pb.ValidateScenariosConfigurationResponse{}
 
-	fp, decRes := decodeFlightPlan(
+	_, decRes := decodeFlightPlan(
 		req.GetWorkspace().GetFlightplan(),
-		flightplan.DecodeModeRef,
+		flightplan.DecodeModeFull,
 		req.GetFilter(),
 	)
 	res.Decode = decRes
@@ -29,13 +29,6 @@ func (s *ServiceV1) ListScenarios(
 		decRes.GetDiagnostics(),
 	) {
 		return res, nil
-	}
-
-	if len(fp.Scenarios) > 0 {
-		res.Scenarios = []*pb.Ref_Scenario{}
-		for _, s := range fp.Scenarios {
-			res.Scenarios = append(res.Scenarios, s.Ref())
-		}
 	}
 
 	return res, nil

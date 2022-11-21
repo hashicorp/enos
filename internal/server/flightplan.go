@@ -6,17 +6,36 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeResponse) {
+func decodeFlightPlan(
+	pfp *pb.FlightPlan,
+	mode flightplan.DecodeMode,
+	f *pb.Scenario_Filter,
+) (*flightplan.FlightPlan, *pb.DecodeResponse) {
 	res := &pb.DecodeResponse{
 		Diagnostics: []*pb.Diagnostic{},
 	}
 
-	dec, err := flightplan.NewDecoder(
+	opts := []flightplan.DecoderOpt{
 		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),
 		flightplan.WithDecoderFPFiles(pfp.GetEnosHcl()),
 		flightplan.WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
 		flightplan.WithDecoderEnv(pfp.GetEnosVarsEnv()),
-	)
+		flightplan.WithDecoderDecodeMode(mode),
+	}
+
+	if f != nil {
+		filter, err := flightplan.NewScenarioFilter(
+			flightplan.WithScenarioFilterDecode(f),
+		)
+		if err != nil {
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+			return nil, res
+		}
+
+		opts = append(opts, flightplan.WithDecoderScenarioFilter(filter))
+	}
+
+	dec, err := flightplan.NewDecoder(opts...)
 	if err != nil {
 		res.Diagnostics = diagnostics.FromErr(err)
 		return nil, res
@@ -37,17 +56,4 @@ func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeRes
 	}
 
 	return fp, res
-}
-
-// filterScenarios takes CLI arguments that may contain a scenario filter and
-// returns the filtered results.
-func filterScenarios(fp *flightplan.FlightPlan, f *pb.Scenario_Filter) ([]*flightplan.Scenario, []*pb.Diagnostic) {
-	filter, err := flightplan.NewScenarioFilter(
-		flightplan.WithScenarioFilterDecode(f),
-	)
-	if err != nil {
-		return nil, diagnostics.FromErr(err)
-	}
-
-	return fp.ScenariosSelect(filter), nil
 }

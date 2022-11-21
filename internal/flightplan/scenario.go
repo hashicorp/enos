@@ -32,7 +32,7 @@ var scenarioSchema = &hcl.BodySchema{
 // Scenario represents an Enos scenario
 type Scenario struct {
 	Name             string
-	Variants         Vector
+	Variants         *Vector
 	TerraformCLI     *TerraformCLI
 	TerraformSetting *TerraformSetting
 	Steps            []*ScenarioStep
@@ -53,7 +53,7 @@ func NewScenario() *Scenario {
 // String returns the scenario identifiers as a string
 func (s *Scenario) String() string {
 	str := s.Name
-	if len(s.Variants) > 0 {
+	if s.Variants != nil && len(s.Variants.unordered) > 0 {
 		str = fmt.Sprintf("%s %s", str, s.Variants.String())
 	}
 
@@ -82,19 +82,52 @@ func (s *Scenario) FromRef(ref *pb.Ref_Scenario) {
 	s.Variants = NewVectorFromProto(ref.GetId().GetVariants())
 }
 
+// Match takes a filter and determines whether or not the scenario matches
+// it.
+func (s *Scenario) Match(filter *ScenarioFilter) bool {
+	if filter.SelectAll {
+		return true
+	}
+
+	// Get scenarios that match our name
+	if filter.Name != "" && filter.Name != s.Name {
+		return false
+	}
+
+	// Make sure it matches any includes
+	if filter.Include != nil && len(filter.Include.unordered) > 0 {
+		if !s.Variants.ContainsUnordered(filter.Include) {
+			return false
+		}
+	}
+
+	// Make sure it does not match an exclude
+	for _, ex := range filter.Exclude {
+		if ex.Match(s.Variants) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // decode takes an HCL block and an evalutaion context and it decodes itself
 // from the block. Any errors that are encountered during decoding will be
 // returned as hcl diagnostics.
-func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
+func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext, mode DecodeMode) hcl.Diagnostics {
 	var diags hcl.Diagnostics
+
+	s.Name = block.Labels[0]
+
+	if mode == DecodeModeRef {
+		return diags
+	}
 
 	content, moreDiags := block.Body.Content(scenarioSchema)
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
 		return diags
 	}
-
-	s.Name = block.Labels[0]
 
 	// Make sure that scenario has at least one step.
 	if len(content.Blocks.OfType(blockTypeScenarioStep)) < 1 {

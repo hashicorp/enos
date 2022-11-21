@@ -4,7 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"runtime"
+	"runtime/pprof"
 	"strings"
 	"time"
 
@@ -37,6 +41,8 @@ type rootStateS struct {
 	enosServer     *server.ServiceV1
 	enosConnection *client.Connection
 	operatorConfig *pb.Operator_Config
+	profile        bool
+	cpuProfileOut  io.ReadWriteCloser
 }
 
 var rootState = &rootStateS{
@@ -60,6 +66,9 @@ func Execute() {
 	rootCmd.PersistentFlags().StringVar(&rootState.stdoutPath, "stdout", "", "Path to write output. (default $STDOUT)")
 	rootCmd.PersistentFlags().StringVar(&rootState.stderrPath, "stderr", "", "Path to write error output. (default $STDERR)")
 	rootCmd.PersistentFlags().Int32Var(&rootState.operatorConfig.WorkerCount, "worker-count", 4, "Number of scenario operation workers")
+	rootCmd.PersistentFlags().BoolVar(&rootState.profile, "profile", false, "Enable Go profiling")
+	_ = rootCmd.PersistentFlags().MarkHidden("profile")
+
 	if err := rootCmd.Execute(); err != nil {
 		var exitErr *status.ErrExit
 		if errors.As(err, &exitErr) {
@@ -130,8 +139,53 @@ func setupCLIUI() error {
 	return err
 }
 
+func startCPUProfiling() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	rootState.cpuProfileOut, err = os.Create(filepath.Join(wd, "cpu.pprof"))
+	if err != nil {
+		return err
+	}
+
+	if err := pprof.StartCPUProfile(rootState.cpuProfileOut); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func runMemoryProfiling() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	m, err := os.Create(filepath.Join(wd, "memory.pprof"))
+	if err != nil {
+		return err
+	}
+	defer m.Close()
+
+	runtime.GC()
+
+	if err := pprof.WriteHeapProfile(m); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 	cmd.SilenceErrors = true // we handle this ourselves
+
+	if rootState.profile {
+		if err := startCPUProfiling(); err != nil {
+			return err
+		}
+	}
 
 	// Setup our UI configuration first
 	err := setupCLIUI()
@@ -155,9 +209,24 @@ func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 }
 
 func rootCmdPostRun(cmd *cobra.Command, args []string) {
+	if rootState.profile {
+		if rootState.cpuProfileOut != nil {
+			defer rootState.cpuProfileOut.Close()
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	if rootState.enosServer != nil {
 		err := rootState.enosServer.Stop()
 		if err != nil {
+			_ = ui.ShowError(err)
+		}
+	}
+
+	// Run memory profiling after we've shut everything down everything but
+	// our UI
+	if rootState.profile {
+		if err := runMemoryProfiling(); err != nil {
 			_ = ui.ShowError(err)
 		}
 	}

@@ -9,6 +9,7 @@ option go_package = "github.com/hashicorp/enos/internal/pb;pb";
 
 service EnosService {
   rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {}
+  rpc ValidateScenariosConfiguration(ValidateScenariosConfigurationRequest) returns (ValidateScenariosConfigurationResponse) {}
   rpc ListScenarios(ListScenariosRequest) returns (ListScenariosResponse) {}
   rpc CheckScenarios(CheckScenariosRequest) returns (CheckScenariosResponse) {}
   rpc GenerateScenarios(GenerateScenariosRequest) returns (GenerateScenariosResponse) {}
@@ -479,6 +480,16 @@ message GetVersionResponse {
   repeated Diagnostic diagnostics = 1;
   string version = 2;
   string git_sha = 3 [json_name = "git_sha"];
+}
+
+message ValidateScenariosConfigurationRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message ValidateScenariosConfigurationResponse {
+  repeated Diagnostic diagnostics = 1;
+  DecodeResponse decode = 2;
 }
 
 message ListScenariosRequest {

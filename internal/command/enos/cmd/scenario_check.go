@@ -13,7 +13,6 @@ import (
 func newScenarioCheckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "check [FILTER]",
-		Aliases:           []string{"validate"}, // old name of the check command
 		Short:             "Check that scenarios are valid",
 		Long:              fmt.Sprintf("Check that scenarios are valid by generating the Scenario's Terraform Root Module, initializing it, validating it, and planning. %s", scenarioFilterDesc),
 		RunE:              runScenarioCheckCmd,

@@ -75,6 +75,7 @@ func newScenarioCmd() *cobra.Command {
 	scenarioCmd.AddCommand(newScenarioRunCmd())
 	scenarioCmd.AddCommand(newScenarioExecCmd())
 	scenarioCmd.AddCommand(newScenarioOutputCmd())
+	scenarioCmd.AddCommand(newScenarioValidateConfigCmd())
 
 	return scenarioCmd
 }
@@ -104,12 +105,7 @@ func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
 // scenarioCmdPostRun is the scenario sub-command post-run. We'll use it to shut
 // down the server.
 func scenarioCmdPostRun(cmd *cobra.Command, args []string) {
-	if rootState.enosServer != nil {
-		err := rootState.enosServer.Stop()
-		if err != nil {
-			_ = ui.ShowError(err)
-		}
-	}
+	rootCmdPostRun(cmd, args)
 }
 
 // setupDefaultScenarioCfg sets up default scenario configuration

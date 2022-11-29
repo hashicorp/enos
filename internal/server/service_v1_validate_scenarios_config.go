@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 
-	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -24,12 +23,6 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 		req.GetFilter(),
 	)
 	res.Decode = decRes
-	if diagnostics.HasFailed(
-		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
-		decRes.GetDiagnostics(),
-	) {
-		return res, nil
-	}
 
 	return res, nil
 }

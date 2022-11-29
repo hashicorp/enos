@@ -227,7 +227,7 @@ scenario "nighttime" {
 				Scenarios: []*Scenario{
 					{
 						Name:         "nighttime",
-						Variants:     &Vector{unordered: []Element{NewElement("cathat", "conrad"), NewElement("onefish", "twofish")}},
+						Variants:     &Vector{elements: []Element{NewElement("cathat", "conrad"), NewElement("onefish", "twofish")}},
 						TerraformCLI: DefaultTerraformCLI(),
 						Steps: []*ScenarioStep{
 							{
@@ -245,7 +245,7 @@ scenario "nighttime" {
 					},
 					{
 						Name:         "nighttime",
-						Variants:     &Vector{unordered: []Element{NewElement("cathat", "sally"), NewElement("onefish", "twofish")}},
+						Variants:     &Vector{elements: []Element{NewElement("cathat", "sally"), NewElement("onefish", "twofish")}},
 						TerraformCLI: DefaultTerraformCLI(),
 						Steps: []*ScenarioStep{
 							{
@@ -263,7 +263,7 @@ scenario "nighttime" {
 					},
 					{
 						Name:         "nighttime",
-						Variants:     &Vector{unordered: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "bluefish")}},
+						Variants:     &Vector{elements: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "bluefish")}},
 						TerraformCLI: DefaultTerraformCLI(),
 						Steps: []*ScenarioStep{
 							{
@@ -281,7 +281,7 @@ scenario "nighttime" {
 					},
 					{
 						Name:         "nighttime",
-						Variants:     &Vector{unordered: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "redfish")}},
+						Variants:     &Vector{elements: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "redfish")}},
 						TerraformCLI: DefaultTerraformCLI(),
 						Steps: []*ScenarioStep{
 							{
@@ -320,18 +320,18 @@ func Test_Matrix_Vector_Equal(t *testing.T) {
 		equal bool
 	}{
 		"equal": {
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			true,
 		},
 		"ordered but unequal Elements": {
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			false,
 		},
 		"equal Values": {
-			&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			false,
 		},
 	} {
@@ -348,28 +348,28 @@ func Test_Matrix_Vector_ContainsUnordered(t *testing.T) {
 		match bool
 	}{
 		"exact": {
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			true,
 		},
 		"unordered unequal len match": {
-			&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
+			&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
 			false,
 		},
 		"unordered exact": {
-			&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			true,
 		},
 		"equal len no match": {
-			&Vector{unordered: []Element{NewElement("backend", "myssql"), NewElement("backend", "raft")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "myssql"), NewElement("backend", "raft")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			false,
 		},
 		"unequal len no match": {
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
 			false,
 		},
 	} {
@@ -386,18 +386,18 @@ func Test_Matrix_Vector_EqualUnordered(t *testing.T) {
 		equal bool
 	}{
 		"equal": {
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			true,
 		},
 		"ordered but unequal Elements": {
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			false,
 		},
 		"equal Values": {
-			&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-			&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+			&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+			&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 			true,
 		},
 	} {
@@ -422,47 +422,47 @@ func Test_Matrix_CartesianProduct(t *testing.T) {
 		},
 		"regular": {
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-				{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}},
-				{unordered: []Element{NewElement("distro", "ubuntu"), NewElement("distro", "rhel")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("distro", "ubuntu"), NewElement("distro", "rhel")}},
 			}},
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "rhel")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "rhel")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "rhel")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "rhel")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "rhel")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "rhel")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "rhel")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "rhel")}},
 			}},
 		},
 		"irregular": {
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-				{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")}},
-				{unordered: []Element{NewElement("distro", "ubuntu")}},
-				{unordered: []Element{NewElement("test", "fresh-install"), NewElement("test", "upgrade"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("distro", "ubuntu")}},
+				{elements: []Element{NewElement("test", "fresh-install"), NewElement("test", "upgrade"), NewElement("test", "security")}},
 			}},
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "fresh-install")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "upgrade")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "ppc64"), NewElement("distro", "ubuntu"), NewElement("test", "security")}},
 			}},
 		},
 	} {
@@ -482,44 +482,44 @@ func Test_Matrix_CartesianProduct_empty_vector(t *testing.T) {
 
 func Test_Matrix_UniqueValues(t *testing.T) {
 	m1 := NewMatrix()
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}})
 
 	m2 := NewMatrix()
-	m2.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")}})
 
 	uniq := m1.UniqueValues()
 	require.Len(t, uniq.Vectors, len(m2.Vectors))
 
 	for i := range m2.Vectors {
-		require.EqualValues(t, m2.Vectors[i].unordered, uniq.Vectors[i].unordered)
+		require.EqualValues(t, m2.Vectors[i].elements, uniq.Vectors[i].elements)
 	}
 }
 
 func Test_Matrix_Unique(t *testing.T) {
 	m1 := NewMatrix()
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft"), NewElement("backend", "myssql")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
-	m1.AddVector(&Vector{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft"), NewElement("backend", "myssql")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
+	m1.AddVector(&Vector{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}})
 
 	m2 := NewMatrix()
-	m2.AddVector(&Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft"), NewElement("backend", "myssql")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
-	m2.AddVector(&Vector{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft"), NewElement("backend", "myssql")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}})
+	m2.AddVector(&Vector{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}})
 
 	require.Equal(t, m2, m1.Unique())
 }
@@ -532,70 +532,70 @@ func Test_Matrix_Exclude(t *testing.T) {
 	}{
 		"exact": {
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 			}},
 			[]*Exclude{
 				{
 					Mode:   pb.Scenario_Filter_Exclude_MODE_EXACTLY,
-					Vector: &Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+					Vector: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 				},
 				{
 					Mode:   pb.Scenario_Filter_Exclude_MODE_EXACTLY,
-					Vector: &Vector{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+					Vector: &Vector{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 				},
 			},
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
 			}},
 		},
 		"equal values": {
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 			}},
 			[]*Exclude{
 				{
 					Mode:   pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
-					Vector: &Vector{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+					Vector: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 				},
 				{
 					Mode:   pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
-					Vector: &Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}},
+					Vector: &Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}},
 				},
 			},
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 			}},
 		},
 		"match": {
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
-				{unordered: []Element{NewElement("backend", "consul"), NewElement("backend", "raft"), NewElement("backend", "mysql")}},
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "mysql"), NewElement("backend", "mssql")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft"), NewElement("backend", "mysql")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "mysql"), NewElement("backend", "mssql")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 			}},
 			[]*Exclude{
 				{
 					Mode:   pb.Scenario_Filter_Exclude_MODE_CONTAINS,
-					Vector: &Vector{unordered: []Element{NewElement("backend", "mysql")}},
+					Vector: &Vector{elements: []Element{NewElement("backend", "mysql")}},
 				},
 				{
 					Mode:   pb.Scenario_Filter_Exclude_MODE_CONTAINS,
-					Vector: &Vector{unordered: []Element{NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
+					Vector: &Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
 				},
 			},
 			&Matrix{Vectors: []*Vector{
-				{unordered: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
-				{unordered: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 			}},
 		},
 	} {

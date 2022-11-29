@@ -80,7 +80,7 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		if expected.Scenarios[i].Variants == nil {
 			require.Nil(t, fp.Scenarios[i].Variants)
 		} else {
-			require.EqualValues(t, expected.Scenarios[i].Variants.unordered, fp.Scenarios[i].Variants.unordered)
+			require.EqualValues(t, expected.Scenarios[i].Variants.elements, fp.Scenarios[i].Variants.elements)
 		}
 		require.Len(t, expected.Scenarios[i].Outputs, len(fp.Scenarios[i].Outputs))
 

@@ -27,12 +27,12 @@ func (sf *ScenarioFilter) String() string {
 		return str
 	}
 
-	for _, i := range sf.Include.unordered {
+	for _, i := range sf.Include.Elements() {
 		str = fmt.Sprintf("%s %s", str, i.String())
 	}
 
 	for _, e := range sf.Exclude {
-		for _, elm := range e.Vector.unordered {
+		for _, elm := range e.Vector.Elements() {
 			str = fmt.Sprintf("%s !%s:%s", str, elm.Key, elm.Val)
 		}
 	}

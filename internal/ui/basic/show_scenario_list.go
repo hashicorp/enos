@@ -15,7 +15,7 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 		scenario.FromRef(ref)
 
 		if i == 0 && scenario.Variants != nil {
-			for vi := range scenario.Variants.UnorderdElements() {
+			for vi := range scenario.Variants.Elements() {
 				if vi == 0 {
 					header = append(header, "variants")
 					continue
@@ -27,7 +27,7 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 
 		row := []string{scenario.Name}
 		if scenario.Variants != nil {
-			for _, elm := range scenario.Variants.UnorderdElements() {
+			for _, elm := range scenario.Variants.Elements() {
 				row = append(row, elm.String())
 			}
 			rows = append(rows, row)

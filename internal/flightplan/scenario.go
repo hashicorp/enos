@@ -53,7 +53,7 @@ func NewScenario() *Scenario {
 // String returns the scenario identifiers as a string
 func (s *Scenario) String() string {
 	str := s.Name
-	if s.Variants != nil && len(s.Variants.unordered) > 0 {
+	if s.Variants != nil && len(s.Variants.elements) > 0 {
 		str = fmt.Sprintf("%s %s", str, s.Variants.String())
 	}
 
@@ -95,7 +95,7 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 	}
 
 	// Make sure it matches any includes
-	if filter.Include != nil && len(filter.Include.unordered) > 0 {
+	if filter.Include != nil && len(filter.Include.elements) > 0 {
 		if !s.Variants.ContainsUnordered(filter.Include) {
 			return false
 		}

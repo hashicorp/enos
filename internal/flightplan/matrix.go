@@ -18,14 +18,14 @@ type Element struct {
 }
 
 // Vector is a collection of Matrix Elements. The Vector maintains orignal
-// ordering in the unordered Element array and optionally keeps a cached ordered
-// Element array for comparison operations.
+// ordering in the elements array and optionally keeps a cached sorted
+// array for comparison operations.
 type Vector struct {
-	// unordered list of elements
-	unordered []Element
-	// an ordered set of elements that we'll populate for some comparisons
-	ordered []Element
-	// whether or not our vector has been modified and needs to be reordered
+	// elements list of elements
+	elements []Element
+	// an sorted set of elements that we'll populate for some comparisons
+	sorted []Element
+	// whether or not our vector has been modified and needs to be resorted
 	// before some comparison operations.
 	dirty bool
 }
@@ -86,6 +86,19 @@ func (e Element) Proto() *pb.Scenario_Filter_Element {
 	return &pb.Scenario_Filter_Element{Key: e.Key, Value: e.Val}
 }
 
+// Equals compares the element with another
+func (e Element) Equal(other Element) bool {
+	if e.Key != other.Key {
+		return false
+	}
+
+	if e.Val != other.Val {
+		return false
+	}
+
+	return true
+}
+
 // NewElementFromProto creates a new Element from a proto filter element
 func NewElementFromProto(p *pb.Scenario_Filter_Element) Element {
 	return NewElement(p.GetKey(), p.GetValue())
@@ -98,7 +111,7 @@ func NewVector() *Vector {
 // String returns the vector as a string
 func (v *Vector) String() string {
 	elmStrings := []string{}
-	for _, elm := range v.unordered {
+	for _, elm := range v.elements {
 		elmStrings = append(elmStrings, elm.String())
 	}
 
@@ -107,20 +120,20 @@ func (v *Vector) String() string {
 
 // Equal returns true if both Vectors have Equal values and Equal value ordering
 func (v *Vector) Equal(other *Vector) bool {
-	if v.unordered == nil && other.unordered == nil {
+	if v.elements == nil && other.elements == nil {
 		return true
 	}
 
-	if v.unordered == nil || other.unordered == nil {
+	if v.elements == nil || other.elements == nil {
 		return false
 	}
 
-	if len(v.unordered) != len(other.unordered) {
+	if len(v.elements) != len(other.elements) {
 		return false
 	}
 
-	for i := range v.unordered {
-		if v.unordered[i] != other.unordered[i] {
+	for i := range v.elements {
+		if v.elements[i] != other.elements[i] {
 			return false
 		}
 	}
@@ -132,23 +145,23 @@ func (v *Vector) Equal(other *Vector) bool {
 // not be ordered the same. This is useful for Vectors of pairs that do not
 // enforce ordering.
 func (v *Vector) EqualUnordered(other *Vector) bool {
-	if v.unordered == nil && other.unordered == nil {
+	if v.elements == nil && other.elements == nil {
 		return true
 	}
 
-	if v.unordered == nil || other.unordered == nil {
+	if v.elements == nil || other.elements == nil {
 		return false
 	}
 
-	if len(v.unordered) != len(other.unordered) {
+	if len(v.elements) != len(other.elements) {
 		return false
 	}
 
-	v.reorder()
-	other.reorder()
+	v.sort()
+	other.sort()
 
-	for i := range v.ordered {
-		if v.ordered[i] != other.ordered[i] {
+	for i := range v.sorted {
+		if v.sorted[i] != other.sorted[i] {
 			return false
 		}
 	}
@@ -159,10 +172,10 @@ func (v *Vector) EqualUnordered(other *Vector) bool {
 // ContainsUnordered returns a boolean which represent if vector contains the values
 // of another vector.
 func (v *Vector) ContainsUnordered(other *Vector) bool {
-	for oi := range other.unordered {
+	for oi := range other.elements {
 		match := false
-		for vi := range v.unordered {
-			if other.unordered[oi].Key == v.unordered[vi].Key && other.unordered[oi].Val == v.unordered[vi].Val {
+		for vi := range v.elements {
+			if other.elements[oi].Equal(v.elements[vi]) {
 				match = true
 				break
 			}
@@ -179,7 +192,7 @@ func (v *Vector) ContainsUnordered(other *Vector) bool {
 // keys will be overwritten.
 func (v *Vector) CtyVal() cty.Value {
 	vals := map[string]cty.Value{}
-	for _, vec := range v.unordered {
+	for _, vec := range v.elements {
 		vals[vec.Key] = cty.StringVal(vec.Val)
 	}
 
@@ -190,11 +203,11 @@ func (v *Vector) CtyVal() cty.Value {
 func (v *Vector) Proto() *pb.Scenario_Filter_Vector {
 	pbv := &pb.Scenario_Filter_Vector{Elements: []*pb.Scenario_Filter_Element{}}
 
-	if v == nil || v.unordered == nil {
+	if v == nil || v.elements == nil {
 		return pbv
 	}
 
-	for _, elm := range v.unordered {
+	for _, elm := range v.elements {
 		pbv.Elements = append(pbv.Elements, &pb.Scenario_Filter_Element{
 			Key:   elm.Key,
 			Value: elm.Val,
@@ -206,74 +219,74 @@ func (v *Vector) Proto() *pb.Scenario_Filter_Vector {
 
 // Add adds an element to the Vector
 func (v *Vector) Add(e Element) {
-	if v.unordered == nil {
-		v.unordered = []Element{}
+	if v.elements == nil {
+		v.elements = []Element{}
 	}
 
-	v.unordered = append(v.unordered, e)
+	v.elements = append(v.elements, e)
 
-	if v.ordered != nil {
-		v.ordered = append(v.ordered, e)
+	if v.sorted != nil {
+		v.sorted = append(v.sorted, e)
 		v.dirty = true
 	}
 }
 
-// Copy creates a new copy of the Vector and all of the elements.
+// Copy creates a new Copy of the Vector
 func (v *Vector) Copy() *Vector {
 	vecC := NewVector()
 
-	if v.unordered == nil || len(v.unordered) == 0 {
+	if v.elements == nil || len(v.elements) == 0 {
 		return vecC
 	}
 
 	vecC.dirty = v.dirty
-	vecC.unordered = make([]Element, len(v.unordered))
-	copy(vecC.unordered, v.unordered)
+	vecC.elements = make([]Element, len(v.elements))
+	copy(vecC.elements, v.elements)
 
-	if v.ordered != nil && len(v.ordered) > 0 {
-		vecC.ordered = make([]Element, len(v.ordered))
-		copy(vecC.ordered, v.ordered)
+	if v.sorted != nil && len(v.sorted) > 0 {
+		vecC.sorted = make([]Element, len(v.sorted))
+		copy(vecC.sorted, v.sorted)
 	}
 
 	return vecC
 }
 
-// UnorderdElements returns a list of unordered elements
-func (v *Vector) UnorderdElements() []Element {
-	return v.unordered
+// Elements returns a list of the vectors elements
+func (v *Vector) Elements() []Element {
+	return v.elements
 }
 
-// OrderedElements returns a list of ordered elements
-func (v *Vector) OrderdElements() []Element {
-	v.reorder()
+// SortedElements returns a list of vectors elements that have been sorted.
+// This can be used for unordered comparisons.
+func (v *Vector) SortedElements() []Element {
+	v.sort()
 
-	return v.ordered
+	return v.sorted
 }
 
-// reorder reorders the ordered vector if necessary.
-func (v *Vector) reorder() {
-	if v.unordered == nil {
+func (v *Vector) sort() {
+	if v.elements == nil {
 		return
 	}
 
-	if v.ordered == nil {
+	if v.sorted == nil {
 		v.dirty = true
-		v.ordered = make([]Element, len(v.unordered))
-		copy(v.ordered, v.unordered)
+		v.sorted = make([]Element, len(v.elements))
+		copy(v.sorted, v.elements)
 	}
 
 	if !v.dirty {
 		return
 	}
 
-	sort.Slice(v.ordered, func(i, j int) bool {
-		return v.ordered[i].String() < v.ordered[j].String()
+	sort.Slice(v.sorted, func(i, j int) bool {
+		return v.sorted[i].String() < v.sorted[j].String()
 	})
 
 	v.dirty = false
 }
 
-// NewVectorFromProto takes a proto filter vector and returns a new Vector
+// NewVectorFromProto takes a proto filter vector and returns a new Vector.
 func NewVectorFromProto(pbv *pb.Scenario_Filter_Vector) *Vector {
 	v := NewVector()
 	for _, elm := range pbv.GetElements() {
@@ -282,14 +295,14 @@ func NewVectorFromProto(pbv *pb.Scenario_Filter_Vector) *Vector {
 	return v
 }
 
-// AddVector adds a vector the the matrix.
+// AddVector adds a vector the matrix.
 func (m *Matrix) AddVector(vec *Vector) {
-	if m.Vectors == nil {
-		m.Vectors = []*Vector{}
+	if vec == nil || len(vec.elements) == 0 {
+		return
 	}
 
-	if vec == nil || len(vec.unordered) == 0 {
-		return
+	if m.Vectors == nil {
+		m.Vectors = []*Vector{}
 	}
 
 	m.Vectors = append(m.Vectors, vec)
@@ -333,7 +346,7 @@ func (m *Matrix) CartesianProduct() *Matrix {
 		// for each Vector in our vector index.
 		vec := NewVector()
 		for i := 0; i < vlen; i++ {
-			vec.Add(m.Vectors[i].unordered[vecIdx[i]])
+			vec.Add(m.Vectors[i].elements[vecIdx[i]])
 		}
 		product.Vectors = append(product.Vectors, vec)
 
@@ -341,7 +354,7 @@ func (m *Matrix) CartesianProduct() *Matrix {
 		// we find a Vector's whose element index can be incremented.
 		next := vlen - 1
 		for {
-			if next >= 0 && (vecIdx[next]+1 >= len(m.Vectors[next].unordered)) {
+			if next >= 0 && (vecIdx[next]+1 >= len(m.Vectors[next].elements)) {
 				// We can't increment this Vector, keep walking back
 				next = next - 1
 			} else {

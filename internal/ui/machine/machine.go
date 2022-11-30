@@ -146,6 +146,14 @@ func (v *View) ShowVersion(all bool, res *pb.GetVersionResponse) error {
 	return status.GetVersion(res)
 }
 
+// ShowScenariosValidateConfig shows the validation response
+func (v *View) ShowScenariosValidateConfig(res *pb.ValidateScenariosConfigurationResponse) error {
+	if err := v.write(res); err != nil {
+		return err
+	}
+	return status.ScenariosValidateConfig(v.settings.GetFailOnWarnings(), res)
+}
+
 // ShowScenarioList shows the a list of scenarios
 func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	if err := v.write(res); err != nil {

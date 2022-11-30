@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// Test_ScenarioFilter_WithScenarioFilterFromScenarioRef tests selecting
-// scenarios based
+// Test_ScenarioFilter_WithScenarioFilterFromScenarioRef tests filtering a
+// scenario that was created from a scenario reference.
 func Test_ScenarioFilter_WithScenarioFilterFromScenarioRe(t *testing.T) {
 	ref := &pb.Ref_Scenario{
 		Id: &pb.Scenario_ID{
@@ -24,19 +24,19 @@ func Test_ScenarioFilter_WithScenarioFilterFromScenarioRe(t *testing.T) {
 	}
 	expected := &ScenarioFilter{
 		Name: "foo",
-		Include: Vector{
+		Include: &Vector{elements: []Element{
 			NewElement("backend", "raft"),
 			NewElement("cloud", "aws"),
-		},
+		}},
 	}
 	sf, err := NewScenarioFilter(WithScenarioFilterFromScenarioRef(ref))
 	require.NoError(t, err)
 	require.Equal(t, expected.Name, sf.Name)
-	require.Len(t, sf.Include, 2)
-	require.Equal(t, expected.Include[0].Key, sf.Include[0].Key)
-	require.Equal(t, expected.Include[0].Val, sf.Include[0].Val)
-	require.Equal(t, expected.Include[1].Key, sf.Include[1].Key)
-	require.Equal(t, expected.Include[1].Val, sf.Include[1].Val)
+	require.Len(t, sf.Include.elements, 2)
+	require.Equal(t, expected.Include.elements[0].Key, sf.Include.elements[0].Key)
+	require.Equal(t, expected.Include.elements[0].Val, sf.Include.elements[0].Val)
+	require.Equal(t, expected.Include.elements[1].Key, sf.Include.elements[1].Key)
+	require.Equal(t, expected.Include.elements[1].Val, sf.Include.elements[1].Val)
 }
 
 // Test_ScenarioFilter_ScenariosSelect tests that a flight plan returns the
@@ -45,14 +45,14 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []*Scenario{
-		{Name: "fresh-install", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
-		{Name: "fresh-install", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-		{Name: "fresh-install", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
-		{Name: "fresh-install", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
-		{Name: "upgrade", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
-		{Name: "upgrade", Variants: Vector{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-		{Name: "upgrade", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
-		{Name: "upgrade", Variants: Vector{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+		{Name: "fresh-install", Variants: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}}},
+		{Name: "fresh-install", Variants: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}}},
+		{Name: "fresh-install", Variants: &Vector{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}}},
+		{Name: "fresh-install", Variants: &Vector{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}}},
+		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}}},
+		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}}},
+		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}}},
+		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}}},
 	}
 
 	for _, test := range []struct {
@@ -83,9 +83,9 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			"variant with no name",
 			scenarios,
 			&ScenarioFilter{
-				Include: Vector{NewElement("backend", "consul")},
+				Include: &Vector{elements: []Element{NewElement("backend", "consul")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "arm64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "arm64")}}},
 				},
 			},
 			[]*Scenario{scenarios[3], scenarios[7]},
@@ -95,9 +95,9 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			scenarios,
 			&ScenarioFilter{
 				Name:    "upgrade",
-				Include: Vector{NewElement("backend", "raft")},
+				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "amd64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "amd64")}}},
 				},
 			},
 			[]*Scenario{scenarios[4]},
@@ -107,7 +107,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			scenarios,
 			&ScenarioFilter{
 				Name:    "upgrade",
-				Include: Vector{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("edition", "ent")},
+				Include: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("edition", "ent")}},
 			},
 			[]*Scenario{},
 		},
@@ -134,21 +134,27 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 		{
 			"blank filter",
 			[]string{},
-			&ScenarioFilter{SelectAll: true},
+			&ScenarioFilter{
+				SelectAll: true,
+				Include:   &Vector{},
+			},
 		},
 		{
 			"filter with only name",
 			[]string{"test"},
-			&ScenarioFilter{Name: "test"},
+			&ScenarioFilter{
+				Name:    "test",
+				Include: &Vector{},
+			},
 		},
 		{
 			"filter with name and variants",
 			[]string{"test", "backend:consul", "!arch:arm64"},
 			&ScenarioFilter{
 				Name:    "test",
-				Include: Vector{NewElement("backend", "consul")},
+				Include: &Vector{elements: []Element{NewElement("backend", "consul")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "arm64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "arm64")}}},
 				},
 			},
 		},
@@ -156,9 +162,9 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			"filter with no name and variants",
 			[]string{"!arch:amd64", "backend:raft"},
 			&ScenarioFilter{
-				Include: Vector{NewElement("backend", "raft")},
+				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{NewElement("arch", "amd64")}},
+					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "amd64")}}},
 				},
 			},
 		},

@@ -12,23 +12,34 @@ import (
 
 // An Element is an Element of a Matrix Vector
 type Element struct {
-	Key string
-	Val string
+	Key             string
+	Val             string
+	formattedString string // cached version of the element as a string
 }
 
-// Vector is a collection of Matrix Elements.
-type Vector []Element
+// Vector is a collection of Matrix Elements. The Vector maintains orignal
+// ordering in the elements array and optionally keeps a cached sorted
+// array for comparison operations.
+type Vector struct {
+	// elements list of elements
+	elements []Element
+	// an sorted set of elements that we'll populate for some comparisons
+	sorted []Element
+	// whether or not our vector has been modified and needs to be resorted
+	// before some comparison operations.
+	dirty bool
+}
 
 // A Matrix contains an slice of Vectors. The collection of Vectors can be
 // used to form a regular or irregular Matrix.
 type Matrix struct {
-	Vectors []Vector
+	Vectors []*Vector
 }
 
 // An Exclude is a filter to removing Elements from the Matrix's Vector combined
 type Exclude struct {
 	Mode   pb.Scenario_Filter_Exclude_Mode
-	Vector Vector
+	Vector *Vector
 }
 
 // NewElement takes an element key and value and returns a new Element
@@ -41,9 +52,9 @@ func NewMatrix() *Matrix {
 	return &Matrix{}
 }
 
-// NewExclude takes an ExcludeMode and Vector, validates the ExcludeMode and return
-// a pointer to a new instance of Exclude and any errors encountered.
-func NewExclude(mode pb.Scenario_Filter_Exclude_Mode, vec Vector) (*Exclude, error) {
+// NewExclude takes an ExcludeMode and Vector, validates the ExcludeMode and
+// return a pointer to a new instance of Exclude and any errors encountered.
+func NewExclude(mode pb.Scenario_Filter_Exclude_Mode, vec *Vector) (*Exclude, error) {
 	ex := &Exclude{Mode: mode, Vector: vec}
 
 	switch mode {
@@ -59,7 +70,15 @@ func NewExclude(mode pb.Scenario_Filter_Exclude_Mode, vec Vector) (*Exclude, err
 
 // String returns the element as a string
 func (e Element) String() string {
-	return fmt.Sprintf("%s:%s", e.Key, e.Val)
+	// Matrix and vector comparison operations often required the element as
+	// a string. We'll cache it to speed up those operations.
+	if e.formattedString != "" {
+		return e.formattedString
+	}
+
+	e.formattedString = fmt.Sprintf("%s:%s", e.Key, e.Val)
+
+	return e.formattedString
 }
 
 // Proto returns the element as a proto message
@@ -67,15 +86,32 @@ func (e Element) Proto() *pb.Scenario_Filter_Element {
 	return &pb.Scenario_Filter_Element{Key: e.Key, Value: e.Val}
 }
 
+// Equals compares the element with another
+func (e Element) Equal(other Element) bool {
+	if e.Key != other.Key {
+		return false
+	}
+
+	if e.Val != other.Val {
+		return false
+	}
+
+	return true
+}
+
 // NewElementFromProto creates a new Element from a proto filter element
 func NewElementFromProto(p *pb.Scenario_Filter_Element) Element {
 	return NewElement(p.GetKey(), p.GetValue())
 }
 
+func NewVector() *Vector {
+	return &Vector{}
+}
+
 // String returns the vector as a string
-func (v Vector) String() string {
+func (v *Vector) String() string {
 	elmStrings := []string{}
-	for _, elm := range v {
+	for _, elm := range v.elements {
 		elmStrings = append(elmStrings, elm.String())
 	}
 
@@ -83,13 +119,21 @@ func (v Vector) String() string {
 }
 
 // Equal returns true if both Vectors have Equal values and Equal value ordering
-func (v Vector) Equal(other Vector) bool {
-	if len(v) != len(other) {
+func (v *Vector) Equal(other *Vector) bool {
+	if v.elements == nil && other.elements == nil {
+		return true
+	}
+
+	if v.elements == nil || other.elements == nil {
 		return false
 	}
 
-	for i, ve := range v {
-		if ve != other[i] {
+	if len(v.elements) != len(other.elements) {
+		return false
+	}
+
+	for i := range v.elements {
+		if v.elements[i] != other.elements[i] {
 			return false
 		}
 	}
@@ -100,37 +144,38 @@ func (v Vector) Equal(other Vector) bool {
 // EqualUnordered returns true if both Vectors have the same Elements but might
 // not be ordered the same. This is useful for Vectors of pairs that do not
 // enforce ordering.
-func (v Vector) EqualUnordered(other Vector) bool {
-	if len(v) != len(other) {
+func (v *Vector) EqualUnordered(other *Vector) bool {
+	if v.elements == nil && other.elements == nil {
+		return true
+	}
+
+	if v.elements == nil || other.elements == nil {
 		return false
 	}
 
-	// Go slice values are header references to backing arrays. As such, we need
-	// to make copies of each Vector because sorting them without copying them
-	// to new memory will modify the backing arrays.
-	vC := make(Vector, len(v))
-	copy(vC, v)
+	if len(v.elements) != len(other.elements) {
+		return false
+	}
 
-	otherC := make(Vector, len(other))
-	copy(otherC, other)
+	v.sort()
+	other.sort()
 
-	sort.Slice(vC, func(i, j int) bool {
-		return vC[i].String() < vC[j].String()
-	})
-	sort.Slice(otherC, func(i, j int) bool {
-		return otherC[i].String() < otherC[j].String()
-	})
+	for i := range v.sorted {
+		if v.sorted[i] != other.sorted[i] {
+			return false
+		}
+	}
 
-	return vC.Equal(otherC)
+	return true
 }
 
 // ContainsUnordered returns a boolean which represent if vector contains the values
 // of another vector.
-func (v Vector) ContainsUnordered(other Vector) bool {
-	for _, otherElm := range other {
+func (v *Vector) ContainsUnordered(other *Vector) bool {
+	for oi := range other.elements {
 		match := false
-		for _, elm := range v {
-			if otherElm.Key == elm.Key && otherElm.Val == elm.Val {
+		for vi := range v.elements {
+			if other.elements[oi].Equal(v.elements[vi]) {
 				match = true
 				break
 			}
@@ -145,9 +190,9 @@ func (v Vector) ContainsUnordered(other Vector) bool {
 
 // CtyVal returns the vector as a cty.Value. Note that this is lossy as duplicate
 // keys will be overwritten.
-func (v Vector) CtyVal() cty.Value {
+func (v *Vector) CtyVal() cty.Value {
 	vals := map[string]cty.Value{}
-	for _, vec := range v {
+	for _, vec := range v.elements {
 		vals[vec.Key] = cty.StringVal(vec.Val)
 	}
 
@@ -155,10 +200,14 @@ func (v Vector) CtyVal() cty.Value {
 }
 
 // Proto returns the vector as a proto message
-func (v Vector) Proto() *pb.Scenario_Filter_Vector {
+func (v *Vector) Proto() *pb.Scenario_Filter_Vector {
 	pbv := &pb.Scenario_Filter_Vector{Elements: []*pb.Scenario_Filter_Element{}}
 
-	for _, elm := range v {
+	if v == nil || v.elements == nil {
+		return pbv
+	}
+
+	for _, elm := range v.elements {
 		pbv.Elements = append(pbv.Elements, &pb.Scenario_Filter_Element{
 			Key:   elm.Key,
 			Value: elm.Val,
@@ -168,30 +217,95 @@ func (v Vector) Proto() *pb.Scenario_Filter_Vector {
 	return pbv
 }
 
-// NewVectorFromProto takes a proto filter vector and returns a new Vector
-func NewVectorFromProto(pbv *pb.Scenario_Filter_Vector) Vector {
-	v := Vector{}
+// Add adds an element to the Vector
+func (v *Vector) Add(e Element) {
+	if v.elements == nil {
+		v.elements = []Element{}
+	}
+
+	v.elements = append(v.elements, e)
+
+	if v.sorted != nil {
+		v.sorted = append(v.sorted, e)
+		v.dirty = true
+	}
+}
+
+// Copy creates a new Copy of the Vector
+func (v *Vector) Copy() *Vector {
+	vecC := NewVector()
+
+	if v.elements == nil || len(v.elements) == 0 {
+		return vecC
+	}
+
+	vecC.dirty = v.dirty
+	vecC.elements = make([]Element, len(v.elements))
+	copy(vecC.elements, v.elements)
+
+	if v.sorted != nil && len(v.sorted) > 0 {
+		vecC.sorted = make([]Element, len(v.sorted))
+		copy(vecC.sorted, v.sorted)
+	}
+
+	return vecC
+}
+
+// Elements returns a list of the vectors elements
+func (v *Vector) Elements() []Element {
+	return v.elements
+}
+
+// SortedElements returns a list of vectors elements that have been sorted.
+// This can be used for unordered comparisons.
+func (v *Vector) SortedElements() []Element {
+	v.sort()
+
+	return v.sorted
+}
+
+func (v *Vector) sort() {
+	if v.elements == nil {
+		return
+	}
+
+	if v.sorted == nil {
+		v.dirty = true
+		v.sorted = make([]Element, len(v.elements))
+		copy(v.sorted, v.elements)
+	}
+
+	if !v.dirty {
+		return
+	}
+
+	sort.Slice(v.sorted, func(i, j int) bool {
+		return v.sorted[i].String() < v.sorted[j].String()
+	})
+
+	v.dirty = false
+}
+
+// NewVectorFromProto takes a proto filter vector and returns a new Vector.
+func NewVectorFromProto(pbv *pb.Scenario_Filter_Vector) *Vector {
+	v := NewVector()
 	for _, elm := range pbv.GetElements() {
-		v = append(v, NewElement(elm.GetKey(), elm.GetValue()))
+		v.Add(NewElement(elm.GetKey(), elm.GetValue()))
 	}
 	return v
 }
 
-// AddVector adds a vector the the matrix.
-func (m *Matrix) AddVector(vec Vector) {
-	if m.Vectors == nil {
-		m.Vectors = []Vector{}
-	}
-
-	if len(vec) == 0 {
+// AddVector adds a vector the matrix.
+func (m *Matrix) AddVector(vec *Vector) {
+	if vec == nil || len(vec.elements) == 0 {
 		return
 	}
 
-	// Always make a copy of each Vector so we don't accidentally refer to the
-	// same backing array when adding a Vector from one Matrix to another.
-	vecC := make(Vector, len(vec))
-	copy(vecC, vec)
-	m.Vectors = append(m.Vectors, vecC)
+	if m.Vectors == nil {
+		m.Vectors = []*Vector{}
+	}
+
+	m.Vectors = append(m.Vectors, vec)
 }
 
 // Exclude takes exclude vararg exclude directives as instances of Exclude. It
@@ -230,9 +344,9 @@ func (m *Matrix) CartesianProduct() *Matrix {
 	for {
 		// Create our next product Vector by reading our Element index address
 		// for each Vector in our vector index.
-		vec := Vector{}
+		vec := NewVector()
 		for i := 0; i < vlen; i++ {
-			vec = append(vec, m.Vectors[i][vecIdx[i]])
+			vec.Add(m.Vectors[i].elements[vecIdx[i]])
 		}
 		product.Vectors = append(product.Vectors, vec)
 
@@ -240,7 +354,7 @@ func (m *Matrix) CartesianProduct() *Matrix {
 		// we find a Vector's whose element index can be incremented.
 		next := vlen - 1
 		for {
-			if next >= 0 && (vecIdx[next]+1 >= len(m.Vectors[next])) {
+			if next >= 0 && (vecIdx[next]+1 >= len(m.Vectors[next].elements)) {
 				// We can't increment this Vector, keep walking back
 				next = next - 1
 			} else {
@@ -269,7 +383,7 @@ func (m *Matrix) CartesianProduct() *Matrix {
 
 // HasVector returns whether or not a matrix has a vector that exactly matches
 // the elements of another that is given.
-func (m *Matrix) HasVector(other Vector) bool {
+func (m *Matrix) HasVector(other *Vector) bool {
 	for _, v := range m.Vectors {
 		if v.Equal(other) {
 			return true
@@ -281,7 +395,7 @@ func (m *Matrix) HasVector(other Vector) bool {
 
 // HasVectorUnordered returns whether or not a matrix has a vector whose unordered
 // values match exactly with another that is given.
-func (m *Matrix) HasVectorUnordered(other Vector) bool {
+func (m *Matrix) HasVectorUnordered(other *Vector) bool {
 	for _, v := range m.Vectors {
 		if v.EqualUnordered(other) {
 			return true
@@ -316,7 +430,7 @@ func (m *Matrix) UniqueValues() *Matrix {
 }
 
 // Match determines if Exclude directive matches the vector
-func (ex *Exclude) Match(vec Vector) bool {
+func (ex *Exclude) Match(vec *Vector) bool {
 	switch ex.Mode {
 	case pb.Scenario_Filter_Exclude_MODE_EXACTLY:
 		if vec.Equal(ex.Vector) {

@@ -27,6 +27,7 @@ type View interface {
 	ShowScenarioList(*pb.ListScenariosResponse) error
 	ShowDecode(*pb.DecodeResponse, bool) error
 	ShowOutput(*pb.OperationResponses) error
+	ShowScenariosValidateConfig(*pb.ValidateScenariosConfigurationResponse) error
 	ShowOperationEvent(*pb.Operation_Event)
 	ShowOperationResponse(*pb.Operation_Response) error
 	ShowOperationResponses(*pb.OperationResponses) error

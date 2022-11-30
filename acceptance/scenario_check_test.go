@@ -127,7 +127,7 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 			path, err := filepath.Abs(filepath.Join("./scenarios", "scenario_generate_has_warnings"))
 			require.NoError(t, err)
 
-			cmd := fmt.Sprintf("scenario validate --chdir %s --out %s --format json", path, outDir)
+			cmd := fmt.Sprintf("scenario check --chdir %s --out %s --format json", path, outDir)
 			if failOnWarnings {
 				cmd = fmt.Sprintf("%s --fail-on-warnings", cmd)
 			}

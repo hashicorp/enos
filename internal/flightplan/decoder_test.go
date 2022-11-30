@@ -32,7 +32,11 @@ func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error)
 	t.Helper()
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
-	decoder, err := NewDecoder(WithDecoderBaseDir(cwd), WithDecoderEnv(env))
+	decoder, err := NewDecoder(
+		WithDecoderBaseDir(cwd),
+		WithDecoderEnv(env),
+		WithDecoderDecodeMode(DecodeModeFull),
+	)
 	require.NoError(t, err)
 	_, diags := decoder.FPParser.ParseHCL(hcl, "decoder-test.hcl")
 	require.False(t, diags.HasErrors(), testDiagsToError(decoder.ParserFiles(), diags))
@@ -73,7 +77,11 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		require.EqualValues(t, expected.Scenarios[i].Name, fp.Scenarios[i].Name)
 		require.EqualValues(t, expected.Scenarios[i].TerraformSetting, fp.Scenarios[i].TerraformSetting)
 		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
-		require.EqualValues(t, expected.Scenarios[i].Variants, fp.Scenarios[i].Variants)
+		if expected.Scenarios[i].Variants == nil {
+			require.Nil(t, fp.Scenarios[i].Variants)
+		} else {
+			require.EqualValues(t, expected.Scenarios[i].Variants.elements, fp.Scenarios[i].Variants.elements)
+		}
 		require.Len(t, expected.Scenarios[i].Outputs, len(fp.Scenarios[i].Outputs))
 
 		if len(fp.Scenarios[i].Outputs) > 0 {

@@ -10,25 +10,29 @@ import (
 // ScenarioFilter is a filter for scenarios
 type ScenarioFilter struct {
 	Name      string
-	Include   Vector
+	Include   *Vector
 	Exclude   []*Exclude
 	SelectAll bool
 }
 
 // String returns the scenario filter as a string
 func (sf *ScenarioFilter) String() string {
+	if sf == nil {
+		return ""
+	}
+
 	str := sf.Name
 
 	if sf.SelectAll {
 		return str
 	}
 
-	for _, i := range sf.Include {
+	for _, i := range sf.Include.Elements() {
 		str = fmt.Sprintf("%s %s", str, i.String())
 	}
 
 	for _, e := range sf.Exclude {
-		for _, elm := range e.Vector {
+		for _, elm := range e.Vector.Elements() {
 			str = fmt.Sprintf("%s !%s:%s", str, elm.Key, elm.Val)
 		}
 	}
@@ -41,7 +45,9 @@ type ScenarioFilterOpt func(*ScenarioFilter) error
 
 // NewScenarioFilter takes in options and returns a new filter
 func NewScenarioFilter(opts ...ScenarioFilterOpt) (*ScenarioFilter, error) {
-	f := &ScenarioFilter{}
+	f := &ScenarioFilter{
+		Include: NewVector(),
+	}
 
 	for _, opt := range opts {
 		err := opt(f)
@@ -71,7 +77,7 @@ func WithScenarioFilterSelectAll() ScenarioFilterOpt {
 
 // WithScenarioFilterMatchingVariants makes the filter select only scenarios with
 // variants that match the given values.
-func WithScenarioFilterMatchingVariants(vec Vector) ScenarioFilterOpt {
+func WithScenarioFilterMatchingVariants(vec *Vector) ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		f.Include = vec
 		return nil
@@ -115,7 +121,10 @@ func WithScenarioFilterFromScenarioRef(ref *pb.Ref_Scenario) ScenarioFilterOpt {
 // ParseScenarioFilter takes command arguments that have been split by spaces
 // and validates that they are composed of a valid scenario filter.
 func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
-	f := &ScenarioFilter{}
+	f, err := NewScenarioFilter()
+	if err != nil {
+		return nil, err
+	}
 
 	// No filter args means everything
 	if len(args) == 0 {
@@ -143,9 +152,10 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 		// Determine if it's an inclusive or exclusive filter
 		if strings.HasPrefix(parts[0], "!") {
 			// It's an exclude filter
-			ex, err := NewExclude(pb.Scenario_Filter_Exclude_MODE_CONTAINS, Vector{
-				NewElement(strings.TrimPrefix(parts[0], "!"), parts[1]),
-			})
+
+			vec := NewVector()
+			vec.Add(NewElement(strings.TrimPrefix(parts[0], "!"), parts[1]))
+			ex, err := NewExclude(pb.Scenario_Filter_Exclude_MODE_CONTAINS, vec)
 			if err != nil {
 				return f, fmt.Errorf("invalid variant filter: %w", err)
 			}
@@ -154,7 +164,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 		}
 
 		// It's an include filter
-		f.Include = append(f.Include, NewElement(parts[0], parts[1]))
+		f.Include.Add(NewElement(parts[0], parts[1]))
 	}
 
 	return f, nil
@@ -218,29 +228,7 @@ func (fp *FlightPlan) ScenariosSelect(f *ScenarioFilter) []*Scenario {
 
 	scenarios := []*Scenario{}
 	for _, s := range fp.Scenarios {
-		// Get scenarios that match our name
-		if f.Name != "" && f.Name != s.Name {
-			// Our name doesn't match the filter name
-			continue
-		}
-
-		// Make sure it matches any includes
-		if len(f.Include) > 0 {
-			if !s.Variants.ContainsUnordered(f.Include) {
-				// Our scenario variants don't include all of the required elements
-				continue
-			}
-		}
-
-		skip := false
-		for _, ex := range f.Exclude {
-			if ex.Match(s.Variants) {
-				skip = true
-				break
-			}
-		}
-		if skip {
-			// We matched an exclusion
+		if !s.Match(f) {
 			continue
 		}
 

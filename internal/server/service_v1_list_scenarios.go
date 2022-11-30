@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
+	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -17,7 +18,11 @@ func (s *ServiceV1) ListScenarios(
 ) {
 	res := &pb.ListScenariosResponse{}
 
-	scenarios, decRes := decodeAndFilter(req.GetWorkspace().GetFlightplan(), req.GetFilter())
+	fp, decRes := decodeFlightPlan(
+		req.GetWorkspace().GetFlightplan(),
+		flightplan.DecodeModeRef,
+		req.GetFilter(),
+	)
 	res.Decode = decRes
 	if diagnostics.HasFailed(
 		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
@@ -26,9 +31,9 @@ func (s *ServiceV1) ListScenarios(
 		return res, nil
 	}
 
-	if len(scenarios) > 0 {
+	if len(fp.Scenarios) > 0 {
 		res.Scenarios = []*pb.Ref_Scenario{}
-		for _, s := range scenarios {
+		for _, s := range fp.Scenarios {
 			res.Scenarios = append(res.Scenarios, s.Ref())
 		}
 	}

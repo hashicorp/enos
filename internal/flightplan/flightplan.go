@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
@@ -95,57 +94,6 @@ type FlightPlan struct {
 	Providers         []*Provider
 	Scenarios         []*Scenario
 	Modules           []*Module
-}
-
-// Decode takes a base eval content and HCL body and decodes it in chunks,
-// continually expanding the evaluation context as more sub-sections are
-// decoded. It returns HCL diagnostics that are collected over the course of
-// decoding.
-func (fp *FlightPlan) Decode(
-	ctx *hcl.EvalContext,
-	fpFiles map[string]*hcl.File,
-	varsFiles map[string]*hcl.File,
-	envVars []string,
-) hcl.Diagnostics {
-	var diags hcl.Diagnostics
-
-	if fp.BaseDir == "" {
-		return diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "unable to decode flight plan without a base directory",
-		})
-	}
-
-	if ctx == nil {
-		ctx = &hcl.EvalContext{
-			Variables: map[string]cty.Value{},
-			Functions: map[string]function.Function{},
-		}
-	}
-
-	// Create a "unified" body of all flightplan files to use for decoding
-	files := []*hcl.File{}
-	for _, file := range fpFiles {
-		files = append(files, file)
-	}
-	body := hcl.MergeFiles(files)
-
-	// Decode our top-level schema
-	fp.BodyContent, diags = body.Content(flightPlanSchema)
-
-	// Decode and validate our variables. They'll be added to eval context for
-	// access in later decoding.
-	diags = diags.Extend(fp.decodeVariables(ctx, varsFiles, envVars))
-
-	// Decode child blocks. Each child block decoder is responsible for
-	// extending the evaluation context.
-	diags = diags.Extend(fp.decodeTerraformSettings(ctx))
-	diags = diags.Extend(fp.decodeTerraformCLIs(ctx))
-	diags = diags.Extend(fp.decodeProviders(ctx))
-	diags = diags.Extend(fp.decodeModules(ctx))
-	diags = diags.Extend(fp.decodeScenarios(ctx))
-
-	return diags
 }
 
 // decodeVariables decodes "variable" blocks that are defined in the
@@ -413,9 +361,65 @@ func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
 	return diags
 }
 
+// decodeScenario decodes a single scenario block according to the mode and
+// filter. It returns whether or not it matched any filters if the mode calls
+// for filtering and any diagnostics encountered.
+func decodeScenario(
+	ctx *hcl.EvalContext,
+	block *hcl.Block,
+	scenario *Scenario,
+	mode DecodeMode,
+	filter *ScenarioFilter,
+) (bool, hcl.Diagnostics) {
+	switch mode {
+	case DecodeModeRef:
+		diags := scenario.decode(block, ctx.NewChild(), DecodeModeRef)
+		if diags.HasErrors() {
+			return false, diags
+		}
+
+		// If we have a filter make sure it matched
+		if filter.String() != "" && !scenario.Match(filter) {
+			return false, diags
+		}
+
+		return true, diags
+	case DecodeModeFull:
+		// If we don't have a filter with configuration we'll decode it immediately
+		if filter.String() == "" {
+			return true, scenario.decode(block, ctx.NewChild(), DecodeModeFull)
+		}
+
+		// Decode it shallow and see if it matched the filter
+		matched, diags := decodeScenario(ctx.NewChild(), block, scenario, DecodeModeRef, filter)
+		if !matched || diags.HasErrors() {
+			return matched, diags
+		}
+
+		// We have a match so fully decode it
+		moreDiags := scenario.decode(block, ctx.NewChild(), DecodeModeFull)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
+			return false, diags
+		}
+
+		return true, diags
+	default:
+		var diags hcl.Diagnostics
+		return false, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  fmt.Sprintf("unknown filter mode %d", mode),
+		})
+	}
+}
+
 // decodeScenarios decodes the "scenario" blocks that are defined in the
 // top-level schema.
-func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
+func (fp *FlightPlan) decodeScenarios(
+	ctx *hcl.EvalContext,
+	mode DecodeMode,
+	filter *ScenarioFilter,
+) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeScenario) {
@@ -435,12 +439,17 @@ func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
 		if matrix == nil || len(matrix.Vectors) == 0 {
 			// Our scenario doesn't include a matrix
 			scenario := NewScenario()
-			moreDiags = scenario.decode(block, ctx.NewChild())
+
+			keep, moreDiags := decodeScenario(ctx, block, scenario, mode, filter)
 			diags = diags.Extend(moreDiags)
 			if moreDiags.HasErrors() {
-				return diags
+				continue
 			}
-			fp.Scenarios = append(fp.Scenarios, scenario)
+
+			if keep {
+				fp.Scenarios = append(fp.Scenarios, scenario)
+			}
+
 			continue
 		}
 
@@ -452,7 +461,8 @@ func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
 			matrixCtx.Variables = map[string]cty.Value{
 				"matrix": vec.CtyVal(),
 			}
-			moreDiags = scenario.decode(block, matrixCtx)
+
+			keep, moreDiags := decodeScenario(matrixCtx, block, scenario, mode, filter)
 			diags = diags.Extend(moreDiags)
 			if moreDiags.HasErrors() {
 				// Exit early rather than continuing to decode all scenarios.
@@ -462,8 +472,11 @@ func (fp *FlightPlan) decodeScenarios(ctx *hcl.EvalContext) hcl.Diagnostics {
 				return diags
 			}
 
-			fp.Scenarios = append(fp.Scenarios, scenario)
+			if keep {
+				fp.Scenarios = append(fp.Scenarios, scenario)
+			}
 		}
+
 	}
 
 	sort.Slice(fp.Scenarios, func(i, j int) bool {
@@ -504,9 +517,9 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 	block = mBlocks[0]
 	matrix := NewMatrix()
 
-	decodeMatrixAttribute := func(block *hcl.Block, attr *hcl.Attribute) (Vector, hcl.Diagnostics) {
+	decodeMatrixAttribute := func(block *hcl.Block, attr *hcl.Attribute) (*Vector, hcl.Diagnostics) {
 		var diags hcl.Diagnostics
-		vec := Vector{}
+		vec := NewVector()
 
 		val, moreDiags := attr.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
@@ -544,7 +557,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				})
 			}
 
-			vec = append(vec, NewElement(attr.Name, elm.AsString()))
+			vec.Add(NewElement(attr.Name, elm.AsString()))
 		}
 
 		return vec, diags

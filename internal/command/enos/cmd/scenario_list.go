@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"context"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -24,7 +21,7 @@ func newScenarioListCmd() *cobra.Command {
 
 // runScenarioListCmd runs a scenario list
 func runScenarioListCmd(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()
 
 	sf, err := flightplan.ParseScenarioFilter(args)

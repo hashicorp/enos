@@ -14,6 +14,16 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
+// DecodeMode determines the method of flight plan decoding.
+type DecodeMode int
+
+const (
+	// Decode and fully evaluate the entire flight plan
+	DecodeModeFull = iota
+	// Decode scenarios to the reference level
+	DecodeModeRef
+)
+
 // DecoderOpt is a functional option for a new flight plan
 type DecoderOpt func(*Decoder) error
 
@@ -67,6 +77,22 @@ func WithDecoderBaseDir(path string) DecoderOpt {
 	}
 }
 
+// WithDecoderDecodeMode sets the decoding mode
+func WithDecoderDecodeMode(mode DecodeMode) DecoderOpt {
+	return func(fp *Decoder) error {
+		fp.mode = mode
+		return nil
+	}
+}
+
+// WithDecoderScenarioFilter sets the scenario decoding filter
+func WithDecoderScenarioFilter(filter *ScenarioFilter) DecoderOpt {
+	return func(fp *Decoder) error {
+		fp.filter = filter
+		return nil
+	}
+}
+
 // Decoder is our Enos flight plan, or, our representation of the HCL file(s)
 // an author has composed.
 type Decoder struct {
@@ -76,6 +102,8 @@ type Decoder struct {
 	varFiles   RawFiles
 	varEnvVars []string
 	dir        string
+	mode       DecodeMode
+	filter     *ScenarioFilter
 }
 
 // Parse locates enos configuration files and parses them.
@@ -225,12 +253,45 @@ func (d *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 		})
 	}
 
-	return fp, diags.Extend(
-		fp.Decode(
-			d.baseEvalContext(),
-			d.FPParser.Files(),
-			d.VarsParser.Files(),
-			d.varEnvVars,
-		),
-	)
+	if fp.BaseDir == "" {
+		return fp, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "unable to decode flight plan without a base directory",
+		})
+	}
+
+	ctx := d.baseEvalContext()
+	if ctx == nil {
+		ctx = &hcl.EvalContext{
+			Variables: map[string]cty.Value{},
+			Functions: map[string]function.Function{},
+		}
+	}
+
+	fpFiles := d.FPParser.Files()
+	varsFiles := d.VarsParser.Files()
+
+	// Create a "unified" body of all flightplan files to use for decoding
+	files := []*hcl.File{}
+	for _, file := range fpFiles {
+		files = append(files, file)
+	}
+	body := hcl.MergeFiles(files)
+
+	// Decode our top-level schema
+	fp.BodyContent, diags = body.Content(flightPlanSchema)
+
+	// Decode and validate our variables. They'll be added to eval context for
+	// access in later decoding.
+	diags = diags.Extend(fp.decodeVariables(ctx, varsFiles, d.varEnvVars))
+
+	// Decode child blocks. Each child block decoder is responsible for
+	// extending the evaluation context.
+	diags = diags.Extend(fp.decodeTerraformSettings(ctx))
+	diags = diags.Extend(fp.decodeTerraformCLIs(ctx))
+	diags = diags.Extend(fp.decodeProviders(ctx))
+	diags = diags.Extend(fp.decodeModules(ctx))
+	diags = diags.Extend(fp.decodeScenarios(ctx, d.mode, d.filter))
+
+	return fp, diags
 }

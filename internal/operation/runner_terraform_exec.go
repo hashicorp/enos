@@ -65,8 +65,6 @@ func (r *Runner) terraformExec(
 	res.SubCommand = r.TFConfig.ExecSubCmd
 	res.Stdout = stdout.String()
 	res.Stderr = execOut.Stderr.String()
-	res.Diagnostics = diagnostics.FromErr(err)
-
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res

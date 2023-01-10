@@ -61,7 +61,6 @@ func (r *Runner) terraformApply(
 	tf.SetStderr(applyOut.Stderr)
 	err = tf.Apply(ctx, r.TFConfig.ApplyOptions()...)
 	res.Stderr = applyOut.Stderr.String()
-	res.Diagnostics = diagnostics.FromErr(err)
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 		return res

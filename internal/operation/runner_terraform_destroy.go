@@ -82,7 +82,6 @@ func (r *Runner) terraformDestroy(
 	tf.SetStdout(destroyOut.Stdout)
 	tf.SetStderr(destroyOut.Stderr)
 	err = tf.Destroy(ctx, r.TFConfig.DestroyOptions()...)
-	res.Diagnostics = diagnostics.FromErr(err)
 	res.Stderr = destroyOut.Stderr.String()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))

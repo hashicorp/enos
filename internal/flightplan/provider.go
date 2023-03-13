@@ -2,13 +2,10 @@ package flightplan
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/zclconf/go-cty/cty"
 
 	hcl "github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 )
 
 // Provider is a Enos transport configuration
@@ -34,21 +31,11 @@ func (p *Provider) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 	p.Type = block.Labels[0]
 	p.Alias = block.Labels[1]
 
-	if p.Type == "enos" {
-		// Since we know the schema for the "enos" provider we can more fine
-		// grained decoding and validation.
-		moreDiags := p.decodeEnosProvider(block, ctx)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
-			return diags
-		}
-	} else {
-		// Decode the entire provider block as a schemaless block
-		moreDiags := p.Config.Decode(block, ctx)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
-			return diags
-		}
+	// Decode the entire provider block as a schemaless block
+	moreDiags := p.Config.Decode(block, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags.HasErrors() {
+		return diags
 	}
 
 	return diags
@@ -103,132 +90,4 @@ func (p *Provider) FromCtyValue(val cty.Value) error {
 	}
 
 	return nil
-}
-
-func (p *Provider) decodeEnosProvider(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
-
-	// Validate that our configuration matches our allowed schema.
-	spec := hcldec.ObjectSpec{
-		"transport": &hcldec.AttrSpec{
-			Name:     "transport",
-			Required: false,
-			Type: cty.ObjectWithOptionalAttrs(map[string]cty.Type{
-				"ssh": cty.ObjectWithOptionalAttrs(map[string]cty.Type{
-					"user":             cty.String,
-					"host":             cty.String,
-					"private_key":      cty.String,
-					"private_key_path": cty.String,
-					"passphrase":       cty.String,
-					"passphrase_path":  cty.String,
-				}, []string{
-					"user", "host", "private_key", "private_key_path",
-					"passphrase", "passphrase_path",
-				}),
-				"kubernetes": cty.ObjectWithOptionalAttrs(map[string]cty.Type{
-					"kubeconfig_base64": cty.String,
-					"context_name":      cty.String,
-					"namespace":         cty.String,
-					"pod":               cty.String,
-					"container":         cty.String,
-				}, []string{
-					"kubeconfig_base64", "context_name", "namespace", "pod",
-					"container",
-				}),
-			}, []string{"ssh", "kubernetes"}),
-		},
-	}
-
-	val, moreDiags := hcldec.Decode(block.Body, spec, ctx)
-	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
-		return diags
-	}
-
-	if val.IsNull() || !val.IsWhollyKnown() || !val.CanIterateElements() {
-		return diags
-	}
-
-	trans, ok := val.AsValueMap()["transport"]
-	if !ok {
-		return diags
-	}
-
-	if trans.IsNull() || !trans.IsWhollyKnown() || !trans.CanIterateElements() {
-		return diags
-	}
-
-	// We should have either a valid k8s or ssh transport.
-	p.Config.Type = "provider"
-	p.Config.Labels = []string{p.Type, p.Alias}
-	p.Config.Attrs["transport"] = trans
-
-	ssh, ok := trans.AsValueMap()["ssh"]
-	if !ok {
-		// We're done, we're not going to do anything else with k8s
-		return diags
-	}
-
-	if ssh.IsNull() || !ssh.IsWhollyKnown() || !ssh.CanIterateElements() {
-		return diags
-	}
-
-	// We have an ssh transport. Make sure any of the paths that we've been
-	// given exist.
-	sshVals := map[string]cty.Value{}
-	for name, val := range ssh.AsValueMap() {
-		// Only pass through known values
-		if val.IsNull() || !val.IsWhollyKnown() {
-			continue
-		}
-
-		switch name {
-		case "passphrase_path", "private_key_path":
-			// Since these are set and they're paths we can ensure that that
-			// they actually exist.
-			abs, err := filepath.Abs(val.AsString())
-			if err != nil {
-				diags = diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  fmt.Sprintf("expanding path for enos provider %s", name),
-					Detail:   err.Error(),
-					Subject:  block.TypeRange.Ptr(),
-					Context:  block.DefRange.Ptr(),
-				})
-				continue
-			}
-
-			bytes, err := os.ReadFile(abs)
-			if err != nil {
-				diags = diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  fmt.Sprintf("reading the file contents for enos provider %s", name),
-					Detail:   err.Error(),
-					Subject:  block.TypeRange.Ptr(),
-					Context:  block.DefRange.Ptr(),
-				})
-				continue
-			}
-
-			if len(bytes) == 0 {
-				diags = diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  fmt.Sprintf("empty content not allowed for enos provider %s", name),
-					Detail:   err.Error(),
-					Subject:  block.TypeRange.Ptr(),
-					Context:  block.DefRange.Ptr(),
-				})
-				continue
-			}
-			sshVals[name] = cty.StringVal(abs)
-		default:
-			sshVals[name] = val
-		}
-	}
-
-	p.Config.Attrs["transport"] = cty.ObjectVal(map[string]cty.Value{
-		"ssh": cty.ObjectVal(sshVals),
-	})
-
-	return diags
 }

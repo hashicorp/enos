@@ -60,10 +60,12 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 
 			for _, variant := range test.variants {
 				name := test.name
-				elements := []*pb.Scenario_Filter_Element{}
+				filter := test.name
+				elements := []*pb.Matrix_Element{}
 				if len(variant) == 2 {
 					name = fmt.Sprintf("%s [%s:%s]", name, variant[0], variant[1])
-					elements = append(elements, &pb.Scenario_Filter_Element{
+					filter = fmt.Sprintf("%s %s:%s", test.name, variant[0], variant[1])
+					elements = append(elements, &pb.Matrix_Element{
 						Key:   variant[0],
 						Value: variant[1],
 					})
@@ -71,9 +73,10 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 				uid := fmt.Sprintf("%x", sha256.Sum256([]byte(name)))
 				scenarioRef := &pb.Ref_Scenario{
 					Id: &pb.Scenario_ID{
-						Name: test.name,
-						Uid:  uid,
-						Variants: &pb.Scenario_Filter_Vector{
+						Name:   test.name,
+						Filter: filter,
+						Uid:    uid,
+						Variants: &pb.Matrix_Vector{
 							Elements: elements,
 						},
 					},
@@ -152,17 +155,18 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 
 			for _, variant := range []string{"has_warning", "valid"} {
 				name := fmt.Sprintf("warning [mod:%s]", variant)
-				elements := []*pb.Scenario_Filter_Element{}
-				elements = append(elements, &pb.Scenario_Filter_Element{
+				elements := []*pb.Matrix_Element{}
+				elements = append(elements, &pb.Matrix_Element{
 					Key:   "mod",
 					Value: variant,
 				})
 				uid := fmt.Sprintf("%x", sha256.Sum256([]byte(name)))
 				scenarioRef := &pb.Ref_Scenario{
 					Id: &pb.Scenario_ID{
-						Name: "warning",
-						Uid:  uid,
-						Variants: &pb.Scenario_Filter_Vector{
+						Name:   "warning",
+						Uid:    uid,
+						Filter: fmt.Sprintf("warning mod:%s", variant),
+						Variants: &pb.Matrix_Vector{
 							Elements: elements,
 						},
 					},

@@ -19,7 +19,7 @@ func TestAcc_Cmd_Fmt(t *testing.T) {
 
 	enos := newAcceptanceRunner(t)
 
-	path, err := filepath.Abs("./scenarios/scenario_generate_pass_0")
+	path, err := filepath.Abs("./invalid_scenarios/scenario_not_formatted")
 	require.NoError(t, err)
 
 	cmd := fmt.Sprintf("fmt %s -d -c --format json", path)

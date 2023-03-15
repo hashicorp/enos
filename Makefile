@@ -8,6 +8,7 @@ GO_BUILD_TAGS=-tags osusergo,netgo
 GO_LD_FLAGS=-ldflags="-extldflags=-static -X ${REPO}/internal/version.Version=${VERSION} -X ${REPO}/internal/version.GitSHA=${GIT_SHA}"
 GO_GC_FLAGS=
 LINT_OUT_FORMAT?=colored-line-number
+BUF_LINT_OUT_FORMAT?=github-actions
 GORACE=GORACE=log_path=/tmp/enos-gorace.log
 TEST_ACC=ENOS_ACC=1
 TEST_ACC_EXT=ENOS_ACC=1 ENOS_EXT=1
@@ -57,13 +58,13 @@ lint-fix-golang:
 
 .PHONY: lint-proto
 lint-proto:
-	pushd proto && buf lint --error-format=$(LINT_OUT_FORMAT)
+	pushd proto && buf lint --error-format=$(BUF_LINT_OUT_FORMAT)
 
 .PHONY: fmt
-fmt: fmt-golang fmt-proto
+fmt: fmt-golang fmt-proto fmt-terraform fmt-enos
 
 .PHONY: fmt-check
-fmt-check: fmt-check-golang fmt-check-proto
+fmt-check: fmt-check-golang fmt-check-proto fmt-check-terraform fmt-check-enos
 
 .PHONY: fmt-golang
 fmt-golang:
@@ -80,6 +81,22 @@ fmt-proto:
 .PHONY: fmt-check-proto
 fmt-check-proto:
 	buf format proto -d --exit-code
+
+.PHONY: fmt-terraform
+fmt-terraform:
+	terraform fmt -recursive acceptance/scenarios
+
+.PHONY: fmt-check-terraform
+fmt-check-terraform:
+	terraform fmt -check -diff -recursive acceptance/scenarios
+
+.PHONY: fmt-enos
+fmt-enos:
+	dist/enos fmt --recursive acceptance/scenarios
+
+.PHONY: fmt-check-enos
+fmt-check-enos:
+	dist/enos fmt --check --diff --recursive acceptance/scenarios
 
 .PHONY: clean
 clean:

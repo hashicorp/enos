@@ -23,6 +23,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 		name     string
 		variants []struct {
 			uid      string
+			filter   string
 			variants [][]string
 		}
 	}{
@@ -31,14 +32,17 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 			name: "e2e",
 			variants: []struct {
 				uid      string
+				filter   string
 				variants [][]string
 			}{
 				{
 					fmt.Sprintf("%x", sha256.Sum256([]byte("e2e [aws_region:east distro:rhel]"))),
+					"e2e aws_region:east distro:rhel",
 					[][]string{{"aws_region", "east"}, {"distro", "rhel"}},
 				},
 				{
 					fmt.Sprintf("%x", sha256.Sum256([]byte("e2e [aws_region:west distro:ubuntu]"))),
+					"e2e aws_region:west distro:ubuntu",
 					[][]string{{"aws_region", "west"}, {"distro", "ubuntu"}},
 				},
 			},
@@ -101,9 +105,9 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 				Responses: []*pb.Operation_Response{},
 			}
 			for _, variant := range test.variants {
-				elements := []*pb.Scenario_Filter_Element{}
+				elements := []*pb.Matrix_Element{}
 				for _, v := range variant.variants {
-					elements = append(elements, &pb.Scenario_Filter_Element{
+					elements = append(elements, &pb.Matrix_Element{
 						Key:   v[0],
 						Value: v[1],
 					})
@@ -111,9 +115,10 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 
 				scenarioRef := &pb.Ref_Scenario{
 					Id: &pb.Scenario_ID{
-						Name: test.name,
-						Uid:  variant.uid,
-						Variants: &pb.Scenario_Filter_Vector{
+						Name:   test.name,
+						Uid:    variant.uid,
+						Filter: variant.filter,
+						Variants: &pb.Matrix_Vector{
 							Elements: elements,
 						},
 					},

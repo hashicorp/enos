@@ -23,9 +23,16 @@ var scenarioSchema = &hcl.BodySchema{
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeScenarioStep, LabelNames: []string{attrLabelNameDefault}},
 		{Type: blockTypeOutput, LabelNames: []string{attrLabelNameDefault}},
-		// Matrix blocks are handled by the matrix decoder
+		// Matrix blocks are decoded before the rest of a scenario block, but are included here
+		// so we can decode without using partials.
 		{Type: blockTypeMatrix},
 		{Type: blockTypeLocals},
+	},
+}
+
+var matrixSchema = &hcl.BodySchema{
+	Blocks: []hcl.BlockHeaderSchema{
+		{Type: blockTypeMatrix},
 	},
 }
 
@@ -72,8 +79,18 @@ func (s *Scenario) Ref() *pb.Ref_Scenario {
 			Name:     s.Name,
 			Variants: s.Variants.Proto(),
 			Uid:      s.UID(),
+			Filter:   s.FilterStr(),
 		},
 	}
+}
+
+func (s *Scenario) FilterStr() string {
+	str := s.Name
+	if s.Variants != nil && len(s.Variants.elements) > 0 {
+		str = fmt.Sprintf("%s %s", str, strings.Trim(s.Variants.String(), "[]"))
+	}
+
+	return str
 }
 
 // FromRef takes a unmarshals a scenario reference into itself.
@@ -134,12 +151,12 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 // decode takes an HCL block and an evaluation context and it decodes itself
 // from the block. Any errors that are encountered during decoding will be
 // returned as hcl diagnostics.
-func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext, mode DecodeMode) hcl.Diagnostics {
+func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext, target DecodeTarget) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	s.Name = block.Labels[0]
 
-	if mode == DecodeModeRef {
+	if target < DecodeTargetScenariosComplete {
 		return diags
 	}
 

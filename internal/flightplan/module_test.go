@@ -50,7 +50,7 @@ scenario "basic" {
     module = module.backend
   }
 }`, modulePath, test.expr)
-			fp, err := testDecodeHCL(t, []byte(hcl))
+			fp, err := testDecodeHCL(t, []byte(hcl), DecodeTargetAll)
 			require.NoError(t, err)
 			require.Equal(t, 1, len(fp.Modules))
 			v, ok := fp.Modules[0].Attrs["something"]
@@ -98,18 +98,23 @@ scenario "basic" {
 						Version: "3.11.0",
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "basic",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "basic",
+						Scenarios: []*Scenario{
 							{
-								Name: "first",
-								Module: &Module{
-									Name:    "backend",
-									Source:  "terraform-aws-modules/vpc/aws",
-									Version: "3.11.0",
-									Attrs:   map[string]cty.Value{},
+								Name:         "basic",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "first",
+										Module: &Module{
+											Name:    "backend",
+											Source:  "terraform-aws-modules/vpc/aws",
+											Version: "3.11.0",
+											Attrs:   map[string]cty.Value{},
+										},
+									},
 								},
 							},
 						},
@@ -189,7 +194,7 @@ scenario "backend" {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
 			if test.fail {
 				require.Error(t, err)
 

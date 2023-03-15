@@ -5,7 +5,7 @@ terraform "qti_cloud" {
   required_providers {
     aws = {
       version = ">= 2.7.0"
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
     }
   }
 
@@ -15,8 +15,8 @@ terraform "qti_cloud" {
 
   cloud {
     organization = "qti"
-    hostname = "app.terraform.io"
-    token = "yunouselogin"
+    hostname     = "app.terraform.io"
+    token        = "yunouselogin"
 
     workspaces {
       tags = ["something", "another"]

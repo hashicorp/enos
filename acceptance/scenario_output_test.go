@@ -50,10 +50,10 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 			require.NoError(t, err)
 
 			filter := test.name
-			elements := []*pb.Scenario_Filter_Element{}
+			elements := []*pb.Matrix_Element{}
 			for _, variant := range test.variants {
 				filter = fmt.Sprintf("%s %s:%s", filter, variant[0], variant[1])
-				elements = append(elements, &pb.Scenario_Filter_Element{
+				elements = append(elements, &pb.Matrix_Element{
 					Key:   variant[0],
 					Value: variant[1],
 				})
@@ -61,9 +61,10 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 
 			scenarioRef := &pb.Ref_Scenario{
 				Id: &pb.Scenario_ID{
-					Name: test.name,
-					Uid:  test.uid,
-					Variants: &pb.Scenario_Filter_Vector{
+					Name:   test.name,
+					Filter: filter,
+					Uid:    test.uid,
+					Variants: &pb.Matrix_Vector{
 						Elements: elements,
 					},
 				},

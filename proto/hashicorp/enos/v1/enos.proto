@@ -3,6 +3,7 @@ syntax = "proto3";
 package hashicorp.enos.v1;
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/hashicorp/enos/internal/pb;pb";
@@ -21,6 +22,8 @@ service EnosService {
   rpc Format(FormatRequest) returns (FormatResponse) {}
   rpc OperationEventStream(OperationEventStreamRequest) returns (stream OperationEventStreamResponse) {}
   rpc Operation(OperationRequest) returns (OperationResponse) {}
+  rpc ListSamples(ListSamplesRequest) returns (ListSamplesResponse) {}
+  rpc ObserveSample(ObserveSampleRequest) returns (ObserveSampleResponse) {}
 }
 
 // UI contains messages related to the UI calling the server. This information
@@ -29,18 +32,18 @@ service EnosService {
 message UI {
   message Settings {
     uint32 width = 1;
-    bool is_tty = 2;
-    bool use_color = 3;
+    bool is_tty = 2 [json_name = "is_tty"];
+    bool use_color = 3 [json_name = "use_color"];
     Format format = 4;
     Level level = 5;
     // stdout_path if defined, we'll write our stdout messages to a file in
     // the given path
-    string stdout_path = 6;
+    string stdout_path = 6 [json_name = "stdout_path"];
     // stderr_path if defined, we'll write our stderr messages to a file in
     // the given path
-    string stderr_path = 7;
+    string stderr_path = 7 [json_name = "stderr_path"];
     // Render warnings as failures
-    bool fail_on_warnings = 8;
+    bool fail_on_warnings = 8 [json_name = "fail_on_warnings"];
 
     enum Format {
       FORMAT_UNSPECIFIED = 0;
@@ -110,7 +113,7 @@ message Workspace {
   FlightPlan flightplan = 1;
   // terraform_exec contains our default and override Terraform execution
   // configuration.
-  Terraform.Runner.Config tf_exec_cfg = 4;
+  Terraform.Runner.Config tf_exec_cfg = 4 [json_name = "tf_exec_cfg"];
   // dir is our workspaces directory. This will default to the current working
   // directory.
   string dir = 5;
@@ -123,9 +126,9 @@ message Workspace {
 // FlightPlan is the Enos configuration.
 message FlightPlan {
   string base_dir = 1;
-  map<string, bytes> enos_hcl = 2;
-  map<string, bytes> enos_vars_hcl = 3;
-  repeated string enos_vars_env = 4;
+  map<string, bytes> enos_hcl = 2 [json_name = "enos_hcl"];
+  map<string, bytes> enos_vars_hcl = 3 [json_name = "enos_vars_hcl"];
+  repeated string enos_vars_env = 4 [json_name = "enos_vars_env"];
 }
 
 message DecodeResponse {
@@ -138,44 +141,20 @@ message Scenario {
   // ID is the unique identification of the scenario and its variants.
   message ID {
     string name = 1;
-    Filter.Vector variants = 2;
+    Matrix.Vector variants = 2;
     string uid = 3;
+    string filter = 4;
   }
 
   // Filter is a scenario filter.
   message Filter {
     string name = 1;
-    SelectAll select_all = 2;
-    Vector include = 3;
-    repeated Exclude exclude = 4;
+    SelectAll select_all = 2 [json_name = "select_all"];
+    Matrix.Vector include = 3;
+    repeated Matrix.Exclude exclude = 4;
+    Matrix intersection_matrix = 5 [json_name = "intersection_matrix"];
 
     message SelectAll {}
-
-    message Element {
-      string key = 1;
-      string value = 2;
-    }
-
-    message Vector {
-      repeated Element elements = 1;
-    }
-
-    message Exclude {
-      Vector vector = 1;
-      Mode mode = 2;
-
-      enum Mode {
-        MODE_UNSPECIFIED = 0;
-        // MODE_EXACTLY will match a vector that has the exact ordered elements
-        MODE_EXACTLY = 1;
-        // MODE_EQUAL_UNORDERED will match a vector that has the exact elements
-        // but may be unordered.
-        MODE_EQUAL_UNORDERED = 2;
-        // MODE_CONTAINS will match any vector that has at least the given vector
-        // elements in any order.
-        MODE_CONTAINS = 3;
-      }
-    }
   }
 }
 
@@ -464,6 +443,99 @@ message Terraform {
   }
 }
 
+// Matrix represents our DSL matrix
+message Matrix {
+  repeated Vector vectors = 1;
+  Vector include = 2;
+  repeated Exclude exclude = 3;
+
+  message Vector {
+    repeated Element elements = 1;
+  }
+
+  message Element {
+    string key = 1;
+    string value = 2;
+  }
+
+  message Exclude {
+    Vector vector = 1;
+    Mode mode = 2;
+
+    enum Mode {
+      MODE_UNSPECIFIED = 0;
+      // MODE_EXACTLY will match a vector that has the exact ordered elements
+      MODE_EXACTLY = 1;
+      // MODE_EQUAL_UNORDERED will match a vector that has the exact elements
+      // but may be unordered.
+      MODE_EQUAL_UNORDERED = 2;
+      // MODE_CONTAINS will match any vector that has at least the given vector
+      // elements in any order.
+      MODE_CONTAINS = 3;
+    }
+  }
+}
+
+// Sample is a scenario matrix sample
+message Sample {
+  ID id = 1;
+  repeated Attribute attributes = 2;
+  repeated Subset subsets = 3;
+
+  // ID is the unique identification of the sample and its subsets.
+  message ID {
+    string name = 1;
+  }
+
+  // A subet refers to a scenario subset of a matrix.
+  message Subset {
+    message ID {
+      string name = 1;
+    }
+
+    ID id = 1;
+    string scenario_name = 2 [json_name = "scenario_name"];
+    string scenario_filter = 3 [json_name = "scenario_filter"];
+    repeated Attribute attributes = 4;
+    Matrix matrix = 5;
+  }
+
+  // A filter lets us dynamically filter our sample frame, limit our sample observation, or control
+  // the randomness seed for deterministic observations.
+  message Filter {
+    Ref.Sample sample = 1;
+    repeated Sample.Subset.ID subsets = 2;
+    repeated Sample.Subset.ID exclude_subsets = 3 [json_name = "exclude_subsets"];
+    int32 max_elements = 4;
+    int32 min_elements = 5;
+    float percentage = 6;
+    int64 seed = 7;
+  }
+
+  // A sample element is one instance of the sample observation.
+  message Element {
+    Ref.Sample sample = 1;
+    Ref.Sample.Subset subset = 2;
+    Ref.Scenario scenario = 3;
+    google.protobuf.Struct attributes = 4;
+  }
+
+  // A sample observation the result of taking a sample.
+  message Observation {
+    repeated Diagnostic diagnostics = 1;
+    repeated Sample.Element elements = 2;
+    Sample.Filter filter = 3;
+  }
+
+  // Attributes are various metadata that was injected into a sample element.
+  message Attribute {
+    string key = 1;
+    // To support unknown schema we pass the attributes as JSON encoded cty types and values.
+    bytes cty_type = 2 [json_name = "cty_type"];
+    bytes cty_value = 3 [json_name = "cty_value"];
+  }
+}
+
 message Ref {
   message Scenario {
     hashicorp.enos.v1.Scenario.ID id = 1;
@@ -472,6 +544,14 @@ message Ref {
   message Operation {
     string id = 1;
     Scenario scenario = 2;
+  }
+
+  message Sample {
+    hashicorp.enos.v1.Sample.ID id = 1;
+
+    message Subset {
+      hashicorp.enos.v1.Sample.Subset.ID id = 1;
+    }
   }
 }
 
@@ -580,6 +660,27 @@ message OutputScenariosResponse {
   repeated Ref.Operation operations = 3;
 }
 
+message ListSamplesRequest {
+  Workspace workspace = 1;
+}
+
+message ListSamplesResponse {
+  repeated Diagnostic diagnostics = 1;
+  DecodeResponse decode = 2;
+  repeated Ref.Sample samples = 3;
+}
+
+message ObserveSampleRequest {
+  Workspace workspace = 1;
+  Sample.Filter filter = 2;
+}
+
+message ObserveSampleResponse {
+  repeated Diagnostic diagnostics = 1;
+  DecodeResponse decode = 2;
+  Sample.Observation observation = 3;
+}
+
 message FormatRequest {
   repeated File files = 1;
   Config config = 2;
@@ -594,6 +695,7 @@ message FormatRequest {
     bool list = 2;
     bool check = 3;
     bool diff = 4;
+    bool recursive = 5;
   }
 }
 

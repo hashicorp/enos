@@ -9,20 +9,32 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan/funcs"
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/tryfunc"
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
-// DecodeMode determines the method of flight plan decoding.
-type DecodeMode int
+// DecodeTarget determines the depth of flight plan decoding so we only ever decode, expand
+// and validate information relevant to our operation.
+type DecodeTarget int
 
 const (
-	// Decode and fully evaluate the entire flight plan.
-	DecodeModeFull = iota
-	// Decode scenarios to the reference level.
-	DecodeModeRef
+	DecodeTargetUnset = iota
+	DecodeTargetVariables
+	DecodeTargetGlobals
+	DecodeTargetSamples
+	DecodeTargetScenariosNamesNoVariants
+	DecodeTargetScenariosMatrixOnly
+	DecodeTargetScenariosNamesExpandVariants
+	DecodeTargetTerraformSettings
+	DecodeTargetTerraformCLIs
+	DecodeTargetProviders
+	DecodeTargetModules
+	DecodeTargetScenariosComplete
+	DecodeTargetAll // Make sure this is always the latest decoding target
 )
 
 // DecoderOpt is a functional option for a new flight plan.
@@ -33,6 +45,7 @@ func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
 	d := &Decoder{
 		FPParser:   hclparse.NewParser(),
 		VarsParser: hclparse.NewParser(),
+		target:     DecodeTargetAll,
 	}
 
 	for _, opt := range opts {
@@ -82,10 +95,10 @@ func WithDecoderBaseDir(path string) DecoderOpt {
 	}
 }
 
-// WithDecoderDecodeMode sets the decoding mode.
-func WithDecoderDecodeMode(mode DecodeMode) DecoderOpt {
+// WithDecoderDecodeTarget sets the decoding mode.
+func WithDecoderDecodeTarget(mode DecodeTarget) DecoderOpt {
 	return func(fp *Decoder) error {
-		fp.mode = mode
+		fp.target = mode
 
 		return nil
 	}
@@ -109,7 +122,7 @@ type Decoder struct {
 	varFiles   RawFiles
 	varEnvVars []string
 	dir        string
-	mode       DecodeMode
+	target     DecodeTarget
 	filter     *ScenarioFilter
 }
 
@@ -288,17 +301,148 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	// Decode our top-level schema
 	fp.BodyContent, diags = body.Content(flightPlanSchema)
 
-	// Decode and validate our variables. They'll be added to eval context for
-	// access in later decoding.
-	diags = diags.Extend(fp.decodeVariables(evalCtx, varsFiles, d.varEnvVars))
+	// Decode to our desired target level. Start with the lowest level and continue until we've
+	// reached our desired target. Each target level includes more blocks. Where appropriate, each
+	// decoder is responsible for extending the eval context and/or falling through to the next
+	// level.
+	decodeToLevel := func() hcl.Diagnostics {
+		var diags hcl.Diagnostics
 
-	// Decode child blocks. Each child block decoder is responsible for
-	// extending the evaluation context.
-	diags = diags.Extend(fp.decodeTerraformSettings(evalCtx))
-	diags = diags.Extend(fp.decodeTerraformCLIs(evalCtx))
-	diags = diags.Extend(fp.decodeProviders(evalCtx))
-	diags = diags.Extend(fp.decodeModules(evalCtx))
-	diags = diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.mode, d.filter))
+		if d.target < DecodeTargetUnset {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Unsupported flight plan decode target level",
+				Detail:   fmt.Sprintf("The configured target decode level was less than minimum allowed. Expected a level >= 1, Received level: %d", d.target),
+				Subject:  body.MissingItemRange().Ptr(),
+			})
+		}
+
+		if d.target == DecodeTargetUnset {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Flight plan decode target level must be configured",
+				Subject:  body.MissingItemRange().Ptr(),
+			})
+		}
+
+		if d.target >= DecodeTargetVariables {
+			// Decode and validate our variables and add them to the eval context.
+			diags = diags.Extend(fp.decodeVariables(evalCtx, varsFiles, d.varEnvVars))
+		}
+
+		if d.target >= DecodeTargetGlobals {
+			// Decode our globals and add them to the eval context.
+			diags = diags.Extend(fp.decodeGlobals(evalCtx))
+		}
+
+		if d.target >= DecodeTargetSamples {
+			// Decode to only our samples but does not verify correctness or an intersection with scenarios.
+			diags = diags.Extend(fp.decodeSamples(evalCtx))
+		}
+
+		if d.target == DecodeTargetScenariosNamesNoVariants {
+			// Decode to only our scenario names. Useful for only decoding the scenario names for
+			// listing but not validating their internal references or expanding their variants.
+			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+		}
+
+		if d.target == DecodeTargetScenariosMatrixOnly {
+			// Decode scenarios to name and matrix only. Useful for shallow decoding scenarios
+			// and building sample frames.
+			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+		}
+
+		if d.target == DecodeTargetScenariosNamesExpandVariants {
+			// Decode to only our scenario names and variants. Useful for listing all scenarios
+			// and variant combinations.
+			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+		}
+
+		if d.target >= DecodeTargetTerraformSettings {
+			diags = diags.Extend(fp.decodeTerraformSettings(evalCtx))
+		}
+
+		if d.target >= DecodeTargetTerraformCLIs {
+			diags = diags.Extend(fp.decodeTerraformCLIs(evalCtx))
+		}
+
+		if d.target >= DecodeTargetProviders {
+			diags = diags.Extend(fp.decodeProviders(evalCtx))
+		}
+
+		if d.target >= DecodeTargetModules {
+			diags = diags.Extend(fp.decodeModules(evalCtx))
+		}
+
+		if d.target >= DecodeTargetScenariosComplete {
+			// Decode scenarios and fully validate them.
+			diags = diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+		}
+
+		if d.target > DecodeTargetAll {
+			return diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Unsupported flight plan decode target level",
+				Detail:   fmt.Sprintf("The configured target decode level was greater than maximum allowed. Expected a level <= %d, Received level: %d", DecodeTargetAll, d.target),
+				Subject:  body.MissingItemRange().Ptr(),
+			})
+		}
+
+		return diags
+	}
+
+	diags = diags.Extend(decodeToLevel())
 
 	return fp, diags
+}
+
+// DecodeProto takes a wire request of a FlightPlan and returns a new flight plan and a wire encodable
+// decode response.
+func DecodeProto(
+	ctx context.Context,
+	pfp *pb.FlightPlan,
+	target DecodeTarget,
+	f *pb.Scenario_Filter,
+) (*FlightPlan, *pb.DecodeResponse) {
+	res := &pb.DecodeResponse{
+		Diagnostics: []*pb.Diagnostic{},
+	}
+
+	opts := []DecoderOpt{
+		WithDecoderBaseDir(pfp.GetBaseDir()),
+		WithDecoderFPFiles(pfp.GetEnosHcl()),
+		WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
+		WithDecoderEnv(pfp.GetEnosVarsEnv()),
+		WithDecoderDecodeTarget(target),
+	}
+
+	sf, err := NewScenarioFilter(WithScenarioFilterDecode(f))
+	if err != nil {
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+	} else {
+		opts = append(opts, WithDecoderScenarioFilter(sf))
+	}
+
+	dec, err := NewDecoder(opts...)
+	if err != nil {
+		res.Diagnostics = diagnostics.FromErr(err)
+
+		return nil, res
+	}
+
+	hclDiags := dec.Parse()
+	if len(hclDiags) > 0 {
+		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
+	}
+
+	if diagnostics.HasErrors(res.GetDiagnostics()) {
+		return nil, res
+	}
+
+	fp, hclDiags := dec.Decode(ctx)
+	if len(hclDiags) > 0 {
+		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
+	}
+
+	return fp, res
 }

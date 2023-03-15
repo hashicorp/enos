@@ -7,11 +7,11 @@ output "anotherinput" {
 }
 
 variable "input" {
-  type = string
+  type    = string
   default = "notset"
 }
 
 variable "anotherinput" {
-  type = list(string)
+  type    = list(string)
   default = ["one"]
 }

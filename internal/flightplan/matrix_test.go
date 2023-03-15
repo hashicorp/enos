@@ -225,74 +225,79 @@ scenario "nighttime" {
 						Source: modulePath,
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "nighttime",
-						Variants:     &Vector{elements: []Element{NewElement("cathat", "conrad"), NewElement("onefish", "twofish")}},
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "nighttime",
+						Scenarios: []*Scenario{
 							{
-								Name: "read",
-								Module: &Module{
-									Name:   "books",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"cathat":  testMakeStepVarValue(cty.StringVal("conrad")),
-										"onefish": testMakeStepVarValue(cty.StringVal("twofish")),
+								Name:         "nighttime",
+								Variants:     &Vector{elements: []Element{NewElement("cathat", "conrad"), NewElement("onefish", "twofish")}},
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "read",
+										Module: &Module{
+											Name:   "books",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"cathat":  testMakeStepVarValue(cty.StringVal("conrad")),
+												"onefish": testMakeStepVarValue(cty.StringVal("twofish")),
+											},
+										},
 									},
 								},
 							},
-						},
-					},
-					{
-						Name:         "nighttime",
-						Variants:     &Vector{elements: []Element{NewElement("cathat", "sally"), NewElement("onefish", "twofish")}},
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
 							{
-								Name: "read",
-								Module: &Module{
-									Name:   "books",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"cathat":  testMakeStepVarValue(cty.StringVal("sally")),
-										"onefish": testMakeStepVarValue(cty.StringVal("twofish")),
+								Name:         "nighttime",
+								Variants:     &Vector{elements: []Element{NewElement("cathat", "sally"), NewElement("onefish", "twofish")}},
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "read",
+										Module: &Module{
+											Name:   "books",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"cathat":  testMakeStepVarValue(cty.StringVal("sally")),
+												"onefish": testMakeStepVarValue(cty.StringVal("twofish")),
+											},
+										},
 									},
 								},
 							},
-						},
-					},
-					{
-						Name:         "nighttime",
-						Variants:     &Vector{elements: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "bluefish")}},
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
 							{
-								Name: "read",
-								Module: &Module{
-									Name:   "books",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"cathat":  testMakeStepVarValue(cty.StringVal("thing2")),
-										"onefish": testMakeStepVarValue(cty.StringVal("bluefish")),
+								Name:         "nighttime",
+								Variants:     &Vector{elements: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "bluefish")}},
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "read",
+										Module: &Module{
+											Name:   "books",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"cathat":  testMakeStepVarValue(cty.StringVal("thing2")),
+												"onefish": testMakeStepVarValue(cty.StringVal("bluefish")),
+											},
+										},
 									},
 								},
 							},
-						},
-					},
-					{
-						Name:         "nighttime",
-						Variants:     &Vector{elements: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "redfish")}},
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
 							{
-								Name: "read",
-								Module: &Module{
-									Name:   "books",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"cathat":  testMakeStepVarValue(cty.StringVal("thing2")),
-										"onefish": testMakeStepVarValue(cty.StringVal("redfish")),
+								Name:         "nighttime",
+								Variants:     &Vector{elements: []Element{NewElement("cathat", "thing2"), NewElement("onefish", "redfish")}},
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "read",
+										Module: &Module{
+											Name:   "books",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"cathat":  testMakeStepVarValue(cty.StringVal("thing2")),
+												"onefish": testMakeStepVarValue(cty.StringVal("redfish")),
+											},
+										},
 									},
 								},
 							},
@@ -306,7 +311,7 @@ scenario "nighttime" {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
 			if test.fail {
 				require.Error(t, err)
 
@@ -528,6 +533,20 @@ func Test_Matrix_UniqueValues(t *testing.T) {
 	}
 }
 
+func Test_Matrix_Proto_RoundTrip(t *testing.T) {
+	t.Parallel()
+	expected := &Matrix{Vectors: []*Vector{
+		{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+		{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+		{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+		{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+	}}
+
+	got := NewMatrix()
+	got.FromProto(expected.Copy().Proto())
+	require.EqualValues(t, expected, got)
+}
+
 func Test_Matrix_Unique(t *testing.T) {
 	t.Parallel()
 
@@ -551,7 +570,7 @@ func Test_Matrix_Unique(t *testing.T) {
 	require.Equal(t, m2, m1.Unique())
 }
 
-func Test_Matrix_Filter(t *testing.T) {
+func Test_Matrix_Filter_Filter_Parse(t *testing.T) {
 	t.Parallel()
 
 	for desc, test := range map[string]struct {
@@ -660,7 +679,432 @@ func Test_Matrix_Filter(t *testing.T) {
 
 			f, err := NewScenarioFilter(WithScenarioFilterParse(strings.Split(test.filterStr, " ")))
 			require.NoError(t, err)
-			require.Equal(t, test.expected, test.in.Filter(f))
+			require.True(t, test.expected.Equal(test.in.Filter(f)))
+		})
+	}
+}
+
+func Test_Matrix_Filter_ScenarioFilter(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in       *Matrix
+		filter   *ScenarioFilter
+		expected *Matrix
+	}{
+		"all": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			&ScenarioFilter{SelectAll: true},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"include-some": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			&ScenarioFilter{
+				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"include-one": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			&ScenarioFilter{
+				Include: &Vector{
+					elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")},
+				},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+		},
+		"exclude-one": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			&ScenarioFilter{
+				Exclude: []*Exclude{
+					{
+						Mode:   pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{elements: []Element{NewElement("backend", "raft")}},
+					},
+				},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"exclude-some": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			&ScenarioFilter{
+				Exclude: []*Exclude{
+					{
+						Mode: pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{
+							elements: []Element{NewElement("arch", "amd64")},
+						},
+					},
+					{
+						Mode: pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{
+							elements: []Element{NewElement("backend", "consul")},
+						},
+					},
+				},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"include-and-exclude-one": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			&ScenarioFilter{
+				Include: &Vector{
+					elements: []Element{NewElement("backend", "raft")},
+				},
+				Exclude: []*Exclude{
+					{
+						Mode: pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{
+							elements: []Element{NewElement("arch", "amd64")},
+						},
+					},
+				},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+			}},
+		},
+		"include-and-exclude-some": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			&ScenarioFilter{
+				Include: &Vector{
+					elements: []Element{NewElement("arch", "aarch64")},
+				},
+				Exclude: []*Exclude{
+					{
+						Mode: pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{
+							elements: []Element{NewElement("arch", "amd64")},
+						},
+					},
+					{
+						Mode: pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{
+							elements: []Element{NewElement("backend", "raft")},
+						},
+					},
+				},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+		},
+		"intersection-matrix": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			&ScenarioFilter{
+				IntersectionMatrix: &Matrix{Vectors: []*Vector{
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+				}},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+		},
+		"intersection-matrix-with-exclude": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			&ScenarioFilter{
+				Exclude: []*Exclude{
+					{
+						Mode: pb.Matrix_Exclude_MODE_CONTAINS,
+						Vector: &Vector{
+							elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")},
+						},
+					},
+				},
+				IntersectionMatrix: &Matrix{Vectors: []*Vector{
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+				}},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+		},
+		"intersection-matrix-with-include": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			&ScenarioFilter{
+				Include: &Vector{
+					elements: []Element{NewElement("backend", "raft")},
+				},
+				IntersectionMatrix: &Matrix{Vectors: []*Vector{
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+				}},
+			},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+			}},
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+			require.True(t, test.expected.EqualUnordered(test.in.Filter(test.filter)))
+		})
+	}
+}
+
+func Test_Matrix_Equal(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in       *Matrix
+		other    *Matrix
+		expected bool
+	}{
+		"both-nil": {
+			in:       new(Matrix),
+			other:    new(Matrix),
+			expected: true,
+		},
+		"in-nil": {
+			in: new(Matrix),
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: false,
+		},
+		"other-nil": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other:    new(Matrix),
+			expected: false,
+		},
+		"unbalanced-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: false,
+		},
+		"balanced-different-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("howdy", "partner"), NewElement("hey", "pal")}},
+				{elements: []Element{NewElement("howdy", "friend"), NewElement("hey", "guy")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: false,
+		},
+		"unordered-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: false,
+		},
+		"equal": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: true,
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
+			require.Equal(t, test.expected, test.in.Equal(test.other))
+		})
+	}
+}
+
+func Test_Matrix_EqualUnordered(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in       *Matrix
+		other    *Matrix
+		expected bool
+	}{
+		"both-nil": {
+			in:       new(Matrix),
+			other:    new(Matrix),
+			expected: true,
+		},
+		"in-nil": {
+			in: new(Matrix),
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: false,
+		},
+		"other-nil": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other:    new(Matrix),
+			expected: false,
+		},
+		"unbalanced-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: false,
+		},
+		"balanced-different-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("howdy", "partner"), NewElement("hey", "pal")}},
+				{elements: []Element{NewElement("howdy", "friend"), NewElement("hey", "guy")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: false,
+		},
+		"unordered-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: true,
+		},
+		"unordered-elements-and-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("arch", "arm32"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("backend", "raft")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: true,
+		},
+		"equal": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: true,
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
+			require.Equal(t, test.expected, test.in.EqualUnordered(test.other))
 		})
 	}
 }
@@ -717,11 +1161,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   pb.Scenario_Filter_Exclude_MODE_EXACTLY,
+					Mode:   pb.Matrix_Exclude_MODE_EXACTLY,
 					Vector: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 				},
 				{
-					Mode:   pb.Scenario_Filter_Exclude_MODE_EXACTLY,
+					Mode:   pb.Matrix_Exclude_MODE_EXACTLY,
 					Vector: &Vector{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
 				},
 			},
@@ -740,11 +1184,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
+					Mode:   pb.Matrix_Exclude_MODE_EQUAL_UNORDERED,
 					Vector: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
 				},
 				{
-					Mode:   pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
+					Mode:   pb.Matrix_Exclude_MODE_EQUAL_UNORDERED,
 					Vector: &Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "amd64")}},
 				},
 			},
@@ -764,11 +1208,11 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 			[]*Exclude{
 				{
-					Mode:   pb.Scenario_Filter_Exclude_MODE_CONTAINS,
+					Mode:   pb.Matrix_Exclude_MODE_CONTAINS,
 					Vector: &Vector{elements: []Element{NewElement("backend", "mysql")}},
 				},
 				{
-					Mode:   pb.Scenario_Filter_Exclude_MODE_CONTAINS,
+					Mode:   pb.Matrix_Exclude_MODE_CONTAINS,
 					Vector: &Vector{elements: []Element{NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
 				},
 			},
@@ -784,6 +1228,211 @@ func Test_Matrix_Exclude(t *testing.T) {
 			t.Parallel()
 
 			require.Equal(t, test.expected.Vectors, test.in.Exclude(test.Excludes...).Vectors)
+		})
+	}
+}
+
+func Test_Matrix_IntersectionUnordered(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in       *Matrix
+		other    *Matrix
+		expected *Matrix
+	}{
+		"both-nil": {
+			in:       nil,
+			other:    nil,
+			expected: nil,
+		},
+		"in-nil": {
+			in: nil,
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: nil,
+		},
+		"other-nil": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other:    nil,
+			expected: nil,
+		},
+		"unbalanced-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+		},
+		"balanced-different-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("howdy", "partner"), NewElement("hey", "pal")}},
+				{elements: []Element{NewElement("howdy", "friend"), NewElement("hey", "guy")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: nil,
+		},
+		"unordered-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+		},
+		"unordered-elements-and-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("arch", "arm32"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("backend", "raft")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+		},
+		"equal": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
+			res := test.in.IntersectionContainsUnordered(test.other)
+			require.Truef(t, test.expected.EqualUnordered(res), test.in.SymmetricDifferenceUnordered(res).String())
+		})
+	}
+}
+
+func Test_Matrix_SymmetricDifferenceUnordered(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in       *Matrix
+		other    *Matrix
+		expected *Matrix
+	}{
+		"both-nil": {
+			in:       nil,
+			other:    nil,
+			expected: nil,
+		},
+		"in-nil": {
+			in: nil,
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+		},
+		"other-nil": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: nil,
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+		},
+		"unbalanced-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+		},
+		"balanced-different-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("howdy", "partner"), NewElement("hey", "pal")}},
+				{elements: []Element{NewElement("howdy", "friend"), NewElement("hey", "guy")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("howdy", "partner"), NewElement("hey", "pal")}},
+				{elements: []Element{NewElement("howdy", "friend"), NewElement("hey", "guy")}},
+			}},
+		},
+		"unordered-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: nil,
+		},
+		"unordered-elements-and-vertices": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("arch", "arm32"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("backend", "raft")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+			}},
+			expected: nil,
+		},
+		"equal": {
+			in: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			other: &Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm32")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+			expected: nil,
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
+			require.Equal(t, test.expected, test.in.SymmetricDifferenceUnordered(test.other))
 		})
 	}
 }

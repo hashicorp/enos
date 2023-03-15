@@ -33,6 +33,8 @@ type View interface {
 	ShowOperationEvent(*pb.Operation_Event)
 	ShowOperationResponse(*pb.Operation_Response) error
 	ShowOperationResponses(*pb.OperationResponses) error
+	ShowSampleList(*pb.ListSamplesResponse) error
+	ShowSampleObservation(*pb.ObserveSampleResponse) error
 }
 
 // New takes a UI configuration settings and returns a new view.

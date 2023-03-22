@@ -158,7 +158,21 @@ func (g *Generator) TerraformModuleDir() string {
 // file.
 func (g *Generator) generateCLIConfig() error {
 	if g.Scenario.TerraformCLI == nil || g.Scenario.TerraformCLI.ConfigVal.IsNull() {
-		return nil
+		// Always generate a configuration file even if we have not been configured
+		// with any configuration content. Enos scenarios are always configured
+		// with a CLI file so that we don't accidentally inherit something
+		// unexpected from common Terraform configuration directories.
+		// Starting with Terraform 1.4.2 this is actually a requirement as
+		// it will warn if the file override does not exist.
+
+		// Make sure our out directory exists and is a directory
+		err := g.ensureOutDir()
+		if err != nil {
+			return err
+		}
+
+		// Write our RC file to disk
+		return g.write(g.TerraformRCPath(), nil)
 	}
 
 	rc := hclwrite.NewEmptyFile()

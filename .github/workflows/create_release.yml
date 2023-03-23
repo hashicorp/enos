@@ -92,7 +92,4 @@ jobs:
       sha: ${{ github.event.inputs.sha }}
       product: ${{ github.event.repository.name }}
       version: ${{ github.event.inputs.version }}
-    secrets:
-      GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
-      ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
-      ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
+    secrets: inherit

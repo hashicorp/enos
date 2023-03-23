@@ -21,13 +21,6 @@ on:
       version:
         required: true
         type: string
-    secrets:
-      GH_TOKEN:
-        required: true
-      ARTIFACTORY_TOKEN:
-        required: true
-      ARTIFACTORY_USER:
-        required: true
 
 jobs:
 

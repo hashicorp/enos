@@ -40,6 +40,8 @@ jobs:
       VERSION: ${{ github.event.inputs.version }}
       CHANNEL: ${{ github.event.inputs.channel }}
       PRE_RELEASE: ${{ github.event.inputs.pre_release }}
+      BOB_ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+      BOB_ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
 
     steps:
       - name: Checkout
@@ -53,9 +55,6 @@ jobs:
 
       # Use bob to download artifacts from Artifactory
       - name: Download artifacts
-        env:
-          BOB_ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
-          BOB_ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
         run: |
           bob download artifactory \
           -channel ${{ env.CHANNEL }} \

@@ -64,7 +64,7 @@ jobs:
 
       # Use bob to download SHA256SUMS file from Artifactory
       - name: Download artifacts
-         env:
+        env:
           BOB_ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
           BOB_ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
         run: |

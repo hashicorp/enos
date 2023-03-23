@@ -53,10 +53,11 @@ jobs:
 
       # Use bob to download artifacts from Artifactory
       - name: Download artifacts
+        env:
+            BOB_ARTIFACTORY_TOKEN: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }}
+            BOB_ARTIFACTORY_USER: ${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }}
         run: |
           bob download artifactory \
-          -token=${{ secrets.QUALITY_TEAM_ARTIFACTORY_TOKEN }} \
-          -user=${{ secrets.QUALITY_TEAM_ARTIFACTORY_USER }} \
           -channel ${{ env.CHANNEL }} \
           -commit=${{ env.SHA }} \
           -product-name=${{ env.PRODUCT }} \

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"embed"
 	"fmt"
 	"io"
 	"os"
@@ -22,56 +23,10 @@ func main() {
 	}
 }
 
-const formulaTemplate = `require_relative "../Strategies/private_strategy"
-class Enos < Formula
-	desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable and shareable declarative language."
-	homepage "https://github.com/hashicorp/enos"
-	version "{{.Version}}"
+//go:embed support/enos.rb.tmpl
+var formulaTemplate embed.FS
 
-	depends_on "terraform"
-
-	on_macos do
-		if Hardware::CPU.arm?
-			url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_darwin_arm64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-			sha256 "{{.DarwinARM64SHA}}"
-
-			def install
-				bin.install "enos"
-			end
-		end
-		if Hardware::CPU.intel?
-			url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_darwin_amd64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-			sha256 "{{.DarwinAMD64SHA}}"
-
-			def install
-				bin.install "enos"
-			end
-		end
-	end
-
-	on_linux do
-		if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-			url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_linux_arm64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-			sha256 "{{.LinuxARM64SHA}}"
-
-			def install
-				bin.install "enos"
-			end
-		end
-		if Hardware::CPU.intel?
-			url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_linux_amd64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-			sha256 "{{.LinuxAMD64SHA}}"
-
-			def install
-				bin.install "enos"
-			end
-		end
-	end
-end
-`
-
-// Create a new template
-var t = template.Must(template.New("formula").Parse(formulaTemplate))
+var t = template.Must(template.ParseFS(formulaTemplate, "support/enos.rb.tmpl"))
 
 var rootCmd = cobra.Command{
 	Use:   "homebrew",

@@ -47,5 +47,5 @@ func Test_renderHomebrewFormulaTemplate(t *testing.T) {
 	expected, err := io.ReadAll(f)
 	require.NoError(t, err)
 
-	require.Equal(t, expected, buf.Bytes())
+	require.Equal(t, string(expected), buf.String())
 }

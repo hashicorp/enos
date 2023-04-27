@@ -31,9 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: '^1.18.1'
       - name: golangci-lint
@@ -46,9 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: '^1.18.1'
       - name: fmt-check
@@ -64,9 +64,9 @@ jobs:
       CI: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version: '^1.18.1'
       - name: Setup Terraform
@@ -89,7 +89,7 @@ jobs:
           echo "${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}" > ./acceptance/support/private_key.pem
           chmod 600 ./acceptance/support/private_key.pem
       - name: Download Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{inputs.artifact-name }}
       - name: Acceptance Tests

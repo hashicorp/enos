@@ -99,11 +99,6 @@ func (e Element) Equal(other Element) bool {
 	return true
 }
 
-// NewElementFromProto creates a new Element from a proto filter element
-func NewElementFromProto(p *pb.Scenario_Filter_Element) Element {
-	return NewElement(p.GetKey(), p.GetValue())
-}
-
 func NewVector() *Vector {
 	return &Vector{}
 }
@@ -120,6 +115,14 @@ func (v *Vector) String() string {
 
 // Equal returns true if both Vectors have Equal values and Equal value ordering
 func (v *Vector) Equal(other *Vector) bool {
+	if v == nil && other == nil {
+		return true
+	}
+
+	if other == nil {
+		return false
+	}
+
 	if v.elements == nil && other.elements == nil {
 		return true
 	}
@@ -145,6 +148,14 @@ func (v *Vector) Equal(other *Vector) bool {
 // not be ordered the same. This is useful for Vectors of pairs that do not
 // enforce ordering.
 func (v *Vector) EqualUnordered(other *Vector) bool {
+	if v == nil && other == nil {
+		return true
+	}
+
+	if other == nil {
+		return false
+	}
+
 	if v.elements == nil && other.elements == nil {
 		return true
 	}
@@ -172,6 +183,18 @@ func (v *Vector) EqualUnordered(other *Vector) bool {
 // ContainsUnordered returns a boolean which represent if vector contains the values
 // of another vector.
 func (v *Vector) ContainsUnordered(other *Vector) bool {
+	if v == nil && other == nil {
+		return true
+	}
+
+	if other == nil {
+		return false
+	}
+
+	if len(v.elements) < 1 || len(other.elements) < 1 {
+		return false
+	}
+
 	for oi := range other.elements {
 		match := false
 		for vi := range v.elements {
@@ -384,6 +407,10 @@ func (m *Matrix) CartesianProduct() *Matrix {
 // HasVector returns whether or not a matrix has a vector that exactly matches
 // the elements of another that is given.
 func (m *Matrix) HasVector(other *Vector) bool {
+	if other == nil {
+		return false
+	}
+
 	for _, v := range m.Vectors {
 		if v.Equal(other) {
 			return true
@@ -396,6 +423,10 @@ func (m *Matrix) HasVector(other *Vector) bool {
 // HasVectorUnordered returns whether or not a matrix has a vector whose unordered
 // values match exactly with another that is given.
 func (m *Matrix) HasVectorUnordered(other *Vector) bool {
+	if other == nil {
+		return false
+	}
+
 	for _, v := range m.Vectors {
 		if v.EqualUnordered(other) {
 			return true
@@ -431,6 +462,10 @@ func (m *Matrix) UniqueValues() *Matrix {
 
 // Match determines if Exclude directive matches the vector
 func (ex *Exclude) Match(vec *Vector) bool {
+	if vec == nil {
+		return false
+	}
+
 	switch ex.Mode {
 	case pb.Scenario_Filter_Exclude_MODE_EXACTLY:
 		if vec.Equal(ex.Vector) {
@@ -460,6 +495,10 @@ func (ex *Exclude) Proto() *pb.Scenario_Filter_Exclude {
 
 // FromProto unmarshals a proto Scenario_Filter_Exclude into itself
 func (ex *Exclude) FromProto(pfe *pb.Scenario_Filter_Exclude) {
+	if pfe == nil {
+		return
+	}
+
 	ex.Vector = NewVectorFromProto(pfe.GetVector())
 	ex.Mode = pfe.GetMode()
 }

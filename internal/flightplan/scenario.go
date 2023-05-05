@@ -78,6 +78,10 @@ func (s *Scenario) Ref() *pb.Ref_Scenario {
 
 // FromRef takes a unmarshals a scenario reference into itself
 func (s *Scenario) FromRef(ref *pb.Ref_Scenario) {
+	if ref == nil {
+		return
+	}
+
 	s.Name = ref.GetId().GetName()
 	s.Variants = NewVectorFromProto(ref.GetId().GetVariants())
 }
@@ -85,6 +89,10 @@ func (s *Scenario) FromRef(ref *pb.Ref_Scenario) {
 // Match takes a filter and determines whether or not the scenario matches
 // it.
 func (s *Scenario) Match(filter *ScenarioFilter) bool {
+	if filter == nil {
+		return false
+	}
+
 	if filter.SelectAll {
 		return true
 	}
@@ -92,6 +100,18 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 	// Get scenarios that match our name
 	if filter.Name != "" && filter.Name != s.Name {
 		return false
+	}
+
+	// If our scenario doesn't have any variants make make sure we don't have
+	// a filter with includes or excludes.
+	if s.Variants == nil || len(s.Variants.elements) == 0 {
+		if filter.Include != nil && len(filter.Include.elements) > 0 {
+			return false
+		}
+
+		if filter.Exclude != nil && len(filter.Exclude) > 0 {
+			return false
+		}
 	}
 
 	// Make sure it matches any includes

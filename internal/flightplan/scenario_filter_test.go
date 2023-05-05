@@ -10,7 +10,7 @@ import (
 
 // Test_ScenarioFilter_WithScenarioFilterFromScenarioRef tests filtering a
 // scenario that was created from a scenario reference.
-func Test_ScenarioFilter_WithScenarioFilterFromScenarioRe(t *testing.T) {
+func Test_ScenarioFilter_WithScenarioFilterFromScenarioRef(t *testing.T) {
 	ref := &pb.Ref_Scenario{
 		Id: &pb.Scenario_ID{
 			Name: "foo",
@@ -53,6 +53,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}}},
 		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}}},
 		{Name: "upgrade", Variants: &Vector{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}}},
+		{Name: "no-variant"},
 	}
 
 	for _, test := range []struct {
@@ -65,7 +66,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			"name only",
 			scenarios,
 			&ScenarioFilter{Name: "upgrade"},
-			scenarios[4:],
+			scenarios[4:8],
 		},
 		{
 			"name no match",
@@ -108,6 +109,15 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			&ScenarioFilter{
 				Name:    "upgrade",
 				Include: &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("edition", "ent")}},
+			},
+			[]*Scenario{},
+		},
+		{
+			"variant filter pass to scenario without variants",
+			scenarios,
+			&ScenarioFilter{
+				Name:    "no-variant",
+				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
 			},
 			[]*Scenario{},
 		},

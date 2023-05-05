@@ -17,9 +17,9 @@ on:
         description: The Artifactory repo from which to download the release assets
         default: stable
         options:
-        - dev
-        - stable
-        - staging
+          - dev
+          - stable
+          - staging
       pre_release:
         required: false
         type: boolean

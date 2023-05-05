@@ -30,7 +30,7 @@ jobs:
     env:
       # Note: `gh` CLI automatically looks for and uses `env.GH_TOKEN` for authentication.
       # This token must have read:org scope in order to authenticate on a different repo.
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
       TARGET_REPO: hashicorp/homebrew-internal
       TARGET_REPO_FILEPATH: homebrew-internal-checkout
       BASE_BRANCH: main
@@ -45,7 +45,7 @@ jobs:
       # Checkout Enos repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: enos-checkout
 
@@ -53,7 +53,7 @@ jobs:
       - name: Setup bob CLI
         uses: hashicorp/action-setup-bob@v1
         with:
-          github-token: ${{ secrets.GH_TOKEN }}
+          github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
 
       # Use bob to download SHA256SUMS file from Artifactory
       - name: Download artifacts
@@ -78,11 +78,11 @@ jobs:
       # in order to accommodate checking out multiple repos.
       # A token with sufficient permissions for the target repo is required.
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           repository: ${{ env.TARGET_REPO }}
           path: ${{ env.TARGET_REPO_FILEPATH }}
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
 
       # Create PR
       - name: Create PR

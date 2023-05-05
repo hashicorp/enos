@@ -15,15 +15,35 @@ on:
       sha:
         required: true
         type: string
-      product:
-        required: true
-        type: string
       version:
         required: true
         type: string
+  # Dispatchable if for some reason we need to change the homebrew formula without
+  # creating a new release.
+  workflow_dispatch:
+    inputs:
+      channel:
+        required: true
+        type: choice
+        description: The Artifactory repo from which to download the release assets
+        default: stable
+        options:
+          - dev
+          - stable
+          - staging
+      product:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+        description: The git SHA of the artifacts in Artifactory to be used in this release
+      version:
+        required: true
+        type: string
+        description: The version number to be used in this release (e.g. 0.0.1)
 
 jobs:
-
   update-formula:
     name: "Update Homebrew formula definition"
     runs-on: ubuntu-latest
@@ -44,7 +64,7 @@ jobs:
     steps:
       # Checkout Enos repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
-      - name: Checkout
+      - name: Checkout enos repo
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           path: enos-checkout
@@ -77,7 +97,7 @@ jobs:
       # Checkout target repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
       # A token with sufficient permissions for the target repo is required.
-      - name: Checkout
+      - name: Checkout homebrew-internal
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           repository: ${{ env.TARGET_REPO }}

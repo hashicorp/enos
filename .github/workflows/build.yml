@@ -22,7 +22,7 @@ jobs:
         id: get-product-version
         run: |
           make version
-          echo "::set-output name=product-version::$(make version)"
+          echo "product-version=$(make version)" >> $GITHUB_OUTPUT
 
   generate-metadata-file:
     needs: get-product-version
@@ -49,7 +49,6 @@ jobs:
     runs-on: linux
     strategy:
       matrix:
-        go: ["1.18.1"]
         goos: [linux, darwin]
         goarch: [amd64, arm64]
       fail-fast: true
@@ -60,12 +59,10 @@ jobs:
     outputs:
       artifact-name: ${{ steps.Build.outputs.artifact-name }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      - name: Setup go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: ${{ matrix.go }}
+          go-version-file: .go-version
       - name: Build
         env:
           GOOS: ${{ matrix.goos }}
@@ -74,15 +71,14 @@ jobs:
           mkdir dist out
           make
           zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
-          echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
+          echo "artifact-name=${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip" >> $GITHUB_OUTPUT
       - name: Upload Artifacts
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
           path: out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
           retention-days: 1
-      - name: Package
-        if: ${{ matrix.goos == 'linux' }}
+      - if: ${{ matrix.goos == 'linux' }}
         uses: hashicorp/actions-packaging-linux@v1
         with:
           name: ${{ github.event.repository.name }}
@@ -128,10 +124,8 @@ jobs:
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      - name: Docker Build (Action)
-        uses: hashicorp/actions-docker-build@v1
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: hashicorp/actions-docker-build@v1
         with:
           version: ${{env.version}}
           target: default

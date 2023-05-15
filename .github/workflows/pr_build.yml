@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ["1.18.1"]
         goos: [linux]
         goarch: [amd64]
       fail-fast: true
@@ -28,24 +27,22 @@ jobs:
       GOARCH: ${{ matrix.goarch }}
       CI: true
     steps:
-      - name: Setup go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
-          go-version: '^1.18.1'
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+          go-version-file: .go-version
       - name: Get Product Version
         id: get-product-version
         run: |
           make version
-          echo "::set-output name=product-version::$(make version)"
+          echo "product-version=$(make version)" >> $GITHUB_OUTPUT
       - name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
         id: build
         run: |
           mkdir dist out
           make build-race
           zip -r -j out/${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
-          echo "::set-output name=artifact-name::${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip"
+          echo "artifact-name=${{ env.PKG_NAME }}_${{ steps.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip" >> $GITHUB_OUTPUT
       - name: Upload
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:

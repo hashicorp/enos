@@ -352,12 +352,12 @@ func LookupReattachInfoFromEnv() (string, bool) {
 	return os.LookupEnv("TF_REATTACH_PROVIDERS")
 }
 
-// UnMarshallReattachInfo unmarshalls the reattach providers configuration string into a tfexec.ReattachOption.
-func UnMarshallReattachInfo(reattachInfo string) (*tfexec.ReattachOption, error) {
+// UnMarshalReattachInfo unmarshals the reattach providers configuration string into a tfexec.ReattachOption.
+func UnMarshalReattachInfo(reattachInfo string) (*tfexec.ReattachOption, error) {
 	var info tfexec.ReattachInfo
 	err := json.Unmarshal([]byte(reattachInfo), &info)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshall, reattach providers config, due to: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal, reattach providers config, due to: %w", err)
 	}
 	return tfexec.Reattach(info), nil
 }

@@ -63,7 +63,7 @@ func (r *Runner) terraformPlan(
 
 	options := r.TFConfig.PlanOptions()
 	if reattachInfo, ok := terraform.LookupReattachInfoFromEnv(); ok {
-		reattachOpt, err := terraform.UnMarshallReattachInfo(reattachInfo)
+		reattachOpt, err := terraform.UnMarshalReattachInfo(reattachInfo)
 		if err != nil {
 			res.Diagnostics = append(res.Diagnostics, &pb.Diagnostic{
 				Severity: pb.Diagnostic_SEVERITY_WARNING,

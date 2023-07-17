@@ -38,11 +38,7 @@ func (c *Connection) StreamOperations(
 		return res
 	}
 
-	var err error
-	res.Responses, err = c.streamResponses(ctx, opRes.GetOperations(), ui)
-	if err != nil {
-		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
-	}
+	res.Responses = c.streamResponses(ctx, opRes.GetOperations(), ui)
 
 	return res
 }
@@ -54,10 +50,7 @@ func (c *Connection) streamResponses(
 	ctx context.Context,
 	refs []*pb.Ref_Operation,
 	ui uipkg.View,
-) (
-	[]*pb.Operation_Response,
-	error,
-) {
+) []*pb.Operation_Response {
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
 	res := []*pb.Operation_Response{}
@@ -86,6 +79,7 @@ func (c *Connection) streamResponses(
 					Op:          ref,
 				})
 				mu.Unlock()
+
 				return
 			}
 
@@ -100,6 +94,7 @@ func (c *Connection) streamResponses(
 					eventRes, err := stream.Recv()
 					if err != nil {
 						errC <- err
+
 						return
 					}
 
@@ -127,6 +122,7 @@ func (c *Connection) streamResponses(
 							)
 						}
 					}
+
 					break LOOP
 				case <-ticker.C:
 					if lastEvent != nil {
@@ -173,5 +169,5 @@ func (c *Connection) streamResponses(
 
 	wg.Wait()
 
-	return res, nil
+	return res
 }

@@ -11,7 +11,7 @@ import (
 
 var _ State = (*InMemoryState)(nil)
 
-// InMemoryState is an implementation of our state that lives only in memory
+// InMemoryState is an implementation of our state that lives only in memory.
 type InMemoryState struct {
 	mu sync.RWMutex
 	//	scenario ID -> operation id -> operation response
@@ -20,7 +20,7 @@ type InMemoryState struct {
 	events map[string]map[string][]*pb.Operation_Event
 }
 
-// NewInMemoryState returns a new InMemoryState
+// NewInMemoryState returns a new InMemoryState.
 func NewInMemoryState() *InMemoryState {
 	return &InMemoryState{
 		mu:        sync.RWMutex{},
@@ -44,7 +44,7 @@ func (i *InMemoryState) GetOperationResponse(
 }
 
 // GetOperationEvents takes a reference to an operation and returns the
-// the entire event history.
+// entire event history.
 func (i *InMemoryState) GetOperationEvents(
 	ref *pb.Ref_Operation,
 ) (
@@ -168,12 +168,12 @@ func (i *InMemoryState) getOperationResponse(
 
 	_, ok := i.responses[sid]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("no operations matching scenario ID")
 	}
 
 	op, ok := i.responses[sid][uid]
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("no operations matching scenario and operation IDs")
 	}
 
 	return op, nil

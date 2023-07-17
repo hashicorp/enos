@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioGenerateCmd returns a new 'scenario generate' sub-command
+// newScenarioGenerateCmd returns a new 'scenario generate' sub-command.
 func newScenarioGenerateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "generate [FILTER]",
@@ -22,7 +22,7 @@ func newScenarioGenerateCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioGenerateCmd is the function that generates scenarios
+// runScenarioGenerateCmd is the function that generates scenarios.
 func runScenarioGenerateCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

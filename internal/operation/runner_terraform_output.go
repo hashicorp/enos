@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// terraformOutput renders the Terraform output
+// terraformOutput renders the Terraform output.
 func (r *Runner) terraformOutput(
 	ctx context.Context,
 	req *pb.Operation_Request,
@@ -23,6 +23,7 @@ func (r *Runner) terraformOutput(
 	if err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
+
 		return res
 	}
 
@@ -53,14 +54,16 @@ func (r *Runner) terraformOutput(
 	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 
 	// Configure our Terraform executor to use the module that should have
 	// already been generated.
-	module, diags := moduleForReq(req)
+	module, diags := moduleForReq(ctx, req)
 	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, diags) {
 		notifyFail(diags)
+
 		return res
 	} else {
 		res.Diagnostics = append(res.GetDiagnostics(), diags...)
@@ -76,6 +79,7 @@ func (r *Runner) terraformOutput(
 	metas, err := tf.Output(ctx, r.TFConfig.OutputOptions()...)
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 
@@ -83,6 +87,7 @@ func (r *Runner) terraformOutput(
 		meta, found := metas[r.TFConfig.OutputName]
 		if !found {
 			notifyFail(diagnostics.FromErr(fmt.Errorf("no output with key %s", r.TFConfig.OutputName)))
+
 			return res
 		}
 
@@ -93,7 +98,6 @@ func (r *Runner) terraformOutput(
 			Sensitive: meta.Sensitive,
 			Stderr:    outText.Stderr.String(),
 		})
-
 	} else {
 		for name, meta := range metas {
 			res.Meta = append(res.Meta, &pb.Terraform_Command_Output_Response_Meta{

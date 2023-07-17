@@ -31,6 +31,7 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 			if err = events.PublishResponse(res); err != nil {
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 

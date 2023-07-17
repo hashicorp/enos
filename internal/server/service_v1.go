@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -27,13 +26,13 @@ import (
 
 var _ pb.EnosServiceServer = (*ServiceV1)(nil)
 
-// ServiceV1 is the enos.v1.ServerService
+// ServiceV1 is the enos.v1.ServerService.
 type ServiceV1 struct {
 	log hclog.Logger
 
-	grpcListenAddr net.Addr
-	grpcListener   net.Listener
-	grpcServer     *grpc.Server
+	configuredURL *url.URL
+	grpcListener  net.Listener
+	grpcServer    *grpc.Server
 
 	operator operation.Operator
 }
@@ -43,49 +42,40 @@ type ServiceConfig struct {
 	ListenAddr net.Addr
 }
 
-// Opt is a functional option
+// Opt is a functional option.
 type Opt func(*ServiceV1) error
 
-// WithGRPCListenURL configures the gRPC listener address from a given URL
+// WithGRPCListenURL configures the gRPC listener address from a given URL.
 func WithGRPCListenURL(url *url.URL) Opt {
 	return func(s *ServiceV1) error {
-		var err error
-		s.grpcListenAddr, err = ListenAddr(url)
-		return err
+		if url == nil {
+			return fmt.Errorf("cannot configure listener URL that is nil")
+		}
+		s.configuredURL = url
+
+		return nil
 	}
 }
 
-// WithLogger configures the logger
+// WithLogger configures the logger.
 func WithLogger(log hclog.Logger) Opt {
 	return func(s *ServiceV1) error {
 		s.log = log
+
 		return nil
 	}
 }
 
-// WithOperator configures the servers operation operator
+// WithOperator configures the servers operation operator.
 func WithOperator(op operation.Operator) Opt {
 	return func(s *ServiceV1) error {
 		s.operator = op
+
 		return nil
 	}
 }
 
-// ListenAddr returns a server listen address from a URL
-func ListenAddr(url *url.URL) (net.Addr, error) {
-	switch url.Scheme {
-	case "unix", "unixpacket":
-		return net.ResolveUnixAddr(url.Scheme, url.Host)
-	default:
-		addr := url.Host
-		if idx := strings.IndexByte(addr, ':'); idx < 0 {
-			addr += ":3205"
-		}
-		return net.ResolveTCPAddr("tcp", addr)
-	}
-}
-
-// New takes options and returns an instance of ServiceV1
+// New takes options and returns an instance of ServiceV1.
 func New(opts ...Opt) (*ServiceV1, error) {
 	svc := &ServiceV1{
 		log:      hclog.NewNullLogger(),
@@ -106,7 +96,7 @@ func New(opts ...Opt) (*ServiceV1, error) {
 			logUnaryInterceptor(grpcLogger, false),
 		),
 		grpc.ChainStreamInterceptor(
-			logStreamInterceptor(grpcLogger, false),
+			logStreamInterceptor(grpcLogger),
 		),
 		grpc.KeepaliveEnforcementPolicy(
 			keepalive.EnforcementPolicy{
@@ -123,13 +113,12 @@ func New(opts ...Opt) (*ServiceV1, error) {
 // Start takes a context and starts the server. It returns any immediate errors and a service config.
 // Fatal errors encountered will automatically stop the server.
 func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
-	if s.grpcListenAddr == nil {
+	if s.configuredURL == nil {
 		return nil, fmt.Errorf("unable to start gRPC service: you must provider a listen address")
 	}
 
 	s.log.Info("starting gRPC server",
-		"network", s.grpcListenAddr.Network(),
-		"addr", s.grpcListenAddr.String(),
+		"listen_grpc", s.configuredURL.String(),
 	)
 
 	// Only interrupt and kill are guaranteed on all OSes. We'll pipe through unix signals we care
@@ -152,7 +141,7 @@ func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
 		errC := make(chan error, 1)
 		wg.Add(1)
 		go func() {
-			errC <- s.serve(ctx)
+			errC <- s.serve()
 			wg.Done()
 		}()
 
@@ -163,12 +152,14 @@ func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
 			if err != nil {
 				s.log.Error("server encountered an error", "error", err)
 			}
+
 			return
 		case <-ctx.Done():
 			err := multierror.Append(ctx.Err(), s.Stop()).ErrorOrNil()
 			if err != nil {
 				s.log.Error(err.Error())
 			}
+
 			return
 		}
 	}
@@ -180,7 +171,7 @@ func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
 	}, nil
 }
 
-// startListener starts the gRPC server listener
+// startListener starts the gRPC server listener.
 func (s *ServiceV1) startListener(ctx context.Context) error {
 	// Reflection makes it easy to see what methods are on a server via grpcurl.
 	reflection.Register(s.grpcServer)
@@ -189,30 +180,56 @@ func (s *ServiceV1) startListener(ctx context.Context) error {
 	pb.RegisterEnosServiceServer(s.grpcServer, s)
 
 	s.log.Debug("starting gRPC server listener",
-		"network", s.grpcListenAddr.Network(),
-		"addr", s.grpcListenAddr.String(),
+		"listen_grpc", s.configuredURL.String(),
 	)
+
+	// Start the listener
+	var addr net.Addr
 	var err error
-	s.grpcListener, err = net.Listen(s.grpcListenAddr.Network(), s.grpcListenAddr.String())
+
+	switch s.configuredURL.Scheme {
+	case "unix", "unixpacket":
+		addr, err = net.ResolveUnixAddr(s.configuredURL.Scheme, s.configuredURL.Host)
+	default:
+		if p := s.configuredURL.Port(); p == "" {
+			s.configuredURL.Host = fmt.Sprintf("%s:0", s.configuredURL.Host)
+		}
+
+		addr, err = net.ResolveTCPAddr("tcp", s.configuredURL.Host)
+	}
+
 	if err != nil {
-		s.log.Error("failed to start gRPC server listener",
-			"network", s.grpcListenAddr.Network(),
-			"addr", s.grpcListenAddr.String(),
+		s.log.Error("failed to resolve gRPC server listener",
+			"listen_grpc", s.configuredURL.String(),
 			"error", err,
 		)
-		return err
+
+		return fmt.Errorf("failed to resolve gRPC server listener: %w", err)
+	}
+
+	lc := &net.ListenConfig{}
+	s.grpcListener, err = lc.Listen(ctx, addr.Network(), addr.String())
+	if err != nil {
+		s.log.Error("failed to start gRPC server listener",
+			"listen_grpc", s.configuredURL.String(),
+			"error", err,
+		)
+
+		return fmt.Errorf("starting gRPC server listener %w", err)
 	}
 
 	s.log.Debug("gRPC server listener is listening",
-		"network", s.grpcListenAddr.Network(),
-		"configured_addr", s.grpcListenAddr.String(),
+		"host", s.configuredURL.Host,
+		"port", s.configuredURL.Host,
+		"requested_addr", addr,
+		"network", s.grpcListener.Addr().Network(),
 		"resolved_addr", s.grpcListener.Addr().String(),
 	)
 
 	return nil
 }
 
-// startOperator starts the service operator
+// startOperator starts the service operator.
 func (s *ServiceV1) startOperator(ctx context.Context) error {
 	s.log.Debug("starting service operator")
 
@@ -221,24 +238,27 @@ func (s *ServiceV1) startOperator(ctx context.Context) error {
 		s.log.Error("failed to start service operator",
 			"error", err,
 		)
+
 		return err
 	}
 
 	s.log.Debug("service operator running")
+
 	return nil
 }
 
 // serve services requests. It will block until an error is encountered.
-func (s *ServiceV1) serve(ctx context.Context) error {
+func (s *ServiceV1) serve() error {
 	s.log.Debug("serving gRPC requests",
-		"network", s.grpcListenAddr.Network(),
+		"listen_grpc", s.configuredURL.String(),
+		"network", s.grpcListener.Addr().Network(),
 		"addr", s.grpcListener.Addr(),
 	)
 
 	return s.grpcServer.Serve(s.grpcListener)
 }
 
-// Stop stops the service
+// Stop stops the service.
 func (s *ServiceV1) Stop() error {
 	var wg sync.WaitGroup
 	var err error
@@ -282,6 +302,7 @@ func (s *ServiceV1) Stop() error {
 // of operation references, and any diagnostics if dispatching isn't possible.
 // The base operation must include a valid operation type.
 func (s *ServiceV1) dispatch(
+	ctx context.Context,
 	f *pb.Scenario_Filter,
 	baseReq *pb.Operation_Request,
 ) (
@@ -300,6 +321,7 @@ func (s *ServiceV1) dispatch(
 	}
 
 	fp, decRes := decodeFlightPlan(
+		ctx,
 		ws.GetFlightplan(),
 		flightplan.DecodeModeFull,
 		f,
@@ -336,6 +358,7 @@ func (s *ServiceV1) dispatch(
 		err := proto.Copy(baseReq, req)
 		if err != nil {
 			diags = append(diags, diagnostics.FromErr(err)...)
+
 			continue
 		}
 

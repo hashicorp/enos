@@ -3139,6 +3139,7 @@ type Operation_Request struct {
 	Workspace *Workspace    `protobuf:"bytes,2,opt,name=workspace,proto3" json:"workspace,omitempty"`
 	Id        string        `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
 	// Types that are assignable to Value:
+	//
 	//	*Operation_Request_Generate_
 	//	*Operation_Request_Check_
 	//	*Operation_Request_Launch_
@@ -3320,6 +3321,7 @@ type Operation_Response struct {
 	// the ui package.
 	//
 	// Types that are assignable to Value:
+	//
 	//	*Operation_Response_Generate_
 	//	*Operation_Response_Check_
 	//	*Operation_Response_Launch_
@@ -3504,6 +3506,7 @@ type Operation_Event struct {
 	// diagnostics and ui packages to handle the new event types.
 	//
 	// Types that are assignable to Value:
+	//
 	//	*Operation_Event_Decode
 	//	*Operation_Event_Generate
 	//	*Operation_Event_Init

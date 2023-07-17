@@ -218,6 +218,7 @@ func (v *View) writeEventOutput(e *pb.Operation_Event, w *strings.Builder) {
 		s, err := format.TerraformOutput(meta, 2)
 		if err != nil {
 			diags = append(diags, diagnostics.FromErr(err)...)
+
 			continue
 		}
 

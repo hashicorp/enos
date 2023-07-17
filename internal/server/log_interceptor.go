@@ -59,7 +59,7 @@ func logUnaryInterceptor(logger hclog.Logger, verbose bool) grpc.UnaryServerInte
 //
 // Additionally, logUnaryInterceptor logs request and response metadata. If verbose
 // is set to true, the request and response attributes are logged too.
-func logStreamInterceptor(logger hclog.Logger, verbose bool) grpc.StreamServerInterceptor {
+func logStreamInterceptor(logger hclog.Logger) grpc.StreamServerInterceptor {
 	return func(
 		srv interface{},
 		ss grpc.ServerStream,

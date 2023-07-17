@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// An Element is an Element of a Matrix Vector
+// An Element is an Element of a Matrix Vector.
 type Element struct {
 	Key             string
 	Val             string
@@ -36,18 +36,18 @@ type Matrix struct {
 	Vectors []*Vector
 }
 
-// An Exclude is a filter to removing Elements from the Matrix's Vector combined
+// An Exclude is a filter to removing Elements from the Matrix's Vector combined.
 type Exclude struct {
 	Mode   pb.Scenario_Filter_Exclude_Mode
 	Vector *Vector
 }
 
-// NewElement takes an element key and value and returns a new Element
+// NewElement takes an element key and value and returns a new Element.
 func NewElement(key string, val string) Element {
 	return Element{Key: key, Val: val}
 }
 
-// NewMatrix returns a pointer to a new instance of Matrix
+// NewMatrix returns a pointer to a new instance of Matrix.
 func NewMatrix() *Matrix {
 	return &Matrix{}
 }
@@ -61,6 +61,8 @@ func NewExclude(mode pb.Scenario_Filter_Exclude_Mode, vec *Vector) (*Exclude, er
 	case pb.Scenario_Filter_Exclude_MODE_EXACTLY,
 		pb.Scenario_Filter_Exclude_MODE_EQUAL_UNORDERED,
 		pb.Scenario_Filter_Exclude_MODE_CONTAINS:
+	case pb.Scenario_Filter_Exclude_MODE_UNSPECIFIED:
+		return ex, fmt.Errorf("exclusion mode was not specified")
 	default:
 		return ex, fmt.Errorf("unknown exclusion mode: %d", mode)
 	}
@@ -68,7 +70,7 @@ func NewExclude(mode pb.Scenario_Filter_Exclude_Mode, vec *Vector) (*Exclude, er
 	return ex, nil
 }
 
-// String returns the element as a string
+// String returns the element as a string.
 func (e Element) String() string {
 	// Matrix and vector comparison operations often required the element as
 	// a string. We'll cache it to speed up those operations.
@@ -81,12 +83,12 @@ func (e Element) String() string {
 	return e.formattedString
 }
 
-// Proto returns the element as a proto message
+// Proto returns the element as a proto message.
 func (e Element) Proto() *pb.Scenario_Filter_Element {
 	return &pb.Scenario_Filter_Element{Key: e.Key, Value: e.Val}
 }
 
-// Equals compares the element with another
+// Equals compares the element with another.
 func (e Element) Equal(other Element) bool {
 	if e.Key != other.Key {
 		return false
@@ -103,7 +105,7 @@ func NewVector() *Vector {
 	return &Vector{}
 }
 
-// String returns the vector as a string
+// String returns the vector as a string.
 func (v *Vector) String() string {
 	elmStrings := []string{}
 	for _, elm := range v.elements {
@@ -113,7 +115,7 @@ func (v *Vector) String() string {
 	return fmt.Sprintf("[%s]", strings.Join(elmStrings, " "))
 }
 
-// Equal returns true if both Vectors have Equal values and Equal value ordering
+// Equal returns true if both Vectors have Equal values and Equal value ordering.
 func (v *Vector) Equal(other *Vector) bool {
 	if v == nil && other == nil {
 		return true
@@ -200,6 +202,7 @@ func (v *Vector) ContainsUnordered(other *Vector) bool {
 		for vi := range v.elements {
 			if other.elements[oi].Equal(v.elements[vi]) {
 				match = true
+
 				break
 			}
 		}
@@ -222,7 +225,7 @@ func (v *Vector) CtyVal() cty.Value {
 	return cty.ObjectVal(vals)
 }
 
-// Proto returns the vector as a proto message
+// Proto returns the vector as a proto message.
 func (v *Vector) Proto() *pb.Scenario_Filter_Vector {
 	pbv := &pb.Scenario_Filter_Vector{Elements: []*pb.Scenario_Filter_Element{}}
 
@@ -240,7 +243,7 @@ func (v *Vector) Proto() *pb.Scenario_Filter_Vector {
 	return pbv
 }
 
-// Add adds an element to the Vector
+// Add adds an element to the Vector.
 func (v *Vector) Add(e Element) {
 	if v.elements == nil {
 		v.elements = []Element{}
@@ -254,7 +257,7 @@ func (v *Vector) Add(e Element) {
 	}
 }
 
-// Copy creates a new Copy of the Vector
+// Copy creates a new Copy of the Vector.
 func (v *Vector) Copy() *Vector {
 	vecC := NewVector()
 
@@ -274,7 +277,7 @@ func (v *Vector) Copy() *Vector {
 	return vecC
 }
 
-// Elements returns a list of the vectors elements
+// Elements returns a list of the vectors elements.
 func (v *Vector) Elements() []Element {
 	return v.elements
 }
@@ -315,6 +318,7 @@ func NewVectorFromProto(pbv *pb.Scenario_Filter_Vector) *Vector {
 	for _, elm := range pbv.GetElements() {
 		v.Add(NewElement(elm.GetKey(), elm.GetValue()))
 	}
+
 	return v
 }
 
@@ -331,17 +335,32 @@ func (m *Matrix) AddVector(vec *Vector) {
 	m.Vectors = append(m.Vectors, vec)
 }
 
-// Exclude takes exclude vararg exclude directives as instances of Exclude. It
-// returns a new matrix with all exclude directives having been processed on
-// on the parent matrix.
-func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
+// Copy creates a new Copy of the Matrix.
+func (m *Matrix) Copy() *Matrix {
 	nm := NewMatrix()
 
+	for i := range m.Vectors {
+		nm.AddVector(m.Vectors[i].Copy())
+	}
+
+	return nm
+}
+
+// Exclude takes exclude vararg exclude directives as instances of Exclude. It
+// returns a new matrix with all exclude directives having been processed on
+// the parent matrix.
+func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
+	if len(Excludes) < 1 {
+		return m.Copy()
+	}
+
+	nm := NewMatrix()
 	for _, vec := range m.Vectors {
 		skip := false
 		for _, ex := range Excludes {
 			if ex.Match(vec) {
 				skip = true
+
 				break
 			}
 		}
@@ -460,7 +479,39 @@ func (m *Matrix) UniqueValues() *Matrix {
 	return nm
 }
 
-// Match determines if Exclude directive matches the vector
+// Filter takes a scenario filter returns a new filtered matrix.
+func (m *Matrix) Filter(filter *ScenarioFilter) *Matrix {
+	if filter == nil {
+		return nil
+	}
+
+	if filter.SelectAll {
+		return m.Copy()
+	}
+
+	var nm *Matrix
+	if filter.Include != nil && len(filter.Include.elements) > 0 {
+		// If we have an include filter we'll generate a new sub-matrix with matching vectors
+		nm = NewMatrix()
+		for i := range m.Vectors {
+			if m.Vectors[i].ContainsUnordered(filter.Include) {
+				nm.AddVector(m.Vectors[i])
+			}
+		}
+	} else {
+		// If we don't have an include and we're not selecting all we need to start with our
+		// entire matrix and then process excludes.
+		nm = m.Copy()
+	}
+
+	if filter.Exclude != nil && len(filter.Exclude) > 0 {
+		nm = nm.Exclude(filter.Exclude...)
+	}
+
+	return nm
+}
+
+// Match determines if Exclude directive matches the vector.
 func (ex *Exclude) Match(vec *Vector) bool {
 	if vec == nil {
 		return false
@@ -479,13 +530,16 @@ func (ex *Exclude) Match(vec *Vector) bool {
 		if vec.ContainsUnordered(ex.Vector) {
 			return true
 		}
+	case pb.Scenario_Filter_Exclude_MODE_UNSPECIFIED:
+		return false
 	default:
+		return false
 	}
 
 	return false
 }
 
-// Proto returns the exclude as a proto message
+// Proto returns the exclude as a proto message.
 func (ex *Exclude) Proto() *pb.Scenario_Filter_Exclude {
 	return &pb.Scenario_Filter_Exclude{
 		Vector: ex.Vector.Proto(),
@@ -493,7 +547,7 @@ func (ex *Exclude) Proto() *pb.Scenario_Filter_Exclude {
 	}
 }
 
-// FromProto unmarshals a proto Scenario_Filter_Exclude into itself
+// FromProto unmarshals a proto Scenario_Filter_Exclude into itself.
 func (ex *Exclude) FromProto(pfe *pb.Scenario_Filter_Exclude) {
 	if pfe == nil {
 		return

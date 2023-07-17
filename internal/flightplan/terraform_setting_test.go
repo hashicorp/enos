@@ -9,7 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// Test_Decode_TerraformSettings
+// Test_Decode_TerraformSettings.
 func Test_Decode_TerraformSettings(t *testing.T) {
 	t.Parallel()
 
@@ -897,10 +897,14 @@ scenario "default" {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)
@@ -910,6 +914,8 @@ scenario "default" {
 }
 
 func Test_TerraformSettings_Cty_RoundTrip(t *testing.T) {
+	t.Parallel()
+
 	setting := &TerraformSetting{
 		Name:            "default",
 		RequiredVersion: cty.StringVal(">= 1.1.0"),

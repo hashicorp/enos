@@ -1,12 +1,15 @@
 package server
 
 import (
+	"context"
+
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 func decodeFlightPlan(
+	ctx context.Context,
 	pfp *pb.FlightPlan,
 	mode flightplan.DecodeMode,
 	f *pb.Scenario_Filter,
@@ -23,21 +26,17 @@ func decodeFlightPlan(
 		flightplan.WithDecoderDecodeMode(mode),
 	}
 
-	if f != nil {
-		filter, err := flightplan.NewScenarioFilter(
-			flightplan.WithScenarioFilterDecode(f),
-		)
-		if err != nil {
-			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
-			return nil, res
-		}
-
-		opts = append(opts, flightplan.WithDecoderScenarioFilter(filter))
+	sf, err := flightplan.NewScenarioFilter(flightplan.WithScenarioFilterDecode(f))
+	if err != nil {
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+	} else {
+		opts = append(opts, flightplan.WithDecoderScenarioFilter(sf))
 	}
 
 	dec, err := flightplan.NewDecoder(opts...)
 	if err != nil {
 		res.Diagnostics = diagnostics.FromErr(err)
+
 		return nil, res
 	}
 
@@ -50,7 +49,7 @@ func decodeFlightPlan(
 		return nil, res
 	}
 
-	fp, hclDiags := dec.Decode()
+	fp, hclDiags := dec.Decode(ctx)
 	if len(hclDiags) > 0 {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
 	}

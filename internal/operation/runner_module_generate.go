@@ -31,6 +31,7 @@ func (r *Runner) moduleGenerate(
 	if err != nil {
 		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
+
 		return resVal
 	}
 
@@ -41,6 +42,7 @@ func (r *Runner) moduleGenerate(
 	if err = events.Publish(event); err != nil {
 		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to send event", "error", err)
+
 		return resVal
 	}
 
@@ -62,16 +64,18 @@ func (r *Runner) moduleGenerate(
 	select {
 	case <-ctx.Done():
 		notifyFail(diagnostics.FromErr(ctx.Err()))
+
 		return resVal
 	default:
 	}
 
 	// Decode our scenario and create our module generator
-	gen, scenario, diags := scenarioAndModuleGeneratorForReq(req)
+	gen, scenario, diags := scenarioAndModuleGeneratorForReq(ctx, req)
 	if diagnostics.HasFailed(
 		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
 		diags) {
 		notifyFail(diags)
+
 		return resVal
 	}
 
@@ -79,6 +83,7 @@ func (r *Runner) moduleGenerate(
 	err = gen.Generate()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return resVal
 	}
 
@@ -107,7 +112,7 @@ func (r *Runner) moduleGenerate(
 	return resVal
 }
 
-func scenarioAndModuleGeneratorForReq(req *pb.Operation_Request) (
+func scenarioAndModuleGeneratorForReq(ctx context.Context, req *pb.Operation_Request) (
 	*generate.Generator,
 	*flightplan.Scenario,
 	[]*pb.Diagnostic,
@@ -123,7 +128,7 @@ func scenarioAndModuleGeneratorForReq(req *pb.Operation_Request) (
 	}
 
 	// Decode our flight plan, find our scenario
-	fp, decRes := decodeFlightPlan(ws.GetFlightplan())
+	fp, decRes := decodeFlightPlan(ctx, ws.GetFlightplan())
 	if diagnostics.HasFailed(
 		ws.GetTfExecCfg().GetFailOnWarnings(),
 		decRes.GetDiagnostics(),
@@ -181,8 +186,8 @@ func scenarioAndModuleGeneratorForReq(req *pb.Operation_Request) (
 
 // moduleForReq returns a Terraform module for the request. It does not generate
 // it, it can only refer to where it would/should exist.
-func moduleForReq(req *pb.Operation_Request) (*pb.Terraform_Module, []*pb.Diagnostic) {
-	gen, scenario, diags := scenarioAndModuleGeneratorForReq(req)
+func moduleForReq(ctx context.Context, req *pb.Operation_Request) (*pb.Terraform_Module, []*pb.Diagnostic) {
+	gen, scenario, diags := scenarioAndModuleGeneratorForReq(ctx, req)
 	if diagnostics.HasErrors(diags) {
 		return nil, diags
 	}

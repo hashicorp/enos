@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	// These have all been made up and have no scientific backing
+	// These have all been made up and have no scientific backing.
 
 	// DefaultOperatorWorkerCount is how many workers to run. The number of
 	// parallel operations is limited to the number of workers.

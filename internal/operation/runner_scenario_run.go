@@ -27,6 +27,7 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 			if err = events.PublishResponse(res); err != nil {
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 
@@ -75,7 +76,7 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 }
 
 // scenarioRun initializes, validates, plans, applies and destroys the generatedTerraform
-// Terraform module
+// Terraform module.
 func (r *Runner) scenarioRun(
 	ctx context.Context,
 	req *pb.Operation_Request,

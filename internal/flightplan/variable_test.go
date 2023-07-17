@@ -11,6 +11,8 @@ import (
 )
 
 func Test_Decode_Variable(t *testing.T) {
+	t.Parallel()
+
 	fakeRng := hcl.Range{
 		Filename: "notreal",
 		Start:    hcl.Pos{Line: 1, Column: 1},
@@ -151,7 +153,10 @@ variable "complex" {
 			}),
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			parser := hclparse.NewParser()
 			f, diags := parser.ParseHCL([]byte(test.enosCfg), "variable.hcl")
 			require.False(t, diags.HasErrors(), diags.Error())

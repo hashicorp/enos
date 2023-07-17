@@ -18,11 +18,13 @@ func (s *ServiceV1) CheckScenarios(
 ) {
 	res := &pb.CheckScenariosResponse{}
 	res.Diagnostics, res.Decode, res.Operations = s.dispatch(
+		ctx,
 		req.GetFilter(),
 		&pb.Operation_Request{
 			Workspace: req.GetWorkspace(),
 			Value:     &pb.Operation_Request_Check_{},
 		},
 	)
+
 	return res, nil
 }

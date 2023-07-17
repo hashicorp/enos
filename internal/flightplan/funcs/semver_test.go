@@ -26,7 +26,10 @@ func TestServerConstraint(t *testing.T) {
 			true,
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
 			val, err := SemverConstraint.Call([]cty.Value{
 				cty.StringVal(test.version), cty.StringVal(test.constraint),
 			})

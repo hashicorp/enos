@@ -13,8 +13,7 @@ import (
 )
 
 func TestAcc_Cmd_Scenario_List(t *testing.T) {
-	enos := newAcceptanceRunner(t)
-
+	t.Parallel()
 	for _, test := range []struct {
 		dir  string
 		out  *pb.ListScenariosResponse
@@ -97,7 +96,11 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			fail: true,
 		},
 	} {
+		test := test
 		t.Run(test.dir, func(t *testing.T) {
+			t.Parallel()
+			enos := newAcceptanceRunner(t)
+
 			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario list --chdir %s --format json", path)
@@ -105,6 +108,7 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			out, err := enos.run(context.Background(), cmd)
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 

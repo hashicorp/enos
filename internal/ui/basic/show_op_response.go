@@ -3,6 +3,7 @@ package basic
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
@@ -12,7 +13,7 @@ import (
 
 var failedIcons = []string{"🙈", "🙉", "🙊"}
 
-// ShowOperationResponses shows an operation responses
+// ShowOperationResponses shows an operation responses.
 func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 	// Determine if anything failed so we can create the correct display header
 	diags := diagnostics.Concat(res.GetDecode().GetDiagnostics(), res.GetDiagnostics())
@@ -21,6 +22,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 		for _, r := range res.GetResponses() {
 			if diagnostics.OpResFailed(v.Settings().GetFailOnWarnings(), r) {
 				failed = true
+
 				break
 			}
 		}
@@ -29,7 +31,9 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 	header := "\nEnos operations"
 	if failed {
 		if v.settings.IsTty {
-			header = fmt.Sprintf("%s failed! %s\n", header, failedIcons[rand.Intn(len(failedIcons))])
+			//nolint:gosec // G404 it's okay to use weak random numbers for random failed icons
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			header = fmt.Sprintf("%s failed! %s\n", header, failedIcons[r.Intn(len(failedIcons))])
 		} else {
 			header += " failed!\n"
 		}
@@ -80,7 +84,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 	return status.OperationResponses(v.Settings().GetFailOnWarnings(), res)
 }
 
-// ShowOperationResponse shows an operation response
+// ShowOperationResponse shows an operation response.
 func (v *View) ShowOperationResponse(res *pb.Operation_Response) error {
 	if res == nil {
 		return nil
@@ -95,7 +99,7 @@ func (v *View) ShowOperationResponse(res *pb.Operation_Response) error {
 	})
 }
 
-// showOperationResponse shows an operation response
+// showOperationResponse shows an operation response.
 func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete bool) error {
 	if res == nil {
 		return nil
@@ -168,7 +172,7 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 // shouldShowFullResponse determines whether or not we should display the entire
 // operation response. We show the full response if something went wrong, if
 // a full response has been requested, or if there is operation information for
-// for sub-operations that have output like exec or output.
+// sub-operations that have output like exec or output.
 func shouldShowFullResponse(res *pb.Operation_Response, fullOnComplete bool) bool {
 	if fullOnComplete {
 		return true

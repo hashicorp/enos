@@ -29,7 +29,7 @@ var scenarioSchema = &hcl.BodySchema{
 	},
 }
 
-// Scenario represents an Enos scenario
+// Scenario represents an Enos scenario.
 type Scenario struct {
 	Name             string
 	Variants         *Vector
@@ -40,7 +40,7 @@ type Scenario struct {
 	Outputs          []*ScenarioOutput
 }
 
-// NewScenario returns a new Scenario
+// NewScenario returns a new Scenario.
 func NewScenario() *Scenario {
 	return &Scenario{
 		TerraformCLI: NewTerraformCLI(),
@@ -50,7 +50,7 @@ func NewScenario() *Scenario {
 	}
 }
 
-// String returns the scenario identifiers as a string
+// String returns the scenario identifiers as a string.
 func (s *Scenario) String() string {
 	str := s.Name
 	if s.Variants != nil && len(s.Variants.elements) > 0 {
@@ -60,12 +60,12 @@ func (s *Scenario) String() string {
 	return str
 }
 
-// UID returns a unique identifier from the name and variants
+// UID returns a unique identifier from the name and variants.
 func (s *Scenario) UID() string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(s.String())))
 }
 
-// Ref returns the proto reference
+// Ref returns the proto reference.
 func (s *Scenario) Ref() *pb.Ref_Scenario {
 	return &pb.Ref_Scenario{
 		Id: &pb.Scenario_ID{
@@ -76,7 +76,7 @@ func (s *Scenario) Ref() *pb.Ref_Scenario {
 	}
 }
 
-// FromRef takes a unmarshals a scenario reference into itself
+// FromRef takes a unmarshals a scenario reference into itself.
 func (s *Scenario) FromRef(ref *pb.Ref_Scenario) {
 	if ref == nil {
 		return
@@ -102,8 +102,8 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 		return false
 	}
 
-	// If our scenario doesn't have any variants make make sure we don't have
-	// a filter with includes or excludes.
+	// If our scenario doesn't have any variants make sure we don't have a filter with includes
+	// or excludes.
 	if s.Variants == nil || len(s.Variants.elements) == 0 {
 		if filter.Include != nil && len(filter.Include.elements) > 0 {
 			return false
@@ -131,7 +131,7 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 	return true
 }
 
-// decode takes an HCL block and an evalutaion context and it decodes itself
+// decode takes an HCL block and an evaluation context and it decodes itself
 // from the block. Any errors that are encountered during decoding will be
 // returned as hcl diagnostics.
 func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext, mode DecodeMode) hcl.Diagnostics {
@@ -296,6 +296,7 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 		if err != nil {
 			diag.Summary = "unable to convert default terraform_cli from eval context to object"
 			diag.Detail = err.Error()
+
 			return diags.Append(diag)
 		}
 
@@ -308,6 +309,7 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 		// terraform_cli which we'll get from the eval context.
 		moreDiags := findAndLoadCLI("default")
 		diags = diags.Extend(moreDiags)
+
 		return diags
 	}
 
@@ -321,8 +323,8 @@ func (s *Scenario) decodeAndValidateTerraformCLIAttribute(
 		// Our value has been set to a string address.
 		moreDiags := findAndLoadCLI(terraformCliVal.AsString())
 		diags = diags.Extend(moreDiags)
-		return diags
 
+		return diags
 	}
 
 	// Decode our terraform_cli from the eval context. If it hasn't been defined
@@ -599,6 +601,7 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 					Subject:  providers.Expr.Range().Ptr(),
 					Context:  providers.Range.Ptr(),
 				})
+
 				continue
 			}
 
@@ -621,10 +624,12 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 					Subject:  providers.Expr.Range().Ptr(),
 					Context:  providers.Range.Ptr(),
 				})
+
 				continue
 			}
 
 			s.Providers = append(s.Providers, provider)
+
 			continue
 		}
 
@@ -639,6 +644,7 @@ func (s *Scenario) decodeAndValidateProvidersAttribute(
 				Subject:  providers.Expr.Range().Ptr(),
 				Context:  providers.Range.Ptr(),
 			})
+
 			continue
 		}
 
@@ -680,6 +686,7 @@ func (s *Scenario) decodeAndValidateStepBlocks(
 				Subject:  childBlock.TypeRange.Ptr(),
 				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
 			})
+
 			continue
 		}
 
@@ -728,6 +735,7 @@ func (s *Scenario) decodeAndValidateOutputBlocks(
 				Subject:  childBlock.TypeRange.Ptr(),
 				Context:  hcl.RangeBetween(childBlock.TypeRange, childBlock.DefRange).Ptr(),
 			})
+
 			continue
 		}
 

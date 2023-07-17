@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioLaunchCmd returns a new 'scenario run' command
+// newScenarioLaunchCmd returns a new 'scenario run' command.
 func newScenarioLaunchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "launch [FILTER]",
@@ -34,7 +34,7 @@ func newScenarioLaunchCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioLaunchCmd is the function that launches scenarios
+// runScenarioLaunchCmd is the function that launches scenarios.
 func runScenarioLaunchCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

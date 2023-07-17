@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ShowScenarioList shows the a list of scenarios
+// ShowScenarioList shows the a list of scenarios.
 func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	header := []string{"name"}
 	rows := [][]string{{""}} // add a padding row
@@ -18,6 +18,7 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 			for vi := range scenario.Variants.Elements() {
 				if vi == 0 {
 					header = append(header, "variants")
+
 					continue
 				}
 				// create a blank "header" for every variant

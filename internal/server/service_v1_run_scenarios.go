@@ -18,11 +18,13 @@ func (s *ServiceV1) RunScenarios(
 ) {
 	res := &pb.RunScenariosResponse{}
 	res.Diagnostics, res.Decode, res.Operations = s.dispatch(
+		ctx,
 		req.GetFilter(),
 		&pb.Operation_Request{
 			Workspace: req.GetWorkspace(),
 			Value:     &pb.Operation_Request_Run_{},
 		},
 	)
+
 	return res, nil
 }

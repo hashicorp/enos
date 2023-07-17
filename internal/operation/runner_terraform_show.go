@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// terraformShow returns gets the Terraform State for a module
+// terraformShow returns gets the Terraform State for a module.
 func (r *Runner) terraformShow(
 	ctx context.Context,
 	req *pb.Operation_Request,
@@ -23,6 +23,7 @@ func (r *Runner) terraformShow(
 	if err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
+
 		return res
 	}
 
@@ -53,6 +54,7 @@ func (r *Runner) terraformShow(
 	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 
@@ -63,12 +65,14 @@ func (r *Runner) terraformShow(
 	state, err := tf.Show(ctx, r.TFConfig.ShowOptions()...)
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 
 	stateEnc, err := json.Marshal(state)
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 

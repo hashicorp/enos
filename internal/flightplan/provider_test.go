@@ -9,7 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// Test_Decode_Provider tests transport
+// Test_Decode_Provider tests transport.
 func Test_Decode_Provider(t *testing.T) {
 	t.Parallel()
 
@@ -578,10 +578,14 @@ scenario "k8s" {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)
@@ -591,6 +595,8 @@ scenario "k8s" {
 }
 
 func Test_Provider_Cty_RoundTrip(t *testing.T) {
+	t.Parallel()
+
 	for _, p := range []struct {
 		testName string
 		provider *Provider
@@ -653,7 +659,10 @@ func Test_Provider_Cty_RoundTrip(t *testing.T) {
 			},
 		},
 	} {
+		p := p
 		t.Run(p.testName, func(t *testing.T) {
+			t.Parallel()
+
 			clone := NewProvider()
 			require.NoError(t, clone.FromCtyValue(p.provider.ToCtyValue()))
 			require.EqualValues(t, p.provider, clone)

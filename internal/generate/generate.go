@@ -15,10 +15,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-// Opt is a generate module option
+// Opt is a generate module option.
 type Opt func(*Generator) error
 
-// Generator is a request to generate a Terraform module
+// Generator is a request to generate a Terraform module.
 type Generator struct {
 	Scenario *flightplan.Scenario
 	BaseDir  string
@@ -26,7 +26,7 @@ type Generator struct {
 	UI       cli.Ui
 }
 
-// NewGenerator takes options and returns a new validated generator
+// NewGenerator takes options and returns a new validated generator.
 func NewGenerator(opts ...Opt) (*Generator, error) {
 	req := &Generator{UI: cli.NewMockUi()}
 
@@ -61,6 +61,7 @@ func WithOutBaseDirectory(dir string) Opt {
 		}
 
 		req.OutDir = a
+
 		return nil
 	}
 }
@@ -73,22 +74,25 @@ func WithScenarioBaseDirectory(dir string) Opt {
 			return err
 		}
 		req.BaseDir = a
+
 		return nil
 	}
 }
 
-// WithScenario is the scenario to generate into a module
+// WithScenario is the scenario to generate into a module.
 func WithScenario(s *flightplan.Scenario) Opt {
 	return func(req *Generator) error {
 		req.Scenario = s
+
 		return nil
 	}
 }
 
-// WithUI is the UI to use for outputing information
+// WithUI is the UI to use for outputing information.
 func WithUI(ui cli.Ui) Opt {
 	return func(req *Generator) error {
 		req.UI = ui
+
 		return nil
 	}
 }
@@ -127,7 +131,7 @@ func absoluteNoSymlinks(path string) (string, error) {
 	return filepath.EvalSymlinks(a)
 }
 
-// Generate converts the Scenario into a terraform module
+// Generate converts the Scenario into a terraform module.
 func (g *Generator) Generate() error {
 	err := g.generateCLIConfig()
 	if err != nil {
@@ -138,18 +142,18 @@ func (g *Generator) Generate() error {
 }
 
 // TerraformRCPath is where the generated terraform.rc configuration file will
-// be written
+// be written.
 func (g *Generator) TerraformRCPath() string {
 	return filepath.Join(g.TerraformModuleDir(), "terraform.rc")
 }
 
 // TerraformModulePath is where the generated Terraform module file will
-// be written
+// be written.
 func (g *Generator) TerraformModulePath() string {
 	return filepath.Join(g.TerraformModuleDir(), "scenario.tf")
 }
 
-// TerraformModuleDir is the directory where the generated Terraform
+// TerraformModuleDir is the directory where the generated Terraform.
 func (g *Generator) TerraformModuleDir() string {
 	return filepath.Join(g.OutDir, g.Scenario.UID())
 }
@@ -290,11 +294,13 @@ func (g *Generator) generateModule() error {
 
 func (g *Generator) ensureOutDir() error {
 	_, err := ensureDir(g.TerraformModuleDir())
+
 	return err
 }
 
 // maybeWriteTerraformSettings writes any configured "terraform" settings
-// nolint:cyclop
+//
+//nolint:cyclop,gocyclo // writing out our terraform settings is complicated.
 func (g *Generator) maybeWriteTerraformSettings(rootBody *hclwrite.Body) {
 	s := g.Scenario.TerraformSetting
 	if s == nil {
@@ -497,6 +503,7 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 			// Use the absolute value
 			if stepVar.Value != cty.NilVal {
 				body.SetAttributeValue(k, stepVar.Value)
+
 				continue
 			}
 
@@ -552,6 +559,7 @@ func (g *Generator) maybeWriteOutputs(rootBody *hclwrite.Body) error {
 			// Use the absolute value if it exists
 			if stepVar.Value != cty.NilVal {
 				body.SetAttributeValue("value", stepVar.Value)
+
 				return nil
 			}
 
@@ -590,6 +598,7 @@ func (g *Generator) write(path string, bytes []byte) error {
 	defer file.Close()
 
 	_, err = file.Write(hclwrite.Format(bytes))
+
 	return err
 }
 
@@ -732,6 +741,7 @@ func dependsOnTokens(names []string) hclwrite.Tokens {
 			Bytes: []byte{'['},
 		})
 		tokens = append(tokens, moduleRef(names[0])...)
+
 		return append(tokens, &hclwrite.Token{
 			Type:  hclsyntax.TokenOBrack,
 			Bytes: []byte{']'},
@@ -867,7 +877,7 @@ func relativePath(from, to string) (string, error) {
 }
 
 // stepToModuleTraversal takes a "step" traversal and updates the root of the
-// the traversal to "module"
+// traversal to "module".
 func stepToModuleTraversal(in hcl.Traversal) error {
 	if len(in) == 0 {
 		return nil

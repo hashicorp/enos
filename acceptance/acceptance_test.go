@@ -176,7 +176,7 @@ func skipUnlessExtEnabled() acceptanceRunnerOpt {
 	}
 }
 
-// acceptanceRunner is the Enos CLI acceptance test runner
+// acceptanceRunner is the Enos CLI acceptance test runner.
 type acceptanceRunner struct {
 	enosBinPath              string
 	tfBinPath                string
@@ -187,11 +187,11 @@ type acceptanceRunner struct {
 	skipUnlessExtEnabled     bool
 }
 
-// run runs an Enos sub-command
+// run runs an Enos sub-command.
 func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, error) {
 	path, err := filepath.Abs(r.enosBinPath)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	cmdParts := strings.Split(subCommand, " ")
@@ -200,6 +200,7 @@ func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, 
 
 	cmd := exec.CommandContext(ctx, path, cmdParts...)
 	cmd.Env = os.Environ()
+
 	return cmd.CombinedOutput()
 }
 
@@ -234,6 +235,8 @@ func sortResponses(r []*pb.Operation_Response) {
 }
 
 func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponses, out []byte) {
+	t.Helper()
+
 	got := &pb.OperationResponses{}
 	require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
 	require.Len(t, got.GetResponses(), len(expected.GetResponses()))
@@ -294,6 +297,8 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 }
 
 func requireEqualGenerateResponse(t *testing.T, expected, got *pb.Operation_Response_Generate) {
+	t.Helper()
+
 	if expected.GetTerraformModule().GetModulePath() != "" {
 		require.Equal(t, expected.GetTerraformModule().GetModulePath(),
 			got.GetTerraformModule().GetModulePath(),
@@ -310,33 +315,45 @@ func requireEqualGenerateResponse(t *testing.T, expected, got *pb.Operation_Resp
 }
 
 func requireEqualInitReponse(t *testing.T, expected, got *pb.Terraform_Command_Init_Response) {
+	t.Helper()
+
 	require.Equal(t, expected.GetStderr(), got.GetStderr())
 	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
 }
 
 func requireEqualValidate(t *testing.T, expected, got *pb.Terraform_Command_Validate_Response) {
+	t.Helper()
+
 	require.Equal(t, expected.GetValid(), got.GetValid())
 	require.Equal(t, expected.GetWarningCount(), got.GetWarningCount())
 	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
 }
 
 func requireEqualPlan(t *testing.T, expected, got *pb.Terraform_Command_Plan_Response) {
+	t.Helper()
+
 	require.Equal(t, expected.GetChangesPresent(), got.GetChangesPresent())
 	require.Equal(t, expected.GetStderr(), got.GetStderr())
 	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
 }
 
 func requireEqualApply(t *testing.T, expected, got *pb.Terraform_Command_Apply_Response) {
+	t.Helper()
+
 	require.Equal(t, expected.GetStderr(), got.GetStderr())
 	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
 }
 
 func requireEqualDestroy(t *testing.T, expected, got *pb.Terraform_Command_Destroy_Response) {
+	t.Helper()
+
 	require.Equal(t, expected.GetStderr(), got.GetStderr())
 	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
 }
 
 func requireEqualOutput(t *testing.T, expected, got *pb.Terraform_Command_Output_Response) {
+	t.Helper()
+
 	require.Len(t, expected.GetMeta(), len(got.GetMeta()))
 	for i := range expected.GetMeta() {
 		require.Equal(t, expected.GetMeta()[i].GetName(), got.GetMeta()[i].GetName())
@@ -350,6 +367,8 @@ func requireEqualOutput(t *testing.T, expected, got *pb.Terraform_Command_Output
 }
 
 func requireEqualExec(t *testing.T, expected, got *pb.Terraform_Command_Exec_Response) {
+	t.Helper()
+
 	require.Equal(t, expected.GetSubCommand(), got.GetSubCommand())
 	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()))
 	// NOTE: we don't check stderr since anything we could test would be brittle

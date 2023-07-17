@@ -1,5 +1,5 @@
 // Package format provides functions for formatting Terraform and cty as
-// as text. The implemenation comes from a modified version of the repl package
+// text. The implemenation comes from a modified version of the repl package
 // in Terraform.
 package format
 
@@ -15,7 +15,7 @@ import (
 )
 
 // TerraformOutput takes a terraform executor output metadata and returns it as
-// as human friendly formatted string.
+// human friendly formatted string.
 func TerraformOutput(out *pb.Terraform_Command_Output_Response_Meta, indent int) (string, error) {
 	if out.GetSensitive() {
 		return "(sensitive)", nil
@@ -72,14 +72,17 @@ func Value(v cty.Value, indent int) string {
 			if formatted, isMultiline := formatMultilineString(v, indent); isMultiline {
 				return formatted
 			}
+
 			return strconv.Quote(v.AsString())
 		case cty.Number:
 			bf := v.AsBigFloat()
+
 			return bf.Text('f', -1)
 		case cty.Bool:
 			if v.True() {
 				return "true"
 			}
+
 			return "false"
 		}
 	case ty.IsObjectType():
@@ -123,6 +126,7 @@ OUTER:
 			// If the delimiter matches a line, extend it and start again
 			if strings.TrimSpace(line) == delimiter {
 				delimiter = delimiter + "_"
+
 				continue OUTER
 			}
 		}
@@ -168,6 +172,7 @@ func formatMappingValue(v cty.Value, indent int) string {
 		buf.WriteString(strings.Repeat(" ", indent))
 	}
 	buf.WriteByte('}')
+
 	return buf.String()
 }
 
@@ -190,5 +195,6 @@ func formatSequenceValue(v cty.Value, indent int) string {
 		buf.WriteString(strings.Repeat(" ", indent))
 	}
 	buf.WriteByte(']')
+
 	return buf.String()
 }

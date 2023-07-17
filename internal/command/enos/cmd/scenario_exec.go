@@ -25,7 +25,7 @@ func newScenarioExecCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioExecCmd is the function that launchs scenarios
+// runScenarioExecCmd is the function that launchs scenarios.
 func runScenarioExecCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

@@ -81,7 +81,7 @@ func newCreateFormulaCommand() *cobra.Command {
 	return createFormula
 }
 
-// Get the the version, the version tag, and the SHASUMS of each asset from the SHASUMS file
+// Get the version, the version tag, and the SHASUMS of each asset from the SHASUMS file.
 func readMetadata(path string) (*metadata, error) {
 	metadata := &metadata{}
 	input, err := os.Open(path)
@@ -139,22 +139,23 @@ func readMetadata(path string) (*metadata, error) {
 	return metadata, nil
 }
 
-// Execute the template with the metadata values to `dest`
+// Execute the template with the metadata values to `dest`.
 func renderHomebrewFormulaTemplate(dest io.Writer, metadataPath string) error {
 	metadata, err := readMetadata(metadataPath)
 	if err != nil {
-		fmt.Printf("reading metadata: %s\n", err.Error())
+		return fmt.Errorf("reading metadata: %s", err.Error())
 	}
 
 	// Execute the template using metadata values from the SHASUMS file
 	err = t.Execute(dest, metadata)
 	if err != nil {
-		fmt.Printf("executing template: %s\n", err.Error())
+		return fmt.Errorf("executing template: %s", err.Error())
 	}
+
 	return nil
 }
 
-// Write the executed template to an output file
+// Write the executed template to an output file.
 func createFormula(cmd *cobra.Command, args []string) error {
 	buf := bytes.Buffer{}
 

@@ -35,7 +35,7 @@ type Variable struct {
 	ConstraintType cty.Type
 }
 
-// VariableValue is a user supplied variable value
+// VariableValue is a user supplied variable value.
 type VariableValue struct {
 	Expr      hcl.Expression
 	Range     hcl.Range
@@ -53,13 +53,12 @@ const (
 
 const EnvVarPrefix = "ENOS_VAR_"
 
-// NewVariable returns a new Variable
+// NewVariable returns a new Variable.
 func NewVariable() *Variable {
 	return &Variable{}
 }
 
-// decode takes in an HCL block of a variable and any set variable values and
-// and decodes itself.
+// decode takes in an HCL block of a variable and any set variable values and decodes itself.
 func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
@@ -138,13 +137,33 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 					v.SetValue = cty.StringVal(setVal.EnvVarRaw)
 				}
 			}
-		default:
+		case VariableValueSourceVarsFile:
 			// We have a value that isn't from the environment so we'll get
 			// the value of the expression.
 			val, moreDiags := setVal.Expr.Value(nil)
 			diags = diags.Extend(moreDiags)
 			if moreDiags.HasErrors() {
 				v.SetValue = cty.DynamicVal
+
+				return diags
+			}
+			v.SetValue = val
+		case VariableValueSourceUnknown:
+			// This should never happen but we'll try and evaluate the expression.
+			val, moreDiags := setVal.Expr.Value(nil)
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				v.SetValue = cty.DynamicVal
+
+				return diags
+			}
+			v.SetValue = val
+		default:
+			val, moreDiags := setVal.Expr.Value(nil)
+			diags = diags.Extend(moreDiags)
+			if moreDiags.HasErrors() {
+				v.SetValue = cty.DynamicVal
+
 				return diags
 			}
 			v.SetValue = val

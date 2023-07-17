@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 )
 
-// TerraformSetting is a terraform settings configuration
+// TerraformSetting is a terraform settings configuration.
 type TerraformSetting struct {
 	Name            string
 	RequiredVersion cty.Value
@@ -22,14 +22,14 @@ type TerraformSetting struct {
 	Cloud         cty.Value
 }
 
-// TerraformSettingBackend is the "backend"
+// TerraformSettingBackend is the "backend".
 type TerraformSettingBackend struct {
 	Name       string
 	Attrs      map[string]cty.Value
 	Workspaces cty.Value
 }
 
-// NewTerraformSetting returns a new TerraformSetting
+// NewTerraformSetting returns a new TerraformSetting.
 func NewTerraformSetting() *TerraformSetting {
 	return &TerraformSetting{
 		RequiredVersion:   cty.NullVal(cty.String),
@@ -41,7 +41,7 @@ func NewTerraformSetting() *TerraformSetting {
 	}
 }
 
-// NewTerraformSettingBackend returns a new TerraformSettingBackend
+// NewTerraformSettingBackend returns a new TerraformSettingBackend.
 func NewTerraformSettingBackend() *TerraformSettingBackend {
 	return &TerraformSettingBackend{
 		Attrs:      map[string]cty.Value{},
@@ -166,7 +166,7 @@ func (t *TerraformSetting) decodeExperiments(ctx *hcl.EvalContext, body hcl.Body
 	return remain, diags
 }
 
-// decodeCloud decodes the "cloud" block
+// decodeCloud decodes the "cloud" block.
 func (t *TerraformSetting) decodeCloud(ctx *hcl.EvalContext, body hcl.Body) (hcl.Body, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	var remain hcl.Body
@@ -283,7 +283,7 @@ func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content
 	return diags
 }
 
-// decodeProviderMeta decodes the "provider_meta" block
+// decodeProviderMeta decodes the "provider_meta" block.
 func (t *TerraformSetting) decodeProviderMeta(ctx *hcl.EvalContext, content *hcl.BodyContent) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
@@ -312,7 +312,7 @@ func (t *TerraformSetting) decodeProviderMeta(ctx *hcl.EvalContext, content *hcl
 	return diags
 }
 
-// decodeBackend decodes the "backend" block
+// decodeBackend decodes the "backend" block.
 func (t *TerraformSetting) decodeBackend(ctx *hcl.EvalContext, content *hcl.BodyContent) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
@@ -325,6 +325,7 @@ func (t *TerraformSetting) decodeBackend(ctx *hcl.EvalContext, content *hcl.Body
 				Subject:  block.TypeRange.Ptr(),
 				Context:  block.DefRange.Ptr(),
 			})
+
 			continue
 		}
 

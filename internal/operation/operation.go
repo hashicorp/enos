@@ -225,6 +225,7 @@ func ResponseTypeString(op *pb.Operation_Response) string {
 	}
 }
 
+//nolint:unparam // right now all callers use pb.Operation_STATUS_RUNNING but that's not guaranteed.
 func newEvent(
 	ref *pb.Ref_Operation,
 	status pb.Operation_Status,
@@ -305,7 +306,6 @@ func NewEventFromResponse(res *pb.Operation_Response) (*pb.Operation_Event, erro
 			newEvent.GetDiagnostics(),
 			diagnostics.FromErr(err)...,
 		)
-
 	}
 
 	return newEvent, merr.ErrorOrNil()
@@ -379,6 +379,8 @@ func hasFailedStatus(s pb.Operation_Status) bool {
 	switch s {
 	case pb.Operation_STATUS_CANCELLED, pb.Operation_STATUS_FAILED:
 		return true
+	case pb.Operation_STATUS_UNSPECIFIED, pb.Operation_STATUS_UNKNOWN, pb.Operation_STATUS_QUEUED, pb.Operation_STATUS_WAITING, pb.Operation_STATUS_RUNNING, pb.Operation_STATUS_RUNNING_WARNING, pb.Operation_STATUS_COMPLETED, pb.Operation_STATUS_COMPLETED_WARNING:
+		return false
 	default:
 		return false
 	}

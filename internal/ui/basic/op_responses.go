@@ -21,6 +21,7 @@ func (v *View) writeDecodeResponse(out *pb.DecodeResponse) {
 		}
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
+
 		return
 	}
 
@@ -58,6 +59,7 @@ func (v *View) writeGenerateResponse(out *pb.Operation_Response_Generate) {
 		v.ui.Error(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
+
 		return
 	}
 

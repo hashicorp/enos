@@ -16,7 +16,7 @@ var moduleSchema = &hcl.BodySchema{
 	},
 }
 
-// Module represents an Enos Terraform module block
+// Module represents an Enos Terraform module block.
 type Module struct {
 	Name    string
 	Source  string
@@ -24,7 +24,7 @@ type Module struct {
 	Attrs   map[string]cty.Value
 }
 
-// NewModule returns a new Module
+// NewModule returns a new Module.
 func NewModule() *Module {
 	return &Module{
 		Attrs: map[string]cty.Value{},
@@ -155,7 +155,7 @@ func (m *Module) ToCtyValue() cty.Value {
 }
 
 // FromCtyValue takes a cty.Value and unmarshals it onto itself. It expects
-// a valid object created from ToCtyValue()
+// a valid object created from ToCtyValue().
 func (m *Module) FromCtyValue(val cty.Value) error {
 	if val.IsNull() {
 		return nil

@@ -3,6 +3,7 @@ package flightplan
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// Test_Decode_Scenario_Matrix tests decoding of a matrix in scenarios
+// Test_Decode_Scenario_Matrix tests decoding of a matrix in scenarios.
 func Test_Decode_Scenario_Matrix(t *testing.T) {
 	t.Parallel()
 
@@ -301,10 +302,14 @@ scenario "nighttime" {
 			},
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)
@@ -314,6 +319,8 @@ scenario "nighttime" {
 }
 
 func Test_Matrix_Vector_Equal(t *testing.T) {
+	t.Parallel()
+
 	for desc, test := range map[string]struct {
 		in    *Vector
 		other *Vector
@@ -335,13 +342,17 @@ func Test_Matrix_Vector_Equal(t *testing.T) {
 			false,
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, test.equal, test.in.Equal(test.other))
 		})
 	}
 }
 
 func Test_Matrix_Vector_ContainsUnordered(t *testing.T) {
+	t.Parallel()
+
 	for desc, test := range map[string]struct {
 		in    *Vector
 		other *Vector
@@ -373,13 +384,17 @@ func Test_Matrix_Vector_ContainsUnordered(t *testing.T) {
 			false,
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, test.match, test.in.ContainsUnordered(test.other))
 		})
 	}
 }
 
 func Test_Matrix_Vector_EqualUnordered(t *testing.T) {
+	t.Parallel()
+
 	for desc, test := range map[string]struct {
 		in    *Vector
 		other *Vector
@@ -401,13 +416,17 @@ func Test_Matrix_Vector_EqualUnordered(t *testing.T) {
 			true,
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, test.equal, test.in.EqualUnordered(test.other))
 		})
 	}
 }
 
 func Test_Matrix_CartesianProduct(t *testing.T) {
+	t.Parallel()
+
 	for desc, test := range map[string]struct {
 		in       *Matrix
 		expected *Matrix
@@ -466,13 +485,17 @@ func Test_Matrix_CartesianProduct(t *testing.T) {
 			}},
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, test.expected.Vectors, test.in.CartesianProduct().Vectors)
 		})
 	}
 }
 
 func Test_Matrix_CartesianProduct_empty_vector(t *testing.T) {
+	t.Parallel()
+
 	m := NewMatrix()
 	m.AddVector(NewVector())
 	m.AddVector(NewVector())
@@ -481,6 +504,8 @@ func Test_Matrix_CartesianProduct_empty_vector(t *testing.T) {
 }
 
 func Test_Matrix_UniqueValues(t *testing.T) {
+	t.Parallel()
+
 	m1 := NewMatrix()
 	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}})
 	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
@@ -504,6 +529,8 @@ func Test_Matrix_UniqueValues(t *testing.T) {
 }
 
 func Test_Matrix_Unique(t *testing.T) {
+	t.Parallel()
+
 	m1 := NewMatrix()
 	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
 	m1.AddVector(&Vector{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}})
@@ -524,12 +551,162 @@ func Test_Matrix_Unique(t *testing.T) {
 	require.Equal(t, m2, m1.Unique())
 }
 
+func Test_Matrix_Filter(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in        *Matrix
+		filterStr string
+		expected  *Matrix
+	}{
+		"all": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			"",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"include-some": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			"backend:raft",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"include-one": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			"backend:raft arch:amd64",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			}},
+		},
+		"exclude-one": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			"!arch:amd64",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"exclude-some": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+			}},
+			"!arch:amd64 !backend:consul",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+			}},
+		},
+		"include-and-exclude-one": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			"!arch:amd64 backend:raft",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+			}},
+		},
+		"include-and-exclude-some": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "aarch64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+			"!arch:amd64 !backend:raft arch:aarch64",
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "aarch64")}},
+			}},
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
+			f, err := NewScenarioFilter(WithScenarioFilterParse(strings.Split(test.filterStr, " ")))
+			require.NoError(t, err)
+			require.Equal(t, test.expected, test.in.Filter(f))
+		})
+	}
+}
+
 func Test_Matrix_Exclude(t *testing.T) {
+	t.Parallel()
+
 	for desc, test := range map[string]struct {
 		in       *Matrix
 		Excludes []*Exclude
 		expected *Matrix
 	}{
+		"nil": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+			}},
+			nil,
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+			}},
+		},
+		"empty": {
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+			}},
+			[]*Exclude{},
+			&Matrix{Vectors: []*Vector{
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
+				{elements: []Element{NewElement("backend", "consul"), NewElement("backend", "raft")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+			}},
+		},
 		"exact": {
 			&Matrix{Vectors: []*Vector{
 				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul")}},
@@ -582,6 +759,8 @@ func Test_Matrix_Exclude(t *testing.T) {
 				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "mysql"), NewElement("backend", "mssql")}},
 				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
 				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64"), NewElement("arch", "arm32")}},
 			}},
 			[]*Exclude{
 				{
@@ -596,10 +775,14 @@ func Test_Matrix_Exclude(t *testing.T) {
 			&Matrix{Vectors: []*Vector{
 				{elements: []Element{NewElement("backend", "raft"), NewElement("backend", "consul"), NewElement("backend", "mssql")}},
 				{elements: []Element{NewElement("arch", "amd64"), NewElement("arch", "arm64"), NewElement("arch", "ppc64")}},
+				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
 			}},
 		},
 	} {
+		test := test
 		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
 			require.Equal(t, test.expected.Vectors, test.in.Exclude(test.Excludes...).Vectors)
 		})
 	}

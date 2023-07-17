@@ -133,6 +133,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 		bytes, err := io.ReadAll(cmd.InOrStdin())
 		if err != nil {
 			res.Diagnostics = diagnostics.FromErr(err)
+
 			return ui.ShowFormat(fmtCfg, res)
 		}
 		req.Files = []*pb.FormatRequest_File{

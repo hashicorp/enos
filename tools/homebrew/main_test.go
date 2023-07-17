@@ -10,8 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Ensure that the SHASUMS file is parsed accurately
+// Ensure that the SHASUMS file is parsed accurately.
 func Test_decodeMetadata(t *testing.T) {
+	t.Parallel()
+
 	p, err := filepath.Abs("./support/enos_0.0.1_SHA256SUMS")
 	require.NoError(t, err)
 
@@ -29,8 +31,10 @@ func Test_decodeMetadata(t *testing.T) {
 	require.Equal(t, expected, sums)
 }
 
-// Ensure that the template renders correctly
+// Ensure that the template renders correctly.
 func Test_renderHomebrewFormulaTemplate(t *testing.T) {
+	t.Parallel()
+
 	p, err := filepath.Abs("./support/enos_0.0.1_SHA256SUMS")
 	require.NoError(t, err)
 

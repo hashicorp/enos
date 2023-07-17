@@ -9,17 +9,17 @@ import (
 	"regexp"
 )
 
-// FlightPlanFileNamePattern is what file names match valid enos configuration files
+// FlightPlanFileNamePattern is what file names match valid enos configuration files.
 var (
 	FlightPlanFileNamePattern = regexp.MustCompile(`^enos[-\w]*?\.hcl$`)
 	VariablesNamePattern      = regexp.MustCompile(`^enos[-\w]*?\.vars\.hcl$`)
 )
 
-// RawFiles are a map of flightplan configuration files and their contents
+// RawFiles are a map of flightplan configuration files and their contents.
 type RawFiles map[string][]byte
 
 // FindRawFiles scans a directory for files matching the given pattern and
-// returns the loaded raw files
+// returns the loaded raw files.
 func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
 	var err error
 	files := RawFiles{}
@@ -59,7 +59,7 @@ func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
 	return files, err
 }
 
-// LoadRawFiles takes a slice of paths and returns the loaded raw files
+// LoadRawFiles takes a slice of paths and returns the loaded raw files.
 func LoadRawFiles(paths []string) (RawFiles, error) {
 	rawFiles := RawFiles{}
 	var err error

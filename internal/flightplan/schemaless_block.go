@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
-// SchemalessBlock is our value on HCL block that has no known schema
+// SchemalessBlock is our value on HCL block that has no known schema.
 type SchemalessBlock struct {
 	Type     string               `cty:"type"`
 	Labels   []string             `cty:"labels"`
@@ -104,7 +104,7 @@ func (s *SchemalessBlock) ToCtyValue() cty.Value {
 }
 
 // FromCtyValue takes a cty.Value and unmarshals it onto itself. It expects
-// a valid object created from ToCtyValue()
+// a valid object created from ToCtyValue().
 func (s *SchemalessBlock) FromCtyValue(val cty.Value) error {
 	if val.IsNull() {
 		return nil

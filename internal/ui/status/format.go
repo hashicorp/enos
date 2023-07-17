@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// Format returns the format status
+// Format returns the format status.
 func Format(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error {
 	checkFailed := false
 	var err error

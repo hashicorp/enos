@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ShowVersion shows the version information
+// ShowVersion shows the version information.
 func (v *View) ShowVersion(all bool, res *pb.GetVersionResponse) error {
 	if !all {
 		v.ui.Output(res.Version)

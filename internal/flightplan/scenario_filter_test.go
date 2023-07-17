@@ -11,6 +11,8 @@ import (
 // Test_ScenarioFilter_WithScenarioFilterFromScenarioRef tests filtering a
 // scenario that was created from a scenario reference.
 func Test_ScenarioFilter_WithScenarioFilterFromScenarioRef(t *testing.T) {
+	t.Parallel()
+
 	ref := &pb.Ref_Scenario{
 		Id: &pb.Scenario_ID{
 			Name: "foo",
@@ -122,7 +124,10 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			[]*Scenario{},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp := &FlightPlan{
 				Scenarios: test.scenarios,
 			}
@@ -179,7 +184,10 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			filter, err := NewScenarioFilter(WithScenarioFilterParse(test.filterArg))
 			require.NoError(t, err)
 			require.EqualValues(t, test.expected, filter)

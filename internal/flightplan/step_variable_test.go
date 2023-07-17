@@ -17,6 +17,7 @@ func testMakeStepVarTraversal(parts ...string) cty.Value {
 	for i, part := range parts {
 		if i == 0 {
 			traversal = append(traversal, hcl.TraverseRoot{Name: part})
+
 			continue
 		}
 		traversal = append(traversal, hcl.TraverseAttr{Name: part})
@@ -159,7 +160,10 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			value: testMakeStepVarValue(cty.ListVal([]cty.Value{cty.StringVal("*")})),
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			file, diags := hclsyntax.ParseConfig([]byte(test.body), "in.hcl", hcl.Pos{Line: 1, Column: 1})
 			if diags.HasErrors() {
 				t.Fatal(diags.Error())

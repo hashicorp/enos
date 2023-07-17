@@ -9,7 +9,7 @@ import (
 )
 
 func TestAcc_Cmd_Version(t *testing.T) {
-	enos := newAcceptanceRunner(t)
+	t.Parallel()
 
 	for _, test := range []struct {
 		cmd  string
@@ -25,8 +25,14 @@ func TestAcc_Cmd_Version(t *testing.T) {
 			out: regexp.MustCompile(`Enos version: \d*\.\d*\.\d* sha: \w*`),
 		},
 	} {
-		out, err := enos.run(context.Background(), test.cmd)
-		require.NoError(t, err)
-		require.True(t, test.out.Match(out))
+		test := test
+		t.Run(test.cmd, func(t *testing.T) {
+			t.Parallel()
+
+			enos := newAcceptanceRunner(t)
+			out, err := enos.run(context.Background(), test.cmd)
+			require.NoError(t, err)
+			require.True(t, test.out.Match(out))
+		})
 	}
 }

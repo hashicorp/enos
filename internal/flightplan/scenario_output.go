@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 )
 
-// ScenarioOutput represents an "output" block in a scenario
+// ScenarioOutput represents an "output" block in a scenario.
 type ScenarioOutput struct {
 	Name        string
 	Description string
@@ -15,7 +15,7 @@ type ScenarioOutput struct {
 	Value       cty.Value
 }
 
-// NewScenarioOutput returns a new Output
+// NewScenarioOutput returns a new Output.
 func NewScenarioOutput() *ScenarioOutput {
 	return &ScenarioOutput{Value: cty.NilVal}
 }

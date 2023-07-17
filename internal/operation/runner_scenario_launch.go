@@ -27,6 +27,7 @@ func LaunchScenario(req *pb.Operation_Request) WorkFunc {
 				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 
@@ -73,7 +74,7 @@ func LaunchScenario(req *pb.Operation_Request) WorkFunc {
 	}
 }
 
-// scenarioLaunch initializes, validates, plans, and applies the generated Terraform module
+// scenarioLaunch initializes, validates, plans, and applies the generated Terraform module.
 func (r *Runner) scenarioLaunch(
 	ctx context.Context,
 	req *pb.Operation_Request,

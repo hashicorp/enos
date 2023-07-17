@@ -16,11 +16,7 @@ import (
 // TestAcc_Cmd_Scenario_Destroy tests that a scenario can be generated and validated
 // with Terraform.
 func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
-	enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
-
-	tmpDir, err := os.MkdirTemp("/tmp", "enos.destroy")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+	t.Parallel()
 
 	for _, test := range []struct {
 		dir  string
@@ -45,9 +41,15 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 			false,
 		},
 	} {
+		test := test
 		t.Run(fmt.Sprintf("%s %s %s %t", test.dir, test.name, test.variants, test.launch), func(t *testing.T) {
+			t.Parallel()
+			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
+			tmpDir, err := os.MkdirTemp("/tmp", "enos.destroy")
+			require.NoError(t, err)
+			t.Cleanup(func() { os.RemoveAll(tmpDir) })
 			outDir := filepath.Join(tmpDir, test.dir)
-			err := os.MkdirAll(outDir, 0o755)
+			err = os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)

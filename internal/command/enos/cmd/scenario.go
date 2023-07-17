@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
-// scenarioConfig is the 'scenario' sub-command configuration type
+// scenarioConfig is the 'scenario' sub-command configuration type.
 type scenarioStateType struct {
 	baseDir        string
 	outDir         string
@@ -30,12 +30,12 @@ type scenarioStateType struct {
 	varsFilesPaths []string
 }
 
-// scenarioState is the 'scenario' sub-command configuration
+// scenarioState is the 'scenario' sub-command configuration.
 var scenarioState = scenarioStateType{
 	tfConfig: terraform.NewConfig(),
 }
 
-// scenarioFilterDesc scenario sub-command filter description
+// scenarioFilterDesc scenario sub-command filter description.
 var scenarioFilterDesc = `
 
 A SCENARIO FILTER or FILTER must be a single string value which
@@ -51,7 +51,7 @@ VARIANT SUBFILTER = '[!]KEY:PATTERN|WILDCARD|ABSOLUTE'
 
 FILTER = '[SCENARIO NAME] [...VARIANT SUBFILTER]'`
 
-// newScenarioCmd returns a new instance of the 'scenario' sub-command
+// newScenarioCmd returns a new instance of the 'scenario' sub-command.
 func newScenarioCmd() *cobra.Command {
 	scenarioCmd := &cobra.Command{
 		Use:               "scenario",
@@ -99,6 +99,7 @@ func scenarioCmdPreRun(cmd *cobra.Command, args []string) error {
 
 	// Load the configuration from our working dir
 	scenarioState.protoFp, err = readFlightPlanConfig(scenarioState.baseDir, scenarioState.varsFilesPaths)
+
 	return err
 }
 
@@ -108,7 +109,7 @@ func scenarioCmdPostRun(cmd *cobra.Command, args []string) {
 	rootCmdPostRun(cmd, args)
 }
 
-// setupDefaultScenarioCfg sets up default scenario configuration
+// setupDefaultScenarioCfg sets up default scenario configuration.
 func setupDefaultScenarioCfg() error {
 	var err error
 
@@ -134,8 +135,8 @@ func setupDefaultScenarioCfg() error {
 	return nil
 }
 
-// decodeFlightPlan decodes the flight plan
-func decodeFlightPlan(cmd *cobra.Command) error {
+// decodeFlightPlan decodes the flight plan.
+func decodeFlightPlan(ctx context.Context, cmd *cobra.Command) error {
 	diags := hcl.Diagnostics{}
 
 	pfp, err := readFlightPlanConfig(scenarioState.baseDir, scenarioState.varsFilesPaths)
@@ -164,7 +165,7 @@ func decodeFlightPlan(cmd *cobra.Command) error {
 		}
 	}
 
-	fp, moreDiags := decoder.Decode()
+	fp, moreDiags := decoder.Decode(ctx)
 	diags = diags.Extend(moreDiags)
 	scenarioState.fp = fp
 
@@ -189,7 +190,9 @@ func scenarioNameCompletion(cmd *cobra.Command, args []string, toComplete string
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
-	err := decodeFlightPlan(cmd)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err := decodeFlightPlan(ctx, cmd)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
@@ -262,6 +265,7 @@ func prepareScenarioOpReq(
 			Diagnostics: diagnostics.FromErr(err),
 			Value:       &pb.Operation_Event_Decode{},
 		})
+
 		return nil, nil, err
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/enos/version"
 )
 
-// GetVersion returns the version information
+// GetVersion returns the version information.
 func (s *ServiceV1) GetVersion(
 	ctx context.Context,
 	req *pb.GetVersionRequest,

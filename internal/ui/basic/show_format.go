@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ShowFormat displays the response of a format request
+// ShowFormat displays the response of a format request.
 func (v *View) ShowFormat(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error {
 	for _, r := range res.GetResponses() {
 		if cfg.GetList() && r.GetChanged() && r.GetPath() != "STDIN" {

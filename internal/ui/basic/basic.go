@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// View is our basic terminal CLI view
+// View is our basic terminal CLI view.
 type View struct {
 	settings *pb.UI_Settings
 	ui       *terminal.UI
@@ -16,10 +16,10 @@ type View struct {
 	stderr   io.ReadWriteCloser
 }
 
-// Opt is a functional option
+// Opt is a functional option.
 type Opt func(*View)
 
-// New takes options and returns a new basic.View
+// New takes options and returns a new basic.View.
 func New(opts ...Opt) (*View, error) {
 	v := &View{}
 
@@ -62,7 +62,6 @@ func New(opts ...Opt) (*View, error) {
 
 			uiOpts = append(uiOpts, terminal.WithStderr(f))
 		}
-
 	}
 
 	v.ui = terminal.NewUI(uiOpts...)
@@ -70,19 +69,19 @@ func New(opts ...Opt) (*View, error) {
 	return v, nil
 }
 
-// WithUISettings sets the ui settings
+// WithUISettings sets the ui settings.
 func WithUISettings(ui *pb.UI_Settings) Opt {
 	return func(view *View) {
 		view.settings = ui
 	}
 }
 
-// Settings returns the views UI settings
+// Settings returns the views UI settings.
 func (v *View) Settings() *pb.UI_Settings {
 	return v.settings
 }
 
-// Close closes any open file handles
+// Close closes any open file handles.
 func (v *View) Close() error {
 	if v.stderr != nil {
 		err := v.stderr.Close()
@@ -143,6 +142,11 @@ func (v *View) opStatusString(status pb.Operation_Status) string {
 		if !tty {
 			res = "queued"
 		}
+	case pb.Operation_STATUS_UNSPECIFIED, pb.Operation_STATUS_UNKNOWN:
+		res = "⁉️"
+		if !tty {
+			res = "unknown"
+		}
 	default:
 		res = "⁉️"
 		if !tty {
@@ -163,16 +167,19 @@ func (v *View) writeMsg(
 
 	if status == pb.Operation_STATUS_FAILED {
 		v.ui.Error(msg)
+
 		return
 	}
 
 	if status == pb.Operation_STATUS_COMPLETED_WARNING && v.settings.Level >= pb.UI_Settings_LEVEL_WARN {
 		v.ui.Warn(msg)
+
 		return
 	}
 
 	if v.settings.Level >= pb.UI_Settings_LEVEL_INFO {
 		v.ui.Info(msg)
+
 		return
 	}
 

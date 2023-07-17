@@ -24,7 +24,7 @@ func startServer(
 	*client.Connection,
 	error,
 ) {
-	url, err := url.Parse(rootState.listenGRPC)
+	listenURL, err := url.Parse(rootState.listenGRPC)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parsing listen-grpc value: %w", err)
 	}
@@ -49,7 +49,7 @@ func startServer(
 	}).Named("client")
 
 	svr, err := server.New(
-		server.WithGRPCListenURL(url),
+		server.WithGRPCListenURL(listenURL),
 		server.WithLogger(svrLog),
 		server.WithOperator(
 			operation.NewLocalOperator(
@@ -63,9 +63,21 @@ func startServer(
 		return nil, nil, err
 	}
 
-	go func() {
-		_ = svr.Start(ctx)
-	}()
+	cfg, err := svr.Start(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resolvedURL := &url.URL{Host: cfg.ListenAddr.String()}
+
+	switch cfg.ListenAddr.Network() {
+	case "tcp", "tcp4", "tcp6":
+		resolvedURL.Scheme = "http"
+	case "unix", "unixpacket":
+		resolvedURL.Scheme = "unix"
+	default:
+		return nil, nil, fmt.Errorf("unable to determine listen network from address: %s", cfg.ListenAddr.String())
+	}
 
 	waitCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -89,7 +101,7 @@ func startServer(
 			defer cancel()
 			var enosConnection *client.Connection
 			enosConnection, err = client.Connect(ctx,
-				client.WithGRPCListenURL(url),
+				client.WithGRPCListenURL(resolvedURL),
 				client.WithLogger(clientLog),
 			)
 			if err == nil {

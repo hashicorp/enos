@@ -34,7 +34,7 @@ func (r *Runner) moduleGenerate(
 		return resVal
 	}
 
-	// Notify that we're running
+	// Notify that we're running generate
 	eventVal := &pb.Operation_Event_Generate{}
 	event := newEvent(ref, pb.Operation_STATUS_RUNNING)
 	event.Value = eventVal

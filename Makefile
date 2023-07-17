@@ -26,9 +26,7 @@ build:
 
 .PHONY: build-race
 build-race:
-	# We can't reliably pass in the GO_GC_FLAGS for the race detector on darwin
-	# https://github.com/golang/go/issues/54291
-	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} -o dist/${BINARY} ./command/enos
+	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o dist/${BINARY} ./command/enos
 
 .PHONY: test
 test:

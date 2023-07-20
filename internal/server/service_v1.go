@@ -32,10 +32,15 @@ type ServiceV1 struct {
 	log hclog.Logger
 
 	grpcListenAddr net.Addr
-	gprcListener   net.Listener
-	gprcServer     *grpc.Server
+	grpcListener   net.Listener
+	grpcServer     *grpc.Server
 
 	operator operation.Operator
+}
+
+// ServiceConfig is the running service config.
+type ServiceConfig struct {
+	ListenAddr net.Addr
 }
 
 // Opt is a functional option
@@ -110,70 +115,127 @@ func New(opts ...Opt) (*ServiceV1, error) {
 			},
 		),
 	}
-	svc.gprcServer = grpc.NewServer(grpcOpts...)
+	svc.grpcServer = grpc.NewServer(grpcOpts...)
 
 	return svc, nil
 }
 
-// Start takes a context and starts the server. It will block until an error
-// is encountered.
-func (s *ServiceV1) Start(ctx context.Context) error {
-	// Only interrupt and kill are guaranteed on all OSes. We'll pipe through
-	// unix signals we care about until such a time as we cannot.
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGTERM)
-	defer cancel()
-
-	wg := sync.WaitGroup{}
-
-	errC := make(chan error, 1)
-	wg.Add(1)
-	go func() {
-		errC <- s.serve(ctx)
-		wg.Done()
-	}()
-	defer wg.Wait()
-
-	select {
-	case err := <-errC:
-		if err != nil {
-			s.log.Error("server encountered an error", "error", err)
-		}
-		return err
-	case <-ctx.Done():
-		err := multierror.Append(ctx.Err(), s.Stop()).ErrorOrNil()
-		if err != nil {
-			s.log.Error(err.Error())
-		}
-		return err
+// Start takes a context and starts the server. It returns any immediate errors and a service config.
+// Fatal errors encountered will automatically stop the server.
+func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
+	if s.grpcListenAddr == nil {
+		return nil, fmt.Errorf("unable to start gRPC service: you must provider a listen address")
 	}
-}
 
-// Serve start the gRPC server and operator
-func (s *ServiceV1) serve(ctx context.Context) error {
-	// Reflection makes it easy to see what methods are on a server via
-	// grpcurl.
-	reflection.Register(s.gprcServer)
-
-	// Register ourselves with the instance of the gRPC server
-	pb.RegisterEnosServiceServer(s.gprcServer, s)
-
-	// Start our listener
 	s.log.Info("starting gRPC server",
 		"network", s.grpcListenAddr.Network(),
 		"addr", s.grpcListenAddr.String(),
 	)
+
+	// Only interrupt and kill are guaranteed on all OSes. We'll pipe through unix signals we care
+	// about until such a time as we cannot.
+	ctx, _ = signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGTERM)
+
+	err := s.startListener(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.startOperator(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	serve := func() {
+		wg := sync.WaitGroup{}
+
+		errC := make(chan error, 1)
+		wg.Add(1)
+		go func() {
+			errC <- s.serve(ctx)
+			wg.Done()
+		}()
+
+		defer wg.Wait()
+
+		select {
+		case err := <-errC:
+			if err != nil {
+				s.log.Error("server encountered an error", "error", err)
+			}
+			return
+		case <-ctx.Done():
+			err := multierror.Append(ctx.Err(), s.Stop()).ErrorOrNil()
+			if err != nil {
+				s.log.Error(err.Error())
+			}
+			return
+		}
+	}
+
+	go serve()
+
+	return &ServiceConfig{
+		ListenAddr: s.grpcListener.Addr(),
+	}, nil
+}
+
+// startListener starts the gRPC server listener
+func (s *ServiceV1) startListener(ctx context.Context) error {
+	// Reflection makes it easy to see what methods are on a server via grpcurl.
+	reflection.Register(s.grpcServer)
+
+	// Register ourselves with the instance of the gRPC server
+	pb.RegisterEnosServiceServer(s.grpcServer, s)
+
+	s.log.Debug("starting gRPC server listener",
+		"network", s.grpcListenAddr.Network(),
+		"addr", s.grpcListenAddr.String(),
+	)
 	var err error
-	s.gprcListener, err = net.Listen(s.grpcListenAddr.Network(), s.grpcListenAddr.String())
+	s.grpcListener, err = net.Listen(s.grpcListenAddr.Network(), s.grpcListenAddr.String())
 	if err != nil {
+		s.log.Error("failed to start gRPC server listener",
+			"network", s.grpcListenAddr.Network(),
+			"addr", s.grpcListenAddr.String(),
+			"error", err,
+		)
 		return err
 	}
 
-	err = s.operator.Start(ctx)
+	s.log.Debug("gRPC server listener is listening",
+		"network", s.grpcListenAddr.Network(),
+		"configured_addr", s.grpcListenAddr.String(),
+		"resolved_addr", s.grpcListener.Addr().String(),
+	)
+
+	return nil
+}
+
+// startOperator starts the service operator
+func (s *ServiceV1) startOperator(ctx context.Context) error {
+	s.log.Debug("starting service operator")
+
+	err := s.operator.Start(ctx)
 	if err != nil {
+		s.log.Error("failed to start service operator",
+			"error", err,
+		)
 		return err
 	}
 
-	return s.gprcServer.Serve(s.gprcListener)
+	s.log.Debug("service operator running")
+	return nil
+}
+
+// serve services requests. It will block until an error is encountered.
+func (s *ServiceV1) serve(ctx context.Context) error {
+	s.log.Debug("serving gRPC requests",
+		"network", s.grpcListenAddr.Network(),
+		"addr", s.grpcListener.Addr(),
+	)
+
+	return s.grpcServer.Serve(s.grpcListener)
 }
 
 // Stop stops the service
@@ -185,7 +247,7 @@ func (s *ServiceV1) Stop() error {
 	go func() {
 		defer close(stopC)
 		s.log.Info("Attemping graceful gRPC server stop")
-		s.gprcServer.GracefulStop()
+		s.grpcServer.GracefulStop()
 	}()
 
 	wg.Add(1)
@@ -205,7 +267,7 @@ func (s *ServiceV1) Stop() error {
 			s.log.Info("Server gracefully stopped")
 		case <-time.After(5 * time.Second):
 			s.log.Info("Forcing stop because 5 second deadline has elapsed")
-			s.gprcServer.Stop()
+			s.grpcServer.Stop()
 		}
 	}()
 

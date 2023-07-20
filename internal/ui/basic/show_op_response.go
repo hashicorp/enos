@@ -113,12 +113,14 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 	case *pb.Operation_Response_Generate_:
 		v.writeGenerateResponse(res.GetGenerate())
 	case *pb.Operation_Response_Check_:
+		v.writeGenerateResponse(res.GetGenerate())
 		v.writeInitResponse(res.GetCheck().GetInit())
 		v.writeValidateResponse(res.GetCheck().GetValidate())
 		if plan := res.GetCheck().GetPlan(); plan != nil {
 			v.writePlainTextResponse("plan", plan.GetStderr(), plan)
 		}
 	case *pb.Operation_Response_Launch_:
+		v.writeGenerateResponse(res.GetGenerate())
 		v.writeInitResponse(res.GetLaunch().GetInit())
 		v.writeValidateResponse(res.GetLaunch().GetValidate())
 		if plan := res.GetLaunch().GetPlan(); plan != nil {
@@ -128,6 +130,7 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 			v.writePlainTextResponse("apply", apply.GetStderr(), apply)
 		}
 	case *pb.Operation_Response_Destroy_:
+		v.writeGenerateResponse(res.GetGenerate())
 		v.writeInitResponse(res.GetDestroy().GetInit())
 		if show := res.GetDestroy().GetPriorStateShow(); show != nil {
 			v.writeShowResponse(show)
@@ -136,6 +139,7 @@ func (v *View) showOperationResponse(res *pb.Operation_Response, fullOnComplete 
 			v.writePlainTextResponse("destroy", destroy.GetStderr(), destroy)
 		}
 	case *pb.Operation_Response_Run_:
+		v.writeGenerateResponse(res.GetGenerate())
 		v.writeInitResponse(res.GetRun().GetInit())
 		v.writeValidateResponse(res.GetRun().GetValidate())
 		if plan := res.GetRun().GetPlan(); plan != nil {

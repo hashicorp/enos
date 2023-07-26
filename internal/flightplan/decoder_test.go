@@ -6,10 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
+	"golang.org/x/net/context"
 
 	hcl "github.com/hashicorp/hcl/v2"
 )
@@ -30,6 +32,7 @@ func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 
 func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error) {
 	t.Helper()
+
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
 	decoder, err := NewDecoder(
@@ -40,12 +43,16 @@ func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error)
 	require.NoError(t, err)
 	_, diags := decoder.FPParser.ParseHCL(hcl, "decoder-test.hcl")
 	require.False(t, diags.HasErrors(), testDiagsToError(decoder.ParserFiles(), diags))
-	fp, diags := decoder.Decode()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	fp, diags := decoder.Decode(ctx)
+
 	return fp, testDiagsToError(decoder.ParserFiles(), diags)
 }
 
 func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	t.Helper()
+
 	require.Len(t, fp.Modules, len(expected.Modules))
 	require.Len(t, fp.Scenarios, len(expected.Scenarios))
 	require.Len(t, fp.Providers, len(expected.Providers))
@@ -148,6 +155,7 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 			aAttr, ok := aVal.Traversal[i].(hcl.TraverseRoot)
 			require.True(t, ok)
 			require.EqualValues(t, eAttr.Name, aAttr.Name)
+
 			continue
 		}
 		eAttr, ok := eVal.Traversal[i].(hcl.TraverseAttr)
@@ -158,7 +166,7 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 	}
 }
 
-// Test_Decode_FlightPlan tests decoding a flight plan
+// Test_Decode_FlightPlan tests decoding a flight plan.
 func Test_Decode_FlightPlan(t *testing.T) {
 	t.Helper()
 	t.Parallel()
@@ -250,10 +258,14 @@ scenario "backend" {
 `, modulePath),
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)

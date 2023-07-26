@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ListScenarios returns the version information
+// ListScenarios returns the version information.
 func (s *ServiceV1) ListScenarios(
 	ctx context.Context,
 	req *pb.ListScenariosRequest,
@@ -19,6 +19,7 @@ func (s *ServiceV1) ListScenarios(
 	res := &pb.ListScenariosResponse{}
 
 	fp, decRes := decodeFlightPlan(
+		ctx,
 		req.GetWorkspace().GetFlightplan(),
 		flightplan.DecodeModeRef,
 		req.GetFilter(),

@@ -9,7 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// Test_Decode_Scenario_Output tests decoding of scenario outputs
+// Test_Decode_Scenario_Output tests decoding of scenario outputs.
 func Test_Decode_Scenario_Output(t *testing.T) {
 	t.Parallel()
 
@@ -189,10 +189,14 @@ scenario "backend" {
 `, modulePath),
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl), "ENOS_VAR_input=fromenv")
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)

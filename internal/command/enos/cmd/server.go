@@ -68,40 +68,29 @@ func startServer(
 		return nil, nil, err
 	}
 
-	resolvedURL := &url.URL{Host: cfg.ListenAddr.String()}
-
-	switch cfg.ListenAddr.Network() {
-	case "tcp", "tcp4", "tcp6":
-		resolvedURL.Scheme = "http"
-	case "unix", "unixpacket":
-		resolvedURL.Scheme = "unix"
-	default:
-		return nil, nil, fmt.Errorf("unable to determine listen network from address: %s", cfg.ListenAddr.String())
-	}
-
-	waitCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	ticker := time.NewTicker(2 * time.Millisecond)
 	for {
 		select {
 		case <-waitCtx.Done():
-			return nil, nil, fmt.Errorf("waiting for server to start: %w", err)
+			return nil, nil, fmt.Errorf("waiting for server to start on address %s:  %w", cfg.ListenAddr.String(), err)
 		default:
 		}
 
 		select {
 		case <-waitCtx.Done():
-			return nil, nil, fmt.Errorf("waiting for server to start: %w", err)
+			return nil, nil, fmt.Errorf("waiting for server to start on address %s:  %w", cfg.ListenAddr.String(), err)
 		case <-ticker.C:
-			ctx, cancel := context.WithTimeout(
-				context.Background(),
-				1*time.Millisecond,
+			connCtx, cancel := context.WithTimeout(
+				ctx,
+				50*time.Millisecond,
 			)
 			defer cancel()
 			var enosConnection *client.Connection
-			enosConnection, err = client.Connect(ctx,
-				client.WithGRPCListenURL(resolvedURL),
+			enosConnection, err = client.Connect(connCtx,
+				client.WithGRPCListenAddr(cfg.ListenAddr),
 				client.WithLogger(clientLog),
 			)
 			if err == nil {

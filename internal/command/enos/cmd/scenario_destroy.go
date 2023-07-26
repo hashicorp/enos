@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioDestroyCmd returns a new `scenario destroy` sub-command
+// newScenarioDestroyCmd returns a new `scenario destroy` sub-command.
 func newScenarioDestroyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "destroy [FILTER]",
@@ -32,7 +32,7 @@ func newScenarioDestroyCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioDestroyCmd is the function that destroys scenarios
+// runScenarioDestroyCmd is the function that destroys scenarios.
 func runScenarioDestroyCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

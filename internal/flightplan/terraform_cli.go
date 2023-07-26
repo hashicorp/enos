@@ -120,7 +120,7 @@ var terraformCLISpec = hcldec.ObjectSpec{
 	},
 }
 
-// terraformCLISchema are the pieces of terraform CLI configuration we care about
+// terraformCLISchema are the pieces of terraform CLI configuration we care about.
 var terraformCLISchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
 		{Name: "path"},
@@ -128,15 +128,15 @@ var terraformCLISchema = &hcl.BodySchema{
 	},
 }
 
-// TerraformCLI is a Terraform CLI configuration
+// TerraformCLI is a Terraform CLI configuration.
 type TerraformCLI struct {
-	Name      string            `hcl:"name" cty:"name"`
-	Path      string            `hcl:"path,optional" cty:"path"`
-	Env       map[string]string `hcl:"env,optional" cty:"env"`
-	ConfigVal cty.Value         `hcl:"config,optional" cty:"config"`
+	Name      string            `cty:"name"   hcl:"name"`
+	Path      string            `cty:"path"   hcl:"path,optional"`
+	Env       map[string]string `cty:"env"    hcl:"env,optional"`
+	ConfigVal cty.Value         `cty:"config" hcl:"config,optional"`
 }
 
-// NewTerraformCLI returns a new TerraformCLI
+// NewTerraformCLI returns a new TerraformCLI.
 func NewTerraformCLI() *TerraformCLI {
 	return &TerraformCLI{
 		Env:       map[string]string{},
@@ -152,6 +152,7 @@ func DefaultTerraformCLI() *TerraformCLI {
 	cli.Name = "default"
 	cli.ConfigVal = cty.NilVal
 	cli.Path, _ = exec.LookPath("terraform")
+
 	return cli
 }
 

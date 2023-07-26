@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioListCmd returns a new 'scenario list' sub-command
+// newScenarioListCmd returns a new 'scenario list' sub-command.
 func newScenarioListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:               "list [FILTER]",
@@ -19,7 +19,7 @@ func newScenarioListCmd() *cobra.Command {
 	}
 }
 
-// runScenarioListCmd runs a scenario list
+// runScenarioListCmd runs a scenario list.
 func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

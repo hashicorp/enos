@@ -30,12 +30,13 @@ func AbsPathFunc(basePath string) function.Function {
 				path = filepath.Join(basePath, path)
 			}
 			absPath, err := filepath.Abs(path)
+
 			return cty.StringVal(filepath.ToSlash(absPath)), err
 		},
 	})
 }
 
-// JoinPathFunc constructs a function that converts joins two paths
+// JoinPathFunc constructs a function that converts joins two paths.
 var JoinPathFunc = function.New(&function.Spec{
 	Params: []function.Parameter{
 		{
@@ -67,6 +68,7 @@ var FileFunc = function.New(&function.Spec{
 	Type: function.StaticReturnType(cty.String),
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		f, err := os.ReadFile(args[0].AsString())
+
 		return cty.StringVal(string(f)), err
 	},
 })

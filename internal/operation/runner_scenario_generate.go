@@ -27,6 +27,7 @@ func GenerateScenario(req *pb.Operation_Request) WorkFunc {
 				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 

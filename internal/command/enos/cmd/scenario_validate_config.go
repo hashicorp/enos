@@ -18,7 +18,7 @@ func newScenarioValidateConfigCmd() *cobra.Command {
 	}
 }
 
-// runScenarioValidateCfgCmd is the function that validates all flight plan configuration
+// runScenarioValidateCfgCmd is the function that validates all flight plan configuration.
 func runScenarioValidateCfgCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

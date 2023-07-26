@@ -36,6 +36,7 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 		v.ui.Error(fmt.Sprintf("  Validation warnings: %d", validate.GetWarningCount()))
 		v.ui.Debug(fmt.Sprintf("  Validation format: %s", validate.GetFormatVersion()))
 		v.WriteDiagnostics(validate.GetDiagnostics())
+
 		return
 	}
 
@@ -77,6 +78,7 @@ func (v *View) writeExecResponse(exec *pb.Terraform_Command_Exec_Response) {
 			v.ui.Error(stderr)
 		}
 		v.WriteDiagnostics(exec.GetDiagnostics())
+
 		return
 	}
 
@@ -138,6 +140,7 @@ func (v *View) writeShowResponse(show *pb.Terraform_Command_Show_Response) {
 		}
 
 		v.WriteDiagnostics(show.GetDiagnostics())
+
 		return
 	}
 
@@ -177,6 +180,7 @@ func (v *View) writePlainTextResponse(cmd string, stderr string, res status.ResW
 			v.ui.Error(stderr)
 		}
 		v.WriteDiagnostics(res.GetDiagnostics())
+
 		return
 	}
 

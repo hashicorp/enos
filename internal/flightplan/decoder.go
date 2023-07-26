@@ -1,6 +1,7 @@
 package flightplan
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
@@ -18,16 +19,16 @@ import (
 type DecodeMode int
 
 const (
-	// Decode and fully evaluate the entire flight plan
+	// Decode and fully evaluate the entire flight plan.
 	DecodeModeFull = iota
-	// Decode scenarios to the reference level
+	// Decode scenarios to the reference level.
 	DecodeModeRef
 )
 
-// DecoderOpt is a functional option for a new flight plan
+// DecoderOpt is a functional option for a new flight plan.
 type DecoderOpt func(*Decoder) error
 
-// NewDecoder takes functional options and returns a new flight plan
+// NewDecoder takes functional options and returns a new flight plan.
 func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
 	d := &Decoder{
 		FPParser:   hclparse.NewParser(),
@@ -44,51 +45,57 @@ func NewDecoder(opts ...DecoderOpt) (*Decoder, error) {
 	return d, nil
 }
 
-// WithDecoderFPFiles sets the flight plan contents as raw bytes
+// WithDecoderFPFiles sets the flight plan contents as raw bytes.
 func WithDecoderFPFiles(files RawFiles) DecoderOpt {
 	return func(fp *Decoder) error {
 		fp.fpFiles = files
+
 		return nil
 	}
 }
 
-// WithDecoderVarFiles sets the flight plan variable contents as raw bytes
+// WithDecoderVarFiles sets the flight plan variable contents as raw bytes.
 func WithDecoderVarFiles(files RawFiles) DecoderOpt {
 	return func(fp *Decoder) error {
 		fp.varFiles = files
+
 		return nil
 	}
 }
 
-// WithDecoderEnv sets flight plan variables from env vars
+// WithDecoderEnv sets flight plan variables from env vars.
 func WithDecoderEnv(vars []string) DecoderOpt {
 	return func(fp *Decoder) error {
 		fp.varEnvVars = vars
+
 		return nil
 	}
 }
 
-// WithDecoderBaseDir sets the flight plan base directory
+// WithDecoderBaseDir sets the flight plan base directory.
 func WithDecoderBaseDir(path string) DecoderOpt {
 	return func(fp *Decoder) error {
 		var err error
 		fp.dir, err = filepath.Abs(path)
+
 		return err
 	}
 }
 
-// WithDecoderDecodeMode sets the decoding mode
+// WithDecoderDecodeMode sets the decoding mode.
 func WithDecoderDecodeMode(mode DecodeMode) DecoderOpt {
 	return func(fp *Decoder) error {
 		fp.mode = mode
+
 		return nil
 	}
 }
 
-// WithDecoderScenarioFilter sets the scenario decoding filter
+// WithDecoderScenarioFilter sets the scenario decoding filter.
 func WithDecoderScenarioFilter(filter *ScenarioFilter) DecoderOpt {
 	return func(fp *Decoder) error {
 		fp.filter = filter
+
 		return nil
 	}
 }
@@ -241,7 +248,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 }
 
 // Decode decodes the HCL into a flight plan.
-func (d *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
+func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	fp, err := NewFlightPlan(WithFlightPlanBaseDirectory(d.dir))
@@ -260,9 +267,9 @@ func (d *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 		})
 	}
 
-	ctx := d.baseEvalContext()
-	if ctx == nil {
-		ctx = &hcl.EvalContext{
+	evalCtx := d.baseEvalContext()
+	if evalCtx == nil {
+		evalCtx = &hcl.EvalContext{
 			Variables: map[string]cty.Value{},
 			Functions: map[string]function.Function{},
 		}
@@ -283,15 +290,15 @@ func (d *Decoder) Decode() (*FlightPlan, hcl.Diagnostics) {
 
 	// Decode and validate our variables. They'll be added to eval context for
 	// access in later decoding.
-	diags = diags.Extend(fp.decodeVariables(ctx, varsFiles, d.varEnvVars))
+	diags = diags.Extend(fp.decodeVariables(evalCtx, varsFiles, d.varEnvVars))
 
 	// Decode child blocks. Each child block decoder is responsible for
 	// extending the evaluation context.
-	diags = diags.Extend(fp.decodeTerraformSettings(ctx))
-	diags = diags.Extend(fp.decodeTerraformCLIs(ctx))
-	diags = diags.Extend(fp.decodeProviders(ctx))
-	diags = diags.Extend(fp.decodeModules(ctx))
-	diags = diags.Extend(fp.decodeScenarios(ctx, d.mode, d.filter))
+	diags = diags.Extend(fp.decodeTerraformSettings(evalCtx))
+	diags = diags.Extend(fp.decodeTerraformCLIs(evalCtx))
+	diags = diags.Extend(fp.decodeProviders(evalCtx))
+	diags = diags.Extend(fp.decodeModules(evalCtx))
+	diags = diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.mode, d.filter))
 
 	return fp, diags
 }

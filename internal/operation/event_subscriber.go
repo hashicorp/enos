@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// Subscribers are operation event subscribers
+// Subscribers are operation event subscribers.
 type Subscribers map[string]*Subscriber
 
-// Subscriber is an event subscriber
+// Subscriber is an event subscriber.
 type Subscriber struct {
 	mu     sync.RWMutex
 	ID     string
@@ -23,10 +23,10 @@ type Subscriber struct {
 	once   sync.Once
 }
 
-// SubscriberOpt is a new subscriber option
+// SubscriberOpt is a new subscriber option.
 type SubscriberOpt func(*Subscriber)
 
-// NewSubscriber takes an operation request and returns a new subscriber instance
+// NewSubscriber takes an operation request and returns a new subscriber instance.
 func NewSubscriber(
 	ref *pb.Ref_Operation,
 	opts ...SubscriberOpt,
@@ -56,14 +56,14 @@ func NewSubscriber(
 	return s, nil
 }
 
-// WithSubscriberLog sets the subscriber logger
+// WithSubscriberLog sets the subscriber logger.
 func WithSubscriberLog(log hclog.Logger) SubscriberOpt {
 	return func(s *Subscriber) {
 		s.log = log
 	}
 }
 
-// Close closes the subscribers
+// Close closes the subscribers.
 func (s *Subscriber) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()

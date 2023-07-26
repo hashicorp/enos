@@ -25,6 +25,7 @@ func (r *Runner) terraformExec(
 	if err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
+
 		return res
 	}
 
@@ -67,6 +68,7 @@ func (r *Runner) terraformExec(
 	res.Stderr = execOut.Stderr.String()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 

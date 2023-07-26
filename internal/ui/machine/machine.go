@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// View is our basic terminal CLI view
+// View is our basic terminal CLI view.
 type View struct {
 	settings *pb.UI_Settings
 	stderr   io.ReadWriteCloser
@@ -31,7 +31,7 @@ type diagsJSON struct {
 	Diags []json.RawMessage `json:"diagnostics"`
 }
 
-// Opt is a functional option
+// Opt is a functional option.
 type Opt func(*View)
 
 // NewErrUnsupportedEncodingFormat returns a new unsupported encoding format
@@ -42,10 +42,11 @@ func NewErrUnsupportedEncodingFormat(format pb.UI_Settings_Format) error {
 	if !ok {
 		msg = fmt.Sprintf("%s: %s", msg, friendlyName)
 	}
+
 	return fmt.Errorf(msg)
 }
 
-// New takes options and returns a new basic.View
+// New takes options and returns a new basic.View.
 func New(opts ...Opt) (*View, error) {
 	v := &View{}
 
@@ -87,19 +88,19 @@ func New(opts ...Opt) (*View, error) {
 	return v, nil
 }
 
-// WithUISettings configures the view with the UI settings
+// WithUISettings configures the view with the UI settings.
 func WithUISettings(settings *pb.UI_Settings) Opt {
 	return func(view *View) {
 		view.settings = settings
 	}
 }
 
-// Settings returns the views UI settings
+// Settings returns the views UI settings.
 func (v *View) Settings() *pb.UI_Settings {
 	return v.settings
 }
 
-// Close closes any open file handles
+// Close closes any open file handles.
 func (v *View) Close() error {
 	if v.stderr != nil {
 		err := v.stderr.Close()
@@ -120,49 +121,53 @@ func (v *View) Close() error {
 	return nil
 }
 
-// ShowFormat shows the output of a format request
+// ShowFormat shows the output of a format request.
 func (v *View) ShowFormat(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
+
 	return status.Format(cfg, res)
 }
 
-// ShowError writes the given error to stdout in the formatted version
+// ShowError writes the given error to stdout in the formatted version.
 func (v *View) ShowError(err error) error {
 	return v.writeError(err)
 }
 
-// ShowDiagnostics writes the given diagnostic to stdout in the formatted version
+// ShowDiagnostics writes the given diagnostic to stdout in the formatted version.
 func (v *View) ShowDiagnostics(diags []*pb.Diagnostic) error {
 	return v.writeDiagnostics(diags)
 }
 
-// ShowVersion shows the version information
+// ShowVersion shows the version information.
 func (v *View) ShowVersion(all bool, res *pb.GetVersionResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
+
 	return status.GetVersion(res)
 }
 
-// ShowScenariosValidateConfig shows the validation response
+// ShowScenariosValidateConfig shows the validation response.
 func (v *View) ShowScenariosValidateConfig(res *pb.ValidateScenariosConfigurationResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
+
 	return status.ScenariosValidateConfig(v.settings.GetFailOnWarnings(), res)
 }
 
-// ShowScenarioList shows the a list of scenarios
+// ShowScenarioList shows the a list of scenarios.
 func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	if err := v.write(res); err != nil {
 		return err
 	}
+
 	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
-// ShowDecode shows the decode response unless it's a incremental update
+// ShowDecode shows the decode response unless it's a incremental update.
 func (v *View) ShowDecode(res *pb.DecodeResponse, incremental bool) error {
 	if incremental {
 		// machine output doesn't show incremental update so we early return
@@ -176,7 +181,7 @@ func (v *View) ShowDecode(res *pb.DecodeResponse, incremental bool) error {
 	return status.Decode(v.Settings().GetFailOnWarnings(), res)
 }
 
-// ShowOutput shows output response
+// ShowOutput shows output response.
 func (v *View) ShowOutput(out *pb.OperationResponses) error {
 	if err := v.write(out); err != nil {
 		return err
@@ -185,11 +190,11 @@ func (v *View) ShowOutput(out *pb.OperationResponses) error {
 	return status.OperationResponses(v.Settings().GetFailOnWarnings(), out)
 }
 
-// ShowOperationEvent does nothing as the machine output doesn't stream events
+// ShowOperationEvent does nothing as the machine output doesn't stream events.
 func (v *View) ShowOperationEvent(*pb.Operation_Event) {
 }
 
-// ShowOperationResponse shows an operation response
+// ShowOperationResponse shows an operation response.
 func (v *View) ShowOperationResponse(res *pb.Operation_Response) error {
 	if err := v.write(res); err != nil {
 		return err
@@ -205,7 +210,7 @@ func (v *View) ShowOperationResponse(res *pb.Operation_Response) error {
 	)
 }
 
-// ShowOperationResponses shows the results of multiple operations
+// ShowOperationResponses shows the results of multiple operations.
 func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 	if err := v.write(res); err != nil {
 		return err
@@ -214,7 +219,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 	return status.OperationResponses(v.settings.GetFailOnWarnings(), res)
 }
 
-// writeError does our best to write the given error to our stderr
+// writeError does our best to write the given error to our stderr.
 func (v *View) writeError(err error) error {
 	tryJSON := func(err error) error {
 		msg := &errJSON{
@@ -249,17 +254,26 @@ func (v *View) writeError(err error) error {
 		if err != nil {
 			return tryPlainText(err)
 		}
+
+		return nil
+	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT:
+		err := tryJSON(fmt.Errorf("%w: %s", err, NewErrUnsupportedEncodingFormat(v.settings.GetFormat()).Error()))
+		if err != nil {
+			return tryPlainText(err)
+		}
+
 		return nil
 	default:
 		err := tryJSON(fmt.Errorf("%w: %s", err, NewErrUnsupportedEncodingFormat(v.settings.GetFormat()).Error()))
 		if err != nil {
 			return tryPlainText(err)
 		}
+
 		return nil
 	}
 }
 
-// writeDiagnostics does our best to write the diagnostics to our stderr
+// writeDiagnostics does our best to write the diagnostics to our stderr.
 func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 	tryJSON := func(diags []*pb.Diagnostic) error {
 		msg := &diagsJSON{
@@ -270,6 +284,7 @@ func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 			bytes, err := protojson.Marshal(diag)
 			if err != nil {
 				msg.Diags = append(msg.Diags, []byte(err.Error()))
+
 				continue
 			}
 			msg.Diags = append(msg.Diags, bytes)
@@ -278,6 +293,7 @@ func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 		bytes, err := json.Marshal(msg)
 		if err != nil {
 			_, _ = v.ui.Stderr.Write([]byte(err.Error()))
+
 			return err
 		}
 
@@ -301,6 +317,17 @@ func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 		if err != nil {
 			return tryPlainText(err)
 		}
+
+		return nil
+	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT:
+		diags = append(diags, diagnostics.FromErr(
+			NewErrUnsupportedEncodingFormat(v.settings.GetFormat()),
+		)...)
+		err := tryJSON(diags)
+		if err != nil {
+			return tryPlainText(err)
+		}
+
 		return nil
 	default:
 		diags = append(diags, diagnostics.FromErr(
@@ -310,11 +337,12 @@ func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 		if err != nil {
 			return tryPlainText(err)
 		}
+
 		return nil
 	}
 }
 
-// write takes a proto messages and writes it to the desired output
+// write takes a proto messages and writes it to the desired output.
 func (v *View) write(msg proto.Message) error {
 	var err error
 	var bytes []byte
@@ -325,10 +353,13 @@ func (v *View) write(msg proto.Message) error {
 		if err != nil {
 			return err
 		}
+	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT:
+		return NewErrUnsupportedEncodingFormat(v.settings.GetFormat())
 	default:
 		return NewErrUnsupportedEncodingFormat(v.settings.GetFormat())
 	}
 
 	_, err = v.ui.Stdout.Write(bytes)
+
 	return err
 }

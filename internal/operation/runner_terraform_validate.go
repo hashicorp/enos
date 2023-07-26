@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// terraformValidate validates a Terraform module
+// terraformValidate validates a Terraform module.
 func (r *Runner) terraformValidate(
 	ctx context.Context,
 	req *pb.Operation_Request,
@@ -23,6 +23,7 @@ func (r *Runner) terraformValidate(
 	if err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
+
 		return res
 	}
 
@@ -53,6 +54,7 @@ func (r *Runner) terraformValidate(
 	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 
@@ -75,6 +77,7 @@ func (r *Runner) terraformValidate(
 	}
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 

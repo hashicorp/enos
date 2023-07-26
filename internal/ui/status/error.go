@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// Error takes a message and optional errors to wrap and returns a new error
+// Error takes a message and optional errors to wrap and returns a new error.
 func Error(msg string, errs ...error) error {
 	err := fmt.Errorf(msg)
 	for _, err2 := range errs {
@@ -20,7 +20,7 @@ func Error(msg string, errs ...error) error {
 	return err
 }
 
-// ErrExit is an error that contains requested special exit behavior
+// ErrExit is an error that contains requested special exit behavior.
 type ErrExit struct {
 	Err      error
 	ExitCode int
@@ -35,19 +35,20 @@ func (e *ErrExit) Error() string {
 	return Error(e.Msg, e.Err).Error()
 }
 
-// ErrDiagnostic is an error that can carry diagnostics information
+// ErrDiagnostic is an error that can carry diagnostics information.
 type ErrDiagnostic struct {
 	Diags          []*pb.Diagnostic
 	DiagStringOpts []diagnostics.StringOpt
 	Err            error
 }
 
-// Error returns a joined message from all diagnostics errors
+// Error returns a joined message from all diagnostics errors.
 func (e *ErrDiagnostic) Error() string {
 	if e.Diags == nil {
 		if e.Err != nil {
 			return e.Err.Error()
 		}
+
 		return ""
 	}
 
@@ -59,7 +60,7 @@ func (e *ErrDiagnostic) Error() string {
 	return msg.String()
 }
 
-// Unwrap returns the wrapped error
+// Unwrap returns the wrapped error.
 func (e *ErrDiagnostic) Unwrap() error {
 	return e.Err
 }

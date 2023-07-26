@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
-// RenderTable does a basic render of table data to the desired writer
+// RenderTable does a basic render of table data to the desired writer.
 func (u *UI) RenderTable(header []string, rows [][]string) {
 	table := tablewriter.NewWriter(u.Stdout)
 
@@ -35,7 +35,7 @@ func (u *UI) RenderTable(header []string, rows [][]string) {
 
 var _ cli.Ui = (*UI)(nil)
 
-// UI is a CLI UI
+// UI is a CLI UI.
 type UI struct {
 	Stderr io.Writer
 	Stdout io.Writer
@@ -56,13 +56,13 @@ type UI struct {
 	ui cli.Ui
 }
 
-// Level is the output level
+// Level is the output level.
 type Level int
 
-// Opt is a UI option
+// Opt is a UI option.
 type Opt func(*UI)
 
-// NewUI takes zero or more options and returns a new UI
+// NewUI takes zero or more options and returns a new UI.
 func NewUI(opts ...Opt) *UI {
 	ui := &UI{
 		Level:    pb.UI_Settings_LEVEL_INFO,
@@ -94,132 +94,132 @@ func NewUI(opts ...Opt) *UI {
 	return ui
 }
 
-// WithStderr sets stderr
+// WithStderr sets stderr.
 func WithStderr(stderr io.Writer) Opt {
 	return func(ui *UI) {
 		ui.Stderr = stderr
 	}
 }
 
-// WithStdout sets stdout
+// WithStdout sets stdout.
 func WithStdout(stdout io.Writer) Opt {
 	return func(ui *UI) {
 		ui.Stdout = stdout
 	}
 }
 
-// WithStdin sets stdin
+// WithStdin sets stdin.
 func WithStdin(stdin io.Reader) Opt {
 	return func(ui *UI) {
 		ui.Stdin = stdin
 	}
 }
 
-// WithAskPrefix sets the ask prefix
+// WithAskPrefix sets the ask prefix.
 func WithAskPrefix(p string) Opt {
 	return func(ui *UI) {
 		ui.AskPrefix = p
 	}
 }
 
-// WithAskSecretPrefix sets the ask prefix
+// WithAskSecretPrefix sets the ask prefix.
 func WithAskSecretPrefix(p string) Opt {
 	return func(ui *UI) {
 		ui.AskSecretPrefix = p
 	}
 }
 
-// WithOutputPrefix sets the output prefix
+// WithOutputPrefix sets the output prefix.
 func WithOutputPrefix(p string) Opt {
 	return func(ui *UI) {
 		ui.OutputPrefix = p
 	}
 }
 
-// WithInfoPrefix sets the info prefix
+// WithInfoPrefix sets the info prefix.
 func WithInfoPrefix(p string) Opt {
 	return func(ui *UI) {
 		ui.InfoPrefix = p
 	}
 }
 
-// WithErrorPrefix sets the error prefix
+// WithErrorPrefix sets the error prefix.
 func WithErrorPrefix(p string) Opt {
 	return func(ui *UI) {
 		ui.ErrorPrefix = p
 	}
 }
 
-// WithWarnPrefix sets the warn prefix
+// WithWarnPrefix sets the warn prefix.
 func WithWarnPrefix(p string) Opt {
 	return func(ui *UI) {
 		ui.WarnPrefix = p
 	}
 }
 
-// WithLevel sets logging level
+// WithLevel sets logging level.
 func WithLevel(l pb.UI_Settings_Level) Opt {
 	return func(ui *UI) {
 		ui.Level = l
 	}
 }
 
-// WithColor sets whether or not to use color
+// WithColor sets whether or not to use color.
 func WithColor(use bool) Opt {
 	return func(ui *UI) {
 		ui.UseColor = use
 	}
 }
 
-// WithWidth sets the line wrapping
+// WithWidth sets the line wrapping.
 func WithWidth(wrap uint) Opt {
 	return func(ui *UI) {
 		ui.Width = wrap
 	}
 }
 
-// Ask prompts the user for some data
+// Ask prompts the user for some data.
 func (u *UI) Ask(q string) (string, error) {
 	return u.ui.Ask(q)
 }
 
-// AskSecret prompts the user for some data
+// AskSecret prompts the user for some data.
 func (u *UI) AskSecret(q string) (string, error) {
 	return u.ui.AskSecret(q)
 }
 
-// Output outputs a message to stdout
+// Output outputs a message to stdout.
 func (u *UI) Output(m string) {
 	u.ui.Output(m)
 }
 
-// Info outputs a message at info level
+// Info outputs a message at info level.
 func (u *UI) Info(m string) {
 	if u.Level >= pb.UI_Settings_LEVEL_INFO {
 		u.ui.Info(m)
 	}
 }
 
-// Error outputs a message at error level
+// Error outputs a message at error level.
 func (u *UI) Error(m string) {
 	u.ui.Error(m)
 }
 
-// Warn outputs a message at warn level
+// Warn outputs a message at warn level.
 func (u *UI) Warn(m string) {
 	if u.Level >= pb.UI_Settings_LEVEL_WARN {
 		u.ui.Warn(m)
 	}
 }
 
-// Debug outputs a message at warn level
+// Debug outputs a message at warn level.
 func (u *UI) Debug(m string) {
 	if u.Level >= pb.UI_Settings_LEVEL_DEBUG {
 		u.ui.Info(m)
 	}
 }
 
-// Diagnostics outputs diagnostics to stderr
+// Diagnostics outputs diagnostics to stderr.
 func (u *UI) Diagnostics(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 	return hcl.NewDiagnosticTextWriter(
 		u.Stderr,

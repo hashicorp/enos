@@ -96,7 +96,10 @@ provider "is" "anything" {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			file, diags := hclsyntax.ParseConfig([]byte(test.body), "in.hcl", hcl.InitialPos)
 			if diags.HasErrors() {
 				t.Fatal(diags.Error())
@@ -178,7 +181,10 @@ func Test_SchemalessBlock_Roundtrip(t *testing.T) {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			val := test.expected.ToCtyValue()
 			got := NewSchemalessBlock()
 			require.NoError(t, got.FromCtyValue(val))

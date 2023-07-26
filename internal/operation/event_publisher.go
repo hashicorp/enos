@@ -8,20 +8,20 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// Unsubscriber is a func that unsubscribes that subscriber from the publisher
+// Unsubscriber is a func that unsubscribes that subscriber from the publisher.
 type Unsubscriber func()
 
-// Publisher is the operation event publisher
+// Publisher is the operation event publisher.
 type Publisher struct {
 	subscribers map[string]Subscribers // operation id -> subscribers
 	mu          sync.RWMutex
 	log         hclog.Logger
 }
 
-// PublisherOpt is a NewPublisher option
+// PublisherOpt is a NewPublisher option.
 type PublisherOpt func(*Publisher)
 
-// NewPublisher returns a new instance of the publisher
+// NewPublisher returns a new instance of the publisher.
 func NewPublisher(opts ...PublisherOpt) *Publisher {
 	p := &Publisher{
 		subscribers: map[string]Subscribers{},
@@ -36,7 +36,7 @@ func NewPublisher(opts ...PublisherOpt) *Publisher {
 	return p
 }
 
-// WithPublisherLog sets the logger on the publisher
+// WithPublisherLog sets the logger on the publisher.
 func WithPublisherLog(log hclog.Logger) PublisherOpt {
 	return func(p *Publisher) {
 		p.log = log
@@ -65,7 +65,7 @@ func (p *Publisher) Subscribe(s *Subscriber) Unsubscriber {
 	}
 }
 
-// Unsubscribe unsubscribes a subscriber
+// Unsubscribe unsubscribes a subscriber.
 func (p *Publisher) Unsubscribe(s *Subscriber) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -82,7 +82,7 @@ func (p *Publisher) Unsubscribe(s *Subscriber) {
 	)
 }
 
-// Publish publishes an operation event to listners for the operationID
+// Publish publishes an operation event to listeners for the operationID.
 func (p *Publisher) Publish(event *pb.Operation_Event) error {
 	if event == nil {
 		return nil
@@ -98,6 +98,7 @@ func (p *Publisher) Publish(event *pb.Operation_Event) error {
 		s.mu.RLock()
 		if !s.active {
 			s.mu.RUnlock()
+
 			return nil
 		}
 		s.mu.RUnlock()
@@ -108,6 +109,7 @@ func (p *Publisher) Publish(event *pb.Operation_Event) error {
 		err := proto.Copy(event, newEvent)
 		if err != nil {
 			log.Error("unable to copy operation", "err", err)
+
 			return err
 		}
 
@@ -119,7 +121,7 @@ func (p *Publisher) Publish(event *pb.Operation_Event) error {
 	return nil
 }
 
-// Stop closes all subscribers and removes and clears the subscribers list
+// Stop closes all subscribers and removes and clears the subscribers list.
 func (p *Publisher) Stop() {
 	p.mu.Lock()
 	defer p.mu.Unlock()

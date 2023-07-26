@@ -10,18 +10,16 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// WorkFunc is a function that a worker can run
+// WorkFunc is a function that a worker can run.
 type WorkFunc func(
 	context.Context,
 	chan *pb.Operation_Event,
 	hclog.Logger,
 ) *pb.Operation_Response
 
-// worker is an operation worker. It listens pulls work requests from the
-// the queue and executes them.
+// worker is an operation worker. It listens pulls work requests from the queue and executes them.
 type worker struct {
 	id        string
-	ctx       context.Context
 	requests  chan *workReq
 	events    chan *pb.Operation_Event
 	log       hclog.Logger
@@ -33,10 +31,9 @@ type workReq struct {
 	f   WorkFunc
 }
 
-// newWorker takes a context, work request channel, and update channel and
-// returns a new instance of a worker.
+// newWorker takes a context, work request channel, and update channel and returns a new instance
+// of a worker.
 func newWorker(
-	ctx context.Context,
 	id string,
 	requests chan *workReq,
 	events chan *pb.Operation_Event,
@@ -44,7 +41,6 @@ func newWorker(
 	saveState func(*pb.Operation_Response) error,
 ) *worker {
 	return &worker{
-		ctx:       ctx,
 		id:        id,
 		requests:  requests,
 		events:    events,
@@ -81,25 +77,26 @@ func newWorkReqForOpReq(op *pb.Operation_Request) (*workReq, error) {
 	return req, err
 }
 
-// Run runs the worker. It continuously polls the input channel for new work
-// requests.
-func (w *worker) run() {
+// Run runs the worker. It continuously polls the input channel for new work requests.
+func (w *worker) run(ctx context.Context) {
 	w.log.Debug("running")
 
 	for {
 		select {
-		case <-w.ctx.Done():
+		case <-ctx.Done():
 			w.log.Debug("stopped")
+
 			return
 		default:
 		}
 
 		select {
-		case <-w.ctx.Done():
+		case <-ctx.Done():
 			w.log.Debug("stopped")
+
 			return
 		case req := <-w.requests:
-			w.runRequest(req)
+			w.runRequest(ctx, req)
 		}
 	}
 }
@@ -109,11 +106,10 @@ func (w *worker) sendEvent(event *pb.Operation_Event, done bool) {
 	w.events <- event
 }
 
-// runRequest is responsible for executing our WorkFunc. We execute the WorkFunc,
-// filter and pass on the events to the events channel, persist the resulting
-// response, and sending the done event.
-func (w *worker) runRequest(req *workReq) {
-	workCtx, workCancel := context.WithCancel(w.ctx)
+// runRequest is responsible for executing our WorkFunc. We execute the WorkFunc, filter and pass
+// on the events to the events channel, persist the resulting response, and sending the done event.
+func (w *worker) runRequest(ctx context.Context, req *workReq) {
+	workCtx, workCancel := context.WithCancel(ctx)
 	eventC := make(chan *pb.Operation_Event)
 	resC := make(chan *pb.Operation_Response, 1)
 	eWg := sync.WaitGroup{}
@@ -169,7 +165,7 @@ func (w *worker) runRequest(req *workReq) {
 		select {
 		case <-workCtx.Done():
 			return
-		case resC <- req.f(w.ctx, eventC, log.Named(req.req.GetId())):
+		case resC <- req.f(ctx, eventC, log.Named(req.req.GetId())):
 			return
 		}
 	}()

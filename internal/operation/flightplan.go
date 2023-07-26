@@ -1,6 +1,7 @@
 package operation
 
 import (
+	"context"
 	"path/filepath"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -20,7 +21,7 @@ func outDirForWorkspace(w *pb.Workspace) string {
 	return filepath.Join(w.GetFlightplan().GetBaseDir(), ".enos")
 }
 
-func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeResponse) {
+func decodeFlightPlan(ctx context.Context, pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeResponse) {
 	res := &pb.DecodeResponse{
 		Diagnostics: []*pb.Diagnostic{},
 	}
@@ -33,6 +34,7 @@ func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeRes
 	)
 	if err != nil {
 		res.Diagnostics = diagnostics.FromErr(err)
+
 		return nil, res
 	}
 
@@ -45,7 +47,7 @@ func decodeFlightPlan(pfp *pb.FlightPlan) (*flightplan.FlightPlan, *pb.DecodeRes
 		return nil, res
 	}
 
-	fp, hclDiags := dec.Decode()
+	fp, hclDiags := dec.Decode(ctx)
 	if len(hclDiags) > 0 {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
 	}

@@ -15,6 +15,8 @@ import (
 )
 
 func TestAcc_Cmd_Fmt(t *testing.T) {
+	t.Parallel()
+
 	enos := newAcceptanceRunner(t)
 
 	path, err := filepath.Abs("./scenarios/scenario_generate_pass_0")

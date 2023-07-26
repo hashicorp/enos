@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-// Format does formatting on Enos configuration
+// Format does formatting on Enos configuration.
 func (s *ServiceV1) Format(
 	ctx context.Context,
 	req *pb.FormatRequest,
@@ -39,6 +39,7 @@ func (s *ServiceV1) Format(
 		if diags.HasErrors() {
 			r.Diagnostics = diagnostics.FromHCL(nil, diags)
 			res.Responses = append(res.Responses, r)
+
 			continue
 		}
 
@@ -46,6 +47,7 @@ func (s *ServiceV1) Format(
 		if bytes.Equal(file.GetBody(), formatted) {
 			// If nothing has changed we can move on
 			res.Responses = append(res.Responses, r)
+
 			continue
 		}
 
@@ -72,6 +74,7 @@ func (s *ServiceV1) Format(
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
 				res.Responses = append(res.Responses, r)
+
 				continue
 			}
 			defer f.Close()
@@ -80,6 +83,7 @@ func (s *ServiceV1) Format(
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
 				res.Responses = append(res.Responses, r)
+
 				continue
 			}
 		}

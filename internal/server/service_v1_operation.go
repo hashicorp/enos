@@ -14,6 +14,7 @@ func (s *ServiceV1) Operation(
 	req *pb.OperationRequest,
 ) (*pb.OperationResponse, error) {
 	res, err := s.operator.Response(req.GetOp())
+
 	return &pb.OperationResponse{
 		Diagnostics: diagnostics.FromErr(err),
 		Response:    res,

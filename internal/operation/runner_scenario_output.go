@@ -30,6 +30,7 @@ func OutputScenario(req *pb.Operation_Request) WorkFunc {
 			if err = events.PublishResponse(res); err != nil {
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 		res.Value = resVal
@@ -41,7 +42,7 @@ func OutputScenario(req *pb.Operation_Request) WorkFunc {
 
 		// Configure the runner with the existing Terraform module. If it doesn't
 		// exit there's nothing to output.
-		mod, diags := moduleForReq(req)
+		mod, diags := moduleForReq(ctx, req)
 		resVal.Output.Diagnostics = append(resVal.Output.GetDiagnostics(), diags...)
 
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Output.Output.GetDiagnostics()...)
@@ -50,6 +51,7 @@ func OutputScenario(req *pb.Operation_Request) WorkFunc {
 			if err = events.PublishResponse(res); err != nil {
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 

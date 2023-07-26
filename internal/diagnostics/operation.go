@@ -15,27 +15,27 @@ func Status(failOnWarn bool, diags ...*pb.Diagnostic) pb.Operation_Status {
 	return status
 }
 
-// OpResFailed checks an operation response for failure diagnostics
+// OpResFailed checks an operation response for failure diagnostics.
 func OpResFailed(failOnWarn bool, res *pb.Operation_Response) bool {
 	return OpResErrors(res) || (failOnWarn && OpResWarnings(res))
 }
 
-// OpResErrors checks an operation response failure diagnostics
+// OpResErrors checks an operation response failure diagnostics.
 func OpResErrors(res *pb.Operation_Response) bool {
 	return HasErrors(resDiags(res))
 }
 
-// OpResWarnings checks an operation response warning diagnostics
+// OpResWarnings checks an operation response warning diagnostics.
 func OpResWarnings(res *pb.Operation_Response) bool {
 	return HasWarnings(resDiags(res))
 }
 
-// OpEventErrors returns whether the event has errors
+// OpEventErrors returns whether the event has errors.
 func OpEventErrors(e *pb.Operation_Event) bool {
 	return HasErrors(eventDiags(e))
 }
 
-// OpEventWarnings returns whether the event has warnings
+// OpEventWarnings returns whether the event has warnings.
 func OpEventWarnings(e *pb.Operation_Event) bool {
 	return HasWarnings(eventDiags(e))
 }
@@ -51,7 +51,7 @@ func OperationStatus(failOnWarn bool, res *pb.Operation_Response) pb.Operation_S
 	return status
 }
 
-// resDiags returns all of the diagnostics that might be included in a response
+// resDiags returns all of the diagnostics that might be included in a response.
 func resDiags(res *pb.Operation_Response) []*pb.Diagnostic {
 	return Concat(
 		res.GetDiagnostics(),
@@ -82,7 +82,7 @@ func resDiags(res *pb.Operation_Response) []*pb.Diagnostic {
 	)
 }
 
-// eventDiags returns all of the diagnosticsthat might be included in an event
+// eventDiags returns all of the diagnosticsthat might be included in an event.
 func eventDiags(e *pb.Operation_Event) []*pb.Diagnostic {
 	return Concat(
 		e.GetDiagnostics(),

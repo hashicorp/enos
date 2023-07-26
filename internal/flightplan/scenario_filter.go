@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ScenarioFilter is a filter for scenarios
+// ScenarioFilter is a filter for scenarios.
 type ScenarioFilter struct {
 	Name      string
 	Include   *Vector
@@ -15,7 +15,7 @@ type ScenarioFilter struct {
 	SelectAll bool
 }
 
-// String returns the scenario filter as a string
+// String returns the scenario filter as a string.
 func (sf *ScenarioFilter) String() string {
 	if sf == nil {
 		return ""
@@ -40,10 +40,10 @@ func (sf *ScenarioFilter) String() string {
 	return str
 }
 
-// ScenarioFilterOpt is a scenario filter constructor functional option
+// ScenarioFilterOpt is a scenario filter constructor functional option.
 type ScenarioFilterOpt func(*ScenarioFilter) error
 
-// NewScenarioFilter takes in options and returns a new filter
+// NewScenarioFilter takes in options and returns a new filter.
 func NewScenarioFilter(opts ...ScenarioFilterOpt) (*ScenarioFilter, error) {
 	f := &ScenarioFilter{
 		Include: NewVector(),
@@ -59,18 +59,20 @@ func NewScenarioFilter(opts ...ScenarioFilterOpt) (*ScenarioFilter, error) {
 	return f, nil
 }
 
-// WithScenarioFilterName sets the filter name
+// WithScenarioFilterName sets the filter name.
 func WithScenarioFilterName(name string) ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		f.Name = name
+
 		return nil
 	}
 }
 
-// WithScenarioFilterSelectAll makes the filter select all
+// WithScenarioFilterSelectAll makes the filter select all.
 func WithScenarioFilterSelectAll() ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		f.SelectAll = true
+
 		return nil
 	}
 }
@@ -80,11 +82,12 @@ func WithScenarioFilterSelectAll() ScenarioFilterOpt {
 func WithScenarioFilterMatchingVariants(vec *Vector) ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		f.Include = vec
+
 		return nil
 	}
 }
 
-// WithScenarioFilterParse parses the given filter
+// WithScenarioFilterParse parses the given filter.
 func WithScenarioFilterParse(args []string) ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		nf, err := ParseScenarioFilter(args)
@@ -101,10 +104,11 @@ func WithScenarioFilterParse(args []string) ScenarioFilterOpt {
 	}
 }
 
-// WithScenarioFilterDecode decodes a filter from a proto Filter
+// WithScenarioFilterDecode decodes a filter from a proto Filter.
 func WithScenarioFilterDecode(filter *pb.Scenario_Filter) ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		f.FromProto(filter)
+
 		return nil
 	}
 }
@@ -114,6 +118,7 @@ func WithScenarioFilterDecode(filter *pb.Scenario_Filter) ScenarioFilterOpt {
 func WithScenarioFilterFromScenarioRef(ref *pb.Ref_Scenario) ScenarioFilterOpt {
 	return func(f *ScenarioFilter) error {
 		f.FromScenarioRef(ref)
+
 		return nil
 	}
 }
@@ -127,8 +132,9 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 	}
 
 	// No filter args means everything
-	if len(args) == 0 {
+	if len(args) == 0 || len(args) == 1 && args[0] == "" {
 		f.SelectAll = true
+
 		return f, nil
 	}
 
@@ -141,6 +147,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 				return f, fmt.Errorf("invalid variant filter: already found variant name %s and given another %s", f.Name, arg)
 			}
 			f.Name = arg
+
 			continue
 		}
 
@@ -160,6 +167,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 				return f, fmt.Errorf("invalid variant filter: %w", err)
 			}
 			f.Exclude = append(f.Exclude, ex)
+
 			continue
 		}
 
@@ -170,7 +178,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 	return f, nil
 }
 
-// Proto returns the scenario filter as a proto filter
+// Proto returns the scenario filter as a proto filter.
 func (sf *ScenarioFilter) Proto() *pb.Scenario_Filter {
 	pbf := &pb.Scenario_Filter{
 		Name:    sf.Name,
@@ -191,8 +199,12 @@ func (sf *ScenarioFilter) Proto() *pb.Scenario_Filter {
 	return pbf
 }
 
-// FromProto unmarshals a proto filter into itself
+// FromProto unmarshals a proto filter into itself.
 func (sf *ScenarioFilter) FromProto(filter *pb.Scenario_Filter) {
+	if filter == nil {
+		return
+	}
+
 	sf.Name = filter.GetName()
 
 	if i := filter.GetInclude(); i != nil {
@@ -213,7 +225,7 @@ func (sf *ScenarioFilter) FromProto(filter *pb.Scenario_Filter) {
 	}
 }
 
-// FromScenarioRef takes a reference to a scenario and returns a filter for it
+// FromScenarioRef takes a reference to a scenario and returns a filter for it.
 func (sf *ScenarioFilter) FromScenarioRef(ref *pb.Ref_Scenario) {
 	sf.Name = ref.GetId().GetName()
 	sf.Include = NewVectorFromProto(ref.GetId().GetVariants())
@@ -222,6 +234,10 @@ func (sf *ScenarioFilter) FromScenarioRef(ref *pb.Ref_Scenario) {
 // ScenariosSelect takes a scenario filter and returns a slice of matching
 // scenarios.
 func (fp *FlightPlan) ScenariosSelect(f *ScenarioFilter) []*Scenario {
+	if f == nil {
+		return nil
+	}
+
 	if f.SelectAll {
 		return fp.Scenarios
 	}

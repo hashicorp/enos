@@ -18,7 +18,9 @@ func Test_MaybeUpdateRelativeSourcePaths(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "update_source_paths")
 	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	t.Cleanup(func() {
+		defer os.RemoveAll(tmpDir)
+	})
 
 	baseDir := filepath.Join(tmpDir, "scenarios/test")
 	moduleDir := filepath.Join(baseDir, "modules/foo")
@@ -114,7 +116,10 @@ func Test_MaybeUpdateRelativeSourcePaths(t *testing.T) {
 			expected: "gcs::https://www.googleapis.com/storage/v1/modules/foomodule.zip",
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			bd := baseDir
 			if test.baseDir != "" {
 				bd = test.baseDir

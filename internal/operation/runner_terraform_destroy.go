@@ -8,7 +8,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 )
 
-// terraformDestroy destroys resources created by the Terraform module
+// terraformDestroy destroys resources created by the Terraform module.
 func (r *Runner) terraformDestroy(
 	ctx context.Context,
 	req *pb.Operation_Request,
@@ -24,6 +24,7 @@ func (r *Runner) terraformDestroy(
 	if err != nil {
 		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
+
 		return res
 	}
 
@@ -75,6 +76,7 @@ func (r *Runner) terraformDestroy(
 	tf, err := r.TFConfig.Terraform()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 
@@ -85,6 +87,7 @@ func (r *Runner) terraformDestroy(
 	res.Stderr = destroyOut.Stderr.String()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
+
 		return res
 	}
 

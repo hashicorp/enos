@@ -9,7 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// Test_Decode_TerraformCLI
+// Test_Decode_TerraformCLI.
 func Test_Decode_TerraformCLI(t *testing.T) {
 	t.Parallel()
 
@@ -432,10 +432,14 @@ scenario "ref" {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)

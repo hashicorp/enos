@@ -9,7 +9,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-// Test_Decode_Scenario_Step tests decoding of scenario steps
+// Test_Decode_Scenario_Step tests decoding of scenario steps.
 func Test_Decode_Scenario_Step(t *testing.T) {
 	t.Parallel()
 
@@ -687,10 +687,14 @@ scenario "step_vars" {
 			},
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)

@@ -15,11 +15,7 @@ import (
 
 // TestAcc_Cmd_Scenario_Check tests that a scenario can be checked with Terraform.
 func TestAcc_Cmd_Scenario_Check(t *testing.T) {
-	enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
-
-	tmpDir, err := os.MkdirTemp("/tmp", "enos.check")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+	t.Parallel()
 
 	for _, test := range []struct {
 		dir  string
@@ -38,7 +34,14 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 			[][]string{{"skip", "keep"}, {"skip", "skip"}},
 		},
 	} {
+		test := test
 		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
+			t.Parallel()
+
+			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
+			tmpDir, err := os.MkdirTemp("/tmp", "enos.check")
+			require.NoError(t, err)
+			t.Cleanup(func() { os.RemoveAll(tmpDir) })
 			outDir := filepath.Join(tmpDir, test.dir)
 			err = os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
@@ -108,6 +111,8 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 // that has warnings can be validated and that the program behaves as it should
 // when given the --fail-on-warnings flag.
 func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
+	t.Parallel()
+
 	enos := newAcceptanceRunner(t,
 		skipUnlessTerraformCLI(),
 		skipUnlessExtEnabled(), // since we need the random provider
@@ -118,7 +123,9 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 	t.Cleanup(func() { os.RemoveAll(tmpDir) })
 
 	for _, failOnWarnings := range []bool{true, false} {
+		failOnWarnings := failOnWarnings
 		t.Run(fmt.Sprintf("fail_on_warnings_%t", failOnWarnings), func(t *testing.T) {
+			t.Parallel()
 			outDir := filepath.Join(tmpDir, "scenario_generate_has_warnings")
 			err = os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
@@ -134,6 +141,7 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 			out, err := enos.run(context.Background(), cmd)
 			if failOnWarnings {
 				require.Error(t, err, string(out))
+
 				return
 			}
 			require.NoError(t, err, string(out))

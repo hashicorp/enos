@@ -16,11 +16,7 @@ import (
 // TestAcc_Cmd_Scenario_Launch tests that a scenario can be generated and validated
 // with Terraform.
 func TestAcc_Cmd_Scenario_Launch(t *testing.T) {
-	enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
-
-	tmpDir, err := os.MkdirTemp("/tmp", "enos.launch")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+	t.Parallel()
 
 	for _, test := range []struct {
 		dir  string
@@ -42,9 +38,17 @@ func TestAcc_Cmd_Scenario_Launch(t *testing.T) {
 			fmt.Sprintf("%x", sha256.Sum256([]byte("test [foo:matrixbar]"))),
 		},
 	} {
+		test := test
 		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
+			t.Parallel()
+
+			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
+
+			tmpDir, err := os.MkdirTemp("/tmp", "enos.launch")
+			require.NoError(t, err)
+			t.Cleanup(func() { os.RemoveAll(tmpDir) })
 			outDir := filepath.Join(tmpDir, test.dir)
-			err := os.MkdirAll(outDir, 0o755)
+			err = os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)

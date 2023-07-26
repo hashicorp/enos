@@ -53,7 +53,7 @@ var rootState = &rootStateS{
 // the view.
 var ui uipkg.View
 
-// Execute executes enos
+// Execute executes enos.
 func Execute() {
 	rootCmd.AddCommand(newVersionCmd())
 	rootCmd.AddCommand(newScenarioCmd())
@@ -193,6 +193,9 @@ func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// If we're this far they've given use valid usage and we'll handle it
+	cmd.SilenceUsage = true
+
 	// Create our gRPC server and client
 	rootState.enosServer, rootState.enosConnection, err = startServer(
 		context.Background(),
@@ -201,9 +204,6 @@ func rootCmdPreRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	// If we're this far they've given use valid usage and we'll handle it
-	cmd.SilenceUsage = true
 
 	return err
 }

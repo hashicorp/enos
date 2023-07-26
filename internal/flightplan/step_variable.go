@@ -14,17 +14,17 @@ import (
 
 // StepVariableType is a cty capsule type that represents "step" variables.
 // Step variables might be known values or unknown references to
-// to module outputs. Due to the complex nature of these values we have our
+// module outputs. Due to the complex nature of these values we have our
 // cty Type to carry this information for us.
 var StepVariableType cty.Type
 
-// StepVariable is the type encapsulated in StepVariableType
+// StepVariable is the type encapsulated in StepVariableType.
 type StepVariable struct {
 	Value     cty.Value
 	Traversal hcl.Traversal
 }
 
-// StepVariableVal returns a new cty.Value of type StepVariableType
+// StepVariableVal returns a new cty.Value of type StepVariableType.
 func StepVariableVal(stepVar *StepVariable) cty.Value {
 	return cty.CapsuleVal(StepVariableType, stepVar)
 }
@@ -100,6 +100,7 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 			if moreDiags.HasErrors() {
 				// Return the core expression diags to help troubleshooting
 				_, moreDiags := expr.Value(ctx)
+
 				return traversal, diags.Extend(moreDiags)
 			}
 
@@ -143,6 +144,7 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 			// easier for the author we'll return both the expression and
 			// absolute traversal diagnostics to ease in solving the problem.
 			_, exprDiags := expr.Value(ctx)
+
 			return traversal, exprDiags.Extend(diags)
 		}
 	}
@@ -168,7 +170,7 @@ func init() {
 						// known values and static analysis for unknown module
 						// output references. We'll do our best to support complex
 						// references but they have to be absolute traversals to
-						// to "step"'s in the evaluation context.
+						// "step"'s in the evaluation context.
 						var diags hcl.Diagnostics
 						stepVar := &StepVariable{
 							Value: cty.NilVal,
@@ -188,6 +190,7 @@ func init() {
 							}
 
 							stepVar.Value = absVal
+
 							return StepVariableVal(stepVar), diags
 						}
 
@@ -245,6 +248,7 @@ func init() {
 						}
 
 						stepVar.Traversal = traversal
+
 						return StepVariableVal(stepVar), diags
 					},
 				)
@@ -257,11 +261,13 @@ func init() {
 		},
 		GoString: func(raw any) string {
 			stepVar, _ := raw.(*StepVariable)
+
 			return fmt.Sprintf("flightplan.StepVariable(%#v)", stepVar)
 		},
 		RawEquals: func(a, b any) bool {
 			stepVarA, _ := a.(*StepVariable)
 			stepVarB, _ := b.(*StepVariable)
+
 			return (stepVarA.Value == stepVarB.Value) &&
 				reflect.DeepEqual(stepVarA.Traversal, stepVarB.Traversal)
 		},

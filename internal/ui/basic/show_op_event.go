@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ShowOperationEvent shows the human friendly view on an operation event
+// ShowOperationEvent shows the human friendly view on an operation event.
 func (v *View) ShowOperationEvent(event *pb.Operation_Event) {
 	if event == nil {
 		return

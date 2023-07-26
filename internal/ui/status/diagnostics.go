@@ -5,12 +5,12 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ResWithDiags is an interface of a response that has diagnostics
+// ResWithDiags is an interface of a response that has diagnostics.
 type ResWithDiags interface {
 	GetDiagnostics() []*pb.Diagnostic
 }
 
-// HasErrorDiags returns whether or not the response has error diagnostics
+// HasErrorDiags returns whether or not the response has error diagnostics.
 func HasErrorDiags(res ...ResWithDiags) bool {
 	if len(res) < 1 {
 		return false
@@ -19,7 +19,7 @@ func HasErrorDiags(res ...ResWithDiags) bool {
 	return diagnostics.HasErrors(combinedResWithDiags(res))
 }
 
-// HasWarningDiags returns whether or not the response has warning diagnostics
+// HasWarningDiags returns whether or not the response has warning diagnostics.
 func HasWarningDiags(res ...ResWithDiags) bool {
 	if res == nil {
 		return false

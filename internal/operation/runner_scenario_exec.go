@@ -30,6 +30,7 @@ func ExecScenario(req *pb.Operation_Request) WorkFunc {
 			if err = events.PublishResponse(res); err != nil {
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 
@@ -47,7 +48,7 @@ func ExecScenario(req *pb.Operation_Request) WorkFunc {
 		// it doesn't exist the sub-command failure will be reported.
 
 		// Try and configure the runner with the module
-		mod, diags := moduleForReq(req)
+		mod, diags := moduleForReq(ctx, req)
 
 		if len(diags) > 0 {
 			// Rewrite failure diags to warnings since we might not need the module

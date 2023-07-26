@@ -26,7 +26,7 @@ var scenarioStepSchema = &hcl.BodySchema{
 	},
 }
 
-// ScenarioStep is a step in an Enos scenario
+// ScenarioStep is a step in an Enos scenario.
 type ScenarioStep struct {
 	Name      string
 	Module    *Module
@@ -35,7 +35,7 @@ type ScenarioStep struct {
 	Skip      bool
 }
 
-// NewScenarioStep returns a new Scenario step
+// NewScenarioStep returns a new Scenario step.
 func NewScenarioStep() *ScenarioStep {
 	return &ScenarioStep{
 		Module: NewModule(),
@@ -109,8 +109,8 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 	return diags
 }
 
-// decodeSkip decodes the the "skip_step" attribute and returns a boolean and
-// diagnostics of whether or not the step should be skipped.
+// decodeSkip decodes the "skip_step" attribute and returns a boolean and diagnostics of whether
+// or not the step should be skipped.
 func (ss *ScenarioStep) decodeSkip(
 	content *hcl.BodyContent,
 	ctx *hcl.EvalContext,
@@ -220,7 +220,7 @@ func (ss *ScenarioStep) decodeModuleAttribute(
 
 		// Validate that our module configuration references an existing module.
 		// We only care that the name and source match. All other variables and
-		// and attributes we'll carry over.
+		// attributes we'll carry over.
 		mod, ok := modules.AsValueMap()[val.AsString()]
 		if !ok {
 			return module, diags.Append(&hcl.Diagnostic{
@@ -352,7 +352,7 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 
 	// Validate that our module configuration references an existing module.
 	// We only care that the name and source match. All other variables and
-	// and attributes we'll carry over.
+	// attributes we'll carry over.
 	for _, mod := range modules.AsValueSlice() {
 		name, ok := mod.AsValueMap()["name"]
 		if !ok {
@@ -387,10 +387,12 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 				Subject: module.Expr.Range().Ptr(),
 				Context: hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
 			})
+
 			break
 		}
 
 		moduleVal = mod
+
 		break
 	}
 
@@ -410,7 +412,7 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 }
 
 // decodeAndValidateDependsOn decodess the depends_on attribute and ensures that
-// that the values reference known steps.
+// the values reference known steps.
 func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
@@ -465,6 +467,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 					Subject:  depends.Expr.Range().Ptr(),
 					Context:  depends.Range.Ptr(),
 				})
+
 				continue
 			}
 
@@ -476,15 +479,17 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 					Subject:  depends.Expr.Range().Ptr(),
 					Context:  depends.Range.Ptr(),
 				})
+
 				continue
 			}
 
 			dependsOnSet[depName] = struct{}{}
+
 			continue
 		}
 
-		// We've been given some other value. Make sure it's a refernce to an
-		// an existing step, which exists in the eval context as a module value.
+		// We've been given some other value. Make sure it's a references to an
+		// existing step, which exists in the eval context as a module value.
 		step := NewModule()
 		err := step.FromCtyValue(depV)
 		if err != nil {
@@ -495,6 +500,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 				Subject:  depends.Expr.Range().Ptr(),
 				Context:  depends.Range.Ptr(),
 			})
+
 			continue
 		}
 
@@ -506,12 +512,13 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 				Subject:  depends.Expr.Range().Ptr(),
 				Context:  depends.Range.Ptr(),
 			})
+
 			continue
 		}
 
 		dependsOnSet[step.Name] = struct{}{}
-		continue
 
+		continue
 	}
 
 	for name := range dependsOnSet {
@@ -625,6 +632,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 					Subject:  providers.Expr.Range().Ptr(),
 					Context:  providers.Range.Ptr(),
 				})
+
 				continue
 			}
 
@@ -649,6 +657,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 					Subject:  providers.Expr.Range().Ptr(),
 					Context:  providers.Range.Ptr(),
 				})
+
 				continue
 			}
 
@@ -663,10 +672,12 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 					Subject:  providers.Expr.Range().Ptr(),
 					Context:  providers.Range.Ptr(),
 				})
+
 				continue
 			}
 
 			ss.Providers[providerImportName] = provider
+
 			continue
 		}
 
@@ -679,6 +690,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 				Subject:  providers.Expr.Range().Ptr(),
 				Context:  providers.Range.Ptr(),
 			})
+
 			continue
 		}
 
@@ -701,6 +713,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 				Subject:  providers.Expr.Range().Ptr(),
 				Context:  providers.Range.Ptr(),
 			})
+
 			continue
 		}
 
@@ -726,6 +739,7 @@ func (ss *ScenarioStep) copyModuleAttributes(module cty.Value) {
 				return true
 			}
 		}
+
 		return false
 	}
 

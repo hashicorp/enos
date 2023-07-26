@@ -32,6 +32,7 @@ func CheckScenario(req *pb.Operation_Request) WorkFunc {
 				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
 				log.Error("failed to send event", "error", err)
 			}
+
 			return res
 		}
 
@@ -67,7 +68,7 @@ func CheckScenario(req *pb.Operation_Request) WorkFunc {
 	}
 }
 
-// scenarioCheck initializes, validates and plans the generated Terraform module
+// scenarioCheck initializes, validates and plans the generated Terraform module.
 func (r *Runner) scenarioCheck(
 	ctx context.Context,
 	req *pb.Operation_Request,

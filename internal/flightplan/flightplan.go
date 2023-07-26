@@ -1,11 +1,13 @@
 package flightplan
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/zclconf/go-cty/cty"
 
@@ -50,7 +52,7 @@ var flightPlanSchema = &hcl.BodySchema{
 	},
 }
 
-// NewFlightPlan returns a new instance of a FlightPlan
+// NewFlightPlan returns a new instance of a FlightPlan.
 func NewFlightPlan(opts ...Opt) (*FlightPlan, error) {
 	fp := &FlightPlan{
 		Files:             map[string]*hcl.File{},
@@ -77,11 +79,12 @@ func WithFlightPlanBaseDirectory(dir string) Opt {
 	return func(fp *FlightPlan) error {
 		var err error
 		fp.BaseDir, err = filepath.Abs(dir)
+
 		return err
 	}
 }
 
-// Opt is a flight plan option
+// Opt is a flight plan option.
 type Opt func(*FlightPlan) error
 
 // FlightPlan represents our flight plan, the main configuration of Enos.
@@ -314,6 +317,7 @@ func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
 				Subject:  hcl.RangeBetween(block.LabelRanges[0], block.LabelRanges[1]).Ptr(),
 				Context:  block.DefRange.Ptr(),
 			})
+
 			continue
 		}
 
@@ -361,62 +365,42 @@ func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
 	return diags
 }
 
-// decodeScenario decodes a single scenario block according to the mode and
-// filter. It returns whether or not it matched any filters if the mode calls
-// for filtering and any diagnostics encountered.
 func decodeScenario(
 	ctx *hcl.EvalContext,
-	block *hcl.Block,
-	scenario *Scenario,
+	vec *Vector,
 	mode DecodeMode,
-	filter *ScenarioFilter,
-) (bool, hcl.Diagnostics) {
+	block *hcl.Block,
+) (bool, *Scenario, hcl.Diagnostics) {
+	scenario := NewScenario()
+	var diags hcl.Diagnostics
+
+	if vec != nil {
+		scenario.Variants = vec
+		matrixCtx := ctx.NewChild()
+		matrixCtx.Variables = map[string]cty.Value{
+			"matrix": vec.CtyVal(),
+		}
+		ctx = matrixCtx
+	}
+
 	switch mode {
-	case DecodeModeRef:
-		diags := scenario.decode(block, ctx.NewChild(), DecodeModeRef)
-		if diags.HasErrors() {
-			return false, diags
-		}
-
-		// If we have a filter make sure it matched
-		if filter.String() != "" && !scenario.Match(filter) {
-			return false, diags
-		}
-
-		return true, diags
-	case DecodeModeFull:
-		// If we don't have a filter with configuration we'll decode it immediately
-		if filter.String() == "" {
-			return true, scenario.decode(block, ctx.NewChild(), DecodeModeFull)
-		}
-
-		// Decode it shallow and see if it matched the filter
-		matched, diags := decodeScenario(ctx.NewChild(), block, scenario, DecodeModeRef, filter)
-		if !matched || diags.HasErrors() {
-			return matched, diags
-		}
-
-		// We have a match so fully decode it
-		moreDiags := scenario.decode(block, ctx.NewChild(), DecodeModeFull)
-		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
-			return false, diags
-		}
-
-		return true, diags
+	case DecodeModeRef, DecodeModeFull:
+		diags = scenario.decode(block, ctx.NewChild(), mode)
 	default:
-		var diags hcl.Diagnostics
-		return false, diags.Append(&hcl.Diagnostic{
+		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  fmt.Sprintf("unknown filter mode %d", mode),
 		})
 	}
+
+	return !diags.HasErrors(), scenario, diags
 }
 
 // decodeScenarios decodes the "scenario" blocks that are defined in the
 // top-level schema.
 func (fp *FlightPlan) decodeScenarios(
-	ctx *hcl.EvalContext,
+	ctx context.Context,
+	evalCtx *hcl.EvalContext,
 	mode DecodeMode,
 	filter *ScenarioFilter,
 ) hcl.Diagnostics {
@@ -429,54 +413,59 @@ func (fp *FlightPlan) decodeScenarios(
 			continue
 		}
 
-		// Decode the matrix block and expand the scenarios.
-		matrix, moreDiags := decodeMatrix(ctx, block)
+		// If we've got a filter that includes a name and our scenario block doesn't
+		// match we don't need to decode anything.
+		if filter != nil && filter.Name != "" && block.Labels[0] != filter.Name {
+			continue
+		}
+
+		// Decode the matrix block if there is one.
+		matrix, _, moreDiags := decodeMatrix(evalCtx, block)
 		diags = diags.Extend(moreDiags)
 		if moreDiags.HasErrors() {
 			continue
 		}
 
-		if matrix == nil || len(matrix.Vectors) == 0 {
-			// Our scenario doesn't include a matrix
-			scenario := NewScenario()
+		// Reduce our matrix
+		if matrix != nil && filter != nil {
+			matrix = matrix.Filter(filter)
+		}
 
-			keep, moreDiags := decodeScenario(ctx, block, scenario, mode, filter)
-			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
-				continue
+		var scenarios []*Scenario
+		if matrix == nil || len(matrix.Vectors) < 1 {
+			scenarios, moreDiags = decodeScenarios(evalCtx, nil, mode, block)
+		} else {
+			switch mode {
+			case DecodeModeRef:
+				switch {
+				case len(matrix.Vectors) < 10_000:
+					scenarios, moreDiags = decodeScenarios(evalCtx, matrix.Vectors, mode, block)
+				default:
+					scenarios, moreDiags = decodeScenariosConcurrent(ctx, evalCtx, matrix.Vectors, mode, block)
+				}
+			case DecodeModeFull:
+				switch {
+				case len(matrix.Vectors) < 100:
+					scenarios, moreDiags = decodeScenarios(evalCtx, matrix.Vectors, mode, block)
+				default:
+					scenarios, moreDiags = decodeScenariosConcurrent(ctx, evalCtx, matrix.Vectors, mode, block)
+				}
+			default:
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "unknown scenario decode mode",
+					Detail:   fmt.Sprintf("%v is not a known decode mode", mode),
+					Subject:  block.TypeRange.Ptr(),
+					Context:  block.DefRange.Ptr(),
+				})
 			}
+		}
 
-			if keep {
-				fp.Scenarios = append(fp.Scenarios, scenario)
-			}
-
+		fp.Scenarios = append(fp.Scenarios, scenarios...)
+		diags = diags.Extend(moreDiags)
+		if moreDiags.HasErrors() {
 			continue
 		}
-
-		for _, vec := range matrix.Vectors {
-			// Create a scenario for every matrix variant combination
-			scenario := NewScenario()
-			scenario.Variants = vec
-			matrixCtx := ctx.NewChild()
-			matrixCtx.Variables = map[string]cty.Value{
-				"matrix": vec.CtyVal(),
-			}
-
-			keep, moreDiags := decodeScenario(matrixCtx, block, scenario, mode, filter)
-			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
-				// Exit early rather than continuing to decode all scenarios.
-				// We do this to avoid spamming the output with identical
-				// diagnostics for common errors that will be found in all
-				// of the scenarios.
-				return diags
-			}
-
-			if keep {
-				fp.Scenarios = append(fp.Scenarios, scenario)
-			}
-		}
-
 	}
 
 	sort.Slice(fp.Scenarios, func(i, j int) bool {
@@ -486,25 +475,116 @@ func (fp *FlightPlan) decodeScenarios(
 	return diags
 }
 
+// decodeScenarios decodes scenario variants serially. When we don't have lots of scenarios or we're
+// in reference decode mode this can be faster than the overhead of goroutines.
+func decodeScenarios(
+	ctx *hcl.EvalContext,
+	vecs []*Vector,
+	mode DecodeMode,
+	block *hcl.Block,
+) ([]*Scenario, hcl.Diagnostics) {
+	// Handle not matrix vectors
+	if vecs == nil || len(vecs) < 1 {
+		keep, scenario, diags := decodeScenario(ctx, nil, mode, block)
+		if keep {
+			return []*Scenario{scenario}, diags
+		}
+
+		return nil, diags
+	}
+
+	// Decode a scenario for all matrix vectors
+	scenarios := []*Scenario{}
+	diags := hcl.Diagnostics{}
+	for i := range vecs {
+		keep, scenario, moreDiags := decodeScenario(ctx, vecs[i], mode, block)
+		diags = diags.Extend(moreDiags)
+		if keep {
+			scenarios = append(scenarios, scenario)
+		}
+	}
+
+	return scenarios, diags
+}
+
+// decodeScenariosConcurrent decodes scenario variants concurrently. This is for improved speeds
+// when fully decoding lots of scenarios.
+func decodeScenariosConcurrent(
+	ctx context.Context,
+	evalCtx *hcl.EvalContext,
+	vecs []*Vector,
+	mode DecodeMode,
+	block *hcl.Block,
+) ([]*Scenario, hcl.Diagnostics) {
+	if vecs == nil || len(vecs) < 1 {
+		return decodeScenarios(evalCtx, nil, mode, block)
+	}
+
+	collectCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	diagC := make(chan hcl.Diagnostics)
+	scenarioC := make(chan *Scenario)
+	wg := sync.WaitGroup{}
+	scenarios := []*Scenario{}
+	diags := hcl.Diagnostics{}
+	doneC := make(chan struct{})
+
+	collect := func() {
+		for {
+			select {
+			case <-collectCtx.Done():
+				close(doneC)
+
+				return
+			case diag := <-diagC:
+				diags = diags.Extend(diag)
+			case scenario := <-scenarioC:
+				scenarios = append(scenarios, scenario)
+			}
+		}
+	}
+
+	go collect()
+
+	for i := range vecs {
+		wg.Add(1)
+		go func(vec *Vector) {
+			defer wg.Done()
+			keep, scenario, diags := decodeScenario(evalCtx, vec, mode, block)
+			diagC <- diags
+			if keep {
+				scenarioC <- scenario
+			}
+		}(vecs[i])
+	}
+
+	wg.Wait()
+	cancel()
+	<-doneC
+
+	return scenarios, diags
+}
+
 // decodeMatrix takes an eval context and scenario blocks and decodes only the
 // matrix block. It returns a unique matrix with vectors for all unique variant
 // value combinations.
-func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnostics) {
+func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, *hcl.Block, hcl.Diagnostics) {
 	mContent, diags := block.Body.Content(scenarioSchema)
 	if diags.HasErrors() {
-		return nil, diags
+		return nil, block, diags
 	}
 
 	mBlocks := mContent.Blocks.OfType(blockTypeMatrix)
 	switch len(mBlocks) {
 	case 0:
 		// We have no matrix block defined
-		return nil, diags
+		return nil, block, diags
 	case 1:
 		// Continue
 		break
 	default:
-		return nil, diags.Append(&hcl.Diagnostic{
+		return nil, block, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "scenarios has more than one matrix block defined",
 			Detail:   fmt.Sprintf("up to one matrix block is expected, found %d", len(mBlocks)),
@@ -608,7 +688,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 	})
 	diags = diags.Extend(moreDiags)
 	if moreDiags.HasErrors() {
-		return nil, diags
+		return nil, block, diags
 	}
 	diags = diags.Extend(verifyBodyOnlyHasBlocksWithLabels(
 		remain, blockTypeMatrixInclude, blockTypeMatrixExclude,
@@ -681,13 +761,14 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				Subject:  mBlock.TypeRange.Ptr(),
 				Context:  mBlock.DefRange.Ptr(),
 			})
+
 			continue
 		}
 	}
 
 	// Return our matrix but do one final pass removing any duplicates that might
 	// have been introduced during our inclusions.
-	return matrix.UniqueValues(), diags
+	return matrix.UniqueValues(), block, diags
 }
 
 // filterTerraformMetaAttrs does our best to ensure that the given set of
@@ -757,6 +838,7 @@ func verifyBodyOnlyHasBlocksWithLabels(in hcl.Body, allowed ...string) hcl.Diagn
 			for _, allowed := range allowed {
 				if block.Type == allowed {
 					isAllowed = true
+
 					break
 				}
 			}
@@ -805,7 +887,7 @@ func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
 
 		// Make sure it also adheres to Enos block name rules
 		r := regexp.MustCompile(`^[\w]+$`)
-		if !r.Match([]byte(label)) {
+		if !r.MatchString(label) {
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "block label is invalid",

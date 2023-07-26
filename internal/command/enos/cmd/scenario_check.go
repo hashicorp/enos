@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioCheckCmd returns a new 'scenario check' sub-command
+// newScenarioCheckCmd returns a new 'scenario check' sub-command.
 func newScenarioCheckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "check [FILTER]",
@@ -34,7 +34,7 @@ func newScenarioCheckCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioCheckCmd is the function that checks scenarios
+// runScenarioCheckCmd is the function that checks scenarios.
 func runScenarioCheckCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

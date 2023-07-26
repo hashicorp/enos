@@ -8,14 +8,14 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 )
 
-// Provider is a Enos transport configuration
+// Provider is a Enos transport configuration.
 type Provider struct {
 	Type   string           `cty:"type"`
 	Alias  string           `cty:"alias"`
 	Config *SchemalessBlock `cty:"config"`
 }
 
-// NewProvider returns a new Provider
+// NewProvider returns a new Provider.
 func NewProvider() *Provider {
 	return &Provider{
 		Config: NewSchemalessBlock(),
@@ -51,7 +51,7 @@ func (p *Provider) ToCtyValue() cty.Value {
 }
 
 // FromCtyValue takes a cty.Value and unmarshals it onto itself. It expects
-// a valid object created from ToCtyValue()
+// a valid object created from ToCtyValue().
 func (p *Provider) FromCtyValue(val cty.Value) error {
 	var err error
 

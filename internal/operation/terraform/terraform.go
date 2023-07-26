@@ -16,20 +16,20 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
-// Config is the Terraform CLI executor configuration
+// Config is the Terraform CLI executor configuration.
 type Config struct {
 	UI             *terminal.UI      // UI to use for input/output
 	BinPath        string            // where terraform binary is
 	ConfigPath     string            // where the terraformrc config is
 	DirPath        string            // what directory to execute the command in
-	Env            map[string]string // envrionment variables
+	Env            map[string]string // environment variables
 	ExecSubCmd     string            // raw command to run
 	OutputName     string            // output name
 	FailOnWarnings bool              // fail on warning diagnostics
 	Flags          *pb.Terraform_Runner_Config_Flags
 }
 
-// Proto returns the instance of config as proto terraform executor config
+// Proto returns the instance of config as proto terraform executor config.
 func (c *Config) Proto() *pb.Terraform_Runner_Config {
 	return &pb.Terraform_Runner_Config{
 		Flags:          c.Flags,
@@ -95,7 +95,7 @@ func (c *Config) tfEnv() map[string]string {
 }
 
 // NewExecSubCmd creates a new instance of a command to run a terraform
-// sub-command
+// sub-command.
 func (c *Config) NewExecSubCmd() *command.Command {
 	execPath, err := c.tfPath()
 	if err != nil {
@@ -118,7 +118,7 @@ func (c *Config) NewExecSubCmd() *command.Command {
 	return command.NewCommand(execPath, opts...)
 }
 
-// Terraform returns a new instance of a configured *tfexec.Terraform
+// Terraform returns a new instance of a configured *tfexec.Terraform.
 func (c *Config) Terraform() (*tfexec.Terraform, error) {
 	var err error
 	var tf *tfexec.Terraform
@@ -146,17 +146,17 @@ func (c *Config) Terraform() (*tfexec.Terraform, error) {
 	return tf, nil
 }
 
-// ConfigOpt is a Terraform CLI executor configuration option
+// ConfigOpt is a Terraform CLI executor configuration option.
 type ConfigOpt func(*Config)
 
 type (
-	// Command is a Terraform sub-command
+	// Command is a Terraform sub-command.
 	Command int
-	// Flag is a Terraform sub-command config flag
+	// Flag is a Terraform sub-command config flag.
 	Flag int
 )
 
-// NewConfig takes options and returns a new instance of config
+// NewConfig takes options and returns a new instance of config.
 func NewConfig(opts ...ConfigOpt) *Config {
 	cfg := &Config{
 		Env:   map[string]string{},
@@ -169,112 +169,112 @@ func NewConfig(opts ...ConfigOpt) *Config {
 	return cfg
 }
 
-// WithUI sets the UI
+// WithUI sets the UI.
 func WithUI(ui *terminal.UI) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.UI = ui
 	}
 }
 
-// WithBinPath sets the terraform binary path
+// WithBinPath sets the terraform binary path.
 func WithBinPath(path string) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.BinPath = path
 	}
 }
 
-// WithConfigPath sets the terraform.rc path
+// WithConfigPath sets the terraform.rc path.
 func WithConfigPath(path string) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.ConfigPath = path
 	}
 }
 
-// WithDirPath sets the terraform module directory path
+// WithDirPath sets the terraform module directory path.
 func WithDirPath(path string) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.DirPath = path
 	}
 }
 
-// WithEnv set environment variables
+// WithEnv set environment variables.
 func WithEnv(env map[string]string) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Env = env
 	}
 }
 
-// WithExecSubCommand set the raw sub-command
+// WithExecSubCommand set the raw sub-command.
 func WithExecSubCommand(cmd string) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.ExecSubCmd = cmd
 	}
 }
 
-// WithLockTimeout sets the state lock timeout
+// WithLockTimeout sets the state lock timeout.
 func WithLockTimeout(timeout time.Duration) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.LockTimeout = durationpb.New(timeout)
 	}
 }
 
-// WithNoBackend disables the configured backend
+// WithNoBackend disables the configured backend.
 func WithNoBackend() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.NoBackend = true
 	}
 }
 
-// WithNoLock disables waiting for the state lock
+// WithNoLock disables waiting for the state lock.
 func WithNoLock() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.NoLock = true
 	}
 }
 
-// WithNoDownload disables module and provider downloading during init
+// WithNoDownload disables module and provider downloading during init.
 func WithNoDownload() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.NoDownload = true
 	}
 }
 
-// WithNoRefresh disables refreshing during plan and apply
+// WithNoRefresh disables refreshing during plan and apply.
 func WithNoRefresh() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.NoRefresh = true
 	}
 }
 
-// WithParallelism sets the parallelism
+// WithParallelism sets the parallelism.
 func WithParallelism(p int) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.Parallelism = uint32(p)
 	}
 }
 
-// WithRefreshOnly does refresh only mode
+// WithRefreshOnly does refresh only mode.
 func WithRefreshOnly() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.RefreshOnly = true
 	}
 }
 
-// WithUpgrade upgrades the terraform providers and modules during init
+// WithUpgrade upgrades the terraform providers and modules during init.
 func WithUpgrade() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.Upgrade = true
 	}
 }
 
-// WithNoReconfigure don't reconfigure the backend during
+// WithNoReconfigure don't reconfigure the backend during.
 func WithNoReconfigure() ConfigOpt {
 	return func(cfg *Config) {
 		cfg.Flags.NoReconfigure = true
 	}
 }
 
-// WithProtoConfig sets configuration from a proto config
+// WithProtoConfig sets configuration from a proto config.
 func WithProtoConfig(pcfg *pb.Terraform_Runner_Config) ConfigOpt {
 	return func(cfg *Config) {
 		cfg.FromProto(pcfg)
@@ -289,7 +289,7 @@ func (c *Config) lockTimeoutString() string {
 	return fmt.Sprintf("%dms", c.Flags.GetLockTimeout().AsDuration().Milliseconds())
 }
 
-// InitOptions are the init command options
+// InitOptions are the init command options.
 func (c *Config) InitOptions() []tfexec.InitOption {
 	return []tfexec.InitOption{
 		tfexec.Backend(!c.Flags.GetNoBackend()),
@@ -299,7 +299,7 @@ func (c *Config) InitOptions() []tfexec.InitOption {
 	}
 }
 
-// PlanOptions are the plan command options
+// PlanOptions are the plan command options.
 func (c *Config) PlanOptions() []tfexec.PlanOption {
 	return []tfexec.PlanOption{
 		tfexec.Refresh(!c.Flags.GetNoRefresh()),
@@ -310,7 +310,7 @@ func (c *Config) PlanOptions() []tfexec.PlanOption {
 	}
 }
 
-// ApplyOptions are the apply command options
+// ApplyOptions are the apply command options.
 func (c *Config) ApplyOptions() []tfexec.ApplyOption {
 	return []tfexec.ApplyOption{
 		tfexec.Backup(c.Flags.GetBackupStateFilePath()),
@@ -322,7 +322,7 @@ func (c *Config) ApplyOptions() []tfexec.ApplyOption {
 	}
 }
 
-// DestroyOptions are the destroy command options
+// DestroyOptions are the destroy command options.
 func (c *Config) DestroyOptions() []tfexec.DestroyOption {
 	return []tfexec.DestroyOption{
 		tfexec.Backup(c.Flags.GetBackupStateFilePath()),
@@ -334,12 +334,12 @@ func (c *Config) DestroyOptions() []tfexec.DestroyOption {
 	}
 }
 
-// OutputOptions are the output commands options
+// OutputOptions are the output commands options.
 func (c *Config) OutputOptions() []tfexec.OutputOption {
 	return []tfexec.OutputOption{}
 }
 
-// ShowOptions are the show command options
+// ShowOptions are the show command options.
 func (c *Config) ShowOptions() []tfexec.ShowOption {
 	return []tfexec.ShowOption{}
 }

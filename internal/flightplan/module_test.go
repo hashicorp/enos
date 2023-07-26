@@ -35,7 +35,10 @@ func Test_Module_EvalContext_Functions(t *testing.T) {
 			expected: "something",
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			hcl := fmt.Sprintf(`
 module "backend" {
   source = "%s"
@@ -57,7 +60,7 @@ scenario "basic" {
 	}
 }
 
-// Test_Decode_Module tests module decoding
+// Test_Decode_Module tests module decoding.
 func Test_Decode_Module(t *testing.T) {
 	t.Parallel()
 
@@ -182,10 +185,14 @@ scenario "backend" {
 `, modulePath),
 		},
 	} {
+		test := test
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			fp, err := testDecodeHCL(t, []byte(test.hcl))
 			if test.fail {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)

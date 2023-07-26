@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// newScenarioRunCmd returns a new 'scenario run' sub-command
+// newScenarioRunCmd returns a new 'scenario run' sub-command.
 func newScenarioRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "run [FILTER]",
@@ -34,7 +34,7 @@ func newScenarioRunCmd() *cobra.Command {
 	return cmd
 }
 
-// runScenarioRunCmd is the function that runs scenarios
+// runScenarioRunCmd is the function that runs scenarios.
 func runScenarioRunCmd(cmd *cobra.Command, args []string) error {
 	ctx, cancel := scenarioTimeoutContext()
 	defer cancel()

@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ShowDecode shows the human friendly view of decoding
+// ShowDecode shows the human friendly view of decoding.
 func (v *View) ShowDecode(res *pb.DecodeResponse, incremental bool) error {
 	if res == nil {
 		return nil

@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// Decode returns the status for a fligth plan decode
+// Decode returns the status for a fligth plan decode.
 func Decode(failOnWarn bool, res *pb.DecodeResponse) error {
 	if HasFailed(failOnWarn, res) {
 		return Error("failed to decode")
@@ -14,7 +14,7 @@ func Decode(failOnWarn bool, res *pb.DecodeResponse) error {
 	return nil
 }
 
-// OperationResponses returns the status multiple operations
+// OperationResponses returns the status multiple operations.
 func OperationResponses(failOnWarn bool, res *pb.OperationResponses) error {
 	var err error
 
@@ -32,7 +32,7 @@ func OperationResponses(failOnWarn bool, res *pb.OperationResponses) error {
 	return nil
 }
 
-// OperationResponse returns the status for an operation
+// OperationResponse returns the status for an operation.
 func OperationResponse(failOnWarn bool, res *pb.Operation_Response) error {
 	if diagnostics.OpResFailed(failOnWarn, res) {
 		// Return a status code here because the operation response UI should
@@ -44,7 +44,7 @@ func OperationResponse(failOnWarn bool, res *pb.Operation_Response) error {
 	return nil
 }
 
-// ListScenarios returns the status response for a scenario list
+// ListScenarios returns the status response for a scenario list.
 func ListScenarios(failOnWarn bool, res *pb.ListScenariosResponse) error {
 	if HasFailed(failOnWarn, res, res.GetDecode()) {
 		return Error("failed to list scenarios")

@@ -8,13 +8,14 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ShowDiagnostics writes a diagnostic to stderr
+// ShowDiagnostics writes a diagnostic to stderr.
 func (v *View) ShowDiagnostics(diags []*pb.Diagnostic) error {
 	v.WriteDiagnostics(diags)
+
 	return nil
 }
 
-// WriteDiagnostics writes diagnostics in a basic human friendly way
+// WriteDiagnostics writes diagnostics in a basic human friendly way.
 func (v *View) WriteDiagnostics(diags []*pb.Diagnostic) {
 	if len(diags) < 1 {
 		return
@@ -22,7 +23,7 @@ func (v *View) WriteDiagnostics(diags []*pb.Diagnostic) {
 	v.ui.Error(v.diagsToString(diags))
 }
 
-// diagsToString returns the diagsnostics as a string
+// diagsToString returns the diagsnostics as a string.
 func (v *View) diagsToString(diags []*pb.Diagnostic) string {
 	if len(diags) < 1 {
 		return ""

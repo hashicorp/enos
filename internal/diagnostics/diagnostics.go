@@ -67,7 +67,7 @@ func hasSeverity(sev pb.Diagnostic_Severity, diags ...[]*pb.Diagnostic) bool {
 	return false
 }
 
-// Concat takes one-or-more sets of daignostics and returns a combined set
+// Concat takes one-or-more sets of daignostics and returns a combined set.
 func Concat(diags ...[]*pb.Diagnostic) []*pb.Diagnostic {
 	combined := []*pb.Diagnostic{}
 	for _, diag := range diags {
@@ -77,7 +77,7 @@ func Concat(diags ...[]*pb.Diagnostic) []*pb.Diagnostic {
 	return combined
 }
 
-// FromErr takes a standard go error and returns proto diagnostics
+// FromErr takes a standard go error and returns proto diagnostics.
 func FromErr(err error) []*pb.Diagnostic {
 	if err == nil {
 		return nil
@@ -89,7 +89,7 @@ func FromErr(err error) []*pb.Diagnostic {
 	}}
 }
 
-// FromTFJSON takes terraform-json Diagnostics and returns them as proto diagnostics
+// FromTFJSON takes terraform-json Diagnostics and returns them as proto diagnostics.
 func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 	if len(in) < 1 {
 		return nil
@@ -107,6 +107,8 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 			d.Severity = pb.Diagnostic_SEVERITY_ERROR
 		case tfjson.DiagnosticSeverityWarning:
 			d.Severity = pb.Diagnostic_SEVERITY_WARNING
+		case tfjson.DiagnosticSeverityUnknown:
+			d.Severity = pb.Diagnostic_SEVERITY_UNKNOWN
 		default:
 			d.Severity = pb.Diagnostic_SEVERITY_UNKNOWN
 		}
@@ -163,6 +165,8 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 
 // FromHCL takes a map of hcl.Files and hcl.Diagnostics and returns pb diagnostics.
 // When possible it will attempt to create a valid snippet.
+//
+//nolint:gocylo,cyclop // converting snippets from HCL to our wire format is complexity we can't avoid
 func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic {
 	if len(diags) < 1 {
 		return nil
@@ -180,6 +184,8 @@ func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic
 			pbDiag.Severity = pb.Diagnostic_SEVERITY_ERROR
 		case hcl.DiagWarning:
 			pbDiag.Severity = pb.Diagnostic_SEVERITY_WARNING
+		case hcl.DiagInvalid:
+			pbDiag.Severity = pb.Diagnostic_SEVERITY_UNKNOWN
 		default:
 			pbDiag.Severity = pb.Diagnostic_SEVERITY_UNKNOWN
 		}
@@ -289,6 +295,7 @@ func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic
 								// already have the same error in our diagnostics set
 								// already.
 								traversal = traversal[:len(traversal)-1]
+
 								continue
 							}
 
@@ -333,24 +340,24 @@ type stringOptConfig struct {
 	uiSettings  *pb.UI_Settings
 }
 
-// StringOpt is an option to the string formatter
+// StringOpt is an option to the string formatter.
 type StringOpt func(*stringOptConfig)
 
-// WithStringSnippetEnabled enables or diables the snippet in the formatting
+// WithStringSnippetEnabled enables or diables the snippet in the formatting.
 func WithStringSnippetEnabled(enabled bool) StringOpt {
 	return func(cfg *stringOptConfig) {
 		cfg.showSnippet = enabled
 	}
 }
 
-// WithStringUISettings passes UI settings to the string formatter
+// WithStringUISettings passes UI settings to the string formatter.
 func WithStringUISettings(settings *pb.UI_Settings) StringOpt {
 	return func(cfg *stringOptConfig) {
 		cfg.uiSettings = settings
 	}
 }
 
-// WithStringColor passes color settings to the formatter
+// WithStringColor passes color settings to the formatter.
 func WithStringColor(color *colorstring.Colorize) StringOpt {
 	return func(cfg *stringOptConfig) {
 		cfg.color = color
@@ -399,6 +406,8 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 		leftRuleStart = cfg.color.Color("[yellow]╷[reset]")
 		leftRuleEnd = cfg.color.Color("[yellow]╵[reset]")
 		leftRuleWidth = 4
+	case pb.Diagnostic_SEVERITY_UNSPECIFIED, pb.Diagnostic_SEVERITY_UNKNOWN:
+		buf.WriteString(cfg.color.Color("\n[reset]"))
 	default:
 		buf.WriteString(cfg.color.Color("\n[reset]"))
 	}
@@ -454,6 +463,7 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 func appendSourceSnippets(buf *bytes.Buffer, diag *pb.Diagnostic, color *colorstring.Colorize) {
 	if diag.GetRange() == nil {
 		fmt.Fprintf(buf, "  (source code not available)\n")
+
 		return
 	}
 
@@ -585,9 +595,11 @@ func compactValueStr(val cty.Value) string {
 		if val.True() {
 			return "true"
 		}
+
 		return "false"
 	case ty == cty.Number:
 		bf := val.AsBigFloat()
+
 		return bf.Text('g', 10)
 	case ty == cty.String:
 		// Go string syntax is not exactly the same as HCL native string syntax,
@@ -615,6 +627,7 @@ func compactValueStr(val cty.Value) string {
 			for k := range atys {
 				name = k
 			}
+
 			return fmt.Sprintf("object with 1 attribute %q", name)
 		default:
 			return fmt.Sprintf("object with %d attributes", l)
@@ -651,5 +664,6 @@ func traversalStr(traversal hcl.Traversal) string {
 			buf.WriteByte(']')
 		}
 	}
+
 	return buf.String()
 }

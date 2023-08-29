@@ -132,7 +132,7 @@ func (s *sampleSubsetObsSpec) size() int32 {
 	return s.space + s.taken
 }
 
-// Convert our sample frame into a collection of subsetWithCapSpace that we can use for determine
+// Convert our sample frame into a collection of subset specs that we can use for determine
 // how many elements we should take from each subset.
 func sampleFrameToSubsetSpecs(frame *SampleFrame) []*sampleSubsetObsSpec {
 	subsetSpecs := []*sampleSubsetObsSpec{}

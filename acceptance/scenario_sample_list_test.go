@@ -29,12 +29,12 @@ func TestAcc_Cmd_Scenario_Sample_List(t *testing.T) {
 				Samples: []*pb.Ref_Sample{
 					{
 						Id: &pb.Sample_ID{
-							Name: "minimal",
+							Name: "complex",
 						},
 					},
 					{
 						Id: &pb.Sample_ID{
-							Name: "complex",
+							Name: "minimal",
 						},
 					},
 				},

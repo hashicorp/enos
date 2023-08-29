@@ -1,7 +1,9 @@
 package server
 
 import (
+	"cmp"
 	"context"
+	"slices"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
@@ -37,6 +39,10 @@ func (s *ServiceV1) ListSamples(
 		for _, s := range fp.Samples {
 			res.Samples = append(res.Samples, s.Ref())
 		}
+
+		slices.SortStableFunc(res.Samples, func(a, b *pb.Ref_Sample) int {
+			return cmp.Compare(a.GetId().GetName(), b.GetId().GetName())
+		})
 	}
 
 	return res, nil

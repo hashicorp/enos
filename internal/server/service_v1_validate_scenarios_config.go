@@ -17,10 +17,10 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 ) {
 	res := &pb.ValidateScenariosConfigurationResponse{}
 
-	_, decRes := decodeFlightPlan(
+	_, decRes := flightplan.DecodeProto(
 		ctx,
 		req.GetWorkspace().GetFlightplan(),
-		flightplan.DecodeModeFull,
+		flightplan.DecodeTargetAll,
 		req.GetFilter(),
 	)
 	res.Decode = decRes

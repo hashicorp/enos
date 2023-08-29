@@ -42,7 +42,7 @@ scenario "step_vars" {
   }
 
   step "target" {
-    module = module.target
+    module     = module.target
     depends_on = concat([step.setup], [matrix.distro == "ubuntu" ? step.infra_west : step.infra_default])
 
     variables {

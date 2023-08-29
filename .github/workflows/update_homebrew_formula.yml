@@ -65,7 +65,7 @@ jobs:
       # Checkout Enos repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
       - name: Checkout enos repo
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
           path: enos-checkout
 
@@ -98,7 +98,7 @@ jobs:
       # in order to accommodate checking out multiple repos.
       # A token with sufficient permissions for the target repo is required.
       - name: Checkout homebrew-internal
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
           repository: ${{ env.TARGET_REPO }}
           path: ${{ env.TARGET_REPO_FILEPATH }}

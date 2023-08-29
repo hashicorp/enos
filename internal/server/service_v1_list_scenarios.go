@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// ListScenarios returns the version information.
+// ListScenarios returns a list of scenarios and their variants.
 func (s *ServiceV1) ListScenarios(
 	ctx context.Context,
 	req *pb.ListScenariosRequest,
@@ -18,10 +18,10 @@ func (s *ServiceV1) ListScenarios(
 ) {
 	res := &pb.ListScenariosResponse{}
 
-	fp, decRes := decodeFlightPlan(
+	fp, decRes := flightplan.DecodeProto(
 		ctx,
 		req.GetWorkspace().GetFlightplan(),
-		flightplan.DecodeModeRef,
+		flightplan.DecodeTargetScenariosNamesExpandVariants,
 		req.GetFilter(),
 	)
 	res.Decode = decRes
@@ -32,9 +32,10 @@ func (s *ServiceV1) ListScenarios(
 		return res, nil
 	}
 
-	if len(fp.Scenarios) > 0 {
+	scenarios := fp.Scenarios()
+	if len(scenarios) > 0 {
 		res.Scenarios = []*pb.Ref_Scenario{}
-		for _, s := range fp.Scenarios {
+		for _, s := range scenarios {
 			res.Scenarios = append(res.Scenarios, s.Ref())
 		}
 	}

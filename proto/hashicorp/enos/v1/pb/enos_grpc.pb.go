@@ -32,6 +32,8 @@ const (
 	EnosService_Format_FullMethodName                         = "/hashicorp.enos.v1.EnosService/Format"
 	EnosService_OperationEventStream_FullMethodName           = "/hashicorp.enos.v1.EnosService/OperationEventStream"
 	EnosService_Operation_FullMethodName                      = "/hashicorp.enos.v1.EnosService/Operation"
+	EnosService_ListSamples_FullMethodName                    = "/hashicorp.enos.v1.EnosService/ListSamples"
+	EnosService_ObserveSample_FullMethodName                  = "/hashicorp.enos.v1.EnosService/ObserveSample"
 )
 
 // EnosServiceClient is the client API for EnosService service.
@@ -51,6 +53,8 @@ type EnosServiceClient interface {
 	Format(ctx context.Context, in *FormatRequest, opts ...grpc.CallOption) (*FormatResponse, error)
 	OperationEventStream(ctx context.Context, in *OperationEventStreamRequest, opts ...grpc.CallOption) (EnosService_OperationEventStreamClient, error)
 	Operation(ctx context.Context, in *OperationRequest, opts ...grpc.CallOption) (*OperationResponse, error)
+	ListSamples(ctx context.Context, in *ListSamplesRequest, opts ...grpc.CallOption) (*ListSamplesResponse, error)
+	ObserveSample(ctx context.Context, in *ObserveSampleRequest, opts ...grpc.CallOption) (*ObserveSampleResponse, error)
 }
 
 type enosServiceClient struct {
@@ -201,6 +205,24 @@ func (c *enosServiceClient) Operation(ctx context.Context, in *OperationRequest,
 	return out, nil
 }
 
+func (c *enosServiceClient) ListSamples(ctx context.Context, in *ListSamplesRequest, opts ...grpc.CallOption) (*ListSamplesResponse, error) {
+	out := new(ListSamplesResponse)
+	err := c.cc.Invoke(ctx, EnosService_ListSamples_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *enosServiceClient) ObserveSample(ctx context.Context, in *ObserveSampleRequest, opts ...grpc.CallOption) (*ObserveSampleResponse, error) {
+	out := new(ObserveSampleResponse)
+	err := c.cc.Invoke(ctx, EnosService_ObserveSample_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EnosServiceServer is the server API for EnosService service.
 // All implementations should embed UnimplementedEnosServiceServer
 // for forward compatibility
@@ -218,6 +240,8 @@ type EnosServiceServer interface {
 	Format(context.Context, *FormatRequest) (*FormatResponse, error)
 	OperationEventStream(*OperationEventStreamRequest, EnosService_OperationEventStreamServer) error
 	Operation(context.Context, *OperationRequest) (*OperationResponse, error)
+	ListSamples(context.Context, *ListSamplesRequest) (*ListSamplesResponse, error)
+	ObserveSample(context.Context, *ObserveSampleRequest) (*ObserveSampleResponse, error)
 }
 
 // UnimplementedEnosServiceServer should be embedded to have forward compatible implementations.
@@ -262,6 +286,12 @@ func (UnimplementedEnosServiceServer) OperationEventStream(*OperationEventStream
 }
 func (UnimplementedEnosServiceServer) Operation(context.Context, *OperationRequest) (*OperationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Operation not implemented")
+}
+func (UnimplementedEnosServiceServer) ListSamples(context.Context, *ListSamplesRequest) (*ListSamplesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSamples not implemented")
+}
+func (UnimplementedEnosServiceServer) ObserveSample(context.Context, *ObserveSampleRequest) (*ObserveSampleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObserveSample not implemented")
 }
 
 // UnsafeEnosServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -512,6 +542,42 @@ func _EnosService_Operation_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EnosService_ListSamples_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSamplesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnosServiceServer).ListSamples(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EnosService_ListSamples_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnosServiceServer).ListSamples(ctx, req.(*ListSamplesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnosService_ObserveSample_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ObserveSampleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnosServiceServer).ObserveSample(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EnosService_ObserveSample_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnosServiceServer).ObserveSample(ctx, req.(*ObserveSampleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EnosService_ServiceDesc is the grpc.ServiceDesc for EnosService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -566,6 +632,14 @@ var EnosService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Operation",
 			Handler:    _EnosService_Operation_Handler,
+		},
+		{
+			MethodName: "ListSamples",
+			Handler:    _EnosService_ListSamples_Handler,
+		},
+		{
+			MethodName: "ObserveSample",
+			Handler:    _EnosService_ObserveSample_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

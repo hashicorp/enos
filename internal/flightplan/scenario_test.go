@@ -107,24 +107,91 @@ scenario "backend" {
 						Attrs:  map[string]cty.Value{},
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "backend",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "backend",
+						Scenarios: []*Scenario{
 							{
-								Name: "first",
-								Module: &Module{
-									Name:   "backend",
-									Source: modulePath,
-									Attrs:  map[string]cty.Value{},
+								Name:         "backend",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "first",
+										Module: &Module{
+											Name:   "backend",
+											Source: modulePath,
+											Attrs:  map[string]cty.Value{},
+										},
+									},
+								},
+								Outputs: []*ScenarioOutput{
+									{
+										Name:  "another",
+										Value: testMakeStepVarValue(cty.StringVal("another")),
+									},
 								},
 							},
 						},
-						Outputs: []*ScenarioOutput{
+					},
+				},
+			},
+		},
+		{
+			desc: "globals",
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+globals {
+  something = "another"
+  another   = global.something
+}
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+
+  output "another" {
+    value = global.another
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "backend",
+						Source: modulePath,
+						Attrs:  map[string]cty.Value{},
+					},
+				},
+				ScenarioBlocks: DecodedScenarioBlocks{
+					{
+						Name: "backend",
+						Scenarios: []*Scenario{
 							{
-								Name:  "another",
-								Value: testMakeStepVarValue(cty.StringVal("another")),
+								Name:         "backend",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "first",
+										Module: &Module{
+											Name:   "backend",
+											Source: modulePath,
+											Attrs:  map[string]cty.Value{},
+										},
+									},
+								},
+								Outputs: []*ScenarioOutput{
+									{
+										Name:  "another",
+										Value: testMakeStepVarValue(cty.StringVal("another")),
+									},
+								},
 							},
 						},
 					},
@@ -136,7 +203,7 @@ scenario "backend" {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
 			if test.fail {
 				require.Error(t, err)
 

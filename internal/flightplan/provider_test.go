@@ -149,41 +149,15 @@ scenario "test" {
 						},
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "test",
-						TerraformCLI: DefaultTerraformCLI(),
-						Providers: []*Provider{
+						Name: "test",
+						Scenarios: []*Scenario{
 							{
-								Type:  "enos",
-								Alias: "ubuntu",
-								Config: &SchemalessBlock{
-									Type:   "provider",
-									Labels: []string{"enos", "ubuntu"},
-									Attrs: map[string]cty.Value{
-										"transport": cty.ObjectVal(map[string]cty.Value{
-											"ssh": cty.ObjectVal(map[string]cty.Value{
-												"user":        cty.StringVal("ubuntu"),
-												"private_key": cty.StringVal("supersecret"),
-											}),
-										}),
-									},
-									Children: []*SchemalessBlock{},
-								},
-							},
-						},
-						Steps: []*ScenarioStep{
-							{
-								Name: "test",
-								Module: &Module{
-									Name:   "test",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"driver": testMakeStepVarValue(cty.StringVal("s3")),
-									},
-								},
-								Providers: map[string]*Provider{
-									"enos": {
+								Name:         "test",
+								TerraformCLI: DefaultTerraformCLI(),
+								Providers: []*Provider{
+									{
 										Type:  "enos",
 										Alias: "ubuntu",
 										Config: &SchemalessBlock{
@@ -198,6 +172,37 @@ scenario "test" {
 												}),
 											},
 											Children: []*SchemalessBlock{},
+										},
+									},
+								},
+								Steps: []*ScenarioStep{
+									{
+										Name: "test",
+										Module: &Module{
+											Name:   "test",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"driver": testMakeStepVarValue(cty.StringVal("s3")),
+											},
+										},
+										Providers: map[string]*Provider{
+											"enos": {
+												Type:  "enos",
+												Alias: "ubuntu",
+												Config: &SchemalessBlock{
+													Type:   "provider",
+													Labels: []string{"enos", "ubuntu"},
+													Attrs: map[string]cty.Value{
+														"transport": cty.ObjectVal(map[string]cty.Value{
+															"ssh": cty.ObjectVal(map[string]cty.Value{
+																"user":        cty.StringVal("ubuntu"),
+																"private_key": cty.StringVal("supersecret"),
+															}),
+														}),
+													},
+													Children: []*SchemalessBlock{},
+												},
+											},
 										},
 									},
 								},
@@ -381,48 +386,15 @@ scenario "k8s" {
 						},
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "copy_to_east",
-						TerraformCLI: DefaultTerraformCLI(),
-						Providers: []*Provider{
+						Name: "copy_to_east",
+						Scenarios: []*Scenario{
 							{
-								Type:  "aws",
-								Alias: "west",
-								Config: &SchemalessBlock{
-									Type:   "provider",
-									Labels: []string{"aws", "west"},
-									Attrs: map[string]cty.Value{
-										"region": cty.StringVal("us-west-1"),
-									},
-									Children: []*SchemalessBlock{},
-								},
-							},
-							{
-								Type:  "aws",
-								Alias: "east",
-								Config: &SchemalessBlock{
-									Type:   "provider",
-									Labels: []string{"aws", "east"},
-									Attrs: map[string]cty.Value{
-										"region": cty.StringVal("us-east-1"),
-									},
-									Children: []*SchemalessBlock{},
-								},
-							},
-						},
-						Steps: []*ScenarioStep{
-							{
-								Name: "copy",
-								Module: &Module{
-									Name:   "copy",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"driver": testMakeStepVarValue(cty.StringVal("s3")),
-									},
-								},
-								Providers: map[string]*Provider{
-									"src": {
+								Name:         "copy_to_east",
+								TerraformCLI: DefaultTerraformCLI(),
+								Providers: []*Provider{
+									{
 										Type:  "aws",
 										Alias: "west",
 										Config: &SchemalessBlock{
@@ -434,7 +406,7 @@ scenario "k8s" {
 											Children: []*SchemalessBlock{},
 										},
 									},
-									"dst": {
+									{
 										Type:  "aws",
 										Alias: "east",
 										Config: &SchemalessBlock{
@@ -444,6 +416,44 @@ scenario "k8s" {
 												"region": cty.StringVal("us-east-1"),
 											},
 											Children: []*SchemalessBlock{},
+										},
+									},
+								},
+								Steps: []*ScenarioStep{
+									{
+										Name: "copy",
+										Module: &Module{
+											Name:   "copy",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"driver": testMakeStepVarValue(cty.StringVal("s3")),
+											},
+										},
+										Providers: map[string]*Provider{
+											"src": {
+												Type:  "aws",
+												Alias: "west",
+												Config: &SchemalessBlock{
+													Type:   "provider",
+													Labels: []string{"aws", "west"},
+													Attrs: map[string]cty.Value{
+														"region": cty.StringVal("us-west-1"),
+													},
+													Children: []*SchemalessBlock{},
+												},
+											},
+											"dst": {
+												Type:  "aws",
+												Alias: "east",
+												Config: &SchemalessBlock{
+													Type:   "provider",
+													Labels: []string{"aws", "east"},
+													Attrs: map[string]cty.Value{
+														"region": cty.StringVal("us-east-1"),
+													},
+													Children: []*SchemalessBlock{},
+												},
+											},
 										},
 									},
 								},
@@ -451,46 +461,13 @@ scenario "k8s" {
 						},
 					},
 					{
-						Name:         "copy_to_eu",
-						TerraformCLI: DefaultTerraformCLI(),
-						Providers: []*Provider{
+						Name: "copy_to_eu",
+						Scenarios: []*Scenario{
 							{
-								Type:  "aws",
-								Alias: "east",
-								Config: &SchemalessBlock{
-									Type:   "provider",
-									Labels: []string{"aws", "east"},
-									Attrs: map[string]cty.Value{
-										"region": cty.StringVal("us-east-1"),
-									},
-									Children: []*SchemalessBlock{},
-								},
-							},
-							{
-								Type:  "aws",
-								Alias: "eu",
-								Config: &SchemalessBlock{
-									Type:   "provider",
-									Labels: []string{"aws", "eu"},
-									Attrs: map[string]cty.Value{
-										"region": cty.StringVal("eu-west-1"),
-									},
-									Children: []*SchemalessBlock{},
-								},
-							},
-						},
-						Steps: []*ScenarioStep{
-							{
-								Name: "copy",
-								Module: &Module{
-									Name:   "copy",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"driver": testMakeStepVarValue(cty.StringVal("s3")),
-									},
-								},
-								Providers: map[string]*Provider{
-									"src": {
+								Name:         "copy_to_eu",
+								TerraformCLI: DefaultTerraformCLI(),
+								Providers: []*Provider{
+									{
 										Type:  "aws",
 										Alias: "east",
 										Config: &SchemalessBlock{
@@ -502,7 +479,7 @@ scenario "k8s" {
 											Children: []*SchemalessBlock{},
 										},
 									},
-									"dst": {
+									{
 										Type:  "aws",
 										Alias: "eu",
 										Config: &SchemalessBlock{
@@ -515,43 +492,37 @@ scenario "k8s" {
 										},
 									},
 								},
-							},
-						},
-					},
-					{
-						Name:         "k8s",
-						TerraformCLI: DefaultTerraformCLI(),
-						Providers: []*Provider{
-							{
-								Type:  "kubernetes",
-								Alias: "default",
-								Config: &SchemalessBlock{
-									Type:   "provider",
-									Labels: []string{"kubernetes", "default"},
-									Attrs: map[string]cty.Value{
-										"host":                   cty.StringVal("eks.host.com"),
-										"cluster_ca_certificate": cty.StringVal("base64cert"),
-									},
-									Children: []*SchemalessBlock{
-										{
-											Type:   "exec",
-											Labels: []string{},
+								Steps: []*ScenarioStep{
+									{
+										Name: "copy",
+										Module: &Module{
+											Name:   "copy",
+											Source: modulePath,
 											Attrs: map[string]cty.Value{
-												"api_version": cty.StringVal("client.authentication.k8s.io/v1alpha1"),
-												"args": cty.ListVal([]cty.Value{
-													cty.StringVal("eks"),
-													cty.StringVal("get-token"),
-													cty.StringVal("--cluster-name"),
-													cty.StringVal("my-cluster"),
-												}),
-												"command": cty.StringVal("aws"),
+												"driver": testMakeStepVarValue(cty.StringVal("s3")),
 											},
-											Children: []*SchemalessBlock{
-												{
-													Type:   "not_a_real_block_but_testing_nested_things",
-													Labels: []string{"with", "labels"},
+										},
+										Providers: map[string]*Provider{
+											"src": {
+												Type:  "aws",
+												Alias: "east",
+												Config: &SchemalessBlock{
+													Type:   "provider",
+													Labels: []string{"aws", "east"},
 													Attrs: map[string]cty.Value{
-														"nested_attr": cty.StringVal("value"),
+														"region": cty.StringVal("us-east-1"),
+													},
+													Children: []*SchemalessBlock{},
+												},
+											},
+											"dst": {
+												Type:  "aws",
+												Alias: "eu",
+												Config: &SchemalessBlock{
+													Type:   "provider",
+													Labels: []string{"aws", "eu"},
+													Attrs: map[string]cty.Value{
+														"region": cty.StringVal("eu-west-1"),
 													},
 													Children: []*SchemalessBlock{},
 												},
@@ -561,14 +532,63 @@ scenario "k8s" {
 								},
 							},
 						},
-						Steps: []*ScenarioStep{
+					},
+					{
+						Name: "k8s",
+						Scenarios: []*Scenario{
 							{
-								Name: "deploy",
-								Module: &Module{
-									Name:   "k8s_deploy",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"driver": testMakeStepVarValue(cty.StringVal("k8s")),
+								Name:         "k8s",
+								TerraformCLI: DefaultTerraformCLI(),
+								Providers: []*Provider{
+									{
+										Type:  "kubernetes",
+										Alias: "default",
+										Config: &SchemalessBlock{
+											Type:   "provider",
+											Labels: []string{"kubernetes", "default"},
+											Attrs: map[string]cty.Value{
+												"host":                   cty.StringVal("eks.host.com"),
+												"cluster_ca_certificate": cty.StringVal("base64cert"),
+											},
+											Children: []*SchemalessBlock{
+												{
+													Type:   "exec",
+													Labels: []string{},
+													Attrs: map[string]cty.Value{
+														"api_version": cty.StringVal("client.authentication.k8s.io/v1alpha1"),
+														"args": cty.ListVal([]cty.Value{
+															cty.StringVal("eks"),
+															cty.StringVal("get-token"),
+															cty.StringVal("--cluster-name"),
+															cty.StringVal("my-cluster"),
+														}),
+														"command": cty.StringVal("aws"),
+													},
+													Children: []*SchemalessBlock{
+														{
+															Type:   "not_a_real_block_but_testing_nested_things",
+															Labels: []string{"with", "labels"},
+															Attrs: map[string]cty.Value{
+																"nested_attr": cty.StringVal("value"),
+															},
+															Children: []*SchemalessBlock{},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+								Steps: []*ScenarioStep{
+									{
+										Name: "deploy",
+										Module: &Module{
+											Name:   "k8s_deploy",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"driver": testMakeStepVarValue(cty.StringVal("k8s")),
+											},
+										},
 									},
 								},
 							},
@@ -582,7 +602,7 @@ scenario "k8s" {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
 			if test.fail {
 				require.Error(t, err)
 

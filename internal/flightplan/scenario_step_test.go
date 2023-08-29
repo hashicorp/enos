@@ -114,48 +114,53 @@ scenario "basic" {
 						Source:  "hashicorp/qti/frontend-aws",
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "basic",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "basic",
+						Scenarios: []*Scenario{
 							{
-								Name: "backend",
-								Module: &Module{
-									Name:   "backend",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"driver": testMakeStepVarValue(cty.StringVal("postgres")),
+								Name:         "basic",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "backend",
+										Module: &Module{
+											Name:   "backend",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"driver": testMakeStepVarValue(cty.StringVal("postgres")),
+											},
+										},
 									},
-								},
-							},
-							{
-								Name: "frontend_blue",
-								Module: &Module{
-									Name:   "frontend_blue",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"app_version": testMakeStepVarValue(cty.StringVal("1.0.0")),
+									{
+										Name: "frontend_blue",
+										Module: &Module{
+											Name:   "frontend_blue",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"app_version": testMakeStepVarValue(cty.StringVal("1.0.0")),
+											},
+										},
 									},
-								},
-							},
-							{
-								Name: "frontend_green",
-								Module: &Module{
-									Name:   "frontend_green",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"app_version": testMakeStepVarValue(cty.StringVal("1.1.0")),
+									{
+										Name: "frontend_green",
+										Module: &Module{
+											Name:   "frontend_green",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"app_version": testMakeStepVarValue(cty.StringVal("1.1.0")),
+											},
+										},
 									},
-								},
-							},
-							{
-								Name: "frontend_red",
-								Module: &Module{
-									Name:    "frontend_red",
-									Source:  "hashicorp/qti/frontend-aws",
-									Version: "2.0.0",
-									Attrs:   map[string]cty.Value{},
+									{
+										Name: "frontend_red",
+										Module: &Module{
+											Name:    "frontend_red",
+											Source:  "hashicorp/qti/frontend-aws",
+											Version: "2.0.0",
+											Attrs:   map[string]cty.Value{},
+										},
+									},
 								},
 							},
 						},
@@ -330,15 +335,20 @@ scenario "skipper" {
 						Source: modulePath,
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "skipper",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "skipper",
+						Scenarios: []*Scenario{
 							{
-								Name:   "one",
-								Skip:   true,
-								Module: NewModule(),
+								Name:         "skipper",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name:   "one",
+										Skip:   true,
+										Module: NewModule(),
+									},
+								},
 							},
 						},
 					},
@@ -478,33 +488,38 @@ scenario "depends_on" {
 						Source: modulePath,
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "depends_on",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "depends_on",
+						Scenarios: []*Scenario{
 							{
-								Name: "one",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
+								Name:         "depends_on",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "one",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+									},
+									{
+										Name: "two",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+										DependsOn: []string{"one"},
+									},
+									{
+										Name: "three",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+										DependsOn: []string{"one", "two"},
+									},
 								},
-							},
-							{
-								Name: "two",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
-								},
-								DependsOn: []string{"one"},
-							},
-							{
-								Name: "three",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
-								},
-								DependsOn: []string{"one", "two"},
 							},
 						},
 					},
@@ -544,33 +559,38 @@ scenario "depends_on" {
 						Source: modulePath,
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "depends_on",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "depends_on",
+						Scenarios: []*Scenario{
 							{
-								Name: "one",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
+								Name:         "depends_on",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "one",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+									},
+									{
+										Name: "two",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+										DependsOn: []string{"one"},
+									},
+									{
+										Name: "three",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+										DependsOn: []string{"one", "two"},
+									},
 								},
-							},
-							{
-								Name: "two",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
-								},
-								DependsOn: []string{"one"},
-							},
-							{
-								Name: "three",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
-								},
-								DependsOn: []string{"one", "two"},
 							},
 						},
 					},
@@ -646,38 +666,43 @@ scenario "step_vars" {
 						},
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "step_vars",
-						Variants:     &Vector{elements: []Element{{Key: "input", Val: "matrixinput"}}},
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "step_vars",
+						Scenarios: []*Scenario{
 							{
-								Name: "one",
-								Module: &Module{
-									Name:   "one",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"oneattr":     testMakeStepVarValue(cty.StringVal("oneattrval")),
-										"concrete":    testMakeStepVarValue(cty.StringVal("oneconcrete")),
-										"matrixinput": testMakeStepVarValue(cty.StringVal("matrixinput")),
+								Name:         "step_vars",
+								Variants:     &Vector{elements: []Element{{Key: "input", Val: "matrixinput"}}},
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "one",
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"oneattr":     testMakeStepVarValue(cty.StringVal("oneattrval")),
+												"concrete":    testMakeStepVarValue(cty.StringVal("oneconcrete")),
+												"matrixinput": testMakeStepVarValue(cty.StringVal("matrixinput")),
+											},
+										},
 									},
-								},
-							},
-							{
-								Name: "two",
-								Module: &Module{
-									Name:   "two",
-									Source: modulePath,
-									Attrs: map[string]cty.Value{
-										"twoattr":            testMakeStepVarValue(cty.StringVal("twoattrval")),
-										"concrete":           testMakeStepVarValue(cty.StringVal("twoconcrete")),
-										"inherited_concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
-										"reference":          testMakeStepVarTraversal("step", "one", "reference"),
-										"oneattr":            testMakeStepVarValue(cty.StringVal("oneattrval")),
-										"matrixconcrete":     testMakeStepVarValue(cty.StringVal("matrixinput")),
-										"matrixinherited":    testMakeStepVarValue(cty.StringVal("matrixinput")),
-										"fromvariables":      testMakeStepVarValue(cty.StringVal("somethingval")),
+									{
+										Name: "two",
+										Module: &Module{
+											Name:   "two",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"twoattr":            testMakeStepVarValue(cty.StringVal("twoattrval")),
+												"concrete":           testMakeStepVarValue(cty.StringVal("twoconcrete")),
+												"inherited_concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
+												"reference":          testMakeStepVarTraversal("step", "one", "reference"),
+												"oneattr":            testMakeStepVarValue(cty.StringVal("oneattrval")),
+												"matrixconcrete":     testMakeStepVarValue(cty.StringVal("matrixinput")),
+												"matrixinherited":    testMakeStepVarValue(cty.StringVal("matrixinput")),
+												"fromvariables":      testMakeStepVarValue(cty.StringVal("somethingval")),
+											},
+										},
 									},
 								},
 							},
@@ -691,7 +716,7 @@ scenario "step_vars" {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
 			if test.fail {
 				require.Error(t, err)
 

@@ -21,11 +21,11 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 		fail bool
 	}{
 		{
-			dir: "scenario_list_pass_0",
+			dir: "scenarios/scenario_list_pass_0",
 			out: &pb.ValidateScenariosConfigurationResponse{},
 		},
 		{
-			dir:  "scenario_list_fail_malformed",
+			dir:  "invalid_scenarios/scenario_list_fail_malformed",
 			fail: true,
 		},
 	} {
@@ -33,7 +33,7 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)
-			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
+			path, err := filepath.Abs(filepath.Join("./", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario validate --chdir %s --format json", path)
 			fmt.Println(path)

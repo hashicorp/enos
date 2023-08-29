@@ -67,36 +67,41 @@ scenario "basic" {
 						Attrs:  map[string]cty.Value{},
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "basic",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "basic",
+						Scenarios: []*Scenario{
 							{
-								Name: "backend",
-								Module: &Module{
-									Name:   "backend",
-									Source: modulePath,
-									Attrs:  map[string]cty.Value{},
+								Name:         "basic",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "backend",
+										Module: &Module{
+											Name:   "backend",
+											Source: modulePath,
+											Attrs:  map[string]cty.Value{},
+										},
+									},
 								},
-							},
-						},
-						Outputs: []*ScenarioOutput{
-							{
-								Name:        "static",
-								Description: "static output",
-								Sensitive:   true,
-								Value:       testMakeStepVarValue(cty.StringVal("veryknown")),
-							},
-							{
-								Name:        "var",
-								Description: "from variable",
-								Value:       testMakeStepVarValue(cty.StringVal("fromenv")),
-							},
-							{
-								Name:        "step_ref",
-								Description: "step module output",
-								Value:       testMakeStepVarTraversal("step", "backend", "addrs"),
+								Outputs: []*ScenarioOutput{
+									{
+										Name:        "static",
+										Description: "static output",
+										Sensitive:   true,
+										Value:       testMakeStepVarValue(cty.StringVal("veryknown")),
+									},
+									{
+										Name:        "var",
+										Description: "from variable",
+										Value:       testMakeStepVarValue(cty.StringVal("fromenv")),
+									},
+									{
+										Name:        "step_ref",
+										Description: "step module output",
+										Value:       testMakeStepVarTraversal("step", "backend", "addrs"),
+									},
+								},
 							},
 						},
 					},
@@ -193,7 +198,7 @@ scenario "backend" {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl), "ENOS_VAR_input=fromenv")
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll, "ENOS_VAR_input=fromenv")
 			if test.fail {
 				require.Error(t, err)
 

@@ -167,6 +167,24 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
+// ShowSampleList shows the a list of samples.
+func (v *View) ShowSampleList(res *pb.ListSamplesResponse) error {
+	if err := v.write(res); err != nil {
+		return err
+	}
+
+	return status.ListSamples(v.settings.GetFailOnWarnings(), res)
+}
+
+// ShowSample shows the sample observation.
+func (v *View) ShowSampleObservation(res *pb.ObserveSampleResponse) error {
+	if err := v.write(res); err != nil {
+		return err
+	}
+
+	return status.ShowSampleObservation(v.settings.GetFailOnWarnings(), res)
+}
+
 // ShowDecode shows the decode response unless it's a incremental update.
 func (v *View) ShowDecode(res *pb.DecodeResponse, incremental bool) error {
 	if incremental {

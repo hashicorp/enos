@@ -320,10 +320,10 @@ func (s *ServiceV1) dispatch(
 		))...)
 	}
 
-	fp, decRes := decodeFlightPlan(
+	fp, decRes := flightplan.DecodeProto(
 		ctx,
 		ws.GetFlightplan(),
-		flightplan.DecodeModeFull,
+		flightplan.DecodeTargetAll,
 		f,
 	)
 
@@ -333,7 +333,8 @@ func (s *ServiceV1) dispatch(
 		))...)
 	}
 
-	if len(fp.Scenarios) == 0 {
+	scenarios := fp.Scenarios()
+	if len(scenarios) == 0 {
 		filter, err := flightplan.NewScenarioFilter(
 			flightplan.WithScenarioFilterDecode(f),
 		)
@@ -353,7 +354,7 @@ func (s *ServiceV1) dispatch(
 		return diags, decRes, refs
 	}
 
-	for _, scenario := range fp.Scenarios {
+	for _, scenario := range scenarios {
 		req := &pb.Operation_Request{}
 		err := proto.Copy(baseReq, req)
 		if err != nil {

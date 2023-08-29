@@ -13,26 +13,25 @@ import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/operation/terraform"
-	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
-	"github.com/hashicorp/hcl/v2"
 )
 
 // scenarioConfig is the 'scenario' sub-command configuration type.
 type scenarioStateType struct {
 	baseDir        string
 	outDir         string
-	fp             *flightplan.FlightPlan
 	protoFp        *pb.FlightPlan
 	timeout        time.Duration
 	tfConfig       *terraform.Config
 	lockTimeout    time.Duration
 	varsFilesPaths []string
+	sampleFilter   *sampleObserveFilter
 }
 
 // scenarioState is the 'scenario' sub-command configuration.
 var scenarioState = scenarioStateType{
-	tfConfig: terraform.NewConfig(),
+	tfConfig:     terraform.NewConfig(),
+	sampleFilter: &sampleObserveFilter{},
 }
 
 // scenarioFilterDesc scenario sub-command filter description.
@@ -61,11 +60,11 @@ func newScenarioCmd() *cobra.Command {
 		PersistentPostRun: scenarioCmdPostRun,
 	}
 
-	scenarioCmd.PersistentFlags().DurationVar(&scenarioState.timeout, "timeout", 15*time.Minute, "the command timeout")
-	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warnings diagnostics are created")
-	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "use the given directory as the working directory")
-	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "base directory where generated modules will be created")
-	scenarioCmd.PersistentFlags().StringSliceVar(&scenarioState.varsFilesPaths, "var-file", []string{}, "path to use for variable values files (default will load all enos*.vars.hcl files in the working directory)")
+	scenarioCmd.PersistentFlags().DurationVar(&scenarioState.timeout, "timeout", 15*time.Minute, "The command timeout")
+	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warning diagnostics are created")
+	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "Use the given directory as the working directory")
+	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "Configure the base directory where generated modules will be created")
+	scenarioCmd.PersistentFlags().StringSliceVar(&scenarioState.varsFilesPaths, "var-file", []string{}, "The path to use for variable values files. By default enos will load all enos*.vars.hcl files in the working directory.")
 
 	scenarioCmd.AddCommand(newScenarioListCmd())
 	scenarioCmd.AddCommand(newScenarioGenerateCmd())
@@ -76,6 +75,7 @@ func newScenarioCmd() *cobra.Command {
 	scenarioCmd.AddCommand(newScenarioExecCmd())
 	scenarioCmd.AddCommand(newScenarioOutputCmd())
 	scenarioCmd.AddCommand(newScenarioValidateConfigCmd())
+	scenarioCmd.AddCommand(newScenarioSampleCmd())
 
 	return scenarioCmd
 }
@@ -135,53 +135,6 @@ func setupDefaultScenarioCfg() error {
 	return nil
 }
 
-// decodeFlightPlan decodes the flight plan.
-func decodeFlightPlan(ctx context.Context, cmd *cobra.Command) error {
-	diags := hcl.Diagnostics{}
-
-	pfp, err := readFlightPlanConfig(scenarioState.baseDir, scenarioState.varsFilesPaths)
-	if err != nil {
-		return err
-	}
-
-	decoder, err := flightplan.NewDecoder(
-		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),
-		flightplan.WithDecoderFPFiles(pfp.GetEnosHcl()),
-		flightplan.WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
-		flightplan.WithDecoderEnv(pfp.GetEnosVarsEnv()),
-	)
-	if err != nil {
-		return err
-	}
-
-	// At this point we don't need to pass usage because it's likely an issue
-	// with the flight plan definition, not missing or invalid arguments.
-	cmd.SilenceUsage = true
-
-	diags = diags.Extend(decoder.Parse())
-	if diags.HasErrors() {
-		return &status.ErrDiagnostic{
-			Diags: diagnostics.FromHCL(decoder.ParserFiles(), diags),
-		}
-	}
-
-	fp, moreDiags := decoder.Decode(ctx)
-	diags = diags.Extend(moreDiags)
-	scenarioState.fp = fp
-
-	if len(diags) > 0 {
-		if !diags.HasErrors() && !scenarioState.tfConfig.FailOnWarnings {
-			return nil
-		}
-
-		return &status.ErrDiagnostic{
-			Diags: diagnostics.FromHCL(decoder.ParserFiles(), diags),
-		}
-	}
-
-	return nil
-}
-
 // scenarioNameCompletion returns a shell directive of available flight plans.
 // For commands which operate on one or more scenarios we can use this to
 // add double tab style completion.
@@ -192,21 +145,61 @@ func scenarioNameCompletion(cmd *cobra.Command, args []string, toComplete string
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := decodeFlightPlan(ctx, cmd)
+
+	err := setupDefaultScenarioCfg()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	if len(scenarioState.fp.Scenarios) == 0 {
-		return nil, cobra.ShellCompDirectiveDefault
+	pfp, err := readFlightPlanConfig(scenarioState.baseDir, scenarioState.varsFilesPaths)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
 	}
 
-	names := []string{}
-	for _, s := range scenarioState.fp.Scenarios {
-		names = append(names, s.Name)
+	opts := []flightplan.DecoderOpt{
+		flightplan.WithDecoderBaseDir(pfp.GetBaseDir()),
+		flightplan.WithDecoderFPFiles(pfp.GetEnosHcl()),
+		flightplan.WithDecoderVarFiles(pfp.GetEnosVarsHcl()),
+		flightplan.WithDecoderEnv(pfp.GetEnosVarsEnv()),
+		flightplan.WithDecoderDecodeTarget(flightplan.DecodeTargetScenariosNamesNoVariants),
 	}
 
-	return names, cobra.ShellCompDirectiveDefault
+	if len(args) > 0 {
+		sf, err := flightplan.ParseScenarioFilter(args)
+		if err == nil {
+			opts = append(opts, flightplan.WithDecoderScenarioFilter(sf))
+		}
+	}
+
+	decoder, err := flightplan.NewDecoder(opts...)
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	diags := decoder.Parse()
+	if diags.HasErrors() {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	fp, diags := decoder.Decode(ctx)
+	if diags.HasErrors() {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	names := map[string]struct{}{}
+	scenarios := fp.Scenarios()
+	for i := range scenarios {
+		names[scenarios[i].Name] = struct{}{}
+	}
+	if len(names) == 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	nameList := []string{}
+	for name := range names {
+		nameList = append(nameList, name)
+	}
+
+	return nameList, cobra.ShellCompDirectiveDefault
 }
 
 // scenarioTimeoutContext returns a context and cancel function with the configured

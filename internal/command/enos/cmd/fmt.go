@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,6 +30,7 @@ func newFmtCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&fmtCfg.List, "list", "l", true, "List changed files. Always disabled if using STDIN")
 	cmd.PersistentFlags().BoolVarP(&fmtCfg.Check, "check", "c", false, "Check if the input is formatted. Exit will be 0 for success, 1 for an error, 3 for success but files would be changed")
 	cmd.PersistentFlags().BoolVarP(&fmtCfg.Diff, "diff", "d", false, "Display the unified diff for files that change")
+	cmd.PersistentFlags().BoolVarP(&fmtCfg.Recursive, "recursive", "r", false, "Recursively scan the directory and format the files")
 
 	return cmd
 }
@@ -68,12 +70,27 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 			return nil, diagnostics.FromErr(err)
 		}
 
-		if info.IsDir() {
-			files := []*pb.FormatRequest_File{}
+		// We have a path that points to a single file
+		if !info.IsDir() {
+			content, err := io.ReadAll(f)
+			if err != nil {
+				return nil, diagnostics.FromErr(err)
+			}
+
+			return []*pb.FormatRequest_File{
+				{Path: path, Body: content},
+			}, nil
+		}
+
+		files := []*pb.FormatRequest_File{}
+		readRawFiles := func(path string, info fs.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
 
 			fpFiles, err := flightplan.FindRawFiles(path, flightplan.FlightPlanFileNamePattern)
 			if err != nil {
-				return nil, diagnostics.FromErr(err)
+				return err
 			}
 			for path, bytes := range fpFiles {
 				files = append(files, &pb.FormatRequest_File{
@@ -84,7 +101,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 
 			varsFiles, err := flightplan.FindRawFiles(path, flightplan.VariablesNamePattern)
 			if err != nil {
-				return nil, diagnostics.FromErr(err)
+				return err
 			}
 
 			for path, bytes := range varsFiles {
@@ -94,17 +111,19 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 				})
 			}
 
-			return files, nil
+			return nil
 		}
 
-		content, err := io.ReadAll(f)
+		if fmtCfg.Recursive {
+			err = filepath.Walk(path, readRawFiles)
+		} else {
+			err = readRawFiles(path, nil, nil)
+		}
 		if err != nil {
 			return nil, diagnostics.FromErr(err)
 		}
 
-		return []*pb.FormatRequest_File{
-			{Path: path, Body: content},
-		}, nil
+		return files, nil
 	}
 
 	var err error
@@ -133,7 +152,6 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 		bytes, err := io.ReadAll(cmd.InOrStdin())
 		if err != nil {
 			res.Diagnostics = diagnostics.FromErr(err)
-
 			return ui.ShowFormat(fmtCfg, res)
 		}
 		req.Files = []*pb.FormatRequest_File{

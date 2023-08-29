@@ -74,7 +74,7 @@ scenario "test" {
   step "barover" {
     module = module.bar
 
-   variables {
+    variables {
       anotherinput = var.setinput.value
     }
   }
@@ -86,7 +86,7 @@ scenario "test" {
   step "barref" {
     module = module.barref
 
-   variables {
+    variables {
       input        = step.fooref.input
       anotherinput = step.fooref.anotherinput
     }

@@ -59,13 +59,13 @@ func Execute() {
 	rootCmd.AddCommand(newScenarioCmd())
 	rootCmd.AddCommand(newFmtCmd())
 
-	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "Log level for client output. Supported levels are error, warn, info, debug, and trace.")
+	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "The log level for client output. Supported levels are error, warn, info, debug, and trace.")
 	rootCmd.PersistentFlags().StringVar(&rootState.logLevelServer, "server-log-level", "error", "The log level for server output. Supported leves are error, warn, info, and debug")
 	rootCmd.PersistentFlags().StringVar(&rootState.listenGRPC, "listen-grpc", "http://localhost:3205", "The gRPC server listen address")
-	rootCmd.PersistentFlags().StringVar(&rootState.format, "format", "text", "Output format to use: text or json")
-	rootCmd.PersistentFlags().StringVar(&rootState.stdoutPath, "stdout", "", "Path to write output. (default $STDOUT)")
-	rootCmd.PersistentFlags().StringVar(&rootState.stderrPath, "stderr", "", "Path to write error output. (default $STDERR)")
-	rootCmd.PersistentFlags().Int32Var(&rootState.operatorConfig.WorkerCount, "worker-count", 4, "Number of scenario operation workers")
+	rootCmd.PersistentFlags().StringVar(&rootState.format, "format", "text", "The output format to use: text or json")
+	rootCmd.PersistentFlags().StringVar(&rootState.stdoutPath, "stdout", "", "The path to write output. (default $STDOUT)")
+	rootCmd.PersistentFlags().StringVar(&rootState.stderrPath, "stderr", "", "The path to write error output. (default $STDERR)")
+	rootCmd.PersistentFlags().Int32Var(&rootState.operatorConfig.WorkerCount, "worker-count", 4, "The number of scenario operation workers")
 	rootCmd.PersistentFlags().BoolVar(&rootState.profile, "profile", false, "Enable Go profiling")
 	_ = rootCmd.PersistentFlags().MarkHidden("profile")
 

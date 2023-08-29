@@ -9,10 +9,11 @@ import (
 
 // ScenarioFilter is a filter for scenarios.
 type ScenarioFilter struct {
-	Name      string
-	Include   *Vector
-	Exclude   []*Exclude
-	SelectAll bool
+	Name               string     // The scenario name
+	Include            *Vector    // A scenanario filter broken include a matrix vector
+	Exclude            []*Exclude // Explicit scenario/variant exclusions
+	SelectAll          bool       // Get all scenarios and variants
+	IntersectionMatrix *Matrix    // Like Include but can contain more than one Vector
 }
 
 // String returns the scenario filter as a string.
@@ -45,9 +46,7 @@ type ScenarioFilterOpt func(*ScenarioFilter) error
 
 // NewScenarioFilter takes in options and returns a new filter.
 func NewScenarioFilter(opts ...ScenarioFilterOpt) (*ScenarioFilter, error) {
-	f := &ScenarioFilter{
-		Include: NewVector(),
-	}
+	f := &ScenarioFilter{}
 
 	for _, opt := range opts {
 		err := opt(f)
@@ -123,6 +122,13 @@ func WithScenarioFilterFromScenarioRef(ref *pb.Ref_Scenario) ScenarioFilterOpt {
 	}
 }
 
+// WithScenarioFilterFromSampleSubset takes a sample subset and returns a filter for it.
+func WithScenarioFilterFromSampleSubset(subset *SampleSubset) ScenarioFilterOpt {
+	return func(f *ScenarioFilter) error {
+		return f.FromSampleSubset(subset)
+	}
+}
+
 // ParseScenarioFilter takes command arguments that have been split by spaces
 // and validates that they are composed of a valid scenario filter.
 func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
@@ -162,7 +168,7 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 
 			vec := NewVector()
 			vec.Add(NewElement(strings.TrimPrefix(parts[0], "!"), parts[1]))
-			ex, err := NewExclude(pb.Scenario_Filter_Exclude_MODE_CONTAINS, vec)
+			ex, err := NewExclude(pb.Matrix_Exclude_MODE_CONTAINS, vec)
 			if err != nil {
 				return f, fmt.Errorf("invalid variant filter: %w", err)
 			}
@@ -172,6 +178,9 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 		}
 
 		// It's an include filter
+		if f.Include == nil {
+			f.Include = NewVector()
+		}
 		f.Include.Add(NewElement(parts[0], parts[1]))
 	}
 
@@ -181,12 +190,14 @@ func ParseScenarioFilter(args []string) (*ScenarioFilter, error) {
 // Proto returns the scenario filter as a proto filter.
 func (sf *ScenarioFilter) Proto() *pb.Scenario_Filter {
 	pbf := &pb.Scenario_Filter{
-		Name:    sf.Name,
-		Include: sf.Include.Proto(),
+		Name: sf.Name,
+	}
+	if sf.Include != nil {
+		pbf.Include = sf.Include.Proto()
 	}
 
 	if len(sf.Exclude) > 0 {
-		pbf.Exclude = []*pb.Scenario_Filter_Exclude{}
+		pbf.Exclude = []*pb.Matrix_Exclude{}
 		for _, e := range sf.Exclude {
 			pbf.Exclude = append(pbf.Exclude, e.Proto())
 		}
@@ -194,6 +205,10 @@ func (sf *ScenarioFilter) Proto() *pb.Scenario_Filter {
 
 	if sf.SelectAll {
 		pbf.SelectAll = &pb.Scenario_Filter_SelectAll{}
+	}
+
+	if sf.IntersectionMatrix != nil {
+		pbf.IntersectionMatrix = sf.IntersectionMatrix.Proto()
 	}
 
 	return pbf
@@ -223,12 +238,82 @@ func (sf *ScenarioFilter) FromProto(filter *pb.Scenario_Filter) {
 	if sa := filter.GetSelectAll(); sa != nil {
 		sf.SelectAll = true
 	}
+
+	if sim := filter.GetIntersectionMatrix(); sim != nil {
+		nm := NewMatrix()
+		nm.FromProto(sim)
+		sf.IntersectionMatrix = nm
+	}
 }
 
 // FromScenarioRef takes a reference to a scenario and returns a filter for it.
 func (sf *ScenarioFilter) FromScenarioRef(ref *pb.Ref_Scenario) {
 	sf.Name = ref.GetId().GetName()
 	sf.Include = NewVectorFromProto(ref.GetId().GetVariants())
+}
+
+// FromSampleSubset takes a sample subset and returns a scenario filter for it.
+func (sf *ScenarioFilter) FromSampleSubset(subset *SampleSubset) error {
+	if sf == nil || subset == nil {
+		return nil
+	}
+
+	// Sample subsets and scenario filters don't match 1:1, so we need to handle special cases
+	// where a sample subset might have configuration that conflicts with a scenario filter.
+	// These differences should be prevented during decoding time, but we'll still validate them here.
+	if subset.Name == "" && subset.ScenarioName == "" && subset.ScenarioFilter == "" {
+		return fmt.Errorf("cannot filter scenarios from subset, the subset does not include a scenario name")
+	}
+
+	if subset.ScenarioFilter != "" && subset.Matrix != nil && len(subset.Matrix.Vectors) > 0 {
+		return fmt.Errorf("cannot filter scenarios from subset, only of matrix and scenario_filter can be set")
+	}
+
+	// Set the name. It's either our subset name, our scenario_name, or the scenario name in the filter.
+	sf.Name = subset.Name
+	if subset.ScenarioName != "" {
+		sf.Name = subset.ScenarioName
+	}
+
+	// Set our matrix if we have one
+	if subset.Matrix != nil && len(subset.Matrix.Vectors) > 0 {
+		sf.IntersectionMatrix = subset.Matrix
+	} else {
+		sf.IntersectionMatrix = nil
+	}
+
+	// Handle select all. If we don't have a filter or a matrix we can assume we're selecting all.
+	// We'll do that by making our filter just our name and parsing it.
+	filter := subset.ScenarioFilter
+	if sf.IntersectionMatrix == nil && filter == "" {
+		filter = sf.Name
+	}
+
+	if filter != "" {
+		psf, err := ParseScenarioFilter(strings.Split(filter, " "))
+		if err != nil {
+			return err
+		}
+
+		if psf.Name != "" {
+			sf.Name = psf.Name
+		}
+
+		// Make sure we didn't set both a scenario_filter and scenario_name with conflicting names.
+		if subset.ScenarioName != "" && psf.Name != "" && subset.ScenarioName != psf.Name {
+			return fmt.Errorf("scenario_name '%s' and the scenario name in scenario_filter '%s' must match",
+				subset.ScenarioName, psf.Name,
+			)
+		}
+
+		sf.Include = psf.Include
+		sf.Exclude = psf.Exclude
+		sf.SelectAll = psf.SelectAll
+
+		return nil
+	}
+
+	return nil
 }
 
 // ScenariosSelect takes a scenario filter and returns a slice of matching
@@ -239,11 +324,12 @@ func (fp *FlightPlan) ScenariosSelect(f *ScenarioFilter) []*Scenario {
 	}
 
 	if f.SelectAll {
-		return fp.Scenarios
+		return fp.Scenarios()
 	}
 
 	scenarios := []*Scenario{}
-	for _, s := range fp.Scenarios {
+	for _, s := range fp.Scenarios() {
+		s := s
 		if !s.Match(f) {
 			continue
 		}

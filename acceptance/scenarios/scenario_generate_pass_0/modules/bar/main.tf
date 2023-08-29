@@ -7,11 +7,11 @@ output "anotherinput" {
 }
 
 variable "input" {
-  type = string
+  type    = string
   default = "notset"
 }
 
 variable "anotherinput" {
-  type = string
+  type    = string
   default = "notset"
 }

@@ -3,6 +3,6 @@ output "input" {
 }
 
 variable "input" {
-  type = string
+  type    = string
   default = "notset"
 }

@@ -16,8 +16,8 @@ func Test_ScenarioFilter_WithScenarioFilterFromScenarioRef(t *testing.T) {
 	ref := &pb.Ref_Scenario{
 		Id: &pb.Scenario_ID{
 			Name: "foo",
-			Variants: &pb.Scenario_Filter_Vector{
-				Elements: []*pb.Scenario_Filter_Element{
+			Variants: &pb.Matrix_Vector{
+				Elements: []*pb.Matrix_Element{
 					{Key: "backend", Value: "raft"},
 					{Key: "cloud", Value: "aws"},
 				},
@@ -39,6 +39,116 @@ func Test_ScenarioFilter_WithScenarioFilterFromScenarioRef(t *testing.T) {
 	require.Equal(t, expected.Include.elements[0].Val, sf.Include.elements[0].Val)
 	require.Equal(t, expected.Include.elements[1].Key, sf.Include.elements[1].Key)
 	require.Equal(t, expected.Include.elements[1].Val, sf.Include.elements[1].Val)
+}
+
+// Test_ScenarioFilter_WithScenarioFilterFromSampleSubset tests filtering a scenario that was
+// created from a scenario reference.
+func Test_ScenarioFilter_WithScenarioFilterFromSampleSubset(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in         *SampleSubset
+		expected   *ScenarioFilter
+		shouldFail bool
+	}{
+		"in is nil": {
+			in:       nil,
+			expected: new(ScenarioFilter),
+		},
+		"missing scenario name identifier": {
+			in:         &SampleSubset{},
+			shouldFail: true,
+		},
+		"scenario_name and scenario_filter are both defined and match": {
+			in: &SampleSubset{
+				Name:           "bar",
+				ScenarioName:   "foo",
+				ScenarioFilter: "foo something:other",
+			},
+			expected: &ScenarioFilter{
+				Name:    "foo",
+				Include: &Vector{elements: []Element{NewElement("something", "other")}},
+			},
+		},
+		"scenario_name and scenario_filter are both defined and do not match": {
+			in: &SampleSubset{
+				Name:           "bar",
+				ScenarioName:   "bar",
+				ScenarioFilter: "foo backend:raft",
+			},
+			shouldFail: true,
+		},
+		"no filter other than name means select all": {
+			in: &SampleSubset{
+				Name: "foo",
+			},
+			expected: &ScenarioFilter{
+				Name: "foo",
+			},
+		},
+		"matrix": {
+			in: &SampleSubset{
+				Name: "foo",
+				Matrix: &Matrix{Vectors: []*Vector{
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				}},
+			},
+			expected: &ScenarioFilter{
+				Name: "foo",
+				IntersectionMatrix: &Matrix{Vectors: []*Vector{
+					{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+					{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+				}},
+			},
+		},
+		"scenario_filter": {
+			in: &SampleSubset{
+				Name:           "foo",
+				ScenarioFilter: "backend:raft",
+			},
+			expected: &ScenarioFilter{
+				Name:    "foo",
+				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
+			},
+		},
+	} {
+		test := test
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+			sf, err := NewScenarioFilter(WithScenarioFilterFromSampleSubset(test.in))
+			if test.shouldFail {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.EqualValues(t, test.expected, sf)
+			}
+		})
+	}
+}
+
+// Test_ScenarioFilter_Proto_RoundTrip ensures that we can wire encode and decode without losing
+// data.
+func Test_ScenarioFilter_Proto_RoundTrip(t *testing.T) {
+	t.Parallel()
+
+	expected := &ScenarioFilter{
+		Name:      "foo",
+		SelectAll: true,
+		Include:   &Vector{elements: []Element{NewElement("backend", "raft"), NewElement("cloud", "aws")}},
+		Exclude: []*Exclude{
+			{pb.Matrix_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("cloud", "aws")}}},
+		},
+		IntersectionMatrix: &Matrix{Vectors: []*Vector{
+			{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
+			{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
+			{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
+			{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+		}},
+	}
+	got := &ScenarioFilter{}
+	got.FromProto(expected.Proto())
+	require.EqualValues(t, expected, got)
 }
 
 // Test_ScenarioFilter_ScenariosSelect tests that a flight plan returns the
@@ -88,7 +198,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			&ScenarioFilter{
 				Include: &Vector{elements: []Element{NewElement("backend", "consul")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "arm64")}}},
+					{pb.Matrix_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "arm64")}}},
 				},
 			},
 			[]*Scenario{scenarios[3], scenarios[7]},
@@ -100,7 +210,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 				Name:    "upgrade",
 				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "amd64")}}},
+					{pb.Matrix_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "amd64")}}},
 				},
 			},
 			[]*Scenario{scenarios[4]},
@@ -129,7 +239,11 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			t.Parallel()
 
 			fp := &FlightPlan{
-				Scenarios: test.scenarios,
+				ScenarioBlocks: DecodedScenarioBlocks{
+					{
+						Scenarios: test.scenarios,
+					},
+				},
 			}
 			require.EqualValues(t, test.expected, fp.ScenariosSelect(test.filter))
 		})
@@ -151,15 +265,13 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			[]string{},
 			&ScenarioFilter{
 				SelectAll: true,
-				Include:   &Vector{},
 			},
 		},
 		{
 			"filter with only name",
 			[]string{"test"},
 			&ScenarioFilter{
-				Name:    "test",
-				Include: &Vector{},
+				Name: "test",
 			},
 		},
 		{
@@ -169,7 +281,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 				Name:    "test",
 				Include: &Vector{elements: []Element{NewElement("backend", "consul")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "arm64")}}},
+					{pb.Matrix_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "arm64")}}},
 				},
 			},
 		},
@@ -179,7 +291,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			&ScenarioFilter{
 				Include: &Vector{elements: []Element{NewElement("backend", "raft")}},
 				Exclude: []*Exclude{
-					{pb.Scenario_Filter_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "amd64")}}},
+					{pb.Matrix_Exclude_MODE_CONTAINS, &Vector{elements: []Element{NewElement("arch", "amd64")}}},
 				},
 			},
 		},

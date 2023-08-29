@@ -239,7 +239,7 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 
 	got := &pb.OperationResponses{}
 	require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-	require.Len(t, got.GetResponses(), len(expected.GetResponses()))
+	require.Len(t, expected.GetResponses(), len(got.GetResponses()))
 	expectedResponses := expected.GetResponses()
 	gotResponses := got.GetResponses()
 	sortResponses(expectedResponses)

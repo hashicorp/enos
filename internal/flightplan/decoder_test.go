@@ -13,6 +13,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/context"
 
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
 )
 
@@ -30,7 +31,8 @@ func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 	return fmt.Errorf(msg.String())
 }
 
-func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error) {
+//nolint:unparam // our decode target configurable to simplify some of our decode tests.
+func testDecodeHCL(t *testing.T, hcl []byte, dt DecodeTarget, env ...string) (*FlightPlan, error) {
 	t.Helper()
 
 	cwd, err := os.Getwd()
@@ -38,7 +40,7 @@ func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error)
 	decoder, err := NewDecoder(
 		WithDecoderBaseDir(cwd),
 		WithDecoderEnv(env),
-		WithDecoderDecodeMode(DecodeModeFull),
+		WithDecoderDecodeTarget(dt),
 	)
 	require.NoError(t, err)
 	_, diags := decoder.FPParser.ParseHCL(hcl, "decoder-test.hcl")
@@ -50,12 +52,69 @@ func testDecodeHCL(t *testing.T, hcl []byte, env ...string) (*FlightPlan, error)
 	return fp, testDiagsToError(decoder.ParserFiles(), diags)
 }
 
+type testCreateWireWorkspaceOpt func(*pb.Workspace)
+
+func withTestCreateWireWorkspaceBody(body string) testCreateWireWorkspaceOpt {
+	return func(ws *pb.Workspace) {
+		if f := ws.GetFlightplan(); f == nil {
+			ws.Flightplan = &pb.FlightPlan{}
+		}
+
+		ws.Flightplan.EnosHcl = map[string][]byte{
+			"enos-test.hcl": []byte(body),
+		}
+	}
+}
+
+func testCreateWireWorkspace(t *testing.T, opts ...testCreateWireWorkspaceOpt) *pb.Workspace {
+	t.Helper()
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+
+	ws := &pb.Workspace{
+		Dir:    cwd,
+		OutDir: t.TempDir(),
+		Flightplan: &pb.FlightPlan{
+			BaseDir: cwd,
+		},
+	}
+
+	for i := range opts {
+		opts[i](ws)
+	}
+
+	return ws
+}
+
 func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	t.Helper()
 
-	require.Len(t, fp.Modules, len(expected.Modules))
-	require.Len(t, fp.Scenarios, len(expected.Scenarios))
-	require.Len(t, fp.Providers, len(expected.Providers))
+	require.Len(t, expected.Modules, len(fp.Modules))
+	require.Len(t, expected.ScenarioBlocks, len(fp.ScenarioBlocks))
+	require.Len(t, expected.Providers, len(fp.Providers))
+
+	if expected.Samples != nil {
+		require.Len(t, fp.Samples, len(expected.Samples))
+		for i := range expected.Samples {
+			require.EqualValues(t, expected.Samples[i].Name, fp.Samples[i].Name)
+			require.EqualValues(t, expected.Samples[i].Attributes, fp.Samples[i].Attributes)
+			require.Len(t, expected.Samples[i].Subsets, len(fp.Samples[i].Subsets))
+			for si := range expected.Samples[i].Subsets {
+				require.EqualValues(t, expected.Samples[i].Subsets[si].Name, fp.Samples[i].Subsets[si].Name)
+				require.EqualValues(t, expected.Samples[i].Subsets[si].ScenarioName, fp.Samples[i].Subsets[si].ScenarioName)
+				require.EqualValues(t, expected.Samples[i].Subsets[si].ScenarioFilter, fp.Samples[i].Subsets[si].ScenarioFilter)
+				require.EqualValues(t, expected.Samples[i].Subsets[si].Attributes, fp.Samples[i].Subsets[si].Attributes)
+				if expected.Samples[i].Subsets[si].Matrix != nil {
+					require.Truef(t,
+						expected.Samples[i].Subsets[si].Matrix.EqualUnordered(fp.Samples[i].Subsets[si].Matrix),
+						"expected equal unordered matrices: expected: \n%v\n, got: \n%v",
+						expected.Samples[i].Subsets[si].Matrix, fp.Samples[i].Subsets[si].Matrix,
+					)
+				}
+			}
+		}
+	}
 
 	if expected.TerraformSettings != nil {
 		require.Len(t, fp.TerraformSettings, len(expected.TerraformSettings))
@@ -65,7 +124,7 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	}
 
 	if expected.TerraformCLIs != nil {
-		require.Len(t, fp.TerraformCLIs, len(expected.TerraformCLIs))
+		require.Len(t, expected.TerraformCLIs, len(fp.TerraformCLIs))
 		for i := range expected.TerraformCLIs {
 			require.EqualValues(t, expected.TerraformCLIs[i], fp.TerraformCLIs[i])
 		}
@@ -80,51 +139,54 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		}
 	}
 
-	for i := range expected.Scenarios {
-		require.EqualValues(t, expected.Scenarios[i].Name, fp.Scenarios[i].Name)
-		require.EqualValues(t, expected.Scenarios[i].TerraformSetting, fp.Scenarios[i].TerraformSetting)
-		require.EqualValues(t, expected.Scenarios[i].TerraformCLI, fp.Scenarios[i].TerraformCLI)
-		if expected.Scenarios[i].Variants == nil {
-			require.Nil(t, fp.Scenarios[i].Variants)
-		} else {
-			require.EqualValues(t, expected.Scenarios[i].Variants.elements, fp.Scenarios[i].Variants.elements)
-		}
-		require.Len(t, expected.Scenarios[i].Outputs, len(fp.Scenarios[i].Outputs))
+	for i := range expected.ScenarioBlocks {
+		for j := range expected.ScenarioBlocks[i].Scenarios {
+			require.EqualValues(t, expected.ScenarioBlocks[i].Name, fp.ScenarioBlocks[i].Name)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Name, fp.ScenarioBlocks[i].Scenarios[j].Name)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformSetting, fp.ScenarioBlocks[i].Scenarios[j].TerraformSetting)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformCLI, fp.ScenarioBlocks[i].Scenarios[j].TerraformCLI)
+			if expected.ScenarioBlocks[i].Scenarios[j].Variants == nil {
+				require.Nil(t, fp.ScenarioBlocks[i].Scenarios[j].Variants)
+			} else {
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Variants.elements, fp.ScenarioBlocks[i].Scenarios[j].Variants.elements)
+			}
+			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs, len(fp.ScenarioBlocks[i].Scenarios[j].Outputs))
 
-		if len(fp.Scenarios[i].Outputs) > 0 {
-			for oi := range expected.Scenarios[i].Outputs {
-				require.Equal(t, expected.Scenarios[i].Outputs[oi].Name, fp.Scenarios[i].Outputs[oi].Name)
-				require.Equal(t, expected.Scenarios[i].Outputs[oi].Description, fp.Scenarios[i].Outputs[oi].Description)
-				require.Equal(t, expected.Scenarios[i].Outputs[oi].Sensitive, fp.Scenarios[i].Outputs[oi].Sensitive)
-				eVal := expected.Scenarios[i].Outputs[oi].Value
-				aVal := fp.Scenarios[i].Outputs[oi].Value
+			if len(fp.ScenarioBlocks[i].Scenarios[j].Outputs) > 0 {
+				for oi := range expected.ScenarioBlocks[i].Scenarios[j].Outputs {
+					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Name, fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Name)
+					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Description, fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Description)
+					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Sensitive, fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Sensitive)
+					eVal := expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Value
+					aVal := fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Value
 
-				require.True(t, eVal.Type().Equals(aVal.Type()),
-					fmt.Sprintf("expected type %s, got %s", eVal.Type().FriendlyName(), aVal.Type().FriendlyName()),
-				)
-				if !eVal.IsNull() {
-					testMostlyEqualStepVar(t, eVal, aVal)
+					require.True(t, eVal.Type().Equals(aVal.Type()),
+						fmt.Sprintf("expected type %s, got %s", eVal.Type().FriendlyName(), aVal.Type().FriendlyName()),
+					)
+					if !eVal.IsNull() {
+						testMostlyEqualStepVar(t, eVal, aVal)
+					}
 				}
 			}
-		}
 
-		require.Len(t, expected.Scenarios[i].Steps, len(fp.Scenarios[i].Steps))
-		for is := range expected.Scenarios[i].Steps {
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].Name, fp.Scenarios[i].Steps[is].Name)
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].Providers, fp.Scenarios[i].Steps[is].Providers)
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].DependsOn, fp.Scenarios[i].Steps[is].DependsOn)
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].Skip, fp.Scenarios[i].Steps[is].Skip)
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Name, fp.Scenarios[i].Steps[is].Module.Name)
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Source, fp.Scenarios[i].Steps[is].Module.Source)
-			require.EqualValues(t, expected.Scenarios[i].Steps[is].Module.Version, fp.Scenarios[i].Steps[is].Module.Version)
+			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Steps, len(fp.ScenarioBlocks[i].Scenarios[j].Steps))
+			for is := range expected.ScenarioBlocks[i].Scenarios[j].Steps {
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Name, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Name)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Providers, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Providers)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].DependsOn, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].DependsOn)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Skip, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Skip)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Name, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Name)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Source, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Source)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Version, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Version)
 
-			for isa := range expected.Scenarios[i].Steps[is].Module.Attrs {
-				eAttr := expected.Scenarios[i].Steps[is].Module.Attrs[isa]
-				aAttr := fp.Scenarios[i].Steps[is].Module.Attrs[isa]
+				for isa := range expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs {
+					eAttr := expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs[isa]
+					aAttr := fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs[isa]
 
-				require.True(t, eAttr.Type().Equals(aAttr.Type()))
-				if !eAttr.IsNull() {
-					testMostlyEqualStepVar(t, eAttr, aAttr)
+					require.True(t, eAttr.Type().Equals(aAttr.Type()))
+					if !eAttr.IsNull() {
+						testMostlyEqualStepVar(t, eAttr, aAttr)
+					}
 				}
 			}
 		}
@@ -203,17 +265,22 @@ scenario "basic" {
 						Source: modulePath,
 					},
 				},
-				Scenarios: []*Scenario{
+				ScenarioBlocks: DecodedScenarioBlocks{
 					{
-						Name:         "basic",
-						TerraformCLI: DefaultTerraformCLI(),
-						Steps: []*ScenarioStep{
+						Name: "basic",
+						Scenarios: []*Scenario{
 							{
-								Name: "first",
-								Module: &Module{
-									Name:   "backend",
-									Source: modulePath,
-									Attrs:  map[string]cty.Value{},
+								Name:         "basic",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "first",
+										Module: &Module{
+											Name:   "backend",
+											Source: modulePath,
+											Attrs:  map[string]cty.Value{},
+										},
+									},
 								},
 							},
 						},
@@ -262,7 +329,7 @@ scenario "backend" {
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.hcl))
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
 			if test.fail {
 				require.Error(t, err)
 

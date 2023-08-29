@@ -20,52 +20,56 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 		fail bool
 	}{
 		{
-			dir: "scenario_list_pass_0",
+			dir: "scenarios/scenario_list_pass_0",
 			out: &pb.ListScenariosResponse{},
 		},
 		{
-			dir: "scenario_list_pass_1",
+			dir: "scenarios/scenario_list_pass_1",
 			out: &pb.ListScenariosResponse{
 				Scenarios: []*pb.Ref_Scenario{{
 					Id: &pb.Scenario_ID{
 						Name:     "test",
+						Filter:   "test",
 						Uid:      "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-						Variants: &pb.Scenario_Filter_Vector{},
+						Variants: &pb.Matrix_Vector{},
 					},
 				}},
 			},
 		},
 		{
-			dir: "scenario_list_pass_2",
+			dir: "scenarios/scenario_list_pass_2",
 			out: &pb.ListScenariosResponse{
 				Scenarios: []*pb.Ref_Scenario{
 					{
 						Id: &pb.Scenario_ID{
 							Name:     "consul",
 							Uid:      "b713f0bd8f48dfad2263cabc455ade78f7e4e99a548101f31f935686dff67124",
-							Variants: &pb.Scenario_Filter_Vector{},
+							Filter:   "consul",
+							Variants: &pb.Matrix_Vector{},
 						},
 					},
 					{
 						Id: &pb.Scenario_ID{
 							Name:     "vault",
+							Filter:   "vault",
 							Uid:      "e6f0a1fbb43c89196dcfcbef85908f19ab4c5f7cc4f4c452284697757683d7ef",
-							Variants: &pb.Scenario_Filter_Vector{},
+							Variants: &pb.Matrix_Vector{},
 						},
 					},
 				},
 			},
 		},
 		{
-			dir: "scenario_list_pass_3",
+			dir: "scenarios/scenario_list_pass_3",
 			out: &pb.ListScenariosResponse{
 				Scenarios: []*pb.Ref_Scenario{
 					{
 						Id: &pb.Scenario_ID{
-							Name: "test",
-							Uid:  "5ee261842ccc5bece062285d63a36dafc61bb5b95793f55820a885969ab8b19b",
-							Variants: &pb.Scenario_Filter_Vector{
-								Elements: []*pb.Scenario_Filter_Element{
+							Name:   "test",
+							Filter: "test backend:consul",
+							Uid:    "5ee261842ccc5bece062285d63a36dafc61bb5b95793f55820a885969ab8b19b",
+							Variants: &pb.Matrix_Vector{
+								Elements: []*pb.Matrix_Element{
 									{
 										Key:   "backend",
 										Value: "consul",
@@ -76,10 +80,11 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 					},
 					{
 						Id: &pb.Scenario_ID{
-							Name: "test",
-							Uid:  "c3576214aca53aad678161d049f5c123026bff0fb5ec1761438c32114fe445a0",
-							Variants: &pb.Scenario_Filter_Vector{
-								Elements: []*pb.Scenario_Filter_Element{
+							Name:   "test",
+							Filter: "test backend:raft",
+							Uid:    "c3576214aca53aad678161d049f5c123026bff0fb5ec1761438c32114fe445a0",
+							Variants: &pb.Matrix_Vector{
+								Elements: []*pb.Matrix_Element{
 									{
 										Key:   "backend",
 										Value: "raft",
@@ -92,7 +97,7 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			},
 		},
 		{
-			dir:  "scenario_list_fail_malformed",
+			dir:  "invalid_scenarios/scenario_list_fail_malformed",
 			fail: true,
 		},
 	} {
@@ -101,7 +106,7 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)
 
-			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
+			path, err := filepath.Abs(filepath.Join("./", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario list --chdir %s --format json", path)
 			fmt.Println(path)

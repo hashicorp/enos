@@ -86,6 +86,7 @@ linters:
     - goconst
     # disabled for now
     - gocritic
+    - gocyclo
     # disabled for now
     - godox
     - goerr113

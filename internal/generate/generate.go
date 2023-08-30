@@ -300,7 +300,7 @@ func (g *Generator) ensureOutDir() error {
 
 // maybeWriteTerraformSettings writes any configured "terraform" settings
 //
-//nolint:cyclop,gocyclo // writing out our terraform settings is complicated.
+//nolint:cyclop // writing out our terraform settings is complicated.
 func (g *Generator) maybeWriteTerraformSettings(rootBody *hclwrite.Body) {
 	s := g.Scenario.TerraformSetting
 	if s == nil {

@@ -117,33 +117,29 @@ func scenarioAndModuleGeneratorForReq(ctx context.Context, req *pb.Operation_Req
 	*flightplan.Scenario,
 	[]*pb.Diagnostic,
 ) {
-	ws := req.GetWorkspace()
-	if ws == nil {
-		return nil, nil, diagnostics.FromErr(fmt.Errorf("unable to create generator for nil workspace"))
-	}
-
-	s := req.GetScenario()
-	if s == nil {
-		return nil, nil, diagnostics.FromErr(fmt.Errorf("unable to create generator for nil scenario reference"))
-	}
-
-	// Decode our flight plan, find our scenario
-	fp, decRes := decodeFlightPlan(ctx, ws.GetFlightplan())
-	if diagnostics.HasFailed(
-		ws.GetTfExecCfg().GetFailOnWarnings(),
-		decRes.GetDiagnostics(),
-	) {
-		return nil, nil, decRes.GetDiagnostics()
-	}
-
 	filter, err := flightplan.NewScenarioFilter(
-		flightplan.WithScenarioFilterFromScenarioRef(s),
+		flightplan.WithScenarioFilterFromScenarioRef(req.GetScenario()),
 	)
 	if err != nil {
 		return nil, nil, diagnostics.FromErr(err)
 	}
 
-	scenarios := fp.ScenariosSelect(filter)
+	fp, decRes := flightplan.DecodeProto(
+		ctx,
+		req.GetWorkspace().GetFlightplan(),
+		flightplan.DecodeTargetAll,
+		filter.Proto(),
+	)
+
+	if diagnostics.HasFailed(
+		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
+		decRes.GetDiagnostics(),
+	) {
+		return nil, nil, decRes.GetDiagnostics()
+	}
+
+	ws := req.GetWorkspace()
+	scenarios := fp.Scenarios()
 	switch len(scenarios) {
 	case 0:
 		return nil, nil, diagnostics.FromErr(fmt.Errorf("no matching scenarios found"))

@@ -12,6 +12,9 @@ on:
       channel:
         required: true
         type: string
+      product:
+        required: true
+        type: string
       sha:
         required: true
         type: string

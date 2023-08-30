@@ -73,7 +73,7 @@ jobs:
           path: enos-checkout
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version-file: .go-version
+          go-version-file: enos-checkout/.go-version
       # Set up bob CLI
       - name: Setup bob CLI
         uses: hashicorp/action-setup-bob@v1

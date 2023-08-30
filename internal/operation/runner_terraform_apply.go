@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
+	"github.com/hashicorp/enos/internal/operation/terraform"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -61,7 +62,22 @@ func (r *Runner) terraformApply(
 	applyOut := NewTextOutput()
 	tf.SetStdout(applyOut.Stdout)
 	tf.SetStderr(applyOut.Stderr)
-	err = tf.Apply(ctx, r.TFConfig.ApplyOptions()...)
+
+	options := r.TFConfig.ApplyOptions()
+	if reattachInfo, ok := terraform.LookupReattachInfoFromEnv(); ok {
+		reattachOpt, err := terraform.UnMarshalReattachInfo(reattachInfo)
+		if err != nil {
+			res.Diagnostics = append(res.Diagnostics, &pb.Diagnostic{
+				Severity: pb.Diagnostic_SEVERITY_WARNING,
+				Summary:  "Failed to configure Reattach Providers option",
+				Detail:   err.Error(),
+			})
+			log.Error("failed to configure Reattach Providers option", "error", err)
+		} else {
+			options = append(options, reattachOpt)
+		}
+	}
+	err = tf.Apply(ctx, options...)
 	res.Stderr = applyOut.Stderr.String()
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))

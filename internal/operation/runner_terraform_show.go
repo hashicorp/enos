@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
+	"github.com/hashicorp/enos/internal/operation/terraform"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -62,7 +63,23 @@ func (r *Runner) terraformShow(
 	showOut := NewTextOutput()
 	tf.SetStdout(showOut.Stdout)
 	tf.SetStderr(showOut.Stderr)
-	state, err := tf.Show(ctx, r.TFConfig.ShowOptions()...)
+
+	options := r.TFConfig.ShowOptions()
+	if reattachInfo, ok := terraform.LookupReattachInfoFromEnv(); ok {
+		reattachOpt, err := terraform.UnMarshalReattachInfo(reattachInfo)
+		if err != nil {
+			res.Diagnostics = append(res.Diagnostics, &pb.Diagnostic{
+				Severity: pb.Diagnostic_SEVERITY_WARNING,
+				Summary:  "Failed to configure Reattach Providers option",
+				Detail:   err.Error(),
+			})
+			log.Error("failed to configure Reattach Providers option", "error", err)
+		} else {
+			options = append(options, reattachOpt)
+		}
+	}
+
+	state, err := tf.Show(ctx, options...)
 	if err != nil {
 		notifyFail(diagnostics.FromErr(err))
 

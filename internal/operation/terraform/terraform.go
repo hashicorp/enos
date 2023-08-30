@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -342,4 +343,21 @@ func (c *Config) OutputOptions() []tfexec.OutputOption {
 // ShowOptions are the show command options.
 func (c *Config) ShowOptions() []tfexec.ShowOption {
 	return []tfexec.ShowOption{}
+}
+
+// LookupReattachInfoFromEnv gets the Terraform Reattach Providers configuration from the TF_REATTACH_PROVIDERS
+// environment variable. Returns the value and a boolean which if true indicates that the value is
+// configured.
+func LookupReattachInfoFromEnv() (string, bool) {
+	return os.LookupEnv("TF_REATTACH_PROVIDERS")
+}
+
+// UnMarshalReattachInfo unmarshals the reattach providers configuration string into a tfexec.ReattachOption.
+func UnMarshalReattachInfo(reattachInfo string) (*tfexec.ReattachOption, error) {
+	var info tfexec.ReattachInfo
+	err := json.Unmarshal([]byte(reattachInfo), &info)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal, reattach providers config, due to: %w", err)
+	}
+	return tfexec.Reattach(info), nil
 }

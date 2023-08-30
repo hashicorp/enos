@@ -149,6 +149,14 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 
 	scenarioBlocks := d.filterScenarioBlocks(blocks)
 	for i := range scenarioBlocks {
+		// Don't worry about decoding scenario blocks that don't match our name if we've been
+		// given a name.
+		if d.ScenarioFilter != nil && d.ScenarioFilter.Name != "" {
+			if d.ScenarioFilter.Name != scenarioBlocks[i].Name {
+				continue
+			}
+		}
+
 		if d.DecodeTarget >= DecodeTargetScenariosMatrixOnly {
 			var diags hcl.Diagnostics
 			scenarioBlocks[i].Matrix, diags = decodeMatrix(d.EvalContext, scenarioBlocks[i].Block)

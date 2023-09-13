@@ -116,14 +116,8 @@ func Test_SampleFuncAll(t *testing.T) {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
@@ -131,14 +125,8 @@ func Test_SampleFuncAll(t *testing.T) {
 							Name: "bar",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -154,26 +142,14 @@ func Test_SampleFuncAll(t *testing.T) {
 				SubsetObservations: SampleSubsetObservations{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -191,14 +167,8 @@ func Test_SampleFuncAll(t *testing.T) {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"baz": {
@@ -217,14 +187,8 @@ func Test_SampleFuncAll(t *testing.T) {
 							Name: "bar",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -239,28 +203,16 @@ func Test_SampleFuncAll(t *testing.T) {
 				SubsetObservations: SampleSubsetObservations{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"baz":       {},
 					"baz_alias": {},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -458,14 +410,8 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
@@ -473,14 +419,8 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "bar",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -489,10 +429,7 @@ func Test_SampleFuncStratified(t *testing.T) {
 				SubsetObservations: SampleSubsetObservations{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 				},
@@ -511,14 +448,8 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
@@ -526,14 +457,8 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "bar",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -549,18 +474,12 @@ func Test_SampleFuncStratified(t *testing.T) {
 				SubsetObservations: SampleSubsetObservations{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -578,14 +497,8 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"baz": {
@@ -604,14 +517,8 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "bar",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -620,20 +527,14 @@ func Test_SampleFuncStratified(t *testing.T) {
 				SubsetObservations: SampleSubsetObservations{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"baz":       {},
 					"baz_alias": {},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -652,30 +553,12 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "aarch64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "aarch64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "aarch64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "aarch64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 					"baz": {
@@ -694,22 +577,10 @@ func Test_SampleFuncStratified(t *testing.T) {
 							Name: "bar",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 				},
@@ -725,40 +596,19 @@ func Test_SampleFuncStratified(t *testing.T) {
 				SubsetObservations: SampleSubsetObservations{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "aarch64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "aarch64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"baz":       {},
 					"baz_alias": {},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "arm64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},

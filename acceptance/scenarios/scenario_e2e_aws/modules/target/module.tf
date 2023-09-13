@@ -42,7 +42,7 @@ data "aws_ami" "rhel" {
   # Currently latest latest point release-1
   filter {
     name   = "name"
-    values = ["RHEL-8.2*HVM-20*"]
+    values = ["RHEL-8.8*HVM-20*"]
   }
 
   filter {

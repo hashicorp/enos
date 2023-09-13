@@ -123,22 +123,22 @@ variable "input" {}
 									"continue-on-error": cty.BoolVal(true),
 								}),
 								Matrix: &Matrix{Vectors: []*Vector{
-									{elements: []Element{
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "package"),
 										NewElement("distro", "rhel"),
 										NewElement("edition", "ent.hsm"),
 										NewElement("primary_backend", "consul"),
-									}},
-									{elements: []Element{
+									),
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "package"),
 										NewElement("distro", "ubuntu"),
 										NewElement("edition", "ent.hsm"),
 										NewElement("primary_backend", "consul"),
-									}},
+									),
 								}},
 							},
 							{
@@ -149,56 +149,56 @@ variable "input" {}
 									"another_thing": cty.StringVal("another"),
 								}),
 								Matrix: &Matrix{Vectors: []*Vector{
-									{elements: []Element{
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "bundle"),
 										NewElement("distro", "rhel"),
 										NewElement("edition", "ent.hsm"),
 										NewElement("primary_backend", "raft"),
-									}},
-									{elements: []Element{
+									),
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "bundle"),
 										NewElement("distro", "centos"),
 										NewElement("edition", "ent.hsm"),
 										NewElement("primary_backend", "raft"),
-									}},
-									{elements: []Element{
+									),
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "bundle"),
 										NewElement("distro", "amz"),
 										NewElement("edition", "ent.hsm"),
 										NewElement("primary_backend", "raft"),
-									}},
+									),
 								}},
 							},
 							{
 								Name: "smoke",
 								Matrix: &Matrix{Vectors: []*Vector{
-									{elements: []Element{
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "package"),
 										NewElement("distro", "rhel"),
 										NewElement("edition", "ent.hsm"),
-									}},
-									{elements: []Element{
+									),
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "package"),
 										NewElement("distro", "centos"),
 										NewElement("edition", "ent.hsm"),
-									}},
-									{elements: []Element{
+									),
+									NewVector(
 										NewElement("arch", "amd64"),
 										NewElement("artifact_source", "artifactory"),
 										NewElement("artifact_type", "package"),
 										NewElement("distro", "amz"),
 										NewElement("edition", "ent.hsm"),
-									}},
+									),
 								}},
 							},
 							{
@@ -410,10 +410,10 @@ sample "foodle" {
 							}),
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw3")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw3")}},
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw3")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw3")),
 						}},
 						ScenarioFilter: &pb.Scenario_Filter{
 							Name: "foo",
@@ -425,9 +425,9 @@ sample "foodle" {
 							ScenarioFilter: "bar length:bl1",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{NewElement("length", "bl1"), NewElement("width", "bw1")}},
-							{elements: []Element{NewElement("length", "bl1"), NewElement("width", "bw2")}},
-							{elements: []Element{NewElement("length", "bl1"), NewElement("width", "bw3")}},
+							NewVector(NewElement("length", "bl1"), NewElement("width", "bw1")),
+							NewVector(NewElement("length", "bl1"), NewElement("width", "bw2")),
+							NewVector(NewElement("length", "bl1"), NewElement("width", "bw3")),
 						}},
 						ScenarioFilter: &pb.Scenario_Filter{
 							Name: "bar",
@@ -475,15 +475,15 @@ sample "foo" {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{NewElement("length", "fl1"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl1"), NewElement("width", "fw2")}},
-							{elements: []Element{NewElement("length", "fl1"), NewElement("width", "fw3")}},
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw2")}},
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw3")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw2")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw3")}},
+							NewVector(NewElement("length", "fl1"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl1"), NewElement("width", "fw2")),
+							NewVector(NewElement("length", "fl1"), NewElement("width", "fw3")),
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw2")),
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw3")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw2")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw3")),
 						}},
 						ScenarioFilter: &pb.Scenario_Filter{
 							Name: "foo",
@@ -546,10 +546,10 @@ sample "foodle" {
 							Name: "foo",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl2"), NewElement("width", "fw3")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl3"), NewElement("width", "fw3")}},
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl2"), NewElement("width", "fw3")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl3"), NewElement("width", "fw3")),
 						}},
 						ScenarioFilter: &pb.Scenario_Filter{
 							Name: "foo",
@@ -613,9 +613,9 @@ sample "foodle" {
 							ScenarioFilter: "bar length:bl1",
 						},
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{NewElement("length", "fl1"), NewElement("width", "fw1")}},
-							{elements: []Element{NewElement("length", "fl1"), NewElement("width", "fw2")}},
-							{elements: []Element{NewElement("length", "fl1"), NewElement("width", "fw3")}},
+							NewVector(NewElement("length", "fl1"), NewElement("width", "fw1")),
+							NewVector(NewElement("length", "fl1"), NewElement("width", "fw2")),
+							NewVector(NewElement("length", "fl1"), NewElement("width", "fw3")),
 						}},
 						ScenarioFilter: &pb.Scenario_Filter{
 							Name: "bar",
@@ -696,22 +696,22 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"continue-on-error": cty.BoolVal(true),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "ubuntu"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
+							),
 						}},
 					},
 					{
@@ -722,56 +722,56 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"another_thing": cty.StringVal("another"),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
+							),
 						}},
 					},
 					{
 						Name: "smoke",
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
-							}},
+							),
 						}},
 					},
 					{
@@ -789,22 +789,22 @@ func Test_Sample_filterSubsets(t *testing.T) {
 						"continue-on-error": cty.BoolVal(true),
 					}),
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "consul"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "ubuntu"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "consul"),
-						}},
+						),
 					}},
 				},
 				{
@@ -815,56 +815,56 @@ func Test_Sample_filterSubsets(t *testing.T) {
 						"another_thing": cty.StringVal("another"),
 					}),
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "bundle"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "raft"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "bundle"),
 							NewElement("distro", "centos"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "raft"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "bundle"),
 							NewElement("distro", "amz"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "raft"),
-						}},
+						),
 					}},
 				},
 				{
 					Name: "smoke",
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "centos"),
 							NewElement("edition", "ent.hsm"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "amz"),
 							NewElement("edition", "ent.hsm"),
-						}},
+						),
 					}},
 				},
 				{
@@ -888,22 +888,22 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"continue-on-error": cty.BoolVal(true),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "ubuntu"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
+							),
 						}},
 					},
 					{
@@ -914,56 +914,56 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"another_thing": cty.StringVal("another"),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
+							),
 						}},
 					},
 					{
 						Name: "smoke",
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
-							}},
+							),
 						}},
 					},
 					{
@@ -990,22 +990,22 @@ func Test_Sample_filterSubsets(t *testing.T) {
 						"continue-on-error": cty.BoolVal(true),
 					}),
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "consul"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "ubuntu"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "consul"),
-						}},
+						),
 					}},
 				},
 				{
@@ -1029,22 +1029,22 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"continue-on-error": cty.BoolVal(true),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "ubuntu"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
+							),
 						}},
 					},
 					{
@@ -1055,56 +1055,56 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"another_thing": cty.StringVal("another"),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
+							),
 						}},
 					},
 					{
 						Name: "smoke",
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
-							}},
+							),
 						}},
 					},
 					{
@@ -1132,56 +1132,56 @@ func Test_Sample_filterSubsets(t *testing.T) {
 						"another_thing": cty.StringVal("another"),
 					}),
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "bundle"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "raft"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "bundle"),
 							NewElement("distro", "centos"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "raft"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "bundle"),
 							NewElement("distro", "amz"),
 							NewElement("edition", "ent.hsm"),
 							NewElement("primary_backend", "raft"),
-						}},
+						),
 					}},
 				},
 				{
 					Name: "smoke",
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "centos"),
 							NewElement("edition", "ent.hsm"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "amz"),
 							NewElement("edition", "ent.hsm"),
-						}},
+						),
 					}},
 				},
 			},
@@ -1201,22 +1201,22 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"continue-on-error": cty.BoolVal(true),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "ubuntu"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "consul"),
-							}},
+							),
 						}},
 					},
 					{
@@ -1227,56 +1227,56 @@ func Test_Sample_filterSubsets(t *testing.T) {
 							"another_thing": cty.StringVal("another"),
 						}),
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "bundle"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
 								NewElement("primary_backend", "raft"),
-							}},
+							),
 						}},
 					},
 					{
 						Name: "smoke",
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "rhel"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "centos"),
 								NewElement("edition", "ent.hsm"),
-							}},
-							{elements: []Element{
+							),
+							NewVector(
 								NewElement("arch", "amd64"),
 								NewElement("artifact_source", "artifactory"),
 								NewElement("artifact_type", "package"),
 								NewElement("distro", "amz"),
 								NewElement("edition", "ent.hsm"),
-							}},
+							),
 						}},
 					},
 					{
@@ -1310,27 +1310,27 @@ func Test_Sample_filterSubsets(t *testing.T) {
 				{
 					Name: "smoke",
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "rhel"),
 							NewElement("edition", "ent.hsm"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "centos"),
 							NewElement("edition", "ent.hsm"),
-						}},
-						{elements: []Element{
+						),
+						NewVector(
 							NewElement("arch", "amd64"),
 							NewElement("artifact_source", "artifactory"),
 							NewElement("artifact_type", "package"),
 							NewElement("distro", "amz"),
 							NewElement("edition", "ent.hsm"),
-						}},
+						),
 					}},
 				},
 			},

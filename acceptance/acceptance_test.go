@@ -196,7 +196,7 @@ func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, 
 
 	cmdParts := strings.Split(subCommand, " ")
 	// Don't specify a port so we can execute tests in parallel
-	cmdParts = append(cmdParts, "--listen-grpc", "http://localhost")
+	cmdParts = append(cmdParts, "--grpc-listen", "http://localhost")
 
 	cmd := exec.CommandContext(ctx, path, cmdParts...)
 	cmd.Env = os.Environ()

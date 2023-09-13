@@ -217,46 +217,46 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 			in: DecodedScenarioBlocks{
 				{
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-						{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
-						{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
-						{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
+						NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
 					}},
 				},
 			},
 			expected: &Matrix{Vectors: []*Vector{
-				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
-				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
-				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+				NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+				NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+				NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
+				NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
 			}},
 		},
 		"multiple": {
 			in: DecodedScenarioBlocks{
 				{
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-						{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
-						{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
-						{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
+						NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
 					}},
 				},
 				{
 					Matrix: &Matrix{Vectors: []*Vector{
-						{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-						{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
-						{elements: []Element{NewElement("backend", "postgres"), NewElement("arch", "aarch65")}},
-						{elements: []Element{NewElement("backend", "mysql"), NewElement("arch", "s309x")}},
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "postgres"), NewElement("arch", "aarch65")),
+						NewVector(NewElement("backend", "mysql"), NewElement("arch", "s309x")),
 					}},
 				},
 			},
 			expected: &Matrix{Vectors: []*Vector{
-				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "amd64")}},
-				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "amd64")}},
-				{elements: []Element{NewElement("backend", "raft"), NewElement("arch", "arm64")}},
-				{elements: []Element{NewElement("backend", "consul"), NewElement("arch", "arm64")}},
-				{elements: []Element{NewElement("backend", "postgres"), NewElement("arch", "aarch65")}},
-				{elements: []Element{NewElement("backend", "mysql"), NewElement("arch", "s309x")}},
+				NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+				NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+				NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
+				NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
+				NewVector(NewElement("backend", "postgres"), NewElement("arch", "aarch65")),
+				NewVector(NewElement("backend", "mysql"), NewElement("arch", "s309x")),
 			}},
 		},
 	} {

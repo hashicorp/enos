@@ -672,7 +672,7 @@ scenario "step_vars" {
 						Scenarios: []*Scenario{
 							{
 								Name:         "step_vars",
-								Variants:     &Vector{elements: []Element{{Key: "input", Val: "matrixinput"}}},
+								Variants:     NewVector(NewElement("input", "matrixinput")),
 								TerraformCLI: DefaultTerraformCLI(),
 								Steps: []*ScenarioStep{
 									{

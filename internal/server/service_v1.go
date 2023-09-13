@@ -30,9 +30,10 @@ var _ pb.EnosServiceServer = (*ServiceV1)(nil)
 type ServiceV1 struct {
 	log hclog.Logger
 
-	configuredURL *url.URL
-	grpcListener  net.Listener
-	grpcServer    *grpc.Server
+	configuredURL  *url.URL
+	grpcListener   net.Listener
+	grpcServer     *grpc.Server
+	grpcServerOpts []grpc.ServerOption
 
 	operator operation.Operator
 }
@@ -52,6 +53,24 @@ func WithGRPCListenURL(url *url.URL) Opt {
 			return fmt.Errorf("cannot configure listener URL that is nil")
 		}
 		s.configuredURL = url
+
+		return nil
+	}
+}
+
+// WithGRPCServerOptions configures the gRPC server options.
+func WithGRPCServerOptions(opts ...grpc.ServerOption) Opt {
+	return func(s *ServiceV1) error {
+		if len(opts) < 1 {
+			return nil
+		}
+
+		if s.grpcServerOpts == nil {
+			s.grpcServerOpts = opts
+			return nil
+		}
+
+		s.grpcServerOpts = append(s.grpcServerOpts, opts...)
 
 		return nil
 	}
@@ -77,9 +96,26 @@ func WithOperator(op operation.Operator) Opt {
 
 // New takes options and returns an instance of ServiceV1.
 func New(opts ...Opt) (*ServiceV1, error) {
+	log := hclog.NewNullLogger()
+	grpcLogger := log.Named("grpc")
+
 	svc := &ServiceV1{
-		log:      hclog.NewNullLogger(),
+		log:      log,
 		operator: operation.NewLocalOperator(),
+		grpcServerOpts: []grpc.ServerOption{
+			grpc.ChainUnaryInterceptor(
+				logUnaryInterceptor(grpcLogger, false),
+			),
+			grpc.ChainStreamInterceptor(
+				logStreamInterceptor(grpcLogger),
+			),
+			grpc.KeepaliveEnforcementPolicy(
+				keepalive.EnforcementPolicy{
+					MinTime:             20 * time.Second,
+					PermitWithoutStream: true,
+				},
+			),
+		},
 	}
 
 	var err error
@@ -90,22 +126,7 @@ func New(opts ...Opt) (*ServiceV1, error) {
 		}
 	}
 
-	grpcLogger := svc.log.Named("grpc")
-	grpcOpts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			logUnaryInterceptor(grpcLogger, false),
-		),
-		grpc.ChainStreamInterceptor(
-			logStreamInterceptor(grpcLogger),
-		),
-		grpc.KeepaliveEnforcementPolicy(
-			keepalive.EnforcementPolicy{
-				MinTime:             20 * time.Second,
-				PermitWithoutStream: true,
-			},
-		),
-	}
-	svc.grpcServer = grpc.NewServer(grpcOpts...)
+	svc.grpcServer = grpc.NewServer(svc.grpcServerOpts...)
 
 	return svc, nil
 }

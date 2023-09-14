@@ -1,0 +1,50 @@
+---
+name: profile-build
+description: profile enos build
+
+inputs:
+  build-path:
+    description: where the enos artifact to profile is
+    default: dist/enos
+  profile-out:
+    description: where to write the union cpu profile
+    default: cpu.pprof
+  merge-to-default:
+    description: merge all cpu profiles to default.pgo after profiling
+    default: true
+  upload-profile:
+    description: upload default.pgo after profiling
+    default: true
+
+outputs:
+  profile-path:
+    value: default.pgo
+
+runs:
+  using: composite
+  steps:
+    - name: profile
+      shell: bash
+      run: |
+        ${{ inputs.build-path }} scenario list  --format json --chdir ./acceptance/scenarios/build_pgo/ --profile | jq '.scenarios | length'
+        mv cpu.pprof cpu.pprof.scenario.list
+        ${{ inputs.build-path }} scenario sample observe complex --max 10 --chdir ./acceptance/scenarios/build_pgo/ --profile
+        mv cpu.pprof cpu.pprof.sample.observe
+        go tool pprof -proto cpu.pprof.scenario.list cpu.pprof.sample.observe > ${{ inputs.profile-out }}
+    - if: ${{ inputs.merge-to-default == 'true' }}
+      name: merge-to-default
+      shell: bash
+      run: |
+        if test -f default.pgo; then
+          cp default.pgo default.pprof
+          go tool pprof -proto ${{ inputs.profile-out }} -proto default.pprof > default.pgo
+          exit 0
+        fi
+        cp ${{ inputs.profile-out }} default.pgo
+    - if: ${{ inputs.upload-profile == 'true' }}
+      uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+      with:
+        name: default.pgo
+        path: default.pgo
+        retention-days: 1
+        if-no-files-found: error

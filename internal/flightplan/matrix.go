@@ -1,8 +1,9 @@
 package flightplan
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
@@ -10,33 +11,27 @@ import (
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
-// An Element is an Element of a Matrix Vector.
+// An Element represents a single element of a matrix vector.
 type Element struct {
 	Key             string
 	Val             string
 	formattedString string // cached version of the element as a string
 }
 
-// Vector is a collection of Matrix Elements. The Vector maintains orignal
-// ordering in the elements array and optionally keeps a cached sorted
-// array for comparison operations.
+// Vector is an ordered collection of matrix elements.
 type Vector struct {
 	// elements list of elements
 	elements []Element
-	// an sorted set of elements that we'll populate for some comparisons
-	sorted []Element
-	// whether or not our vector has been modified and needs to be resorted
-	// before some comparison operations.
-	dirty bool
 }
 
-// A Matrix contains an slice of Vectors. The collection of Vectors can be
-// used to form a regular or irregular Matrix.
+// Matrix is an ordered list of vectors. Vectors can be of any length. A matrix can be irregular if
+// different length vectors are used.
 type Matrix struct {
 	Vectors []*Vector
 }
 
-// An Exclude is a filter to removing Elements from the Matrix's Vector combined.
+// Exclude is an exclusion filter that can be passed to the matrix. It includes the exclusion mode
+// to use and a matching vector.
 type Exclude struct {
 	Mode   pb.Matrix_Exclude_Mode
 	Vector *Vector
@@ -47,13 +42,8 @@ func NewElement(key string, val string) Element {
 	return Element{Key: key, Val: val}
 }
 
-// NewMatrix returns a pointer to a new instance of Matrix.
-func NewMatrix() *Matrix {
-	return &Matrix{}
-}
-
-// NewExclude takes an ExcludeMode and Vector, validates the ExcludeMode and
-// return a pointer to a new instance of Exclude and any errors encountered.
+// NewExclude takes an ExcludeMode and Vector, validates the ExcludeMode and returns a pointer to a
+// new instance of Exclude and any errors encountered.
 func NewExclude(mode pb.Matrix_Exclude_Mode, vec *Vector) (*Exclude, error) {
 	ex := &Exclude{Mode: mode, Vector: vec}
 
@@ -68,6 +58,28 @@ func NewExclude(mode pb.Matrix_Exclude_Mode, vec *Vector) (*Exclude, error) {
 	}
 
 	return ex, nil
+}
+
+// NewMatrix returns a pointer to a new instance of Matrix.
+func NewMatrix() *Matrix {
+	return &Matrix{}
+}
+
+// NewMatrix takes zero-or-more elements and returns a pointer to a new instance of Vector.
+func NewVector(elms ...Element) *Vector {
+	return &Vector{
+		elements: elms,
+	}
+}
+
+// NewVectorFromProto takes a proto filter vector and returns a new Vector.
+func NewVectorFromProto(pbv *pb.Matrix_Vector) *Vector {
+	v := NewVector()
+	for _, elm := range pbv.GetElements() {
+		v.Add(NewElement(elm.GetKey(), elm.GetValue()))
+	}
+
+	return v
 }
 
 // String returns the element as a string.
@@ -88,7 +100,7 @@ func (e Element) Proto() *pb.Matrix_Element {
 	return &pb.Matrix_Element{Key: e.Key, Value: e.Val}
 }
 
-// Equals compares the element with another.
+// Equals compares the element with another Element.
 func (e Element) Equal(other Element) bool {
 	if e.Key != other.Key {
 		return false
@@ -101,28 +113,116 @@ func (e Element) Equal(other Element) bool {
 	return true
 }
 
-func NewVector() *Vector {
-	return &Vector{}
-}
-
-// String returns the vector as a string.
-func (v *Vector) String() string {
-	elmStrings := []string{}
-	for _, elm := range v.elements {
-		elmStrings = append(elmStrings, elm.String())
+// Match determines if Exclude directive matches the given Vector.
+func (ex *Exclude) Match(vec *Vector) bool {
+	if vec == nil {
+		return false
 	}
 
-	return fmt.Sprintf("[%s]", strings.Join(elmStrings, " "))
-}
-
-// StringSorted returns the vector as a string with sorted elements.
-func (v *Vector) StringSorted() string {
-	elmStrings := []string{}
-	for _, elm := range v.SortedElements() {
-		elmStrings = append(elmStrings, elm.String())
+	switch ex.Mode {
+	case pb.Matrix_Exclude_MODE_EXACTLY:
+		if vec.Equal(ex.Vector) {
+			return true
+		}
+	case pb.Matrix_Exclude_MODE_EQUAL_UNORDERED:
+		if vec.EqualUnordered(ex.Vector) {
+			return true
+		}
+	case pb.Matrix_Exclude_MODE_CONTAINS:
+		if vec.ContainsUnordered(ex.Vector) {
+			return true
+		}
+	case pb.Matrix_Exclude_MODE_UNSPECIFIED:
+		return false
+	default:
+		return false
 	}
 
-	return fmt.Sprintf("[%s]", strings.Join(elmStrings, " "))
+	return false
+}
+
+// Proto returns the exclude as a proto message.
+func (ex *Exclude) Proto() *pb.Matrix_Exclude {
+	return &pb.Matrix_Exclude{
+		Vector: ex.Vector.Proto(),
+		Mode:   ex.Mode,
+	}
+}
+
+// FromProto unmarshals a proto Matrix_Exclude into itself.
+func (ex *Exclude) FromProto(pfe *pb.Matrix_Exclude) {
+	if pfe == nil {
+		return
+	}
+
+	ex.Vector = NewVectorFromProto(pfe.GetVector())
+	ex.Mode = pfe.GetMode()
+}
+
+// Add adds an Element to the Vector.
+func (v *Vector) Add(e Element) {
+	if v.elements == nil {
+		v.elements = []Element{e}
+		return
+	}
+
+	v.elements = append(v.elements, e)
+}
+
+// Copy creates a new Copy of the Vector.
+func (v *Vector) Copy() *Vector {
+	vecC := NewVector()
+
+	if v.elements == nil || len(v.elements) == 0 {
+		return vecC
+	}
+
+	vecC.elements = make([]Element, len(v.elements))
+	copy(vecC.elements, v.elements)
+
+	return vecC
+}
+
+// ContainsUnordered takes a Vector and determines whether all Elements in the given Vector are
+// represented in the Vector.
+func (v *Vector) ContainsUnordered(other *Vector) bool {
+	if v == nil && other == nil {
+		return true
+	}
+
+	if other == nil {
+		return false
+	}
+
+	if len(v.elements) < 1 || len(other.elements) < 1 {
+		return false
+	}
+
+	for oi := range other.elements {
+		match := false
+		for vi := range v.elements {
+			if other.elements[oi].Equal(v.elements[vi]) {
+				match = true
+
+				break
+			}
+		}
+		if !match {
+			return false
+		}
+	}
+
+	return true
+}
+
+// CtyVal returns the vector as a cty.Value. This is lossy as duplicate keys will be overwritten.
+func (v *Vector) CtyVal() cty.Value {
+	vals := map[string]cty.Value{}
+	for _, vec := range v.elements {
+		vals[vec.Key] = cty.StringVal(vec.Val)
+	}
+
+	return cty.ObjectVal(vals)
 }
 
 // Equal returns true if both Vectors have Equal values and Equal value ordering.
@@ -156,9 +256,8 @@ func (v *Vector) Equal(other *Vector) bool {
 	return true
 }
 
-// EqualUnordered returns true if both Vectors have the same Elements but might
-// not be ordered the same. This is useful for Vectors of pairs that do not
-// enforce ordering.
+// EqualUnordered returns true if both Vectors have the same Elements but might not be ordered
+// the same. This is useful for Vectors of pairs that do not enforce ordering.
 func (v *Vector) EqualUnordered(other *Vector) bool {
 	if v == nil && other == nil {
 		return true
@@ -180,11 +279,13 @@ func (v *Vector) EqualUnordered(other *Vector) bool {
 		return false
 	}
 
-	v.sort()
-	other.sort()
+	vCpy := v.Copy()
+	oCpy := other.Copy()
+	vCpy.Sort()
+	oCpy.Sort()
 
-	for i := range v.sorted {
-		if v.sorted[i] != other.sorted[i] {
+	for i := range vCpy.elements {
+		if !vCpy.elements[i].Equal(oCpy.elements[i]) {
 			return false
 		}
 	}
@@ -192,50 +293,12 @@ func (v *Vector) EqualUnordered(other *Vector) bool {
 	return true
 }
 
-// ContainsUnordered returns a boolean which represent if vector contains the values
-// of another vector.
-func (v *Vector) ContainsUnordered(other *Vector) bool {
-	if v == nil && other == nil {
-		return true
-	}
-
-	if other == nil {
-		return false
-	}
-
-	if len(v.elements) < 1 || len(other.elements) < 1 {
-		return false
-	}
-
-	for oi := range other.elements {
-		match := false
-		for vi := range v.elements {
-			if other.elements[oi].Equal(v.elements[vi]) {
-				match = true
-
-				break
-			}
-		}
-		if !match {
-			return false
-		}
-	}
-
-	return true
+// Elements returns a list of the Vectors Elements.
+func (v *Vector) Elements() []Element {
+	return v.elements
 }
 
-// CtyVal returns the vector as a cty.Value. Note that this is lossy as duplicate
-// keys will be overwritten.
-func (v *Vector) CtyVal() cty.Value {
-	vals := map[string]cty.Value{}
-	for _, vec := range v.elements {
-		vals[vec.Key] = cty.StringVal(vec.Val)
-	}
-
-	return cty.ObjectVal(vals)
-}
-
-// Proto returns the vector as a proto message.
+// Proto returns the Vector as a proto message.
 func (v *Vector) Proto() *pb.Matrix_Vector {
 	pbv := &pb.Matrix_Vector{Elements: []*pb.Matrix_Element{}}
 
@@ -253,150 +316,69 @@ func (v *Vector) Proto() *pb.Matrix_Vector {
 	return pbv
 }
 
-// Add adds an element to the Vector.
-func (v *Vector) Add(e Element) {
-	if v.elements == nil {
-		v.elements = []Element{}
-	}
-
-	v.elements = append(v.elements, e)
-
-	if v.sorted != nil {
-		v.sorted = append(v.sorted, e)
-		v.dirty = true
-	}
-}
-
-// Copy creates a new Copy of the Vector.
-func (v *Vector) Copy() *Vector {
-	vecC := NewVector()
-
-	if v.elements == nil || len(v.elements) == 0 {
-		return vecC
-	}
-
-	vecC.dirty = v.dirty
-	vecC.elements = make([]Element, len(v.elements))
-	copy(vecC.elements, v.elements)
-
-	if v.sorted != nil && len(v.sorted) > 0 {
-		vecC.sorted = make([]Element, len(v.sorted))
-		copy(vecC.sorted, v.sorted)
-	}
-
-	return vecC
-}
-
-// Elements returns a list of the vectors elements.
-func (v *Vector) Elements() []Element {
-	return v.elements
-}
-
-// SortedElements returns a list of vectors elements that have been sorted.
-// This can be used for unordered comparisons.
-func (v *Vector) SortedElements() []Element {
-	v.sort()
-
-	return v.sorted
-}
-
-func (v *Vector) sort() {
+// Sort sorts the Vector's Elements.
+func (v *Vector) Sort() {
 	if v.elements == nil {
 		return
 	}
 
-	if v.sorted == nil {
-		v.dirty = true
-		v.sorted = make([]Element, len(v.elements))
-		copy(v.sorted, v.elements)
-	}
-
-	if !v.dirty {
+	if len(v.elements) < 2 {
 		return
 	}
 
-	sort.Slice(v.sorted, func(i, j int) bool {
-		return v.sorted[i].String() < v.sorted[j].String()
-	})
-
-	v.dirty = false
+	slices.SortStableFunc(v.elements, compareElement)
 }
 
-// NewVectorFromProto takes a proto filter vector and returns a new Vector.
-func NewVectorFromProto(pbv *pb.Matrix_Vector) *Vector {
-	v := NewVector()
-	for _, elm := range pbv.GetElements() {
-		v.Add(NewElement(elm.GetKey(), elm.GetValue()))
-	}
-
-	return v
-}
-
-// String returns the matrix vectors as a string.
-func (m *Matrix) String() string {
-	if m == nil || len(m.Vectors) < 1 {
+// String returns the Vector as a string.
+func (v *Vector) String() string {
+	if v == nil || len(v.elements) < 1 {
 		return ""
 	}
 
-	b := strings.Builder{}
-	for i := range m.Vectors {
-		if i != 0 {
-			b.WriteString("\n")
-		}
-		b.WriteString(m.Vectors[i].String())
+	if len(v.elements) == 1 {
+		return fmt.Sprintf("[%s]", v.elements[0].String())
 	}
+
+	b := strings.Builder{}
+	b.WriteString("[")
+	for i, elm := range v.elements {
+		if i != 0 {
+			b.WriteString(" ")
+		}
+		b.WriteString(elm.String())
+	}
+	b.WriteString("]")
 
 	return b.String()
 }
 
-// AddVector adds a vector the matrix.
+// AddVector adds a Vector the Matrix.
 func (m *Matrix) AddVector(vec *Vector) {
-	if vec == nil || len(vec.elements) == 0 {
+	if m == nil || vec == nil || len(vec.elements) == 0 {
 		return
 	}
 
 	if m.Vectors == nil {
-		m.Vectors = []*Vector{}
+		m.Vectors = []*Vector{vec}
+		return
 	}
 
 	m.Vectors = append(m.Vectors, vec)
 }
 
-// Copy creates a new Copy of the Matrix.
-func (m *Matrix) Copy() *Matrix {
-	nm := NewMatrix()
-
-	for i := range m.Vectors {
-		nm.AddVector(m.Vectors[i].Copy())
+// AddVectorSorted adds a sorted Vector to a sorted Matrix.
+func (m *Matrix) AddVectorSorted(vec *Vector) {
+	if m == nil || vec == nil || len(vec.elements) == 0 {
+		return
 	}
 
-	return nm
-}
-
-// Exclude takes exclude vararg exclude directives as instances of Exclude. It
-// returns a new matrix with all exclude directives having been processed on
-// the parent matrix.
-func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
-	if len(Excludes) < 1 {
-		return m.Copy()
+	if m.Vectors == nil {
+		m.Vectors = []*Vector{vec}
+		return
 	}
 
-	nm := NewMatrix()
-	for _, vec := range m.Vectors {
-		skip := false
-		for _, ex := range Excludes {
-			if ex.Match(vec) {
-				skip = true
-
-				break
-			}
-		}
-		if !skip {
-			nm.AddVector(vec)
-		}
-	}
-
-	return nm
+	i, _ := slices.BinarySearchFunc(m.Vectors, vec, compareVector)
+	m.Vectors = slices.Insert(m.Vectors, i, vec)
 }
 
 // CartesianProduct returns a pointer to a new Matrix whose Vectors are the
@@ -450,40 +432,19 @@ func (m *Matrix) CartesianProduct() *Matrix {
 	return product
 }
 
-// HasVector returns whether or not a matrix has a vector that exactly matches
-// the elements of another that is given.
-func (m *Matrix) HasVector(other *Vector) bool {
-	if other == nil {
-		return false
+// Compact removes duplicate Vectors from a Matrix.
+func (m *Matrix) Compact() {
+	if m == nil || len(m.Vectors) < 2 {
+		return
 	}
 
-	for _, v := range m.Vectors {
-		if v.Equal(other) {
-			return true
-		}
-	}
-
-	return false
+	slices.CompactFunc(m.Vectors, func(a, b *Vector) bool {
+		return a.Equal(b)
+	})
 }
 
-// HasVectorUnordered returns whether or not a matrix has a vector whose unordered
-// values match exactly with another that is given.
-func (m *Matrix) HasVectorUnordered(other *Vector) bool {
-	if other == nil {
-		return false
-	}
-
-	for _, v := range m.Vectors {
-		if v.EqualUnordered(other) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// ContainsVectorUnordered returns whether or not a matrix has a vector whose unordered
-// values contain those of the other vector.
+// ContainsVectorUnordered returns whether or not a matrix has a Vector whose unordered values
+// contain those of the other Vector.
 func (m *Matrix) ContainsVectorUnordered(other *Vector) bool {
 	if other == nil {
 		return false
@@ -498,31 +459,88 @@ func (m *Matrix) ContainsVectorUnordered(other *Vector) bool {
 	return false
 }
 
-// Unique returns a new Matrix with all unique Vectors.
-func (m *Matrix) Unique() *Matrix {
+// Copy creates a new copy of the Matrix.
+func (m *Matrix) Copy() *Matrix {
 	nm := NewMatrix()
-	for _, v := range m.Vectors {
-		if !nm.HasVector(v) {
-			nm.AddVector(v)
+
+	for i := range m.Vectors {
+		nm.AddVector(m.Vectors[i].Copy())
+	}
+
+	return nm
+}
+
+// Equal returns true if the Matrix and other Matrix have equal verticies.
+func (m *Matrix) Equal(other *Matrix) bool {
+	if m == nil && other == nil {
+		return true
+	}
+
+	if other == nil {
+		return false
+	}
+
+	if len(m.Vectors) != len(other.Vectors) {
+		return false
+	}
+
+	for i := range m.Vectors {
+		if !m.Vectors[i].Equal(other.Vectors[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// EqualUnordered returns true if the Matrix and other Matrix have equal but unordered verticies.
+func (m *Matrix) EqualUnordered(other *Matrix) bool {
+	if m == nil && other == nil {
+		return true
+	}
+
+	if (m != nil && other == nil) || (m == nil && other != nil) {
+		return false
+	}
+
+	if len(m.Vectors) != len(other.Vectors) {
+		return false
+	}
+
+	mSorted := m.Copy()
+	mSorted.Sort()
+	otherSorted := other.Copy()
+	otherSorted.Sort()
+
+	return mSorted.Equal(otherSorted)
+}
+
+// Exclude takes exclude vararg exclude directives as instances of Exclude. It returns a new
+// Matrix with all Exclude directives having been processed on the parent Matrix.
+func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
+	if len(Excludes) < 1 {
+		return m.Copy()
+	}
+
+	nm := NewMatrix()
+	for _, vec := range m.Vectors {
+		skip := false
+		for _, ex := range Excludes {
+			if ex.Match(vec) {
+				skip = true
+
+				break
+			}
+		}
+		if !skip {
+			nm.AddVector(vec)
 		}
 	}
 
 	return nm
 }
 
-// UniqueValues returns a new Matrix with all Vectors that have unique values.
-func (m *Matrix) UniqueValues() *Matrix {
-	nm := NewMatrix()
-	for _, v := range m.Vectors {
-		if !nm.HasVectorUnordered(v) {
-			nm.AddVector(v)
-		}
-	}
-
-	return nm
-}
-
-// Filter takes a scenario filter returns a new filtered matrix.
+// Filter takes a CcenarioFilter returns a new filtered Matrix.
 func (m *Matrix) Filter(filter *ScenarioFilter) *Matrix {
 	if filter == nil {
 		return nil
@@ -555,9 +573,28 @@ func (m *Matrix) Filter(filter *ScenarioFilter) *Matrix {
 	return nm
 }
 
-// IntersectionContainsUnordered takes another matrix and returns a new matrix whose vectors are
+// FromProto takes a proto representation of a Matrix and unmarshals it into itself.
+func (m *Matrix) FromProto(in *pb.Matrix) {
+	if m == nil || in == nil {
+		return
+	}
+
+	if len(in.Vectors) < 1 {
+		return
+	}
+
+	if m.Vectors == nil {
+		m.Vectors = []*Vector{}
+	}
+
+	for i := range in.Vectors {
+		m.Vectors = append(m.Vectors, NewVectorFromProto(in.Vectors[i]))
+	}
+}
+
+// IntersectionContainsUnordered takes another Matrix and returns a new Matrix whose Vectors are
 // composed of the result of a intersection of both matrices vector elements that are contained and
-// unordered. It's important to not that contains does not mean equal, so a vector [1,2,3] contains
+// unordered. It's important to note that contains does not mean equal, so a vector [1,2,3] contains
 // [3,1] but a vector of [3,1] does not contain [1,2,3] because it doesn't have all of the elements.
 func (m *Matrix) IntersectionContainsUnordered(other *Matrix) *Matrix {
 	if m == nil || other == nil {
@@ -591,30 +628,110 @@ func (m *Matrix) IntersectionContainsUnordered(other *Matrix) *Matrix {
 	return nm.UniqueValues()
 }
 
-// Equal returns true if the matrix and other matrix have equal verticies.
-func (m *Matrix) Equal(other *Matrix) bool {
-	if m == nil && other == nil {
-		return true
-	}
-
+// HasVector returns whether or not a Matrix has a Vector that exactly matches the Elements of
+// another that is given.
+func (m *Matrix) HasVector(other *Vector) bool {
 	if other == nil {
 		return false
 	}
 
-	if len(m.Vectors) != len(other.Vectors) {
-		return false
-	}
-
-	for i := range m.Vectors {
-		if !m.Vectors[i].Equal(other.Vectors[i]) {
-			return false
+	for _, v := range m.Vectors {
+		if v.Equal(other) {
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
-// SymmetricDifferenceUnordered returns a new matrix that includes the symmetric difference between
+// HasVectorSorted returns whether or not a sorted Matrix has a sorted Vector. It assumes the
+// Matrix and Vector have both already been sorted.
+func (m *Matrix) HasVectorSorted(other *Vector) bool {
+	if other == nil {
+		return false
+	}
+
+	_, has := slices.BinarySearchFunc(m.Vectors, other, compareVector)
+
+	return has
+}
+
+// HasVectorUnordered returns whether or not a Matrix has a Vector whose unordered values match
+// exactly with another that is given.
+func (m *Matrix) HasVectorUnordered(other *Vector) bool {
+	if other == nil {
+		return false
+	}
+
+	for _, v := range m.Vectors {
+		if v.EqualUnordered(other) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Proto returns the Matrix as a proto message. If a Matrix is created with a ScenarioFilter that
+// has Includes and Excludes a round trip is lossy and will only retain the Vectors.
+func (m *Matrix) Proto() *pb.Matrix {
+	if m == nil {
+		return nil
+	}
+
+	if len(m.Vectors) < 1 {
+		return nil
+	}
+
+	pbm := &pb.Matrix{
+		Vectors: []*pb.Matrix_Vector{},
+	}
+	for i := range m.Vectors {
+		pbm.Vectors = append(pbm.GetVectors(), m.Vectors[i].Proto())
+	}
+
+	return pbm
+}
+
+// SortVectorElements sorts all the elements of each Vector.
+func (m *Matrix) SortVectorElements() {
+	if m == nil {
+		return
+	}
+
+	for i := range m.Vectors {
+		m.Vectors[i].Sort()
+	}
+}
+
+// Sort sorts by all Vectors and Elements included.
+func (m *Matrix) Sort() {
+	if m == nil || len(m.Vectors) < 1 {
+		return
+	}
+
+	m.SortVectorElements()
+	slices.SortStableFunc(m.Vectors, compareVector)
+}
+
+// String returns the Matrix Vectors as a string.
+func (m *Matrix) String() string {
+	if m == nil || len(m.Vectors) < 1 {
+		return ""
+	}
+
+	b := strings.Builder{}
+	for i := range m.Vectors {
+		if i != 0 {
+			b.WriteString("\n")
+		}
+		b.WriteString(m.Vectors[i].String())
+	}
+
+	return b.String()
+}
+
+// SymmetricDifferenceUnordered returns a new Matrix that includes the symmetric difference between
 // two matrices of unordered vertices.
 func (m *Matrix) SymmetricDifferenceUnordered(other *Matrix) *Matrix {
 	if m == nil && other == nil {
@@ -649,123 +766,85 @@ func (m *Matrix) SymmetricDifferenceUnordered(other *Matrix) *Matrix {
 	return nm
 }
 
-// EqualUnordered returns true if the matrix and other matrix have equal but unordered verticies.
-func (m *Matrix) EqualUnordered(other *Matrix) bool {
-	if m == nil && other == nil {
-		return true
-	}
-
-	if (m != nil && other == nil) || (m == nil && other != nil) {
-		return false
-	}
-
-	if len(m.Vectors) != len(other.Vectors) {
-		return false
-	}
-
-	mSorted := m.Copy()
-	otherSorted := other.Copy()
-
-	sort.Slice(mSorted.Vectors, func(i, j int) bool {
-		return mSorted.Vectors[i].StringSorted() < mSorted.Vectors[j].StringSorted()
-	})
-
-	sort.Slice(otherSorted.Vectors, func(i, j int) bool {
-		return otherSorted.Vectors[i].StringSorted() < otherSorted.Vectors[j].StringSorted()
-	})
-
-	for i := range mSorted.Vectors {
-		if !mSorted.Vectors[i].EqualUnordered(otherSorted.Vectors[i]) {
-			return false
+// Unique returns a new Matrix with all unique Vectors.
+func (m *Matrix) Unique() *Matrix {
+	nm := NewMatrix()
+	for _, v := range m.Vectors {
+		if !nm.HasVector(v) {
+			nm.AddVector(v)
 		}
 	}
 
-	return true
+	return nm
 }
 
-// Proto returns the matrix as a proto message. If a matrix is created with a scenario filter
-// that has includes and excludes a round trip is lossy and will only retain the vectors.
-func (m *Matrix) Proto() *pb.Matrix {
+// UniqueValues returns a new Matrix with all Vectors that have unique values.
+func (m *Matrix) UniqueValues() *Matrix {
 	if m == nil {
 		return nil
 	}
 
-	if len(m.Vectors) < 1 {
-		return nil
+	if len(m.Vectors) < 2 {
+		return m.Copy()
 	}
 
-	pbm := &pb.Matrix{
-		Vectors: []*pb.Matrix_Vector{},
-	}
+	nmUnsorted := NewMatrix()
+	nmSorted := NewMatrix()
 	for i := range m.Vectors {
-		pbm.Vectors = append(pbm.GetVectors(), m.Vectors[i].Proto())
-	}
-
-	return pbm
-}
-
-// Proto returns the matrix as a proto message. If a matrix is created with a scenario filter
-// that has includes and excludes a round trip is lossy and will only retain the vectors.
-func (m *Matrix) FromProto(in *pb.Matrix) {
-	if m == nil || in == nil {
-		return
-	}
-
-	if len(in.Vectors) < 1 {
-		return
-	}
-
-	if m.Vectors == nil {
-		m.Vectors = []*Vector{}
-	}
-
-	for i := range in.Vectors {
-		m.Vectors = append(m.Vectors, NewVectorFromProto(in.Vectors[i]))
-	}
-}
-
-// Match determines if Exclude directive matches the vector.
-func (ex *Exclude) Match(vec *Vector) bool {
-	if vec == nil {
-		return false
-	}
-
-	switch ex.Mode {
-	case pb.Matrix_Exclude_MODE_EXACTLY:
-		if vec.Equal(ex.Vector) {
-			return true
+		v := m.Vectors[i].Copy()
+		v.Sort()
+		if !nmSorted.HasVectorSorted(v) {
+			nmSorted.AddVectorSorted(v)
+			nmUnsorted.AddVector(m.Vectors[i])
 		}
-	case pb.Matrix_Exclude_MODE_EQUAL_UNORDERED:
-		if vec.EqualUnordered(ex.Vector) {
-			return true
-		}
-	case pb.Matrix_Exclude_MODE_CONTAINS:
-		if vec.ContainsUnordered(ex.Vector) {
-			return true
-		}
-	case pb.Matrix_Exclude_MODE_UNSPECIFIED:
-		return false
-	default:
-		return false
 	}
 
-	return false
+	return nmUnsorted
 }
 
-// Proto returns the exclude as a proto message.
-func (ex *Exclude) Proto() *pb.Matrix_Exclude {
-	return &pb.Matrix_Exclude{
-		Vector: ex.Vector.Proto(),
-		Mode:   ex.Mode,
+// compareElement takes two Elements and does a sort commparison.
+func compareElement(a, b Element) int {
+	if iv := cmp.Compare(a.Key, b.Key); iv != 0 {
+		return iv
 	}
+
+	return cmp.Compare(a.Val, b.Val)
 }
 
-// FromProto unmarshals a proto Matrix_Exclude into itself.
-func (ex *Exclude) FromProto(pfe *pb.Matrix_Exclude) {
-	if pfe == nil {
-		return
+// compareVector takes two Vectors and does a sort comparison.
+func compareVector(a, b *Vector) int {
+	// Compare by existence
+	if a == nil && b == nil {
+		return 0
 	}
 
-	ex.Vector = NewVectorFromProto(pfe.GetVector())
-	ex.Mode = pfe.GetMode()
+	if a != nil && b == nil {
+		return 1
+	}
+
+	if a == nil && b != nil {
+		return -1
+	}
+
+	// Compare by number of variants
+	var aElms, bElms []Element
+	if len(a.elements) > 0 {
+		aElms = a.elements
+	}
+	if len(b.elements) > 0 {
+		bElms = b.elements
+	}
+	if i := cmp.Compare(len(aElms), len(bElms)); i != 0 {
+		return i
+	}
+
+	// Compare by element value
+	for i := range a.elements {
+		if iv := compareElement(a.elements[i], b.elements[i]); iv != 0 {
+			return iv
+		}
+	}
+
+	// We have equal vectors
+	return 0
 }

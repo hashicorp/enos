@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"runtime"
 	"slices"
 	"sync"
 
@@ -186,14 +187,14 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 			switch d.DecodeTarget {
 			case DecodeTargetScenariosNamesExpandVariants:
 				switch {
-				case len(scenarioBlocks[i].Matrix.Vectors) < 8_000:
+				case runtime.NumCPU() < 2:
 					d.decodeScenariosSerial(scenarioBlocks[i])
 				default:
 					d.decodeScenariosConcurrent(ctx, scenarioBlocks[i])
 				}
 			case DecodeTargetScenariosComplete, DecodeTargetAll:
 				switch {
-				case len(scenarioBlocks[i].Matrix.Vectors) < 100:
+				case runtime.NumCPU() < 2:
 					d.decodeScenariosSerial(scenarioBlocks[i])
 				default:
 					d.decodeScenariosConcurrent(ctx, scenarioBlocks[i])
@@ -209,9 +210,7 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 			}
 		}
 
-		slices.SortStableFunc(scenarioBlocks[i].Scenarios, func(a, b *Scenario) int {
-			return cmp.Compare(a.String(), b.String())
-		})
+		slices.SortStableFunc(scenarioBlocks[i].Scenarios, compareScenarios)
 	}
 
 	slices.SortStableFunc(scenarioBlocks, func(a, b *DecodedScenarioBlock) int {
@@ -219,6 +218,31 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 	})
 
 	return scenarioBlocks
+}
+
+// compareScenarios takes two scenarios and does a sort comparison. At present we only factor
+// in existence, name, and variants into equality.
+func compareScenarios(a, b *Scenario) int {
+	// Compare by existence
+	if a == nil && b == nil {
+		return 0
+	}
+
+	if a != nil && b == nil {
+		return 1
+	}
+
+	if a == nil && b != nil {
+		return -1
+	}
+
+	// Compare by name
+	if i := cmp.Compare(a.Name, b.Name); i != 0 {
+		return i
+	}
+
+	// Compare by variant vectors
+	return compareVector(a.Variants, b.Variants)
 }
 
 // filterScenarioBlocks takes a slice of hcl.Blocks's and returns our base set of filtered
@@ -297,7 +321,7 @@ func (d *ScenarioDecoder) decodeScenariosSerial(sb *DecodedScenarioBlock) {
 // decodeScenariosConcurrent decodes scenario variants concurrently. This is for improved speeds
 // when fully decoding lots of scenarios.
 func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *DecodedScenarioBlock) {
-	if sb.Matrix == nil || len(sb.Matrix.Vectors) < 1 {
+	if sb.Matrix == nil || len(sb.Matrix.Vectors) < 1 || runtime.NumCPU() < 2 {
 		d.decodeScenariosSerial(sb)
 
 		return
@@ -308,38 +332,66 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 
 	diagC := make(chan hcl.Diagnostics)
 	scenarioC := make(chan *Scenario)
+	doneC := make(chan struct{})
+	vectorC := make(chan *Vector)
 	wg := sync.WaitGroup{}
 	scenarios := []*Scenario{}
 	diags := hcl.Diagnostics{}
-	doneC := make(chan struct{})
+	defer func() {
+		close(diagC)
+		close(scenarioC)
+		close(vectorC)
+		close(doneC)
+	}()
 
-	collect := func() {
+	collectDiags := func() {
 		for {
 			select {
 			case <-collectCtx.Done():
-				close(doneC)
-
 				return
 			case diag := <-diagC:
 				diags = diags.Extend(diag)
-			case scenario := <-scenarioC:
-				scenarios = append(scenarios, scenario)
 			}
 		}
 	}
+	go collectDiags()
 
-	go collect()
+	collectScenarios := func() {
+		for {
+			select {
+			case <-collectCtx.Done():
+				return
+			case scenario := <-scenarioC:
+				scenarios = append(scenarios, scenario)
+				wg.Done()
+			}
+		}
+	}
+	go collectScenarios()
+
+	decodeScenario := func() {
+		for {
+			select {
+			case <-collectCtx.Done():
+				return
+			case vec := <-vectorC:
+				keep, scenario, diags := d.decodeScenario(vec, sb.Block)
+				diagC <- diags
+				if keep {
+					scenarioC <- scenario
+				} else {
+					wg.Done()
+				}
+			}
+		}
+	}
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go decodeScenario()
+	}
 
 	for i := range sb.Matrix.Vectors {
 		wg.Add(1)
-		go func(vec *Vector) {
-			defer wg.Done()
-			keep, scenario, diags := d.decodeScenario(vec, sb.Block)
-			diagC <- diags
-			if keep {
-				scenarioC <- scenario
-			}
-		}(sb.Matrix.Vectors[i])
+		vectorC <- sb.Matrix.Vectors[i]
 	}
 
 	wg.Wait()

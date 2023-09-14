@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
       # Set up bob CLI
       - name: Setup bob CLI
@@ -78,7 +78,7 @@ jobs:
             PRERELEASE="--prerelease"
             TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
           fi
-          gh release create $TAG --target ${{ env.SHA }} --generate-notes $PRERELEASE ./.bob/artifacts/*.zip
+          gh release create "$TAG" --target ${{ env.SHA }} --generate-notes "$PRERELEASE" ./.bob/artifacts/*.zip
 
   # If not a pre-release, generate an updated Homebrew formula definition file
   # and open a PR on hashicorp/homebrew-internal with the updated file

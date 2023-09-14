@@ -34,7 +34,9 @@ var rootCmd = &cobra.Command{
 type rootStateS struct {
 	logLevel       string // client log level
 	logLevelServer string // server log level
-	listenGRPC     string
+	grpcListenAddr string
+	grpcMaxSend    int
+	grpcMaxRecv    int
 	format         string
 	stderrPath     string
 	stdoutPath     string
@@ -59,9 +61,11 @@ func Execute() {
 	rootCmd.AddCommand(newScenarioCmd())
 	rootCmd.AddCommand(newFmtCmd())
 
-	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "The log level for client output. Supported levels are error, warn, info, debug, and trace.")
+	rootCmd.PersistentFlags().StringVar(&rootState.logLevel, "log-level", "info", "The log level for client output. Supported levels are error, warn, info, debug, and trace")
 	rootCmd.PersistentFlags().StringVar(&rootState.logLevelServer, "server-log-level", "error", "The log level for server output. Supported leves are error, warn, info, and debug")
-	rootCmd.PersistentFlags().StringVar(&rootState.listenGRPC, "listen-grpc", "http://localhost:3205", "The gRPC server listen address")
+	rootCmd.PersistentFlags().StringVar(&rootState.grpcListenAddr, "grpc-listen", "http://localhost:3205", "The gRPC server listen address")
+	rootCmd.PersistentFlags().IntVar(&rootState.grpcMaxRecv, "grpc-max-recv", 1024*1025*20, "The gRPC max message receive size in bytes")
+	rootCmd.PersistentFlags().IntVar(&rootState.grpcMaxSend, "grpc-max-send", 1024*1025*20, "The gRPC max message send size in bytes")
 	rootCmd.PersistentFlags().StringVar(&rootState.format, "format", "text", "The output format to use: text or json")
 	rootCmd.PersistentFlags().StringVar(&rootState.stdoutPath, "stdout", "", "The path to write output. (default $STDOUT)")
 	rootCmd.PersistentFlags().StringVar(&rootState.stderrPath, "stderr", "", "The path to write error output. (default $STDERR)")

@@ -1,0 +1,44 @@
+name: build
+description: build enos
+
+inputs:
+  bundle:
+    description: bundle the enos binary into a zip archive
+    default: true
+  goarch:
+    description: the GOARCH value
+    required: true
+  goos:
+    description: the GOOS value
+    required: true
+  version:
+    description: the version of the package
+    required: true
+
+outputs:
+  artifact-name:
+    description: where the built artifact is located
+    value: ${{ steps.build.outputs.artifact-name }}
+  artifact-path:
+    description: where the built artifact is located
+    value: ${{ steps.build.outputs.artifact-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build
+      id: build
+      env:
+        ARTIFACT_NAME: ${{ env.PKG_NAME}}_${{ inputs.version }}_${{ inputs.goos }}_${{ inputs.goarch }}.zip
+        GOARCH: ${{ inputs.goarch }}
+        GOOS: ${{ inputs.goos }}
+      shell: bash
+      run: |
+        mkdir -p dist out
+        make
+        echo "artifact-name=${{ env.ARTIFACT_NAME }}" >> "$GITHUB_OUTPUT"
+        echo "artifact-path=out/${{ env.ARTIFACT_NAME }}" >> "$GITHUB_OUTPUT"
+    - if: ${{ inputs.bundle == 'true' }}
+      name: Bundle
+      shell: bash
+      run: zip -r -j ${{ steps.build.outputs.artifact-path }} dist/

@@ -17,10 +17,11 @@ import (
 
 // Connection is a client connection to the enos server.
 type Connection struct {
-	Addr   net.Addr
-	Client pb.EnosServiceClient
-	Log    hclog.Logger
-	Level  pb.UI_Settings_Level
+	Addr     net.Addr
+	Client   pb.EnosServiceClient
+	Log      hclog.Logger
+	Level    pb.UI_Settings_Level
+	DialOpts []grpc.DialOption
 }
 
 // Opt is a client connection option.
@@ -48,6 +49,23 @@ func WithGRPCListenURL(url *url.URL) Opt {
 func WithGRPCListenAddr(addr net.Addr) Opt {
 	return func(c *Connection) error {
 		c.Addr = addr
+
+		return nil
+	}
+}
+
+func WithGRPCDialOpts(opts ...grpc.DialOption) Opt {
+	return func(c *Connection) error {
+		if len(opts) < 1 {
+			return nil
+		}
+
+		if c.DialOpts == nil {
+			c.DialOpts = opts
+			return nil
+		}
+
+		c.DialOpts = append(c.DialOpts, opts...)
 
 		return nil
 	}
@@ -81,6 +99,16 @@ func (c *Connection) Trace(msg string, args ...any) {
 // Connect takes a context and options and returns a new connection.
 func Connect(ctx context.Context, opts ...Opt) (*Connection, error) {
 	c := &Connection{
+		DialOpts: []grpc.DialOption{
+			grpc.WithBlock(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithKeepaliveParams(
+				keepalive.ClientParameters{
+					Time:                30 * time.Second,
+					PermitWithoutStream: true,
+				},
+			),
+		},
 		Log: hclog.NewNullLogger().Named("client"),
 	}
 
@@ -96,19 +124,8 @@ func Connect(ctx context.Context, opts ...Opt) (*Connection, error) {
 		return nil, fmt.Errorf("you must supply a server address")
 	}
 
-	grpcOpts := []grpc.DialOption{
-		grpc.WithBlock(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithKeepaliveParams(
-			keepalive.ClientParameters{
-				Time:                30 * time.Second,
-				PermitWithoutStream: true,
-			},
-		),
-	}
-
 	c.Trace("connecting to server", "addr", c.Addr.String())
-	conn, err := grpc.DialContext(ctx, c.Addr.String(), grpcOpts...)
+	conn, err := grpc.DialContext(ctx, c.Addr.String(), c.DialOpts...)
 	if err != nil {
 		return nil, err
 	}

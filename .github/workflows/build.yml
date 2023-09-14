@@ -1,3 +1,4 @@
+---
 name: build
 on:
   # Run the build workflow manually from GitHub Actions menu
@@ -11,72 +12,102 @@ env:
   PKG_NAME: "enos"
 
 jobs:
-  get-product-version:
-    runs-on: linux
-    outputs:
-      product-version: ${{ steps.get-product-version.outputs.product-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - name: get product version
-        id: get-product-version
-        run: |
-          make version
-          echo "product-version=$(make version)" >> $GITHUB_OUTPUT
-
-  generate-metadata-file:
-    needs: get-product-version
+  product-metadata:
     runs-on: linux
     outputs:
       filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
+      product-version: ${{ steps.product-metadata.outputs.product-version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - name: Generate metadata file
-        id: generate-metadata-file
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - id: product-metadata
+        run: |
+          make version
+          echo "product-version=$(make version)" >> "$GITHUB_OUTPUT"
+      - id: generate-metadata-file
         uses: hashicorp/actions-generate-metadata@main
         with:
-          version: ${{ needs.get-product-version.outputs.product-version }}
+          version: ${{ steps.product-metadata.outputs.product-version }}
           product: ${{ env.PKG_NAME }}
-      - name: Upload Metadata
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: metadata.json
           path: ${{ steps.generate-metadata-file.outputs.filepath }}
 
+  profile-binary:
+    runs-on: linux
+    env:
+      GOPRIVATE: 'github.com/hashicorp/*'
+      TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+    outputs:
+      profile-path: ${{ steps.final-profile.outputs.profile-path }}
+    steps:
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        with:
+          go-version-file: .go-version
+      - id: product-metadata
+        run: |
+          make version
+          echo "product-version=$(make version)" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/build
+        name: Standard build
+        with:
+          bundle: false
+          goarch: amd64
+          goos: linux
+          version: ${{ steps.product-metadata.outputs.product-version }}
+      - uses: ./.github/actions/profile-build
+        name: Profile standard build
+        with:
+          upload-profile: false
+      - uses: ./.github/actions/build
+        name: Optimized build
+        with:
+          bundle: false
+          goarch: amd64
+          goos: linux
+          version: ${{ steps.product-metadata.outputs.product-version }}
+      - uses: ./.github/actions/profile-build
+        id: final-profile
+        name: Profile optimized build
+
   build:
-    needs: get-product-version
+    needs:
+      - product-metadata
+      - profile-binary
     runs-on: linux
     strategy:
       matrix:
         goos: [linux, darwin]
         goarch: [amd64, arm64]
       fail-fast: true
-    name: Go ${{ matrix.go }} ${{ matrix.goos }} ${{ matrix.goarch }} build
+    name: Go ${{ matrix.goos }} ${{ matrix.goarch }} build
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     outputs:
-      artifact-name: ${{ steps.Build.outputs.artifact-name }}
+      artifact-name: ${{ steps.build.outputs.artifact-name }}
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
           go-version-file: .go-version
-      - name: Build
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: |
-          mkdir dist out
-          make
-          zip -r -j out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip dist/
-          echo "artifact-name=${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip" >> $GITHUB_OUTPUT
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        id: download
         with:
-          name: ${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
-          path: out/${{ env.PKG_NAME }}_${{ needs.get-product-version.outputs.product-version }}_${{ matrix.goos }}_${{ matrix.goarch }}.zip
+          name: ${{ needs.profile-binary.outputs.profile-path }}
+      - uses: ./.github/actions/build
+        name: Build
+        id: build
+        with:
+          goarch: ${{ matrix.goarch }}
+          goos: ${{ matrix.goos }}
+          version: ${{ needs.product-metadata.outputs.product-version }}
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: ${{ steps.build.outputs.artifact-name }}
+          path: ${{ steps.build.outputs.artifact-path }}
           retention-days: 1
       - if: ${{ matrix.goos == 'linux' }}
         uses: hashicorp/actions-packaging-linux@v1
@@ -84,7 +115,7 @@ jobs:
           name: ${{ github.event.repository.name }}
           description: "enos CLI package"
           arch: ${{ matrix.goarch }}
-          version: ${{ needs.get-product-version.outputs.product-version }}
+          version: ${{ needs.product-metadata.outputs.product-version }}
           maintainer: "HashiCorp"
           homepage: "https://github.com/hashicorp/enos"
           license: "MPL-2.0"
@@ -94,16 +125,16 @@ jobs:
       - name: Set Package Names
         if: ${{ matrix.goos == 'linux' }}
         run: |
-          echo "RPM_PACKAGE=$(basename out/*.rpm)" >> $GITHUB_ENV
-          echo "DEB_PACKAGE=$(basename out/*.deb)" >> $GITHUB_ENV
+          echo "RPM_PACKAGE=$(basename out/*.rpm)" >> "$GITHUB_ENV"
+          echo "DEB_PACKAGE=$(basename out/*.deb)" >> "$GITHUB_ENV"
       - name: Upload RHEL Packages
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         if: ${{ matrix.goos == 'linux' }}
         with:
           name: ${{ env.RPM_PACKAGE }}
           path: out/${{ env.RPM_PACKAGE }}
       - name: Upload Debian Packages
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         if: ${{ matrix.goos == 'linux' }}
         with:
           name: ${{ env.DEB_PACKAGE }}
@@ -112,7 +143,7 @@ jobs:
   build-docker:
     name: Docker ${{ matrix.arch }} build
     needs:
-      - get-product-version
+      - product-metadata
       - build
     runs-on: linux
     strategy:
@@ -120,11 +151,11 @@ jobs:
         arch: ["arm64", "amd64"]
     env:
       repo: ${{github.event.repository.name}}
-      version: ${{needs.get-product-version.outputs.product-version}}
+      version: ${{needs.product-metadata.outputs.product-version}}
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
       - uses: hashicorp/actions-docker-build@v1
         with:
           version: ${{env.version}}
@@ -136,9 +167,9 @@ jobs:
 
   validate-artifact:
     name: Validate Artifact
-    needs: [build, get-product-version]
+    needs: [build, product-metadata]
     uses: hashicorp/enos/.github/workflows/validate.yml@main
     with:
-      artifact-name: "enos_${{ needs.get-product-version.outputs.product-version }}_linux_amd64.zip"
+      artifact-name: "enos_${{ needs.product-metadata.outputs.product-version }}_linux_amd64.zip"
     secrets:
       ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}

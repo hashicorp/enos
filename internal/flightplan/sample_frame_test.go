@@ -580,26 +580,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -617,26 +605,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -654,26 +630,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -691,26 +655,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -728,26 +680,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -765,26 +705,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -802,26 +730,14 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -883,26 +799,14 @@ func Test_SampleFrame_Size(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},
@@ -914,14 +818,8 @@ func Test_SampleFrame_Size(t *testing.T) {
 				SubsetFrames: SampleSubsetFrames{
 					"foo": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "consul"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
 						}},
 					},
 					"baz": {
@@ -937,14 +835,8 @@ func Test_SampleFrame_Size(t *testing.T) {
 					},
 					"bar": {
 						Matrix: &Matrix{Vectors: []*Vector{
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
-							{elements: []Element{
-								NewElement("arch", "amd64"),
-								NewElement("primary_backend", "raft"),
-							}},
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
 						}},
 					},
 				},

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/hashicorp/enos/internal/client"
 	"github.com/hashicorp/enos/internal/operation"
 	"github.com/hashicorp/enos/internal/server"
@@ -24,9 +26,9 @@ func startServer(
 	*client.Connection,
 	error,
 ) {
-	listenURL, err := url.Parse(rootState.listenGRPC)
+	listenURL, err := url.Parse(rootState.grpcListenAddr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("parsing listen-grpc value: %w", err)
+		return nil, nil, fmt.Errorf("parsing grpc-listen value: %w", err)
 	}
 
 	svrLog := hclog.New(&hclog.LoggerOptions{
@@ -50,6 +52,10 @@ func startServer(
 
 	svr, err := server.New(
 		server.WithGRPCListenURL(listenURL),
+		server.WithGRPCServerOptions(
+			grpc.MaxRecvMsgSize(rootState.grpcMaxRecv),
+			grpc.MaxSendMsgSize(rootState.grpcMaxSend),
+		),
 		server.WithLogger(svrLog),
 		server.WithOperator(
 			operation.NewLocalOperator(
@@ -90,6 +96,12 @@ func startServer(
 			defer cancel()
 			var enosConnection *client.Connection
 			enosConnection, err = client.Connect(connCtx,
+				client.WithGRPCDialOpts(
+					grpc.WithDefaultCallOptions(
+						grpc.MaxCallRecvMsgSize(rootState.grpcMaxRecv),
+						grpc.MaxCallSendMsgSize(rootState.grpcMaxSend),
+					),
+				),
 				client.WithGRPCListenAddr(cfg.ListenAddr),
 				client.WithLogger(clientLog),
 			)

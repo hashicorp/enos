@@ -39,10 +39,10 @@ scenario "upgrade" {
 
   step "upgrade" {
     module = module.upgrade
-  }
 
-  variables {
-    az = matrix.distro
+    variables {
+      az = matrix.distro
+    }
   }
 }
 
@@ -79,10 +79,10 @@ scenario "replication" {
 
   step "replication" {
     module = module.replication
-  }
 
-  variables {
-    az = matrix.distro
+    variables {
+      az = matrix.distro
+    }
   }
 }
 

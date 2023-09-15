@@ -26,6 +26,10 @@ generate-proto:
 build:
 	CGO_ENABLED=0 go build ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o dist/${BINARY} ./command/enos
 
+.PHONY: build-profile
+build-profile:
+	CGO_ENABLED=0 go build ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -pgo=default.pgo -o dist/${BINARY} ./command/enos
+
 .PHONY: build-race
 build-race:
 	${GORACE} go build -race ${GO_BUILD_TAGS} ${GO_LD_FLAGS} ${GO_GC_FLAGS} -o dist/${BINARY} ./command/enos

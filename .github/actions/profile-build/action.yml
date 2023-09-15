@@ -30,14 +30,16 @@ runs:
         mv cpu.pprof cpu.pprof.scenario.list
         ${{ inputs.build-path }} scenario sample observe complex --max 10 --chdir ./acceptance/scenarios/build_pgo/ --profile
         mv cpu.pprof cpu.pprof.sample.observe
-        go tool pprof -proto cpu.pprof.scenario.list cpu.pprof.sample.observe > ${{ inputs.profile-out }}
+        ${{ inputs.build-path }} scenario validate --chdir ./acceptance/scenarios/build_pgo/ --profile
+        mv cpu.pprof cpu.pprof.validate
+        go tool pprof -proto cpu.pprof.scenario.list cpu.pprof.sample.observe cpu.pprof.validate > ${{ inputs.profile-out }}
     - if: ${{ inputs.merge-to-default == 'true' }}
       name: merge-to-default
       shell: bash
       run: |
         if test -f default.pgo; then
           cp default.pgo default.pprof
-          go tool pprof -proto ${{ inputs.profile-out }} -proto default.pprof > default.pgo
+          go tool pprof -proto ${{ inputs.profile-out }} default.pprof > default.pgo
           exit 0
         fi
         cp ${{ inputs.profile-out }} default.pgo

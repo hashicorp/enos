@@ -11,6 +11,9 @@ inputs:
   goos:
     description: the GOOS value
     required: true
+  pgo:
+    description: build with profile guided optimization
+    default: false
   version:
     description: the version of the package
     required: true
@@ -18,27 +21,38 @@ inputs:
 outputs:
   artifact-name:
     description: where the built artifact is located
-    value: ${{ steps.build.outputs.artifact-name }}
+    value: ${{ steps.prepare.outputs.artifact-name }}
   artifact-path:
     description: where the built artifact is located
-    value: ${{ steps.build.outputs.artifact-path }}
+    value: ${{ steps.prepare.outputs.artifact-path }}
 
 runs:
   using: composite
   steps:
-    - name: Build
-      id: build
+    - name: prepare
+      id: prepare
       env:
         ARTIFACT_NAME: ${{ env.PKG_NAME}}_${{ inputs.version }}_${{ inputs.goos }}_${{ inputs.goarch }}.zip
-        GOARCH: ${{ inputs.goarch }}
-        GOOS: ${{ inputs.goos }}
       shell: bash
       run: |
         mkdir -p dist out
-        make
         echo "artifact-name=${{ env.ARTIFACT_NAME }}" >> "$GITHUB_OUTPUT"
         echo "artifact-path=out/${{ env.ARTIFACT_NAME }}" >> "$GITHUB_OUTPUT"
+    - if: ${{ inputs.pgo != 'true' }}
+      name: build standard
+      env:
+        GOARCH: ${{ inputs.goarch }}
+        GOOS: ${{ inputs.goos }}
+      shell: bash
+      run: make build
+    - if: ${{ inputs.pgo == 'true' }}
+      name: build pgo
+      env:
+        GOARCH: ${{ inputs.goarch }}
+        GOOS: ${{ inputs.goos }}
+      shell: bash
+      run: make build-profile
     - if: ${{ inputs.bundle == 'true' }}
       name: Bundle
       shell: bash
-      run: zip -r -j ${{ steps.build.outputs.artifact-path }} dist/
+      run: zip -r -j ${{ steps.prepare.outputs.artifact-path }} dist/

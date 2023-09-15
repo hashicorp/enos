@@ -66,6 +66,7 @@ jobs:
           bundle: false
           goarch: amd64
           goos: linux
+          pgo: true
           version: ${{ steps.product-metadata.outputs.product-version }}
       - uses: ./.github/actions/profile-build
         id: final-profile
@@ -102,6 +103,7 @@ jobs:
         with:
           goarch: ${{ matrix.goarch }}
           goos: ${{ matrix.goos }}
+          pgo: true
           version: ${{ needs.product-metadata.outputs.product-version }}
       - name: Upload Artifacts
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3

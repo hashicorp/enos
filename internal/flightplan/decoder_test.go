@@ -183,7 +183,12 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 					eAttr := expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs[isa]
 					aAttr := fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs[isa]
 
-					require.True(t, eAttr.Type().Equals(aAttr.Type()))
+					require.Truef(
+						t, eAttr.Type().Equals(aAttr.Type()),
+						fmt.Sprintf("expected %s type to have type %s, got %s",
+							isa, eAttr.Type().GoString(), aAttr.Type().GoString(),
+						),
+					)
 					if !eAttr.IsNull() {
 						testMostlyEqualStepVar(t, eAttr, aAttr)
 					}
@@ -209,7 +214,11 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 	aVal, diags := StepVariableFromVal(got)
 	require.False(t, diags.HasErrors(), diags.Error())
 	require.EqualValues(t, eVal.Value, aVal.Value)
-	require.Len(t, eVal.Traversal, len(aVal.Traversal))
+	require.Lenf(t, eVal.Traversal, len(aVal.Traversal),
+		"expected %s to have a traversal of: %+v, got: %+v", eVal.Value.GoString(),
+		eVal.Traversal, aVal.Traversal,
+	)
+
 	for i := range eVal.Traversal {
 		if i == 0 {
 			eAttr, ok := eVal.Traversal[i].(hcl.TraverseRoot)

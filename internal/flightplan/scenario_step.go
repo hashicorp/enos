@@ -821,15 +821,12 @@ func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
 	}
 
 	vals := map[string]cty.Value{
-		"source": cty.StringVal(ss.Module.Source),
-		"name":   cty.StringVal(ss.Name),
+		"source":    cty.StringVal(ss.Module.Source),
+		"name":      cty.StringVal(ss.Name),
+		"variables": cty.ObjectVal(ss.Module.Attrs),
 	}
 	if ss.Module.Version != "" {
 		vals["version"] = cty.StringVal(ss.Module.Version)
-	}
-
-	for k, v := range ss.Module.Attrs {
-		vals[k] = v
 	}
 
 	steps[ss.Name] = cty.ObjectVal(vals)

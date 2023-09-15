@@ -63,12 +63,12 @@ scenario "step_vars" {
 
   output "module_default" {
     description = "a known value inherited through module defaults"
-    value       = step.infra_default.az
+    value       = step.infra_default.variables.az
   }
 
   output "step_known" {
     description = "a known value set at a step"
-    value       = step.infra_west.az
+    value       = step.infra_west.variables.az
   }
 
   output "step_reference_output_ref" {

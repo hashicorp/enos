@@ -625,24 +625,25 @@ scenario "step_vars" {
   step "one" {
     module = module.one
 
-	variables {
+    variables {
       concrete    = "oneconcrete"
-	  matrixinput = matrix.input
-	}
+      matrixinput = matrix.input
+    }
   }
 
   step "two" {
     module = module.two
 
-	variables {
-      concrete           = "twoconcrete"
-	  inherited_concrete = step.one.concrete
-	  reference          = step.one.reference
-	  oneattr            = step.one.oneattr
-	  matrixconcrete     = matrix.input
-	  matrixinherited    = step.one.matrixinput
-	  fromvariables      = var.something
-	}
+    variables {
+      concrete            = "twoconcrete"
+      reference           = step.one.reference
+      reference_same_name = step.one.concrete
+      inherited_concrete  = step.one.variables.concrete
+      oneattr             = step.one.oneattr
+      matrixconcrete      = matrix.input
+      matrixreference     = step.one.matrixinput
+      fromvariables       = var.something
+    }
   }
 }
 `, modulePath),
@@ -693,14 +694,116 @@ scenario "step_vars" {
 											Name:   "two",
 											Source: modulePath,
 											Attrs: map[string]cty.Value{
-												"twoattr":            testMakeStepVarValue(cty.StringVal("twoattrval")),
-												"concrete":           testMakeStepVarValue(cty.StringVal("twoconcrete")),
-												"inherited_concrete": testMakeStepVarValue(cty.StringVal("oneconcrete")),
-												"reference":          testMakeStepVarTraversal("step", "one", "reference"),
-												"oneattr":            testMakeStepVarValue(cty.StringVal("oneattrval")),
-												"matrixconcrete":     testMakeStepVarValue(cty.StringVal("matrixinput")),
-												"matrixinherited":    testMakeStepVarValue(cty.StringVal("matrixinput")),
-												"fromvariables":      testMakeStepVarValue(cty.StringVal("somethingval")),
+												"twoattr":             testMakeStepVarValue(cty.StringVal("twoattrval")),
+												"concrete":            testMakeStepVarValue(cty.StringVal("twoconcrete")),
+												"inherited_concrete":  testMakeStepVarValue(cty.StringVal("oneconcrete")),
+												"reference":           testMakeStepVarTraversal("step", "one", "reference"),
+												"reference_same_name": testMakeStepVarTraversal("step", "one", "concrete"),
+												"oneattr":             testMakeStepVarTraversal("step", "one", "oneattr"),
+												"matrixconcrete":      testMakeStepVarValue(cty.StringVal("matrixinput")),
+												"matrixreference":     testMakeStepVarTraversal("step", "one", "matrixinput"),
+												"fromvariables":       testMakeStepVarValue(cty.StringVal("somethingval")),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "step variables with vars and outputs of same name",
+			hcl: fmt.Sprintf(`
+module "cluster" {
+  source = "%s"
+}
+
+module "worker" {
+  source = "%[1]s"
+}
+
+variable "addr" {
+  type = string
+  default = "http://192.168.0.1"
+}
+
+scenario "boundary" {
+  step "cluster" {
+    module = module.cluster
+
+    variables {
+      addr = var.addr
+    }
+  }
+
+  step "worker" {
+    module = module.worker
+
+    variables {
+      upstream_addr = step.cluster.addr
+    }
+  }
+
+  step "worker_downstream" {
+    module = module.worker
+
+    variables {
+      upstream_addr = step.worker.upstream_addr
+    }
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "cluster",
+						Source: modulePath,
+					},
+					{
+						Name:   "worker",
+						Source: modulePath,
+					},
+				},
+				ScenarioBlocks: DecodedScenarioBlocks{
+					{
+						Name: "boundary",
+						Scenarios: []*Scenario{
+							{
+								Name:         "boundary",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "cluster",
+										Module: &Module{
+											Name:   "cluster",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"addr": testMakeStepVarValue(cty.StringVal("http://192.168.0.1")),
+											},
+										},
+									},
+									{
+										Name: "worker",
+										Module: &Module{
+											Name:   "worker",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"upstream_addr": testMakeStepVarTraversal("step", "cluster", "addr"),
+											},
+										},
+									},
+									{
+										Name: "worker_downstream",
+										Module: &Module{
+											Name:   "worker",
+											Source: modulePath,
+											Attrs: map[string]cty.Value{
+												"upstream_addr": testMakeStepVarTraversal("step", "worker", "upstream_addr"),
 											},
 										},
 									},

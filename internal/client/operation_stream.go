@@ -38,7 +38,9 @@ func (c *Connection) StreamOperations(
 		return res
 	}
 
-	res.Responses = c.streamResponses(ctx, opRes.GetOperations(), ui)
+	var moreDiags []*pb.Diagnostic
+	res.Responses, moreDiags = c.streamResponses(ctx, opRes.GetOperations(), ui)
+	res.Diagnostics = append(res.GetDiagnostics(), moreDiags...)
 
 	return res
 }
@@ -46,14 +48,93 @@ func (c *Connection) StreamOperations(
 // streamResponses takes a context, workspace, and slice of operation references
 // and streams operation events to the ui. It will return a slice of operation
 // responses for each stream that completes.
+//
+//nolint:cyclop // This could probably be refactored to be less complex but right now its inlined.
 func (c *Connection) streamResponses(
 	ctx context.Context,
 	refs []*pb.Ref_Operation,
 	ui uipkg.View,
-) []*pb.Operation_Response {
+) ([]*pb.Operation_Response, []*pb.Diagnostic) {
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
 	res := []*pb.Operation_Response{}
+
+	diags := []*pb.Diagnostic{}
+	diagC := make(chan *pb.Diagnostic)
+	doneC := make(chan struct{})
+	diagWg := sync.WaitGroup{}
+
+	select {
+	case <-ctx.Done():
+		cause := context.Cause(ctx)
+		if cause != nil && cause != context.Canceled {
+			// We have a custom error or our deadline was exceeded.
+			diags = append(diags, diagnostics.FromErr(cause)...)
+		}
+
+		return res, diags
+	default:
+	}
+
+	// Start the error diagnostic routine. This collects diagnostics generated at the client level.
+	// that are unexpected. Per stream request diagnostics will be scoped to each ref.
+	diagWg.Add(1)
+	go func() {
+		defer diagWg.Done()
+
+		drainDiags := func() {
+			for {
+				select {
+				case diag := <-diagC:
+					diags = append(diags, diag)
+
+					continue
+				default:
+				}
+
+				return
+			}
+		}
+
+		checkCtx := func() {
+			err := ctx.Err()
+			if err == nil {
+				return
+			}
+			cause := context.Cause(ctx)
+			if cause != context.Canceled {
+				// We have a custom error or our deadline was exceeded.
+				diags = append(diags, diagnostics.FromErr(cause)...)
+			}
+		}
+
+		for {
+			select {
+			case diag := <-diagC:
+				diags = append(diags, diag)
+
+				continue
+			default:
+			}
+
+			select {
+			case diag := <-diagC:
+				diags = append(diags, diag)
+
+				continue
+			case <-ctx.Done():
+				drainDiags()
+				checkCtx()
+
+				return
+			case <-doneC:
+				drainDiags()
+				checkCtx()
+
+				return
+			}
+		}
+	}()
 
 	for _, ref := range refs {
 		ref := ref
@@ -110,6 +191,7 @@ func (c *Connection) streamResponses(
 			for {
 				select {
 				case <-ctx.Done():
+
 					break LOOP
 				case err := <-errC:
 					if err != nil && err != io.EOF {
@@ -168,6 +250,8 @@ func (c *Connection) streamResponses(
 	}
 
 	wg.Wait()
+	close(doneC)
+	diagWg.Wait()
 
-	return res
+	return res, diags
 }

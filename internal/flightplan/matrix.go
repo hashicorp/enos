@@ -295,6 +295,10 @@ func (v *Vector) EqualUnordered(other *Vector) bool {
 
 // Elements returns a list of the Vectors Elements.
 func (v *Vector) Elements() []Element {
+	if v == nil {
+		return nil
+	}
+
 	return v.elements
 }
 

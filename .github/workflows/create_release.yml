@@ -78,9 +78,7 @@ jobs:
             PRERELEASE="--prerelease"
             TAG=v${{ env.VERSION }}-pre+$( echo ${{ env.SHA }} | head -c 5 )
           fi
-          export TAG=$TAG
-          export PRERELEASE=$PRERELEASE
-          gh release create "$TAG" --target ${{ env.SHA }} --generate-notes "$PRERELEASE" ./.bob/artifacts/*.zip
+          eval gh release create "$TAG" --target ${{ env.SHA }} --generate-notes "$PRERELEASE" ./.bob/artifacts/*.zip
 
   # If not a pre-release, generate an updated Homebrew formula definition file
   # and open a PR on hashicorp/homebrew-internal with the updated file

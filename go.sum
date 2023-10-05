@@ -103,8 +103,8 @@ github.com/hashicorp/hcl/v2 v2.18.0 h1:wYnG7Lt31t2zYkcquwgKo6MWXzRUDIeIVU5naZwHL
 github.com/hashicorp/hcl/v2 v2.18.0/go.mod h1:ThLC89FV4p9MPW804KVbe/cEXoQ8NZEh+JtMeeGErHE=
 github.com/hashicorp/terraform-exec v0.19.0 h1:FpqZ6n50Tk95mItTSS9BjeOVUb4eg81SpgVtZNNtFSM=
 github.com/hashicorp/terraform-exec v0.19.0/go.mod h1:tbxUpe3JKruE9Cuf65mycSIT8KiNPZ0FkuTE3H4urQg=
-github.com/hashicorp/terraform-json v0.17.1 h1:eMfvh/uWggKmY7Pmb3T85u86E2EQg6EQHgyRwf3RkyA=
-github.com/hashicorp/terraform-json v0.17.1/go.mod h1:Huy6zt6euxaY9knPAFKjUITn8QxUFIe9VuSzb4zn/0o=
+github.com/hashicorp/terraform-json v0.17.2-0.20230925093316-33462c328ac9 h1:spC06FL52vGx3A1SJQqFji3VUSHmPgkaVIPMIAMKWQk=
+github.com/hashicorp/terraform-json v0.17.2-0.20230925093316-33462c328ac9/go.mod h1:0a5tk65jPDbGo2lEMmvmwwvM0qCbOhW33hXtGrJQBgc=
 github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/huandu/xstrings v1.3.1/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq4ovT0aE=

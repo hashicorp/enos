@@ -5,6 +5,9 @@ go 1.21.0
 // https://github.com/ryancragun/go-cty/commit/b70d2866762dd2a09605c9755d4e8d997518f0c4
 replace github.com/zclconf/go-cty => github.com/ryancragun/go-cty v1.10.1-0.20230928174205-b70d2866762d
 
+// https://github.com/hashicorp/terraform-json/issues/106
+replace github.com/hashicorp/terraform-json => github.com/hashicorp/terraform-json v0.17.2-0.20230925093316-33462c328ac9
+
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/aws-sdk-go-v2/config v1.18.39

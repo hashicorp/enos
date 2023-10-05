@@ -94,6 +94,7 @@ linters:
     - goheader
     - golint
     - gomnd
+    - gomoddirectives # until we remove our go-cty fork
     - ifshort
     - importas
     - interfacer

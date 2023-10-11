@@ -25,7 +25,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.0
-	golang.org/x/net v0.15.0
+	golang.org/x/net v0.17.0
 	golang.org/x/term v0.13.0
 	golang.org/x/text v0.13.0
 	google.golang.org/grpc v1.58.2

@@ -111,7 +111,10 @@ provider "is" "anything" {
 
 			csb := NewSchemalessBlock()
 			diags = csb.Decode(body.Blocks[0].AsHCLBlock(), test.ctx)
-			require.Len(t, diags, 0, testDiagsToError(files, diags))
+			if len(diags) > 0 {
+				err := testDiagsToError(files, diags)
+				require.NoError(t, err)
+			}
 			require.EqualValues(t, test.expected, csb)
 		})
 	}

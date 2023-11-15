@@ -50,9 +50,9 @@ func RunScenario(req *pb.Operation_Request) WorkFunc {
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, genVal.GetDiagnostics()...)
 
 		// Return early if we failed to generate our module
-		if hasFailedStatus(res.Status) {
+		if hasFailedStatus(res.GetStatus()) {
 			if err := events.PublishResponse(res); err != nil {
-				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 				log.Error("failed to send event", "error", err)
 			}
 
@@ -99,11 +99,11 @@ func (r *Runner) scenarioRun(
 	// Return early if we failed to apply our module
 	if diagnostics.HasFailed(
 		r.TFConfig.FailOnWarnings,
-		res.Run.Diagnostics,
-		res.Run.Init.GetDiagnostics(),
-		res.Run.Validate.GetDiagnostics(),
-		res.Run.Plan.GetDiagnostics(),
-		res.Run.Apply.GetDiagnostics(),
+		res.Run.GetDiagnostics(),
+		res.Run.GetInit().GetDiagnostics(),
+		res.Run.GetValidate().GetDiagnostics(),
+		res.Run.GetPlan().GetDiagnostics(),
+		res.Run.GetApply().GetDiagnostics(),
 	) {
 		return res
 	}
@@ -118,7 +118,7 @@ func (r *Runner) scenarioRun(
 		stateVal.Diagnostics = append(stateVal.GetDiagnostics(), diagnostics.FromErr(err)...)
 	}
 
-	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, stateVal.Diagnostics) {
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, stateVal.GetDiagnostics()) {
 		return res
 	}
 

@@ -311,7 +311,7 @@ func (v *Vector) Proto() *pb.Matrix_Vector {
 	}
 
 	for _, elm := range v.elements {
-		pbv.Elements = append(pbv.Elements, &pb.Matrix_Element{
+		pbv.Elements = append(pbv.GetElements(), &pb.Matrix_Element{
 			Key:   elm.Key,
 			Value: elm.Val,
 		})
@@ -583,7 +583,7 @@ func (m *Matrix) FromProto(in *pb.Matrix) {
 		return
 	}
 
-	if len(in.Vectors) < 1 {
+	if len(in.GetVectors()) < 1 {
 		return
 	}
 
@@ -591,8 +591,8 @@ func (m *Matrix) FromProto(in *pb.Matrix) {
 		m.Vectors = []*Vector{}
 	}
 
-	for i := range in.Vectors {
-		m.Vectors = append(m.Vectors, NewVectorFromProto(in.Vectors[i]))
+	for i := range in.GetVectors() {
+		m.Vectors = append(m.Vectors, NewVectorFromProto(in.GetVectors()[i]))
 	}
 }
 

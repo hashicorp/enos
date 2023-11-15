@@ -3,6 +3,7 @@ package operation
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -95,10 +96,10 @@ func (o *LocalOperator) Start(ctx context.Context) error {
 
 	for i := int32(0); i < o.workerCount; i++ {
 		go newWorker(
-			fmt.Sprintf("%d", i),
+			strconv.Itoa(int(i)),
 			o.workRequests,
 			o.workEvents,
-			o.log.Named("worker").Named(fmt.Sprintf("%d", i)),
+			o.log.Named("worker").Named(strconv.Itoa(int(i))),
 			func(res *pb.Operation_Response) error {
 				return o.state.UpsertOperationResponse(res)
 			},
@@ -167,7 +168,7 @@ func (o *LocalOperator) Dispatch(
 
 	// Make sure our request and response share the same operation id
 	ref.Id = opUUID.String()
-	req.Id = ref.Id
+	req.Id = ref.GetId()
 
 	// Create our worker request
 	workReq, err := newWorkReqForOpReq(req)

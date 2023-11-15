@@ -199,7 +199,7 @@ func (sf *ScenarioFilter) Proto() *pb.Scenario_Filter {
 	if len(sf.Exclude) > 0 {
 		pbf.Exclude = []*pb.Matrix_Exclude{}
 		for _, e := range sf.Exclude {
-			pbf.Exclude = append(pbf.Exclude, e.Proto())
+			pbf.Exclude = append(pbf.GetExclude(), e.Proto())
 		}
 	}
 

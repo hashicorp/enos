@@ -20,7 +20,7 @@ func (r *Runner) terraformPlan(
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
 
 		return res
@@ -31,7 +31,7 @@ func (r *Runner) terraformPlan(
 	event := newEvent(ref, pb.Operation_STATUS_RUNNING)
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to publish event", "error", err)
 	}
 
@@ -39,12 +39,12 @@ func (r *Runner) terraformPlan(
 	// event
 	notifyFail := func(diags []*pb.Diagnostic) {
 		event.Status = pb.Operation_STATUS_FAILED
-		res.Diagnostics = append(res.Diagnostics, diags...)
-		event.Diagnostics = append(event.Diagnostics, res.GetDiagnostics()...)
+		res.Diagnostics = append(res.GetDiagnostics(), diags...)
+		event.Diagnostics = append(event.GetDiagnostics(), res.GetDiagnostics()...)
 		eventVal.Plan = res
 
 		if err := events.Publish(event); err != nil {
-			res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 			log.Error("failed to publish event", "error", err)
 		}
 	}
@@ -72,13 +72,13 @@ func (r *Runner) terraformPlan(
 
 	// Finalize our responses and event
 	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
-	event.Diagnostics = res.Diagnostics
+	event.Diagnostics = res.GetDiagnostics()
 	eventVal.Plan = res
 
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
 		log.Error("failed to send event", "error", err)
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 	}
 	log.Debug("finished plan")
 

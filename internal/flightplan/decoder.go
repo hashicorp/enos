@@ -432,7 +432,7 @@ func DecodeProto(
 
 	hclDiags := dec.Parse()
 	if len(hclDiags) > 0 {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
 	}
 
 	if diagnostics.HasErrors(res.GetDiagnostics()) {
@@ -441,7 +441,7 @@ func DecodeProto(
 
 	fp, hclDiags := dec.Decode(ctx)
 	if len(hclDiags) > 0 {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
 	}
 
 	return fp, res

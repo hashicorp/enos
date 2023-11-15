@@ -59,7 +59,7 @@ func hasSeverity(sev pb.Diagnostic_Severity, diags ...[]*pb.Diagnostic) bool {
 	}
 
 	for _, diag := range combined {
-		if diag.Severity == sev {
+		if diag.GetSeverity() == sev {
 			return true
 		}
 	}
@@ -118,14 +118,14 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 				Filename: din.Range.Filename,
 			}
 
-			if d.Range.Start != nil {
+			if d.GetRange().GetStart() != nil {
 				d.Range.Start = &pb.Range_Pos{
 					Line:   int64(din.Range.Start.Line),
 					Column: int64(din.Range.Start.Column),
 					Byte:   int64(din.Range.Start.Byte),
 				}
 			}
-			if d.Range.End != nil {
+			if d.GetRange().GetEnd() != nil {
 				d.Range.End = &pb.Range_Pos{
 					Line:   int64(din.Range.End.Line),
 					Column: int64(din.Range.End.Column),
@@ -150,7 +150,7 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 				if i == 0 {
 					d.Snippet.Values = []*pb.Diagnostic_ExpressionValue{}
 				}
-				d.Snippet.Values = append(d.Snippet.Values, &pb.Diagnostic_ExpressionValue{
+				d.Snippet.Values = append(d.GetSnippet().GetValues(), &pb.Diagnostic_ExpressionValue{
 					Traversal: expr.Traversal,
 					Statement: expr.Statement,
 				})
@@ -321,7 +321,7 @@ func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic
 						}
 					}
 					sort.Slice(values, func(i, j int) bool {
-						return values[i].Traversal < values[j].Traversal
+						return values[i].GetTraversal() < values[j].GetTraversal()
 					})
 					pbDiag.Snippet.Values = values
 				}
@@ -393,7 +393,7 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 		width = int(cfg.uiSettings.GetWidth())
 	}
 
-	switch diag.Severity {
+	switch diag.GetSeverity() {
 	case pb.Diagnostic_SEVERITY_ERROR:
 		buf.WriteString(cfg.color.Color("[bold][red]Error: [reset]"))
 		leftRuleLine = cfg.color.Color("[red]│[reset] ")
@@ -415,14 +415,14 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 	// We don't wrap the summary, since we expect it to be terse, and since
 	// this is where we put the text of a native Go error it may not always
 	// be pure text that lends itself well to word-wrapping.
-	fmt.Fprintf(&buf, cfg.color.Color("[bold]%s[reset]\n\n"), diag.Summary)
+	fmt.Fprintf(&buf, cfg.color.Color("[bold]%s[reset]\n\n"), diag.GetSummary())
 
 	appendSourceSnippets(&buf, diag, cfg.color)
 
-	if diag.Detail != "" {
+	if diag.GetDetail() != "" {
 		paraWidth := width - leftRuleWidth - 1 // leave room for the left rule
 		if paraWidth > 0 {
-			lines := strings.Split(diag.Detail, "\n")
+			lines := strings.Split(diag.GetDetail(), "\n")
 			for _, line := range lines {
 				if !strings.HasPrefix(line, " ") {
 					line = wordwrap.WrapString(line, uint(paraWidth))
@@ -430,7 +430,7 @@ func String(diag *pb.Diagnostic, opts ...StringOpt) string {
 				fmt.Fprintf(&buf, "%s\n", line)
 			}
 		} else {
-			fmt.Fprintf(&buf, "%s\n", diag.Detail)
+			fmt.Fprintf(&buf, "%s\n", diag.GetDetail())
 		}
 	}
 

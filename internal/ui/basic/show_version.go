@@ -10,7 +10,7 @@ import (
 // ShowVersion shows the version information.
 func (v *View) ShowVersion(all bool, res *pb.GetVersionResponse) error {
 	if !all {
-		v.ui.Output(res.Version)
+		v.ui.Output(res.GetVersion())
 	} else {
 		v.ui.Output(fmt.Sprintf("Enos version: %s sha: %s", res.GetVersion(), res.GetGitSha()))
 	}

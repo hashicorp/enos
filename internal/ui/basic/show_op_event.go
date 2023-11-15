@@ -14,7 +14,7 @@ func (v *View) ShowOperationEvent(event *pb.Operation_Event) {
 		return
 	}
 
-	if event.Done {
+	if event.GetDone() {
 		// We don't show done events as they should have already been
 		// reported.
 		return
@@ -44,7 +44,7 @@ func (v *View) ShowOperationEvent(event *pb.Operation_Event) {
 	case *pb.Operation_Event_Output:
 		// Don't display output events by default since outputs have their own
 		// view.
-		if v.settings.Level == pb.UI_Settings_LEVEL_TRACE {
+		if v.settings.GetLevel() == pb.UI_Settings_LEVEL_TRACE {
 			v.writeEventOutput(event, msg)
 		}
 	default:

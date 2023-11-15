@@ -21,7 +21,7 @@ func (r *Runner) terraformValidate(
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
 
 		return res
@@ -32,7 +32,7 @@ func (r *Runner) terraformValidate(
 	event := newEvent(ref, pb.Operation_STATUS_RUNNING)
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to publish event", "error", err)
 	}
 
@@ -40,12 +40,12 @@ func (r *Runner) terraformValidate(
 	// event
 	notifyFail := func(diags []*pb.Diagnostic) {
 		event.Status = pb.Operation_STATUS_FAILED
-		res.Diagnostics = append(res.Diagnostics, diags...)
-		event.Diagnostics = append(event.Diagnostics, res.GetDiagnostics()...)
+		res.Diagnostics = append(res.GetDiagnostics(), diags...)
+		event.Diagnostics = append(event.GetDiagnostics(), res.GetDiagnostics()...)
 		eventVal.Validate = res
 
 		if err := events.Publish(event); err != nil {
-			res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 			log.Error("failed to publish event", "error", err)
 		}
 	}
@@ -66,11 +66,11 @@ func (r *Runner) terraformValidate(
 		res.ErrorCount = int64(jsonOut.ErrorCount)
 		res.WarningCount = int64(jsonOut.WarningCount)
 		res.Diagnostics = append(
-			res.Diagnostics,
+			res.GetDiagnostics(),
 			diagnostics.FromTFJSON(jsonOut.Diagnostics)...,
 		)
 
-		if r.TFConfig.FailOnWarnings && !res.Valid {
+		if r.TFConfig.FailOnWarnings && !res.GetValid() {
 			err = fmt.Errorf("failing on validation warnings")
 			// We'll handle this error below and exit after notifyFail
 		}
@@ -88,7 +88,7 @@ func (r *Runner) terraformValidate(
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
 		log.Error("failed to send event", "error", err)
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 	}
 	log.Debug("finished validate")
 

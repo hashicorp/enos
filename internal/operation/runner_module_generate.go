@@ -29,7 +29,7 @@ func (r *Runner) moduleGenerate(
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
-		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
+		resVal.Generate.Diagnostics = append(resVal.Generate.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
 
 		return resVal
@@ -40,7 +40,7 @@ func (r *Runner) moduleGenerate(
 	event := newEvent(ref, pb.Operation_STATUS_RUNNING)
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
-		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
+		resVal.Generate.Diagnostics = append(resVal.Generate.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to send event", "error", err)
 
 		return resVal
@@ -49,13 +49,13 @@ func (r *Runner) moduleGenerate(
 	// notifyFail prepares the response for failure and sends a failure
 	// event
 	notifyFail := func(diags []*pb.Diagnostic) {
-		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diags...)
+		resVal.Generate.Diagnostics = append(resVal.Generate.GetDiagnostics(), diags...)
 		event.Status = pb.Operation_STATUS_FAILED
 		event.Diagnostics = resVal.Generate.GetDiagnostics()
 		eventVal.Generate = resVal.Generate
 
 		if err := events.Publish(event); err != nil {
-			resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
+			resVal.Generate.Diagnostics = append(resVal.Generate.GetDiagnostics(), diagnostics.FromErr(err)...)
 			log.Error("failed to send event", "error", err)
 		}
 	}
@@ -95,7 +95,7 @@ func (r *Runner) moduleGenerate(
 	}
 
 	// Configure our Terraform executor to use the module we generated
-	r.TFConfig.WithModule(resVal.Generate.TerraformModule)
+	r.TFConfig.WithModule(resVal.Generate.GetTerraformModule())
 
 	// Finalize our responses and event
 	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, resVal.Generate.GetDiagnostics()...)
@@ -104,7 +104,7 @@ func (r *Runner) moduleGenerate(
 
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
-		resVal.Generate.Diagnostics = append(resVal.Generate.Diagnostics, diagnostics.FromErr(err)...)
+		resVal.Generate.Diagnostics = append(resVal.Generate.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to send event", "error", err)
 	}
 	log.Debug("finished generate")

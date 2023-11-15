@@ -40,7 +40,7 @@ func New(opts ...Opt) (*View, error) {
 		}
 
 		if v.settings.GetWidth() > 0 {
-			uiOpts = append(uiOpts, terminal.WithWidth(uint(v.settings.Width)))
+			uiOpts = append(uiOpts, terminal.WithWidth(uint(v.settings.GetWidth())))
 		}
 
 		if v.settings.GetStdoutPath() != "" {
@@ -99,7 +99,7 @@ func (v *View) Close() error {
 
 func (v *View) opStatusString(status pb.Operation_Status) string {
 	var res string
-	tty := v.settings.IsTty
+	tty := v.settings.GetIsTty()
 
 	switch status {
 	case pb.Operation_STATUS_CANCELLED:
@@ -171,13 +171,13 @@ func (v *View) writeMsg(
 		return
 	}
 
-	if status == pb.Operation_STATUS_COMPLETED_WARNING && v.settings.Level >= pb.UI_Settings_LEVEL_WARN {
+	if status == pb.Operation_STATUS_COMPLETED_WARNING && v.settings.GetLevel() >= pb.UI_Settings_LEVEL_WARN {
 		v.ui.Warn(msg)
 
 		return
 	}
 
-	if v.settings.Level >= pb.UI_Settings_LEVEL_INFO {
+	if v.settings.GetLevel() >= pb.UI_Settings_LEVEL_INFO {
 		v.ui.Info(msg)
 
 		return

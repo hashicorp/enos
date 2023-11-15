@@ -375,7 +375,7 @@ func sampleElementsFor(
 
 			if subsetFrame.ScenarioFilter != nil {
 				scenario := NewScenario()
-				scenario.Name = subsetFrame.ScenarioFilter.Name
+				scenario.Name = subsetFrame.ScenarioFilter.GetName()
 				elm.Scenario = scenario.Ref()
 			}
 		}
@@ -395,7 +395,7 @@ func sampleElementsFor(
 
 			if subsetFrame.ScenarioFilter != nil {
 				scenario := NewScenario()
-				scenario.Name = subsetFrame.ScenarioFilter.Name
+				scenario.Name = subsetFrame.ScenarioFilter.GetName()
 				scenario.Variants = vectors[i]
 				elm.Scenario = scenario.Ref()
 			}

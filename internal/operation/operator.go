@@ -24,10 +24,10 @@ var (
 
 // Operator is the server operation handler.
 type Operator interface {
-	Dispatch(*pb.Operation_Request) (*pb.Ref_Operation, []*pb.Diagnostic)
-	Stream(*pb.Ref_Operation) (*Subscriber, Unsubscriber, error)
-	Response(*pb.Ref_Operation) (*pb.Operation_Response, error)
+	Dispatch(req *pb.Operation_Request) (*pb.Ref_Operation, []*pb.Diagnostic)
+	Stream(ref *pb.Ref_Operation) (*Subscriber, Unsubscriber, error)
+	Response(ref *pb.Ref_Operation) (*pb.Operation_Response, error)
 	Stop() error
-	Start(context.Context) error
+	Start(ctx context.Context) error
 	State() state.State
 }

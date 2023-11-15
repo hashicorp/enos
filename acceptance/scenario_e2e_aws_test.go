@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -98,7 +97,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 				// Lets try one more time to destroy resources that might have been
 				// created
 				out, err := enos.run(context.Background(), fmt.Sprintf("scenario destroy --chdir %s --out %s", path, outDir))
-				assert.NoErrorf(t, err, string(out))
+				require.NoErrorf(t, err, string(out))
 			})
 
 			expected := &pb.OperationResponses{
@@ -149,7 +148,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 					},
 				}
 
-				expected.Responses = append(expected.Responses, res)
+				expected.Responses = append(expected.GetResponses(), res)
 			}
 
 			cmd := fmt.Sprintf("scenario run --chdir %s --out %s --format json", path, outDir)

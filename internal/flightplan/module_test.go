@@ -52,7 +52,7 @@ scenario "basic" {
 }`, modulePath, test.expr)
 			fp, err := testDecodeHCL(t, []byte(hcl), DecodeTargetAll)
 			require.NoError(t, err)
-			require.Equal(t, 1, len(fp.Modules))
+			require.Len(t, fp.Modules, 1)
 			v, ok := fp.Modules[0].Attrs["something"]
 			require.True(t, ok)
 			require.Equal(t, test.expected, v.AsString())

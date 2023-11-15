@@ -37,10 +37,10 @@ func (s *ServiceV1) ListSamples(
 	if len(fp.Samples) > 0 {
 		res.Samples = []*pb.Ref_Sample{}
 		for _, s := range fp.Samples {
-			res.Samples = append(res.Samples, s.Ref())
+			res.Samples = append(res.GetSamples(), s.Ref())
 		}
 
-		slices.SortStableFunc(res.Samples, func(a, b *pb.Ref_Sample) int {
+		slices.SortStableFunc(res.GetSamples(), func(a, b *pb.Ref_Sample) int {
 			return cmp.Compare(a.GetId().GetName(), b.GetId().GetName())
 		})
 	}

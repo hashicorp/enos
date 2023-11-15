@@ -21,7 +21,7 @@ func (r *Runner) terraformOutput(
 
 	ref, err := NewReferenceFromRequest(req)
 	if err != nil {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to create reference from request", "error", err)
 
 		return res
@@ -32,7 +32,7 @@ func (r *Runner) terraformOutput(
 	event := newEvent(ref, pb.Operation_STATUS_RUNNING)
 	event.Value = eventVal
 	if err = events.Publish(event); err != nil {
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 		log.Error("failed to publish event", "error", err)
 	}
 
@@ -40,12 +40,12 @@ func (r *Runner) terraformOutput(
 	// event
 	notifyFail := func(diags []*pb.Diagnostic) {
 		event.Status = pb.Operation_STATUS_FAILED
-		res.Diagnostics = append(res.Diagnostics, diags...)
-		event.Diagnostics = append(event.Diagnostics, res.GetDiagnostics()...)
+		res.Diagnostics = append(res.GetDiagnostics(), diags...)
+		event.Diagnostics = append(event.GetDiagnostics(), res.GetDiagnostics()...)
 		eventVal.Output = res
 
 		if err := events.Publish(event); err != nil {
-			res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 			log.Error("failed to publish event", "error", err)
 		}
 	}
@@ -91,7 +91,7 @@ func (r *Runner) terraformOutput(
 			return res
 		}
 
-		res.Meta = append(res.Meta, &pb.Terraform_Command_Output_Response_Meta{
+		res.Meta = append(res.GetMeta(), &pb.Terraform_Command_Output_Response_Meta{
 			Name:      r.TFConfig.OutputName,
 			Type:      []byte(meta.Type),
 			Value:     []byte(meta.Value),
@@ -100,7 +100,7 @@ func (r *Runner) terraformOutput(
 		})
 	} else {
 		for name, meta := range metas {
-			res.Meta = append(res.Meta, &pb.Terraform_Command_Output_Response_Meta{
+			res.Meta = append(res.GetMeta(), &pb.Terraform_Command_Output_Response_Meta{
 				Name:      name,
 				Type:      []byte(meta.Type),
 				Value:     []byte(meta.Value),
@@ -112,13 +112,13 @@ func (r *Runner) terraformOutput(
 
 	// Finalize our responses and event
 	event.Status = diagnostics.Status(r.TFConfig.FailOnWarnings, res.GetDiagnostics()...)
-	event.Diagnostics = res.Diagnostics
+	event.Diagnostics = res.GetDiagnostics()
 	eventVal.Output = res
 
 	// Notify that we've finished
 	if err := events.Publish(event); err != nil {
 		log.Error("failed to send event", "error", err)
-		res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 	}
 	log.Debug("finished output")
 

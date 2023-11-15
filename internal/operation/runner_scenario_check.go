@@ -29,7 +29,7 @@ func CheckScenario(req *pb.Operation_Request) WorkFunc {
 		if err != nil {
 			log.Debug("failed to create response")
 			if err := events.PublishResponse(res); err != nil {
-				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 				log.Error("failed to send event", "error", err)
 			}
 
@@ -50,7 +50,7 @@ func CheckScenario(req *pb.Operation_Request) WorkFunc {
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, genVal.GetDiagnostics()...)
 
 		// Return early if we failed to generate our module
-		if hasFailedStatus(res.Status) {
+		if hasFailedStatus(res.GetStatus()) {
 			return res
 		}
 
@@ -83,14 +83,14 @@ func (r *Runner) scenarioCheck(
 	res.Check.Init = r.terraformInit(ctx, req, events)
 
 	// Return early if we failed to initialize our module
-	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, res.Check.Init.GetDiagnostics()) {
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, res.Check.GetInit().GetDiagnostics()) {
 		return res
 	}
 
 	// validate our Terraform module
 	res.Check.Validate = r.terraformValidate(ctx, req, events)
 	// Return early if we failed to plan our module
-	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, res.Check.Validate.GetDiagnostics()) {
+	if diagnostics.HasFailed(r.TFConfig.FailOnWarnings, res.Check.GetValidate().GetDiagnostics()) {
 		return res
 	}
 

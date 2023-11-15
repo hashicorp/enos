@@ -53,7 +53,7 @@ func ExecScenario(req *pb.Operation_Request) WorkFunc {
 		if len(diags) > 0 {
 			// Rewrite failure diags to warnings since we might not need the module
 			for i := range diags {
-				if diags[i].Severity == pb.Diagnostic_SEVERITY_ERROR {
+				if diags[i].GetSeverity() == pb.Diagnostic_SEVERITY_ERROR {
 					diags[i].Severity = pb.Diagnostic_SEVERITY_WARNING
 				}
 			}

@@ -14,7 +14,7 @@ func (v *View) writeEventDecode(e *pb.Operation_Event, w *strings.Builder) {
 	v.writeEventHeader("decode", e, pb.UI_Settings_LEVEL_DEBUG, w)
 
 	// Write debug information if necessary
-	if v.settings.Level > pb.UI_Settings_LEVEL_INFO {
+	if v.settings.GetLevel() > pb.UI_Settings_LEVEL_INFO {
 		if fp := e.GetDecode().GetFlightplan(); fp != nil {
 			extra := strings.Builder{}
 
@@ -60,7 +60,7 @@ func (v *View) writeEventGenerate(e *pb.Operation_Event, w *strings.Builder) {
 		return
 	}
 
-	if v.settings.Level > pb.UI_Settings_LEVEL_INFO {
+	if v.settings.GetLevel() > pb.UI_Settings_LEVEL_INFO {
 		extra := strings.Builder{}
 
 		if mp := g.GetTerraformModule().GetModulePath(); mp != "" {
@@ -87,7 +87,7 @@ func (v *View) writeEventInit(e *pb.Operation_Event, w *strings.Builder) {
 	v.writeEventHeader("init", e, pb.UI_Settings_LEVEL_INFO, w)
 
 	if stderr := i.GetStderr(); stderr != "" &&
-		v.settings.Level > pb.UI_Settings_LEVEL_INFO {
+		v.settings.GetLevel() > pb.UI_Settings_LEVEL_INFO {
 		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
 	}
 
@@ -107,13 +107,13 @@ func (v *View) writeEventValidate(e *pb.Operation_Event, w *strings.Builder) {
 		extra.WriteString(fmt.Sprintf("  Validation errors: %d\n", ec))
 	}
 
-	if v.settings.Level >= pb.UI_Settings_LEVEL_WARN {
+	if v.settings.GetLevel() >= pb.UI_Settings_LEVEL_WARN {
 		if wc := vl.GetWarningCount(); wc > 0 {
 			extra.WriteString(fmt.Sprintf("  Validation warnings: %d\n", wc))
 		}
 	}
 
-	if v.settings.Level >= pb.UI_Settings_LEVEL_DEBUG {
+	if v.settings.GetLevel() >= pb.UI_Settings_LEVEL_DEBUG {
 		if f := vl.GetFormatVersion(); f != "" {
 			extra.WriteString(fmt.Sprintf("  Validation format: %s\n", f))
 		}
@@ -135,7 +135,7 @@ func (v *View) writeEventPlan(e *pb.Operation_Event, w *strings.Builder) {
 	}
 
 	if stderr := p.GetStderr(); stderr != "" &&
-		v.settings.Level == pb.UI_Settings_LEVEL_DEBUG {
+		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
 		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
 	}
 
@@ -151,7 +151,7 @@ func (v *View) writeEventApply(e *pb.Operation_Event, w *strings.Builder) {
 	}
 
 	if stderr := a.GetStderr(); stderr != "" &&
-		v.settings.Level == pb.UI_Settings_LEVEL_DEBUG {
+		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
 		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
 	}
 
@@ -167,7 +167,7 @@ func (v *View) writeEventDestroy(e *pb.Operation_Event, w *strings.Builder) {
 	}
 
 	if stderr := d.GetStderr(); stderr != "" &&
-		v.settings.Level == pb.UI_Settings_LEVEL_DEBUG {
+		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
 		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
 	}
 
@@ -184,17 +184,17 @@ func (v *View) writeEventExec(e *pb.Operation_Event, w *strings.Builder) {
 
 	extra := strings.Builder{}
 	if cmd := ex.GetSubCommand(); cmd != "" &&
-		v.settings.Level == pb.UI_Settings_LEVEL_DEBUG {
+		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
 		extra.WriteString(fmt.Sprintf("  Sub-command: %s\n", cmd))
 	}
 
 	if stderr := ex.GetStderr(); stderr != "" &&
-		v.settings.Level == pb.UI_Settings_LEVEL_DEBUG {
+		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
 		extra.WriteString(fmt.Sprintf("  Stderr: %s\n", stderr))
 	}
 
 	if stdout := ex.GetStdout(); stdout != "" &&
-		v.settings.Level == pb.UI_Settings_LEVEL_DEBUG {
+		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
 		extra.WriteString(fmt.Sprintf("  Stdout: %s\n", stdout))
 	}
 
@@ -248,7 +248,7 @@ func (v *View) writeEventHeader(
 	l pb.UI_Settings_Level,
 	w *strings.Builder,
 ) {
-	if v.settings.Level < l {
+	if v.settings.GetLevel() < l {
 		return
 	}
 

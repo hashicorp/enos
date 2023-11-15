@@ -24,7 +24,7 @@ func GenerateScenario(req *pb.Operation_Request) WorkFunc {
 		if err != nil {
 			log.Debug("failed to create response")
 			if err := events.PublishResponse(res); err != nil {
-				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 				log.Error("failed to send event", "error", err)
 			}
 

@@ -26,9 +26,9 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 		return
 	}
 
-	if status.HasFailed(v.settings.FailOnWarnings, validate) {
+	if status.HasFailed(v.settings.GetFailOnWarnings(), validate) {
 		msg := "  Validate: failed!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Validate: ❌"
 		}
 		v.ui.Error(msg)
@@ -43,12 +43,12 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 	var msg string
 	if status.HasWarningDiags(validate) {
 		msg = "  Validate: success! (warnings present)"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Validate: ⚠️"
 		}
 	} else {
 		msg = "  Validate: success!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Validate: ✅"
 		}
 	}
@@ -64,9 +64,9 @@ func (v *View) writeExecResponse(exec *pb.Terraform_Command_Exec_Response) {
 		return
 	}
 
-	if status.HasFailed(v.settings.FailOnWarnings, exec) {
+	if status.HasFailed(v.settings.GetFailOnWarnings(), exec) {
 		msg := "  Exec: failed!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Exec: ❌"
 		}
 		v.ui.Error(fmt.Sprintf("  Sub-command: %s", exec.GetSubCommand()))
@@ -102,9 +102,9 @@ func (v *View) writeOutputResponse(res *pb.Operation_Response) {
 	scenario.FromRef(res.GetOp().GetScenario())
 	v.ui.Info(fmt.Sprintf("Scenario: %s %s", scenario.String(), v.opStatusString(res.GetStatus())))
 
-	if status.HasFailed(v.settings.FailOnWarnings, out) {
+	if status.HasFailed(v.settings.GetFailOnWarnings(), out) {
 		msg := "  Output: failed!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Output: ❌"
 		}
 		v.ui.Error(msg)
@@ -128,9 +128,9 @@ func (v *View) writeShowResponse(show *pb.Terraform_Command_Show_Response) {
 		return
 	}
 
-	if status.HasFailed(v.settings.FailOnWarnings, show) {
+	if status.HasFailed(v.settings.GetFailOnWarnings(), show) {
 		msg := "  Read state: failed!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Read state: ❌"
 		}
 
@@ -147,12 +147,12 @@ func (v *View) writeShowResponse(show *pb.Terraform_Command_Show_Response) {
 	var msg string
 	if status.HasWarningDiags(show) {
 		msg = "  Read state: success! (warnings present)"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Read state: ⚠️"
 		}
 	} else {
 		msg = "  Read state: success!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Read state: ✅"
 		}
 	}
@@ -170,9 +170,9 @@ func (v *View) writePlainTextResponse(cmd string, stderr string, res status.ResW
 	}
 
 	cmd = cases.Title(language.English).String(cmd)
-	if status.HasFailed(v.settings.FailOnWarnings, res) {
+	if status.HasFailed(v.settings.GetFailOnWarnings(), res) {
 		msg := fmt.Sprintf("  %s: failed!", cmd)
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = fmt.Sprintf("  %s: ❌", cmd)
 		}
 		v.ui.Error(msg)
@@ -187,12 +187,12 @@ func (v *View) writePlainTextResponse(cmd string, stderr string, res status.ResW
 	var msg string
 	if status.HasWarningDiags(res) {
 		msg = fmt.Sprintf("  %s: success! (warnings present)", cmd)
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = fmt.Sprintf("  %s: ⚠️", cmd)
 		}
 	} else {
 		msg = fmt.Sprintf("  %s: success!", cmd)
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = fmt.Sprintf("  %s: ✅", cmd)
 		}
 	}

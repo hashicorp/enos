@@ -181,7 +181,7 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 
 		// Choose which decode option based on our target and the number of variants we have.
 		if scenarioBlocks[i].Matrix == nil ||
-			(scenarioBlocks[i].Matrix != nil || len(scenarioBlocks[i].Matrix.Vectors) < 1) {
+			(scenarioBlocks[i].Matrix != nil && len(scenarioBlocks[i].Matrix.Vectors) < 1) {
 			d.decodeScenariosSerial(scenarioBlocks[i])
 		} else {
 			switch d.DecodeTarget {
@@ -279,16 +279,15 @@ func (d *ScenarioDecoder) decodeScenario(
 	scenario := NewScenario()
 	var diags hcl.Diagnostics
 
+	evalCtx := d.EvalContext.NewChild()
 	if vec != nil {
 		scenario.Variants = vec
-		matrixCtx := d.EvalContext.NewChild()
-		matrixCtx.Variables = map[string]cty.Value{
+		evalCtx.Variables = map[string]cty.Value{
 			"matrix": vec.CtyVal(),
 		}
-		d.EvalContext = matrixCtx
 	}
 
-	diags = scenario.decode(block, d.EvalContext.NewChild(), d.DecodeTarget)
+	diags = scenario.decode(block, evalCtx, d.DecodeTarget)
 
 	return !diags.HasErrors(), scenario, diags
 }
@@ -330,49 +329,84 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 	collectCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	diagC := make(chan hcl.Diagnostics)
 	scenarioC := make(chan *Scenario)
-	doneC := make(chan struct{})
 	vectorC := make(chan *Vector)
-	wg := sync.WaitGroup{}
+	diagC := make(chan hcl.Diagnostics)
+	decodeWg := sync.WaitGroup{}
+	workerWg := sync.WaitGroup{}
 	scenarios := []*Scenario{}
 	diags := hcl.Diagnostics{}
 	defer func() {
 		close(diagC)
 		close(scenarioC)
 		close(vectorC)
-		close(doneC)
 	}()
 
 	collectDiags := func() {
 		for {
 			select {
+			case diag := <-diagC:
+				diags = diags.Extend(diag)
+
+				continue
+			default:
+			}
+
+			select {
 			case <-collectCtx.Done():
+				workerWg.Done()
 				return
 			case diag := <-diagC:
 				diags = diags.Extend(diag)
 			}
 		}
 	}
+	workerWg.Add(1)
 	go collectDiags()
 
 	collectScenarios := func() {
 		for {
 			select {
+			case scenario := <-scenarioC:
+				scenarios = append(scenarios, scenario)
+				decodeWg.Done()
+
+				continue
+			default:
+			}
+
+			select {
 			case <-collectCtx.Done():
+				workerWg.Done()
 				return
 			case scenario := <-scenarioC:
 				scenarios = append(scenarios, scenario)
-				wg.Done()
+				decodeWg.Done()
 			}
 		}
 	}
+	workerWg.Add(1)
 	go collectScenarios()
 
 	decodeScenario := func() {
 		for {
 			select {
+			case vec := <-vectorC:
+				keep, scenario, diags := d.decodeScenario(vec, sb.Block)
+				diagC <- diags
+				if keep {
+					scenarioC <- scenario
+				} else {
+					decodeWg.Done()
+				}
+
+				continue
+			default:
+			}
+
+			select {
 			case <-collectCtx.Done():
+				workerWg.Done()
 				return
 			case vec := <-vectorC:
 				keep, scenario, diags := d.decodeScenario(vec, sb.Block)
@@ -380,22 +414,24 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 				if keep {
 					scenarioC <- scenario
 				} else {
-					wg.Done()
+					decodeWg.Done()
 				}
 			}
 		}
 	}
+
 	for i := 0; i < runtime.NumCPU(); i++ {
+		workerWg.Add(1)
 		go decodeScenario()
 	}
 
 	for i := range sb.Matrix.Vectors {
-		wg.Add(1)
+		decodeWg.Add(1)
 		vectorC <- sb.Matrix.Vectors[i]
 	}
 
-	wg.Wait()
+	decodeWg.Wait()
 	cancel()
-	<-doneC
+	workerWg.Wait()
 	sb.Scenarios = append(sb.Scenarios, scenarios...)
 }

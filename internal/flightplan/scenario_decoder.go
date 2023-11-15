@@ -425,8 +425,8 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 		go decodeScenario()
 	}
 
+	decodeWg.Add(len(sb.Matrix.Vectors))
 	for i := range sb.Matrix.Vectors {
-		decodeWg.Add(1)
 		vectorC <- sb.Matrix.Vectors[i]
 	}
 

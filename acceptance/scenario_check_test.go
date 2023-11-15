@@ -82,7 +82,7 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 					},
 				}
 
-				expected.Responses = append(expected.Responses, &pb.Operation_Response{
+				expected.Responses = append(expected.GetResponses(), &pb.Operation_Response{
 					Op: &pb.Ref_Operation{
 						Scenario: scenarioRef,
 					},
@@ -189,7 +189,7 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 					}
 				}
 
-				expected.Responses = append(expected.Responses, &pb.Operation_Response{
+				expected.Responses = append(expected.GetResponses(), &pb.Operation_Response{
 					Op: &pb.Ref_Operation{
 						Scenario: scenarioRef,
 					},

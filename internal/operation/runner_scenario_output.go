@@ -45,7 +45,7 @@ func OutputScenario(req *pb.Operation_Request) WorkFunc {
 		mod, diags := moduleForReq(ctx, req)
 		resVal.Output.Diagnostics = append(resVal.Output.GetDiagnostics(), diags...)
 
-		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Output.Output.GetDiagnostics()...)
+		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, resVal.Output.GetOutput().GetDiagnostics()...)
 		if diagnostics.HasFailed(runner.TFConfig.FailOnWarnings, resVal.Output.GetDiagnostics()) {
 			log.Debug("failed to load Terraform module")
 			if err = events.PublishResponse(res); err != nil {

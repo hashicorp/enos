@@ -30,7 +30,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 
 	header := "\nEnos operations"
 	if failed {
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			//nolint:gosec // G404 it's okay to use weak random numbers for random failed icons
 			r := rand.New(rand.NewSource(time.Now().UnixNano()))
 			header = fmt.Sprintf("%s failed! %s\n", header, failedIcons[r.Intn(len(failedIcons))])
@@ -38,7 +38,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 			header += " failed!\n"
 		}
 	} else {
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			header += " finished! 🐵\n"
 		} else {
 			header += " finished!\n"

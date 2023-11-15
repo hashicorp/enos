@@ -36,7 +36,7 @@ func (s *ServiceV1) ListScenarios(
 	if len(scenarios) > 0 {
 		res.Scenarios = []*pb.Ref_Scenario{}
 		for _, s := range scenarios {
-			res.Scenarios = append(res.Scenarios, s.Ref())
+			res.Scenarios = append(res.GetScenarios(), s.Ref())
 		}
 	}
 

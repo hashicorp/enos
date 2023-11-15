@@ -50,9 +50,9 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, genVal.GetDiagnostics()...)
 
 		// Return early if we failed to generate our module
-		if hasFailedStatus(res.Status) {
+		if hasFailedStatus(res.GetStatus()) {
 			if err := events.PublishResponse(res); err != nil {
-				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 				log.Error("failed to send event", ResponseDebugArgs(res)...)
 			}
 
@@ -65,7 +65,7 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 		resVal.Destroy.Init = runner.terraformInit(ctx, req, events)
 
 		// Return early if we failed to initialize our scenario
-		if diagnostics.HasFailed(runner.TFConfig.FailOnWarnings, resVal.Destroy.Init.GetDiagnostics()) {
+		if diagnostics.HasFailed(runner.TFConfig.FailOnWarnings, resVal.Destroy.GetInit().GetDiagnostics()) {
 			return res
 		}
 
@@ -84,9 +84,9 @@ func DestroyScenario(req *pb.Operation_Request) WorkFunc {
 		res.Status = diagnostics.Status(runner.TFConfig.FailOnWarnings, stateVal.GetDiagnostics()...)
 
 		// Return early if we failed to show our state
-		if hasFailedStatus(res.Status) {
+		if hasFailedStatus(res.GetStatus()) {
 			if err := events.PublishResponse(res); err != nil {
-				res.Diagnostics = append(res.Diagnostics, diagnostics.FromErr(err)...)
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
 				log.Error("failed to send event", ResponseDebugArgs(res)...)
 			}
 

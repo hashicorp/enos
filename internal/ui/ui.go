@@ -22,24 +22,24 @@ var (
 type View interface {
 	io.Closer
 	Settings() *pb.UI_Settings
-	ShowError(error) error
-	ShowDiagnostics([]*pb.Diagnostic) error
+	ShowError(err error) error
+	ShowDiagnostics(diags []*pb.Diagnostic) error
 	ShowVersion(all bool, res *pb.GetVersionResponse) error
-	ShowFormat(*pb.FormatRequest_Config, *pb.FormatResponse) error
-	ShowScenarioList(*pb.ListScenariosResponse) error
-	ShowDecode(*pb.DecodeResponse, bool) error
-	ShowOutput(*pb.OperationResponses) error
-	ShowScenariosValidateConfig(*pb.ValidateScenariosConfigurationResponse) error
-	ShowOperationEvent(*pb.Operation_Event)
-	ShowOperationResponse(*pb.Operation_Response) error
-	ShowOperationResponses(*pb.OperationResponses) error
-	ShowSampleList(*pb.ListSamplesResponse) error
-	ShowSampleObservation(*pb.ObserveSampleResponse) error
+	ShowFormat(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error
+	ShowScenarioList(res *pb.ListScenariosResponse) error
+	ShowDecode(res *pb.DecodeResponse, incremental bool) error
+	ShowOutput(res *pb.OperationResponses) error
+	ShowScenariosValidateConfig(res *pb.ValidateScenariosConfigurationResponse) error
+	ShowOperationEvent(res *pb.Operation_Event)
+	ShowOperationResponse(res *pb.Operation_Response) error
+	ShowOperationResponses(res *pb.OperationResponses) error
+	ShowSampleList(res *pb.ListSamplesResponse) error
+	ShowSampleObservation(res *pb.ObserveSampleResponse) error
 }
 
 // New takes a UI configuration settings and returns a new view.
 func New(s *pb.UI_Settings) (View, error) {
-	switch s.Format {
+	switch s.GetFormat() {
 	case pb.UI_Settings_FORMAT_JSON:
 		return machine.New(machine.WithUISettings(s))
 	case pb.UI_Settings_FORMAT_BASIC_TEXT:
@@ -48,7 +48,7 @@ func New(s *pb.UI_Settings) (View, error) {
 		return basic.New(basic.WithUISettings(s))
 	default:
 		msg := "unsupported UI format"
-		name, ok := pb.UI_Settings_Format_name[int32(s.Format)]
+		name, ok := pb.UI_Settings_Format_name[int32(s.GetFormat())]
 		if ok {
 			msg = fmt.Sprintf("%s is not a supported UI format", name)
 		}

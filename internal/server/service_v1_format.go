@@ -38,7 +38,7 @@ func (s *ServiceV1) Format(
 		_, diags := hclwrite.ParseConfig(file.GetBody(), file.GetPath(), hcl.InitialPos)
 		if diags.HasErrors() {
 			r.Diagnostics = diagnostics.FromHCL(nil, diags)
-			res.Responses = append(res.Responses, r)
+			res.Responses = append(res.GetResponses(), r)
 
 			continue
 		}
@@ -46,7 +46,7 @@ func (s *ServiceV1) Format(
 		formatted := hclwrite.Format(file.GetBody())
 		if bytes.Equal(file.GetBody(), formatted) {
 			// If nothing has changed we can move on
-			res.Responses = append(res.Responses, r)
+			res.Responses = append(res.GetResponses(), r)
 
 			continue
 		}
@@ -73,7 +73,7 @@ func (s *ServiceV1) Format(
 			f, err := os.OpenFile(file.GetPath(), os.O_RDWR|os.O_TRUNC, 0o755)
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
-				res.Responses = append(res.Responses, r)
+				res.Responses = append(res.GetResponses(), r)
 
 				continue
 			}
@@ -82,13 +82,13 @@ func (s *ServiceV1) Format(
 			_, err = f.Write(formatted)
 			if err != nil {
 				res.Diagnostics = diagnostics.FromErr(err)
-				res.Responses = append(res.Responses, r)
+				res.Responses = append(res.GetResponses(), r)
 
 				continue
 			}
 		}
 
-		res.Responses = append(res.Responses, r)
+		res.Responses = append(res.GetResponses(), r)
 	}
 
 	return res, nil

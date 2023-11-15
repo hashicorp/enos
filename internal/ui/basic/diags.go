@@ -46,7 +46,7 @@ func (v *View) writeDiags(d []*pb.Diagnostic, w *strings.Builder) {
 		return
 	}
 
-	if diagnostics.HasErrors(d) || v.settings.Level >= pb.UI_Settings_LEVEL_WARN {
+	if diagnostics.HasErrors(d) || v.settings.GetLevel() >= pb.UI_Settings_LEVEL_WARN {
 		w.WriteString(fmt.Sprintf("\n%s", v.diagsToString(d)))
 	}
 }

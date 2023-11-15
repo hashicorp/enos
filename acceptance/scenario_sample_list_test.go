@@ -61,8 +61,8 @@ func TestAcc_Cmd_Scenario_Sample_List(t *testing.T) {
 			got := &pb.ListSamplesResponse{}
 			require.NoError(t, protojson.Unmarshal(out, got))
 			require.Len(t, got.GetSamples(), len(test.out.GetSamples()))
-			for i := range test.out.Samples {
-				require.Equal(t, test.out.Samples[i].String(), got.Samples[i].String())
+			for i := range test.out.GetSamples() {
+				require.Equal(t, test.out.GetSamples()[i].String(), got.GetSamples()[i].String())
 			}
 		})
 	}

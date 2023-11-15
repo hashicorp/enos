@@ -245,7 +245,7 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 	sortResponses(expectedResponses)
 	sortResponses(gotResponses)
 
-	for i := range expected.Responses {
+	for i := range expected.GetResponses() {
 		got := gotResponses[i]
 		expected := expectedResponses[i]
 

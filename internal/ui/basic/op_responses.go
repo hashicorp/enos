@@ -16,7 +16,7 @@ func (v *View) writeDecodeResponse(out *pb.DecodeResponse) {
 
 	if status.HasFailed(v.settings.GetFailOnWarnings(), out) {
 		msg := "Decode: failed!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "Decode: ❌"
 		}
 		v.ui.Error(msg)
@@ -28,13 +28,13 @@ func (v *View) writeDecodeResponse(out *pb.DecodeResponse) {
 	var msg string
 	if status.HasWarningDiags(out) {
 		msg = "Decode: success! (warnings present)"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "Decode: ⚠️"
 		}
 		v.ui.Warn(msg)
 	} else {
 		msg = "Decode: success!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "Decode: ✅"
 		}
 		v.ui.Debug(msg)
@@ -52,7 +52,7 @@ func (v *View) writeGenerateResponse(out *pb.Operation_Response_Generate) {
 
 	if status.HasFailed(v.settings.GetFailOnWarnings(), out) {
 		msg := "  Generate: failed!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Generate: ❌"
 		}
 		v.ui.Error(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
@@ -66,12 +66,12 @@ func (v *View) writeGenerateResponse(out *pb.Operation_Response_Generate) {
 	var msg string
 	if status.HasWarningDiags(out) {
 		msg = "  Generate: success! (warnings present)"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Generate: ⚠️"
 		}
 	} else {
 		msg = "  Generate: success!"
-		if v.settings.IsTty {
+		if v.settings.GetIsTty() {
 			msg = "  Generate: ✅"
 		}
 	}

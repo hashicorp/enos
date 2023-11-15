@@ -397,11 +397,11 @@ sample "all" {
 			fp, err := testDecodeHCL(t, ws.GetFlightplan().GetEnosHcl()["enos-test.hcl"], DecodeTargetAll)
 			require.NoError(t, err)
 			require.NotNil(t, fp)
-			require.Equal(t, 1, len(fp.Samples))
+			require.Len(t, fp.Samples, 1)
 			samp := fp.Samples[0]
 
 			frame, decRes := samp.Frame(context.Background(), ws, test.filter)
-			require.Equal(t, 0, len(decRes.GetDiagnostics()))
+			require.Empty(t, decRes.GetDiagnostics())
 
 			subFrame, ok := frame.SubsetFrames[subsetName]
 			require.True(t, ok)
@@ -412,11 +412,11 @@ sample "all" {
 
 			for i := range test.expected {
 				test.expected[i].Sample = samp.Ref()
-				require.EqualValues(t, test.expected[i].Sample, elements[i].Sample)
-				require.EqualValues(t, test.expected[i].Subset, elements[i].Subset)
-				require.EqualValues(t, test.expected[i].Scenario, elements[i].Scenario)
-				gotAttrs := elements[i].Attributes.AsMap()
-				for name, val := range test.expected[i].Attributes.AsMap() {
+				require.EqualValues(t, test.expected[i].GetSample(), elements[i].GetSample())
+				require.EqualValues(t, test.expected[i].GetSubset(), elements[i].GetSubset())
+				require.EqualValues(t, test.expected[i].GetScenario(), elements[i].GetScenario())
+				gotAttrs := elements[i].GetAttributes().AsMap()
+				for name, val := range test.expected[i].GetAttributes().AsMap() {
 					attr, ok := gotAttrs[name]
 					require.True(t, ok, "did not find expected attribute %s", name)
 					require.EqualValues(t, val, attr)
@@ -537,7 +537,7 @@ func Test_SampleFrame_FilterPercentage(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, test.expected, pct)
+				require.InEpsilon(t, test.expected, pct, 0)
 			}
 		})
 	}

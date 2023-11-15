@@ -121,8 +121,8 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			got := &pb.ListScenariosResponse{}
 			require.NoError(t, protojson.Unmarshal(out, got))
 			require.Len(t, got.GetScenarios(), len(test.out.GetScenarios()))
-			for i := range test.out.Scenarios {
-				require.Equal(t, test.out.Scenarios[i].String(), got.Scenarios[i].String())
+			for i := range test.out.GetScenarios() {
+				require.Equal(t, test.out.GetScenarios()[i].String(), got.GetScenarios()[i].String())
 			}
 		})
 	}

@@ -252,7 +252,7 @@ sample "foo" {
 			if test.expected == nil {
 				for i := range samp.Subsets {
 					frame, decRes := samp.Subsets[i].Frame(context.Background(), test.ws)
-					require.Equal(t, 0, len(decRes.GetDiagnostics()))
+					require.Empty(t, decRes.GetDiagnostics())
 					testRequireEqualSampleSubsetFrame(t, nil, frame)
 				}
 
@@ -268,7 +268,7 @@ sample "foo" {
 				for _, d := range decRes.GetDiagnostics() {
 					msg += fmt.Sprintf(" %s", diagnostics.String(d))
 				}
-				require.Equal(t, 0, len(decRes.GetDiagnostics()), msg)
+				require.Emptyf(t, decRes.GetDiagnostics(), msg)
 
 				testRequireEqualSampleSubsetFrame(t, test.expected[i], frame)
 			}

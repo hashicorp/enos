@@ -29,14 +29,14 @@ func (t *sampleObserveFilter) Proto() *pb.Sample_Filter {
 		if i == 0 {
 			f.Subsets = []*pb.Sample_Subset_ID{}
 		}
-		f.Subsets = append(f.Subsets, &pb.Sample_Subset_ID{Name: t.OnlySubsets[i]})
+		f.Subsets = append(f.GetSubsets(), &pb.Sample_Subset_ID{Name: t.OnlySubsets[i]})
 	}
 
 	for i := range t.ExcludeSubsets {
 		if i == 0 {
 			f.ExcludeSubsets = []*pb.Sample_Subset_ID{}
 		}
-		f.ExcludeSubsets = append(f.ExcludeSubsets, &pb.Sample_Subset_ID{Name: t.ExcludeSubsets[i]})
+		f.ExcludeSubsets = append(f.GetExcludeSubsets(), &pb.Sample_Subset_ID{Name: t.ExcludeSubsets[i]})
 	}
 
 	return f

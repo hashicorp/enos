@@ -643,7 +643,7 @@ sample "foodle" {
 			fp, err := testDecodeHCL(t, test.ws.GetFlightplan().GetEnosHcl()["enos-test.hcl"], DecodeTargetAll)
 			require.NoError(t, err)
 			require.NotNil(t, fp)
-			require.Equal(t, 1, len(fp.Samples))
+			require.Len(t, fp.Samples, 1)
 			samp := fp.Samples[0]
 			frame, decRes := samp.Frame(context.Background(), test.ws, test.filter)
 			require.EqualValues(t, samp, frame.Sample)
@@ -651,7 +651,7 @@ sample "foodle" {
 			// Handle cases where we don't expect to get a valid frame
 			if test.expected == nil {
 				require.Equal(t, int32(0), frame.Size())
-				require.Equal(t, 0, len(decRes.GetDiagnostics()))
+				require.Empty(t, decRes.GetDiagnostics())
 
 				return
 			}

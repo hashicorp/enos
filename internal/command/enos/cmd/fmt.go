@@ -114,7 +114,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		if fmtCfg.Recursive {
+		if fmtCfg.GetRecursive() {
 			err = filepath.Walk(path, readRawFiles)
 		} else {
 			err = readRawFiles(path, nil, nil)
@@ -148,7 +148,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 
 	/// Scan STDIN for content if we've been told to use STDIN either implicitly
 	// of explicitly.
-	if (argP == "-" || argP == "") && len(req.Files) == 0 {
+	if (argP == "-" || argP == "") && len(req.GetFiles()) == 0 {
 		bytes, err := io.ReadAll(cmd.InOrStdin())
 		if err != nil {
 			res.Diagnostics = diagnostics.FromErr(err)

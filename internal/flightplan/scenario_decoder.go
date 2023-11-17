@@ -434,4 +434,5 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 	cancel()
 	workerWg.Wait()
 	sb.Scenarios = append(sb.Scenarios, scenarios...)
+	sb.Diagnostics = sb.Diagnostics.Extend(diags)
 }

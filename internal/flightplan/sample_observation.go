@@ -194,7 +194,7 @@ func (s *SampleObservationReq) getSample(ctx context.Context) (*Sample, *pb.Deco
 		return nil, decRes
 	}
 
-	if len(sampleFP.Samples) < 1 {
+	if sampleFP == nil || len(sampleFP.Samples) < 1 {
 		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("no sample found with name %s", sampleName))
 
 		return nil, decRes
@@ -222,6 +222,9 @@ func (s *SampleObservationReq) Frame(ctx context.Context, r *rand.Rand) (*Sample
 	f := &SampleFrame{}
 
 	sample, decRes := s.getSample(ctx)
+	if decRes == nil {
+		decRes = &pb.DecodeResponse{}
+	}
 	if diagnostics.HasFailed(
 		s.Ws.GetTfExecCfg().GetFailOnWarnings(),
 		decRes.GetDiagnostics(),
@@ -264,7 +267,12 @@ func (s *SampleObservation) Elements(r *rand.Rand) ([]*pb.Sample_Element, error)
 
 	res := []*pb.Sample_Element{}
 	for _, name := range s.SubsetObservations.Keys() {
-		subsetObsv := s.SubsetObservations[name]
+		subsetObsv, ok := s.SubsetObservations[name]
+		if !ok {
+			// This should never happen but because Keys() isn't a range over the collection directly we
+			// could theoretically nil panic here if Keys() gives us invalid results.
+			return nil, fmt.Errorf("failed to get observation elements for subset")
+		}
 		subElements, err := s.SampleFrame.Elements(subsetObsv.SampleSubset.Name, r, subsetObsv.Matrix)
 		if err != nil {
 			return nil, fmt.Errorf("attemping to get elements from subset %s: %w", subsetObsv.SampleSubset.Name, err)

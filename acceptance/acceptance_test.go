@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -99,6 +100,10 @@ func hasAWSCredentials() bool {
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
+		return false
+	}
+
+	if cfg.Credentials == nil {
 		return false
 	}
 
@@ -245,9 +250,13 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 	sortResponses(expectedResponses)
 	sortResponses(gotResponses)
 
-	for i := range expected.GetResponses() {
-		got := gotResponses[i]
+	require.Lenf(t, gotResponses, len(expectedResponses),
+		fmt.Sprintf("expected %d responses, got %d", len(expectedResponses), len(gotResponses)),
+	)
+	for i := range expectedResponses {
+		require.NotNil(t, gotResponses)
 		expected := expectedResponses[i]
+		got := gotResponses[i]
 
 		// Scenario reference
 		require.Equal(t, expected.GetOp().GetScenario().String(), got.GetOp().GetScenario().String())
@@ -355,13 +364,18 @@ func requireEqualOutput(t *testing.T, expected, got *pb.Terraform_Command_Output
 	t.Helper()
 
 	require.Len(t, expected.GetMeta(), len(got.GetMeta()))
-	for i := range expected.GetMeta() {
-		require.Equal(t, expected.GetMeta()[i].GetName(), got.GetMeta()[i].GetName())
+	for i, eMeta := range expected.GetMeta() {
+		gotMetas := got.GetMeta()
+		require.NotNil(t, gotMetas)
+		gotMeta := gotMetas[i]
+		require.NotNil(t, gotMeta)
+
+		require.Equal(t, eMeta.GetName(), gotMeta.GetName())
 		// Skip the type and the value by default since they're encoded
-		// require.Equal(t, expected.GetMeta()[i].GetType(), got.GetMeta()[i].GetType())
-		// require.Equal(t, expected.GetMeta()[i].GetValue(), got.GetMeta()[i].GetValue())
-		require.Equal(t, expected.GetMeta()[i].GetSensitive(), got.GetMeta()[i].GetSensitive())
-		require.Equal(t, expected.GetMeta()[i].GetStderr(), got.GetMeta()[i].GetStderr())
+		// require.Equal(t, eMeta.GetType(), gotMeta.GetType())
+		// require.Equal(t, eMeta.GetValue(), gotMeta.GetValue())
+		require.Equal(t, eMeta.GetSensitive(), gotMeta.GetSensitive())
+		require.Equal(t, eMeta.GetStderr(), gotMeta.GetStderr())
 	}
 	require.Equal(t, expected.GetDiagnostics(), got.GetDiagnostics())
 }

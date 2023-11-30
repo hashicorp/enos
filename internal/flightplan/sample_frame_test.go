@@ -148,7 +148,7 @@ sample "all" {
 						Id: &pb.Scenario_ID{
 							Name:     "baz",
 							Filter:   "baz",
-							Variants: &pb.Matrix_Vector{Elements: []*pb.Matrix_Element{}},
+							Variants: nil,
 							Uid:      "baa5a0964d3320fbc0c6a922140453c8513ea24ab8fd0577034804a967248096",
 						},
 					},

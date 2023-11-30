@@ -35,43 +35,52 @@ func NewModule() *Module {
 // the block onto itself. Any errors that are encountered are returned as hcl
 // diagnostics.
 func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	content, remain, moreDiags := block.Body.PartialContent(moduleSchema)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	m.Name = block.Labels[0]
-	src := content.Attributes["source"]
-	val, moreDiags := src.Expr.Value(ctx)
-	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
-		return diags
-	}
-
-	if val.Type() == cty.String {
-		m.Source = val.AsString()
+	src, ok := content.Attributes["source"]
+	if !ok {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "missing required module attribute source",
+			Detail:   "the 'source' attribute must be set for a module",
+			Subject:  block.Body.MissingItemRange().Ptr(),
+		})
 	} else {
-		sourceVal, err := convert.Convert(val, cty.String)
-		if err != nil {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "invalid value",
-				Detail:   "source must be a string value",
-				Subject:  src.Expr.Range().Ptr(),
-				Context:  hcl.RangeBetween(src.Expr.StartRange(), src.Expr.Range()).Ptr(),
-			})
+		val, moreDiags := src.Expr.Value(ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags != nil && moreDiags.HasErrors() {
+			return diags
+		}
+
+		if val.Type() == cty.String {
+			m.Source = val.AsString()
 		} else {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagWarning,
-				Summary:  "invalid value",
-				Detail:   "source should be a string value, consider changing it",
-				Subject:  src.Expr.Range().Ptr(),
-				Context:  hcl.RangeBetween(src.Expr.StartRange(), src.Expr.Range()).Ptr(),
-			})
-			m.Source = sourceVal.AsString()
+			sourceVal, err := convert.Convert(val, cty.String)
+			if err != nil {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "invalid value",
+					Detail:   "source must be a string value",
+					Subject:  src.Expr.Range().Ptr(),
+					Context:  hcl.RangeBetween(src.Expr.StartRange(), src.Expr.Range()).Ptr(),
+				})
+			} else {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagWarning,
+					Summary:  "invalid value",
+					Detail:   "source should be a string value, consider changing it",
+					Subject:  src.Expr.Range().Ptr(),
+					Context:  hcl.RangeBetween(src.Expr.StartRange(), src.Expr.Range()).Ptr(),
+				})
+				m.Source = sourceVal.AsString()
+			}
 		}
 	}
 
@@ -80,7 +89,7 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	if ok {
 		val, moreDiags := version.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 
@@ -115,13 +124,13 @@ func (m *Module) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	// attribute.
 	attrs, moreDiags := remain.JustAttributes()
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	attrs, moreDiags = filterTerraformMetaAttrs(attrs)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 

@@ -160,11 +160,11 @@ func DefaultTerraformCLI() *TerraformCLI {
 // decodes from the block onto itself. Any errors that are encountered are
 // returned as hcl diagnostics.
 func (m *TerraformCLI) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	content, remain, moreDiags := block.Body.PartialContent(terraformCLISchema)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -174,7 +174,7 @@ func (m *TerraformCLI) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagno
 	if ok {
 		val, moreDiags := path.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 
@@ -205,9 +205,12 @@ func (m *TerraformCLI) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagno
 
 	env, ok := content.Attributes["env"]
 	if ok {
+		if m.Env == nil {
+			m.Env = map[string]string{}
+		}
 		val, moreDiags := env.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 		for k, v := range val.AsValueMap() {
@@ -242,7 +245,7 @@ func (m *TerraformCLI) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagno
 	// execution.
 	m.ConfigVal, moreDiags = hcldec.Decode(remain, terraformCLISpec, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 

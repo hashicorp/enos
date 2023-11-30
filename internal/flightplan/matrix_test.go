@@ -526,10 +526,19 @@ func Test_Matrix_UniqueValues(t *testing.T) {
 	m2.AddVector(NewVector(NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")))
 
 	uniq := m1.UniqueValues()
-	require.Len(t, uniq.Vectors, len(m2.Vectors))
+	require.Len(t, uniq.GetVectors(), len(m2.GetVectors()))
+	require.NotNil(t, uniq)
 
-	for i := range m2.Vectors {
-		require.EqualValues(t, m2.Vectors[i].elements, uniq.Vectors[i].elements)
+	for i := range m2.GetVectors() {
+		m2Vecs := m2.GetVectors()
+		require.NotNil(t, m2Vecs)
+		m2Vec := m2Vecs[i]
+		require.NotNil(t, m2Vec)
+		uniqVecs := uniq.GetVectors()
+		require.NotNil(t, uniqVecs)
+		uniqVec := uniqVecs[i]
+		require.NotNil(t, uniqVec)
+		require.EqualValues(t, m2Vec.Elements(), uniqVec.Elements())
 	}
 }
 

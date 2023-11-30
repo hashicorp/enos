@@ -121,7 +121,7 @@ func (fp *FlightPlan) decodeVariables(
 	varFiles map[string]*hcl.File,
 	envVars []string,
 ) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	values := map[string]*VariableValue{}
 	vars := map[string]cty.Value{}
 
@@ -156,11 +156,14 @@ func (fp *FlightPlan) decodeVariables(
 	}
 
 	diags = diags.Extend(verifyNoBlockInAttrOnlySchema(valuesBody))
+	if diags.HasErrors() {
+		return diags
+	}
 
 	// Get the values of each variable
 	vals, moreDiags := valuesBody.JustAttributes()
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -202,14 +205,14 @@ func (fp *FlightPlan) decodeVariables(
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeVariable) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		variable := NewVariable()
 		moreDiags = variable.decode(block, values)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -226,7 +229,7 @@ func (fp *FlightPlan) decodeVariables(
 
 // decodeGlobals decodes "global" blocks that are defined in the top-level schema.
 func (fp *FlightPlan) decodeGlobals(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	globals := map[string]cty.Value{}
 	for i, globalsBlock := range fp.BodyContent.Blocks.OfType(blockTypeGlobals) {
@@ -238,13 +241,13 @@ func (fp *FlightPlan) decodeGlobals(ctx *hcl.EvalContext) hcl.Diagnostics {
 
 		moreDiags := verifyBlockHasNLabels(globalsBlock, 0)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		attrs, moreDiags := globalsBlock.Body.JustAttributes()
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -263,7 +266,7 @@ func (fp *FlightPlan) decodeGlobals(ctx *hcl.EvalContext) hcl.Diagnostics {
 		for _, attr := range sortedGlobals {
 			val, moreDiags := attr.Expr.Value(ctx)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
 			}
 
@@ -277,19 +280,19 @@ func (fp *FlightPlan) decodeGlobals(ctx *hcl.EvalContext) hcl.Diagnostics {
 
 // decodeSamples decodes "sample" blocks that are defined in the top-level schema.
 func (fp *FlightPlan) decodeSamples(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeSample) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		sample := NewSample()
 		moreDiags = sample.Decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -302,20 +305,20 @@ func (fp *FlightPlan) decodeSamples(ctx *hcl.EvalContext) hcl.Diagnostics {
 // decodeTerraformSettings decodes "terraform" blocks that are defined in the
 // top-level schema.
 func (fp *FlightPlan) decodeTerraformSettings(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	settings := map[string]cty.Value{}
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeTerraformSetting) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		setting := NewTerraformSetting()
 		moreDiags = setting.decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -331,20 +334,20 @@ func (fp *FlightPlan) decodeTerraformSettings(ctx *hcl.EvalContext) hcl.Diagnost
 // decodeTerraformCLIs decodes "terraform_cli" blocks that are defined in the
 // top-level schema.
 func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	clis := map[string]cty.Value{}
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeTerraformCLI) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		cli := NewTerraformCLI()
 		moreDiags = cli.decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -367,27 +370,27 @@ func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics 
 // decodeProviders decodes "provider" blocks that are defined in the
 // top-level schema.
 func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	// provider type -> alias name -> provider object value
 	providers := map[string]map[string]cty.Value{}
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeProvider) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		moreDiags = verifyBlockHasNLabels(block, 2)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		provider := NewProvider()
 		moreDiags = provider.decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -428,20 +431,20 @@ func (fp *FlightPlan) decodeProviders(ctx *hcl.EvalContext) hcl.Diagnostics {
 // decodeModules decodes "module" blocks that are defined in the top-level
 // schema.
 func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	mods := map[string]cty.Value{}
 
 	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeModule) {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		module := NewModule()
 		moreDiags = module.decode(block, ctx.NewChild())
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -472,7 +475,7 @@ func (fp *FlightPlan) decodeScenarios(
 		WithScenarioDecoderScenarioFilter(filter),
 	)
 	if err != nil {
-		var diags hcl.Diagnostics
+		diags := hcl.Diagnostics{}
 		return diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to initialize scenario decoder",
@@ -482,16 +485,23 @@ func (fp *FlightPlan) decodeScenarios(
 	}
 
 	fp.ScenarioBlocks = scenarioDecoder.DecodeScenarioBlocks(ctx, blocks)
+	if fp.ScenarioBlocks != nil {
+		return fp.ScenarioBlocks.Diagnostics()
+	}
 
-	return fp.ScenarioBlocks.Diagnostics()
+	return nil
 }
 
 // decodeMatrix takes an eval context and scenario blocks and decodes only the
 // matrix block. It returns a unique matrix with vectors for all unique variant
 // value combinations.
+//
+//nolint:cyclop // matrix decode has a high cyclomatic complexity due to it having a lot of HCL
 func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnostics) {
-	mContent, _, diags := block.Body.PartialContent(matrixSchema)
-	if diags.HasErrors() {
+	diags := hcl.Diagnostics{}
+	mContent, _, moreDiags := block.Body.PartialContent(matrixSchema)
+	diags = diags.Extend(moreDiags)
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return nil, diags
 	}
 
@@ -518,12 +528,12 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 	matrix := NewMatrix()
 
 	decodeMatrixAttribute := func(block *hcl.Block, attr *hcl.Attribute) (*Vector, hcl.Diagnostics) {
-		var diags hcl.Diagnostics
+		diags := hcl.Diagnostics{}
 		vec := NewVector()
 
 		val, moreDiags := attr.Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return vec, diags
 		}
 
@@ -586,7 +596,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 	for _, attr := range sortAttributes(mAttrs) {
 		vec, moreDiags := decodeMatrixAttribute(block, attr)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -607,7 +617,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 		},
 	})
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return nil, diags
 	}
 	diags = diags.Extend(verifyBodyOnlyHasBlocksWithLabels(
@@ -620,14 +630,14 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 			iMatrix := NewMatrix()
 			iAttrs, moreDiags := mBlock.Body.JustAttributes()
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
 			}
 
 			for _, attr := range sortAttributes(iAttrs) {
 				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
 				diags = diags.Extend(moreDiags)
-				if moreDiags.HasErrors() {
+				if moreDiags != nil && moreDiags.HasErrors() {
 					continue
 				}
 
@@ -636,28 +646,28 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 
 			// Generate our possible include vectors and add them to our main
 			// matrix.
-			for _, vec := range iMatrix.CartesianProduct().UniqueValues().Vectors {
+			for _, vec := range iMatrix.CartesianProduct().UniqueValues().GetVectors() {
 				matrix.AddVector(vec)
 			}
 		case "exclude":
 			eMatrix := NewMatrix()
 			eAttrs, moreDiags := mBlock.Body.JustAttributes()
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
 			}
 
 			for _, attr := range sortAttributes(eAttrs) {
 				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
 				diags = diags.Extend(moreDiags)
-				if moreDiags.HasErrors() {
+				if moreDiags != nil && moreDiags.HasErrors() {
 					continue
 				}
 				eMatrix.AddVector(vec)
 			}
 
 			excludes := []*Exclude{}
-			for _, vec := range eMatrix.CartesianProduct().UniqueValues().Vectors {
+			for _, vec := range eMatrix.CartesianProduct().UniqueValues().GetVectors() {
 				ex, err := NewExclude(pb.Matrix_Exclude_MODE_CONTAINS, vec)
 				if err != nil {
 					diags = diags.Append(&hcl.Diagnostic{
@@ -700,7 +710,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 // pass along error diagnostics for any encountered. This allows us to continue
 // to decode in some cases while still bubbling the error up.
 func filterTerraformMetaAttrs(in hcl.Attributes) (hcl.Attributes, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	var out hcl.Attributes
 
 	for name, attr := range in {
@@ -729,7 +739,7 @@ func filterTerraformMetaAttrs(in hcl.Attributes) (hcl.Attributes, hcl.Diagnostic
 // blocks which have an unknown schema, this is the only way to ensure those
 // blocks don't have child blocks.
 func verifyNoBlockInAttrOnlySchema(in hcl.Body) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	body, ok := in.(*hclsyntax.Body)
 	if ok && len(body.Blocks) != 0 {
@@ -749,7 +759,7 @@ func verifyNoBlockInAttrOnlySchema(in hcl.Body) hcl.Diagnostics {
 // verifyBodyOnlyHasBlocksWithLabels is a hacky way to ensure that the given block
 // doesn't have any child blocks execept for those allowed.
 func verifyBodyOnlyHasBlocksWithLabels(in hcl.Body, allowed ...string) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	body, ok := in.(*hclsyntax.Body)
 	if ok && len(body.Blocks) != 0 {
@@ -780,7 +790,7 @@ func verifyBodyOnlyHasBlocksWithLabels(in hcl.Body, allowed ...string) hcl.Diagn
 // verifyBlockLabelsAreValidIdentifiers takes and HCL block and validates that
 // the labels conform to both HCL and Enos allowed identifiers.
 func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	if len(block.Labels) == 0 {
 		diags = diags.Append(&hcl.Diagnostic{
@@ -803,7 +813,7 @@ func verifyBlockLabelsAreValidIdentifiers(block *hcl.Block) hcl.Diagnostics {
 
 // verifyValidIdentifier verifies that the string value could be used as an enos identifier.
 func verifyValidIdentifier(label string, hclRange *hcl.Range) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	// Make sure it's a valid HCL identifier
 	if !hclsyntax.ValidIdentifier(label) {
@@ -832,7 +842,7 @@ func verifyValidIdentifier(label string, hclRange *hcl.Range) hcl.Diagnostics {
 // verifyBlockHasNLabels verifies that the given block has the appropriate number
 // of defined labels.
 func verifyBlockHasNLabels(block *hcl.Block, n int) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	if len(block.Labels) != n {
 		diags = diags.Append(&hcl.Diagnostic{

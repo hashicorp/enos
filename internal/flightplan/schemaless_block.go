@@ -30,7 +30,15 @@ func NewSchemalessBlock() *SchemalessBlock {
 // Decode takes in an HCL block and eval context and attempts to decode and
 // evaluate it.
 func (s *SchemalessBlock) Decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
+
+	if block == nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity:    hcl.DiagError,
+			Summary:     "cannot decode nil block",
+			EvalContext: ctx,
+		})
+	}
 
 	s.Type = block.Type
 	s.Labels = block.Labels
@@ -52,7 +60,7 @@ func (s *SchemalessBlock) Decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Dia
 	for name, attr := range body.Attributes {
 		val, moreDiags := attr.AsHCLAttribute().Expr.Value(ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 		s.Attrs[name] = val
@@ -62,7 +70,7 @@ func (s *SchemalessBlock) Decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Dia
 		csb := NewSchemalessBlock()
 		moreDiags := csb.Decode(child.AsHCLBlock(), ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 		s.Children = append(s.Children, csb)

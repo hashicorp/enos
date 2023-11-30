@@ -60,25 +60,24 @@ func NewVariable() *Variable {
 
 // decode takes in an HCL block of a variable and any set variable values and decodes itself.
 func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	content, moreDiags := block.Body.Content(variableSchema)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	v.Name = block.Labels[0]
 
 	if attr, ok := content.Attributes["description"]; ok {
-		moreDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Description)
-		diags = diags.Extend(moreDiags)
+		diags = diags.Extend(gohcl.DecodeExpression(attr.Expr, nil, &v.Description))
 	}
 
 	if attr, ok := content.Attributes["type"]; ok {
 		ty, moreDiags := typeexpr.TypeConstraint(attr.Expr)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			ty = cty.DynamicPseudoType
 		}
 		v.ConstraintType = ty
@@ -88,8 +87,7 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 	if attr, ok := content.Attributes["sensitive"]; ok {
 		// NOTE: We don't actually do anything with sensitive variables yet
 		// but we're reserving them here.
-		moreDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Sensitive)
-		diags = diags.Extend(moreDiags)
+		diags = diags.Extend(gohcl.DecodeExpression(attr.Expr, nil, &v.Sensitive))
 	}
 
 	if attr, ok := content.Attributes["default"]; ok {
@@ -142,7 +140,7 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 			// the value of the expression.
 			val, moreDiags := setVal.Expr.Value(nil)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				v.SetValue = cty.DynamicVal
 
 				return diags
@@ -152,7 +150,7 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 			// This should never happen but we'll try and evaluate the expression.
 			val, moreDiags := setVal.Expr.Value(nil)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				v.SetValue = cty.DynamicVal
 
 				return diags
@@ -161,7 +159,7 @@ func (v *Variable) decode(block *hcl.Block, values map[string]*VariableValue) hc
 		default:
 			val, moreDiags := setVal.Expr.Value(nil)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				v.SetValue = cty.DynamicVal
 
 				return diags

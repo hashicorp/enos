@@ -115,7 +115,7 @@ func (e Element) Equal(other Element) bool {
 
 // Match determines if Exclude directive matches the given Vector.
 func (ex *Exclude) Match(vec *Vector) bool {
-	if vec == nil {
+	if ex == nil || vec == nil {
 		return false
 	}
 
@@ -143,6 +143,10 @@ func (ex *Exclude) Match(vec *Vector) bool {
 
 // Proto returns the exclude as a proto message.
 func (ex *Exclude) Proto() *pb.Matrix_Exclude {
+	if ex == nil {
+		return nil
+	}
+
 	return &pb.Matrix_Exclude{
 		Vector: ex.Vector.Proto(),
 		Mode:   ex.Mode,
@@ -151,7 +155,7 @@ func (ex *Exclude) Proto() *pb.Matrix_Exclude {
 
 // FromProto unmarshals a proto Matrix_Exclude into itself.
 func (ex *Exclude) FromProto(pfe *pb.Matrix_Exclude) {
-	if pfe == nil {
+	if ex == nil || pfe == nil {
 		return
 	}
 
@@ -161,6 +165,10 @@ func (ex *Exclude) FromProto(pfe *pb.Matrix_Exclude) {
 
 // Add adds an Element to the Vector.
 func (v *Vector) Add(e Element) {
+	if v == nil {
+		return
+	}
+
 	if v.elements == nil {
 		v.elements = []Element{e}
 		return
@@ -171,6 +179,10 @@ func (v *Vector) Add(e Element) {
 
 // Copy creates a new Copy of the Vector.
 func (v *Vector) Copy() *Vector {
+	if v == nil {
+		return nil
+	}
+
 	vecC := NewVector()
 
 	if v.elements == nil || len(v.elements) == 0 {
@@ -190,8 +202,12 @@ func (v *Vector) ContainsUnordered(other *Vector) bool {
 		return true
 	}
 
-	if other == nil {
+	if v == nil {
 		return false
+	}
+
+	if other == nil {
+		return true
 	}
 
 	if len(v.elements) < 1 || len(other.elements) < 1 {
@@ -217,6 +233,10 @@ func (v *Vector) ContainsUnordered(other *Vector) bool {
 
 // CtyVal returns the vector as a cty.Value. This is lossy as duplicate keys will be overwritten.
 func (v *Vector) CtyVal() cty.Value {
+	if v == nil {
+		return cty.NilVal
+	}
+
 	vals := map[string]cty.Value{}
 	for _, vec := range v.elements {
 		vals[vec.Key] = cty.StringVal(vec.Val)
@@ -279,11 +299,19 @@ func (v *Vector) EqualUnordered(other *Vector) bool {
 		return false
 	}
 
+	// We couldn't determine equality by elements. Next, create a copy of each and sort them to check
+	// by element.
 	vCpy := v.Copy()
 	oCpy := other.Copy()
 	vCpy.Sort()
 	oCpy.Sort()
 
+	// Make sure our copies didn't result in unexpected nil values.
+	if vCpy == nil || oCpy == nil || vCpy.elements == nil || oCpy.elements == nil {
+		return false
+	}
+
+	// Now check by elements.
 	for i := range vCpy.elements {
 		if !vCpy.elements[i].Equal(oCpy.elements[i]) {
 			return false
@@ -304,9 +332,13 @@ func (v *Vector) Elements() []Element {
 
 // Proto returns the Vector as a proto message.
 func (v *Vector) Proto() *pb.Matrix_Vector {
+	if v == nil {
+		return nil
+	}
+
 	pbv := &pb.Matrix_Vector{Elements: []*pb.Matrix_Element{}}
 
-	if v == nil || v.elements == nil {
+	if v.elements == nil {
 		return pbv
 	}
 
@@ -322,11 +354,7 @@ func (v *Vector) Proto() *pb.Matrix_Vector {
 
 // Sort sorts the Vector's Elements.
 func (v *Vector) Sort() {
-	if v.elements == nil {
-		return
-	}
-
-	if len(v.elements) < 2 {
+	if v == nil || v.elements == nil || len(v.elements) < 2 {
 		return
 	}
 
@@ -385,9 +413,22 @@ func (m *Matrix) AddVectorSorted(vec *Vector) {
 	m.Vectors = slices.Insert(m.Vectors, i, vec)
 }
 
+// GetVectors is an accessor for the vectors.
+func (m *Matrix) GetVectors() []*Vector {
+	if m == nil {
+		return nil
+	}
+
+	return m.Vectors
+}
+
 // CartesianProduct returns a pointer to a new Matrix whose Vectors are the
 // Cartesian product of combining all possible Vector Elements from the Matrix.
 func (m *Matrix) CartesianProduct() *Matrix {
+	if m == nil {
+		return nil
+	}
+
 	product := NewMatrix()
 	vlen := len(m.Vectors)
 	if vlen == 0 {
@@ -450,7 +491,7 @@ func (m *Matrix) Compact() {
 // ContainsVectorUnordered returns whether or not a matrix has a Vector whose unordered values
 // contain those of the other Vector.
 func (m *Matrix) ContainsVectorUnordered(other *Vector) bool {
-	if other == nil {
+	if m == nil || other == nil {
 		return false
 	}
 
@@ -465,6 +506,10 @@ func (m *Matrix) ContainsVectorUnordered(other *Vector) bool {
 
 // Copy creates a new copy of the Matrix.
 func (m *Matrix) Copy() *Matrix {
+	if m == nil {
+		return nil
+	}
+
 	nm := NewMatrix()
 
 	for i := range m.Vectors {
@@ -480,7 +525,7 @@ func (m *Matrix) Equal(other *Matrix) bool {
 		return true
 	}
 
-	if other == nil {
+	if m == nil || other == nil {
 		return false
 	}
 
@@ -488,7 +533,19 @@ func (m *Matrix) Equal(other *Matrix) bool {
 		return false
 	}
 
+	if m.Vectors == nil || other.Vectors == nil {
+		return true
+	}
+
 	for i := range m.Vectors {
+		if m.Vectors[i] == nil && other.Vectors[i] == nil {
+			continue
+		}
+
+		if m.Vectors[i] == nil {
+			return false
+		}
+
 		if !m.Vectors[i].Equal(other.Vectors[i]) {
 			return false
 		}
@@ -507,7 +564,7 @@ func (m *Matrix) EqualUnordered(other *Matrix) bool {
 		return false
 	}
 
-	if len(m.Vectors) != len(other.Vectors) {
+	if len(m.GetVectors()) != len(other.GetVectors()) {
 		return false
 	}
 
@@ -522,6 +579,10 @@ func (m *Matrix) EqualUnordered(other *Matrix) bool {
 // Exclude takes exclude vararg exclude directives as instances of Exclude. It returns a new
 // Matrix with all Exclude directives having been processed on the parent Matrix.
 func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
+	if m == nil {
+		return nil
+	}
+
 	if len(Excludes) < 1 {
 		return m.Copy()
 	}
@@ -546,8 +607,12 @@ func (m *Matrix) Exclude(Excludes ...*Exclude) *Matrix {
 
 // Filter takes a CcenarioFilter returns a new filtered Matrix.
 func (m *Matrix) Filter(filter *ScenarioFilter) *Matrix {
-	if filter == nil {
+	if m == nil {
 		return nil
+	}
+
+	if filter == nil {
+		return m
 	}
 
 	if filter.SelectAll {
@@ -635,7 +700,7 @@ func (m *Matrix) IntersectionContainsUnordered(other *Matrix) *Matrix {
 // HasVector returns whether or not a Matrix has a Vector that exactly matches the Elements of
 // another that is given.
 func (m *Matrix) HasVector(other *Vector) bool {
-	if other == nil {
+	if m == nil || other == nil {
 		return false
 	}
 
@@ -651,7 +716,7 @@ func (m *Matrix) HasVector(other *Vector) bool {
 // HasVectorSorted returns whether or not a sorted Matrix has a sorted Vector. It assumes the
 // Matrix and Vector have both already been sorted.
 func (m *Matrix) HasVectorSorted(other *Vector) bool {
-	if other == nil {
+	if m == nil || other == nil {
 		return false
 	}
 
@@ -663,7 +728,7 @@ func (m *Matrix) HasVectorSorted(other *Vector) bool {
 // HasVectorUnordered returns whether or not a Matrix has a Vector whose unordered values match
 // exactly with another that is given.
 func (m *Matrix) HasVectorUnordered(other *Vector) bool {
-	if other == nil {
+	if m == nil || other == nil {
 		return false
 	}
 
@@ -772,6 +837,10 @@ func (m *Matrix) SymmetricDifferenceUnordered(other *Matrix) *Matrix {
 
 // Unique returns a new Matrix with all unique Vectors.
 func (m *Matrix) Unique() *Matrix {
+	if m == nil {
+		return nil
+	}
+
 	nm := NewMatrix()
 	for _, v := range m.Vectors {
 		if !nm.HasVector(v) {
@@ -830,22 +899,35 @@ func compareVector(a, b *Vector) int {
 		return -1
 	}
 
-	// Compare by number of variants
-	var aElms, bElms []Element
-	if len(a.elements) > 0 {
-		aElms = a.elements
-	}
-	if len(b.elements) > 0 {
-		bElms = b.elements
-	}
+	// Compare by number of elements
+	aElms := a.Elements()
+	bElms := b.Elements()
+
 	if i := cmp.Compare(len(aElms), len(bElms)); i != 0 {
 		return i
 	}
 
-	// Compare by element value
-	for i := range a.elements {
-		if iv := compareElement(a.elements[i], b.elements[i]); iv != 0 {
-			return iv
+	// Compare by element existence
+	if aElms == nil && bElms == nil {
+		return 0
+	}
+
+	if aElms != nil && bElms == nil {
+		return 1
+	}
+
+	if aElms == nil && bElms != nil {
+		return -1
+	}
+
+	// Compare by element values if we have elements. We do this existence check again to please nilaway
+	if aElms != nil && bElms != nil {
+		for i, aElm := range aElms {
+			bElm := bElms[i]
+
+			if iv := compareElement(aElm, bElm); iv != 0 {
+				return iv
+			}
 		}
 	}
 

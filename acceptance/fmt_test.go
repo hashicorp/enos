@@ -47,10 +47,12 @@ func TestAcc_Cmd_Fmt(t *testing.T) {
 	got := &pb.FormatResponse{}
 	require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
 	require.Len(t, got.GetResponses(), len(expected.GetResponses()))
-	for i := range expected.GetResponses() {
-		got := got.GetResponses()[i]
-		expected := expected.GetResponses()[i]
-		require.Equal(t, expected.GetPath(), got.GetPath())
-		require.Equal(t, expected.GetChanged(), got.GetChanged())
+	gotResps := got.GetResponses()
+	require.NotNil(t, gotResps)
+	for i, eRes := range expected.GetResponses() {
+		gotRes := gotResps[i]
+		require.NotNil(t, gotRes)
+		require.Equal(t, eRes.GetPath(), gotRes.GetPath())
+		require.Equal(t, eRes.GetChanged(), gotRes.GetChanged())
 	}
 }

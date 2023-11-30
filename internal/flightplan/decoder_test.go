@@ -18,7 +18,7 @@ import (
 )
 
 func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
-	if !diags.HasErrors() {
+	if diags == nil || !diags.HasErrors() {
 		return nil
 	}
 	msg := &strings.Builder{}
@@ -44,7 +44,9 @@ func testDecodeHCL(t *testing.T, hcl []byte, dt DecodeTarget, env ...string) (*F
 	)
 	require.NoError(t, err)
 	_, diags := decoder.FPParser.ParseHCL(hcl, "decoder-test.hcl")
-	require.False(t, diags.HasErrors(), testDiagsToError(decoder.ParserFiles(), diags))
+	if diags != nil {
+		require.False(t, diags.HasErrors(), testDiagsToError(decoder.ParserFiles(), diags))
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	fp, diags := decoder.Decode(ctx)
@@ -139,26 +141,37 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		}
 	}
 
+	if expected.ScenarioBlocks != nil {
+		require.NotNil(t, fp.ScenarioBlocks)
+	}
 	for i := range expected.ScenarioBlocks {
-		for j := range expected.ScenarioBlocks[i].Scenarios {
-			require.EqualValues(t, expected.ScenarioBlocks[i].Name, fp.ScenarioBlocks[i].Name)
-			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Name, fp.ScenarioBlocks[i].Scenarios[j].Name)
-			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformSetting, fp.ScenarioBlocks[i].Scenarios[j].TerraformSetting)
-			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformCLI, fp.ScenarioBlocks[i].Scenarios[j].TerraformCLI)
-			if expected.ScenarioBlocks[i].Scenarios[j].Variants == nil {
-				require.Nil(t, fp.ScenarioBlocks[i].Scenarios[j].Variants)
-			} else {
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Variants.elements, fp.ScenarioBlocks[i].Scenarios[j].Variants.elements)
-			}
-			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs, len(fp.ScenarioBlocks[i].Scenarios[j].Outputs))
+		require.NotNil(t, fp.ScenarioBlocks)
+		gotBlock := fp.ScenarioBlocks[i]
+		require.NotNil(t, gotBlock)
 
-			if len(fp.ScenarioBlocks[i].Scenarios[j].Outputs) > 0 {
+		for j := range expected.ScenarioBlocks[i].Scenarios {
+			require.EqualValues(t, expected.ScenarioBlocks[i].Name, gotBlock.Name)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Name, gotBlock.Scenarios[j].Name)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformSetting, gotBlock.Scenarios[j].TerraformSetting)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformCLI, gotBlock.Scenarios[j].TerraformCLI)
+			if expected.ScenarioBlocks[i].Scenarios[j].Variants == nil {
+				require.Nil(t, gotBlock.Scenarios[j].Variants)
+			} else {
+				expectedVariants := expected.ScenarioBlocks[i].Scenarios[j].Variants
+				gotVariants := gotBlock.Scenarios[j].Variants
+				require.NotNil(t, expectedVariants)
+				require.NotNil(t, gotVariants)
+				require.EqualValues(t, expectedVariants.Elements(), gotVariants.Elements())
+			}
+			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs, len(gotBlock.Scenarios[j].Outputs))
+
+			if len(gotBlock.Scenarios[j].Outputs) > 0 {
 				for oi := range expected.ScenarioBlocks[i].Scenarios[j].Outputs {
-					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Name, fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Name)
-					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Description, fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Description)
-					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Sensitive, fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Sensitive)
+					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Name, gotBlock.Scenarios[j].Outputs[oi].Name)
+					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Description, gotBlock.Scenarios[j].Outputs[oi].Description)
+					require.Equal(t, expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Sensitive, gotBlock.Scenarios[j].Outputs[oi].Sensitive)
 					eVal := expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Value
-					aVal := fp.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Value
+					aVal := gotBlock.Scenarios[j].Outputs[oi].Value
 
 					require.True(t, eVal.Type().Equals(aVal.Type()),
 						fmt.Sprintf("expected type %s, got %s", eVal.Type().FriendlyName(), aVal.Type().FriendlyName()),
@@ -169,15 +182,15 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 				}
 			}
 
-			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Steps, len(fp.ScenarioBlocks[i].Scenarios[j].Steps))
+			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Steps, len(gotBlock.Scenarios[j].Steps))
 			for is := range expected.ScenarioBlocks[i].Scenarios[j].Steps {
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Name, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Name)
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Providers, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Providers)
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].DependsOn, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].DependsOn)
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Skip, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Skip)
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Name, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Name)
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Source, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Source)
-				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Version, fp.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Version)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Name, gotBlock.Scenarios[j].Steps[is].Name)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Providers, gotBlock.Scenarios[j].Steps[is].Providers)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].DependsOn, gotBlock.Scenarios[j].Steps[is].DependsOn)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Skip, gotBlock.Scenarios[j].Steps[is].Skip)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Name, gotBlock.Scenarios[j].Steps[is].Module.Name)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Source, gotBlock.Scenarios[j].Steps[is].Module.Source)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Version, gotBlock.Scenarios[j].Steps[is].Module.Version)
 
 				for isa := range expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs {
 					eAttr := expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Attrs[isa]
@@ -210,8 +223,10 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 	t.Helper()
 
 	eVal, diags := StepVariableFromVal(expected)
+	require.NotNil(t, eVal)
 	require.False(t, diags.HasErrors(), diags.Error())
 	aVal, diags := StepVariableFromVal(got)
+	require.NotNil(t, aVal)
 	require.False(t, diags.HasErrors(), diags.Error())
 	require.EqualValues(t, eVal.Value, aVal.Value)
 	require.Lenf(t, eVal.Traversal, len(aVal.Traversal),
@@ -221,9 +236,14 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 
 	for i := range eVal.Traversal {
 		if i == 0 {
-			eAttr, ok := eVal.Traversal[i].(hcl.TraverseRoot)
+			require.NotNil(t, aVal.Traversal)
+			eTrav := eVal.Traversal[i]
+			require.NotNil(t, eTrav)
+			eAttr, ok := eTrav.(hcl.TraverseRoot)
 			require.True(t, ok)
-			aAttr, ok := aVal.Traversal[i].(hcl.TraverseRoot)
+			aTrav := aVal.Traversal[i]
+			require.NotNil(t, aTrav)
+			aAttr, ok := aTrav.(hcl.TraverseRoot)
 			require.True(t, ok)
 			require.EqualValues(t, eAttr.Name, aAttr.Name)
 

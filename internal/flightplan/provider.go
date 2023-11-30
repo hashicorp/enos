@@ -26,7 +26,7 @@ func NewProvider() *Provider {
 // decodes from the block onto itself. Any errors that are encountered are
 // returned as hcl diagnostics.
 func (p *Provider) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	p.Type = block.Labels[0]
 	p.Alias = block.Labels[1]
@@ -34,7 +34,7 @@ func (p *Provider) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostic
 	// Decode the entire provider block as a schemaless block
 	moreDiags := p.Config.Decode(block, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 

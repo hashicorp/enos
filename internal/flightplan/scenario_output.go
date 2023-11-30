@@ -22,7 +22,7 @@ func NewScenarioOutput() *ScenarioOutput {
 
 // decode takes in an HCL block of an output and unmarshal the value into itself.
 func (v *ScenarioOutput) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	v.Name = block.Labels[0]
 
 	// Define this here so StepVariableType is our cty.Type and not cty.Nil
@@ -46,7 +46,7 @@ func (v *ScenarioOutput) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diag
 
 	val, moreDiags := hcldec.Decode(block.Body, scenarioOutputSpec, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 

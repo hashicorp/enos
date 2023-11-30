@@ -128,14 +128,14 @@ type Decoder struct {
 
 // Parse locates enos configuration files and parses them.
 func (d *Decoder) Parse() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	// Parse and raw configuration bytes we've been configured with
 	return diags.Extend(d.parseRawFiles())
 }
 
 func (d *Decoder) parseRawFiles() hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	for path, bytes := range d.fpFiles {
 		_, moreDiags := d.FPParser.ParseHCL(bytes, path)
@@ -262,7 +262,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 
 // Decode decodes the HCL into a flight plan.
 func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	fp, err := NewFlightPlan(WithFlightPlanBaseDirectory(d.dir))
 	if err != nil {
@@ -299,14 +299,19 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	body := hcl.MergeFiles(files)
 
 	// Decode our top-level schema
-	fp.BodyContent, diags = body.Content(flightPlanSchema)
+	var moreDiags hcl.Diagnostics
+	fp.BodyContent, moreDiags = body.Content(flightPlanSchema)
+	diags = diags.Extend(moreDiags)
+	if diags.HasErrors() {
+		return fp, diags
+	}
 
 	// Decode to our desired target level. Start with the lowest level and continue until we've
 	// reached our desired target. Each target level includes more blocks. Where appropriate, each
 	// decoder is responsible for extending the eval context and/or falling through to the next
 	// level.
 	decodeToLevel := func() hcl.Diagnostics {
-		var diags hcl.Diagnostics
+		diags := hcl.Diagnostics{}
 
 		if d.target < DecodeTargetUnset {
 			return diags.Append(&hcl.Diagnostic{

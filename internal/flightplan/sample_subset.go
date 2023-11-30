@@ -100,44 +100,52 @@ func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubs
 
 // decode takes a sample subset HCL block and decodes and unmarshals the contents of it into itself.
 func (s *SampleSubset) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	s.Name = block.Labels[0]
 
 	content, moreDiags := block.Body.Content(sampleSubsetSchema)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	s.ScenarioName, moreDiags = decodeSampleSubsetFieldString("scenario_name", content.Attributes, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
-	if s.ScenarioName != "" {
-		moreDiags = verifyValidIdentifier(s.ScenarioName, content.Attributes["scenario_name"].NameRange.Ptr())
+
+	scenarioNameAttr, ok := content.Attributes["scenario_name"]
+	if s.ScenarioName != "" && ok {
+		moreDiags = verifyValidIdentifier(s.ScenarioName, scenarioNameAttr.NameRange.Ptr())
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 	}
 
 	s.ScenarioFilter, moreDiags = decodeSampleSubsetFieldString("scenario_filter", content.Attributes, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
-	s.Attributes, moreDiags = decodeAndValidateSampleAttrs(content.Attributes["attributes"], ctx)
-	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
-		return diags
+	attributesAttr, ok := content.Attributes["attributes"]
+	if ok {
+		s.Attributes, moreDiags = decodeAndValidateSampleAttrs(attributesAttr, ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags != nil && moreDiags.HasErrors() {
+			return diags
+		}
 	}
 
 	// Decode the matrix block if there is one.
 	s.Matrix, moreDiags = decodeMatrix(ctx, block)
 	diags = diags.Extend(moreDiags)
+	if moreDiags != nil && moreDiags.HasErrors() {
+		return diags
+	}
 
 	if s.Name == "" && s.ScenarioName == "" && s.ScenarioFilter == "" {
 		diags = diags.Append(&hcl.Diagnostic{
@@ -170,13 +178,15 @@ func (s *SampleSubset) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagno
 }
 
 func decodeSampleSubsetFieldString(name string, attrs hcl.Attributes, ctx *hcl.EvalContext) (string, hcl.Diagnostics) {
+	diags := hcl.Diagnostics{}
 	f, ok := attrs[name]
 	if !ok {
 		return "", nil
 	}
 
-	val, diags := f.Expr.Value(ctx)
-	if diags.HasErrors() {
+	val, moreDiags := f.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return "", diags
 	}
 

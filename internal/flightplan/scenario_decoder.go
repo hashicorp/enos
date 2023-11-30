@@ -128,8 +128,8 @@ func (d DecodedScenarioBlocks) CombinedMatrix() *Matrix {
 		if m == nil {
 			m = sm
 		} else {
-			for j := range sm.Vectors {
-				m.AddVector(sm.Vectors[j])
+			for _, v := range sm.GetVectors() {
+				m.AddVector(v)
 			}
 		}
 	}
@@ -164,10 +164,10 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 			scenarioBlocks[i].Diagnostics = scenarioBlocks[i].Diagnostics.Extend(diags)
 
 			if scenarioBlocks[i].Matrix != nil &&
-				len(scenarioBlocks[i].Matrix.Vectors) > 1 &&
+				len(scenarioBlocks[i].Matrix.GetVectors()) > 1 &&
 				d.ScenarioFilter != nil {
 				scenarioBlocks[i].Matrix = scenarioBlocks[i].Matrix.Filter(d.ScenarioFilter)
-				if scenarioBlocks[i].Matrix == nil || len(scenarioBlocks[i].Matrix.Vectors) < 1 {
+				if scenarioBlocks[i].Matrix == nil || len(scenarioBlocks[i].Matrix.GetVectors()) < 1 {
 					// Our filter has no matches with the scenario filter so there's no need to
 					// try and continue to decode.
 					continue
@@ -181,7 +181,7 @@ func (d *ScenarioDecoder) DecodeScenarioBlocks(ctx context.Context, blocks []*hc
 
 		// Choose which decode option based on our target and the number of variants we have.
 		if scenarioBlocks[i].Matrix == nil ||
-			(scenarioBlocks[i].Matrix != nil && len(scenarioBlocks[i].Matrix.Vectors) < 1) {
+			(scenarioBlocks[i].Matrix != nil && len(scenarioBlocks[i].Matrix.GetVectors()) < 1) {
 			d.decodeScenariosSerial(scenarioBlocks[i])
 		} else {
 			switch d.DecodeTarget {
@@ -297,7 +297,7 @@ func (d *ScenarioDecoder) decodeScenario(
 // and requiring the overhead of goroutines.
 func (d *ScenarioDecoder) decodeScenariosSerial(sb *DecodedScenarioBlock) {
 	// Decode the scenario without a matrix
-	if sb.Matrix == nil || len(sb.Matrix.Vectors) < 1 {
+	if sb.Matrix == nil || len(sb.Matrix.GetVectors()) < 1 {
 		keep, scenario, diags := d.decodeScenario(nil, sb.Block)
 		sb.Diagnostics = sb.Diagnostics.Extend(diags)
 		if keep {
@@ -308,8 +308,8 @@ func (d *ScenarioDecoder) decodeScenariosSerial(sb *DecodedScenarioBlock) {
 	}
 
 	// Decode a scenario for all matrix vectors
-	for i := range sb.Matrix.Vectors {
-		keep, scenario, diags := d.decodeScenario(sb.Matrix.Vectors[i], sb.Block)
+	for i := range sb.Matrix.GetVectors() {
+		keep, scenario, diags := d.decodeScenario(sb.Matrix.GetVectors()[i], sb.Block)
 		sb.Diagnostics = sb.Diagnostics.Extend(diags)
 		if keep {
 			sb.Scenarios = append(sb.Scenarios, scenario)

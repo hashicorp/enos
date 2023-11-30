@@ -28,10 +28,9 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			out: &pb.ListScenariosResponse{
 				Scenarios: []*pb.Ref_Scenario{{
 					Id: &pb.Scenario_ID{
-						Name:     "test",
-						Filter:   "test",
-						Uid:      "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-						Variants: &pb.Matrix_Vector{},
+						Name:   "test",
+						Filter: "test",
+						Uid:    "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
 					},
 				}},
 			},
@@ -42,18 +41,16 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 				Scenarios: []*pb.Ref_Scenario{
 					{
 						Id: &pb.Scenario_ID{
-							Name:     "consul",
-							Uid:      "b713f0bd8f48dfad2263cabc455ade78f7e4e99a548101f31f935686dff67124",
-							Filter:   "consul",
-							Variants: &pb.Matrix_Vector{},
+							Name:   "consul",
+							Uid:    "b713f0bd8f48dfad2263cabc455ade78f7e4e99a548101f31f935686dff67124",
+							Filter: "consul",
 						},
 					},
 					{
 						Id: &pb.Scenario_ID{
-							Name:     "vault",
-							Filter:   "vault",
-							Uid:      "e6f0a1fbb43c89196dcfcbef85908f19ab4c5f7cc4f4c452284697757683d7ef",
-							Variants: &pb.Matrix_Vector{},
+							Name:   "vault",
+							Filter: "vault",
+							Uid:    "e6f0a1fbb43c89196dcfcbef85908f19ab4c5f7cc4f4c452284697757683d7ef",
 						},
 					},
 				},

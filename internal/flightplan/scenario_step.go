@@ -50,12 +50,12 @@ func NewScenarioStep() *ScenarioStep {
 // We then inherit the default variables from the module reference and then
 // evaluate our own "variables" block to get step level attributes.
 func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	// Decode the our scenario step
 	content, moreDiags := block.Body.Content(scenarioStepSchema)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -66,35 +66,35 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 	moreDiags, shouldSkip := ss.decodeSkip(content, ctx)
 	diags = diags.Extend(moreDiags)
 	ss.Skip = shouldSkip
-	if moreDiags.HasErrors() || shouldSkip {
+	if moreDiags != nil && moreDiags.HasErrors() || shouldSkip {
 		return diags
 	}
 
 	// Decode depends_on
 	moreDiags = ss.decodeAndValidateDependsOn(content, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	// Decode the step module reference
 	moduleAttr, moreDiags := ss.decodeModuleAttribute(block, content, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	// Validate that our module references an existing module in the eval context.
 	moduleVal, moreDiags := ss.validateModuleAttributeReference(moduleAttr, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	// Handle our named providers, if any
 	moreDiags = ss.decodeAndValidateProvidersAttribute(content, ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -118,7 +118,7 @@ func (ss *ScenarioStep) decodeSkip(
 	hcl.Diagnostics,
 	bool,
 ) {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	skip, ok := content.Attributes["skip_step"]
 	if !ok {
@@ -127,7 +127,7 @@ func (ss *ScenarioStep) decodeSkip(
 
 	val, moreDiags := skip.Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags, false
 	}
 
@@ -166,7 +166,7 @@ func (ss *ScenarioStep) decodeModuleAttribute(
 	*hcl.Attribute,
 	hcl.Diagnostics,
 ) {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	module, ok := content.Attributes["module"]
 	if !ok {
@@ -185,7 +185,7 @@ func (ss *ScenarioStep) decodeModuleAttribute(
 	// been defined at the top-level and has a matching name and source.
 	val, moreDiags := module.Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return module, diags
 	}
 
@@ -331,21 +331,32 @@ func (ss *ScenarioStep) decodeModuleAttribute(
 }
 
 func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	var modules cty.Value
 	var moduleVal cty.Value
 	var err error
 
+	newDiag := func(sum string, det string) *hcl.Diagnostic {
+		d := &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  sum,
+			Detail:   det,
+		}
+		if module != nil {
+			d.Subject = module.Expr.Range().Ptr()
+			d.Context = hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr()
+		}
+
+		return d
+	}
+
 	// Search through the eval context chain until we find a "modules" variable.
 	modules, err = findEvalContextVariable("module", ctx)
 	if err != nil {
-		diags = diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "unknown module",
-			Detail:   fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
-			Subject:  module.Expr.Range().Ptr(),
-			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
-		})
+		diags = diags.Append(newDiag(
+			"unknown module",
+			fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
+		))
 
 		return moduleVal, diags
 	}
@@ -366,27 +377,19 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 
 		source, ok := mod.AsValueMap()["source"]
 		if !ok {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "missing source",
-				Detail:   "module value does not contain a source",
-				Subject:  module.Expr.Range().Ptr(),
-				Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
-			})
+			diags = diags.Append(newDiag(
+				"missing source",
+				"module value does not contain a source",
+			))
 
 			break
 		}
 
 		if s := source.AsString(); s != ss.Module.Source {
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "module source doesn't match module definition",
-				Detail: fmt.Sprintf("module source for module %s is %s, not %s",
-					ss.Module.Name, s, ss.Module.Source,
-				),
-				Subject: module.Expr.Range().Ptr(),
-				Context: hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
-			})
+			diags = diags.Append(newDiag(
+				"module source doesn't match module definition",
+				fmt.Sprintf("module source for module %s is %s, not %s", ss.Module.Name, s, ss.Module.Source),
+			))
 
 			break
 		}
@@ -397,13 +400,10 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 	}
 
 	if moduleVal.IsNull() {
-		diags = diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "unknown module",
-			Detail:   fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
-			Subject:  module.Expr.Range().Ptr(),
-			Context:  hcl.RangeBetween(module.NameRange, module.Expr.Range()).Ptr(),
-		})
+		diags = diags.Append(newDiag(
+			"unknown module",
+			fmt.Sprintf("a module with name %s has not been defined", ss.Module.Name),
+		))
 
 		return moduleVal, diags
 	}
@@ -414,7 +414,7 @@ func (ss *ScenarioStep) validateModuleAttributeReference(module *hcl.Attribute, 
 // decodeAndValidateDependsOn decodess the depends_on attribute and ensures that
 // the values reference known steps.
 func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	depends, ok := content.Attributes["depends_on"]
 	if !ok {
@@ -426,7 +426,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 
 	dependsVal, moreDiags := depends.Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -533,7 +533,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 // from the content and validates that each sub-attribute references a defined
 // provider.
 func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	providers, ok := content.Attributes["providers"]
 	if !ok {
@@ -544,7 +544,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 
 	providersVal, moreDiags := providers.Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -589,7 +589,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 
 	// findProvider finds an unrolled provider given a provider type and alias
 	findProvider := func(pType string, pAlias string) (cty.Value, hcl.Diagnostics) {
-		var diags hcl.Diagnostics
+		diags := hcl.Diagnostics{}
 
 		types, ok := unrolled[pType]
 		if !ok {
@@ -640,7 +640,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 			var moreDiags hcl.Diagnostics
 			providerVal, moreDiags = findProvider(parts[0], parts[1])
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
 			}
 
@@ -696,7 +696,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 
 		alias, moreDiags := findProvider(provider.Type, provider.Alias)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -755,7 +755,7 @@ func (ss *ScenarioStep) copyModuleAttributes(module cty.Value) {
 }
 
 func (ss *ScenarioStep) decodeVariables(varBlocks hcl.Blocks, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	for _, varBlock := range varBlocks {
 		// Step variables are decoded into special StepVariableType's because
@@ -767,13 +767,13 @@ func (ss *ScenarioStep) decodeVariables(varBlocks hcl.Blocks, ctx *hcl.EvalConte
 		spec := hcldec.ObjectSpec{}
 		attrs, moreDiags := varBlock.Body.JustAttributes()
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 
 		attrs, moreDiags = filterTerraformMetaAttrs(attrs)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 
@@ -787,7 +787,7 @@ func (ss *ScenarioStep) decodeVariables(varBlocks hcl.Blocks, ctx *hcl.EvalConte
 
 		val, moreDiags := hcldec.Decode(varBlock.Body, spec, ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -802,10 +802,17 @@ func (ss *ScenarioStep) decodeVariables(varBlocks hcl.Blocks, ctx *hcl.EvalConte
 // insertIntoCtx takes a pointer to an eval context and adds the step into
 // it. If no "step" variable is present it will handle creating it.
 func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
+	if ss == nil {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  `cannot insert into nil "step" eval context`,
+		})
+	}
+
 	var notDefined *errNotDefinedInCtx
 
-	steps := map[string]cty.Value{}
+	var steps map[string]cty.Value
 	stepVal, err := findEvalContextVariable("step", ctx)
 	if err != nil && !errors.As(err, &notDefined) {
 		// This should never happen but lets make sure that it's not a different
@@ -818,6 +825,9 @@ func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
 	}
 	if err == nil {
 		steps = stepVal.AsValueMap()
+	}
+	if steps == nil {
+		steps = map[string]cty.Value{}
 	}
 
 	vals := map[string]cty.Value{

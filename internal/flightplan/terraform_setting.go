@@ -55,7 +55,7 @@ func NewTerraformSettingBackend() *TerraformSettingBackend {
 // in enos, nor do we need to modify them, they're usually decoded and left as
 // cty.Values so that we can pass them directly to the generator.
 func (t *TerraformSetting) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	t.Name = block.Labels[0]
 
@@ -69,6 +69,10 @@ func (t *TerraformSetting) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Di
 	remain, moreDiags = t.decodeCloud(ctx, remain)
 	diags = diags.Extend(moreDiags)
 
+	if remain == nil {
+		return diags
+	}
+
 	// Handle the rest of our schema manually since it isn't strictly defined
 	content, moreDiags := remain.Content(&hcl.BodySchema{
 		Blocks: []hcl.BlockHeaderSchema{
@@ -78,7 +82,7 @@ func (t *TerraformSetting) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Di
 		},
 	})
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -91,7 +95,7 @@ func (t *TerraformSetting) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Di
 
 // ensureOnlyCloudOrBackendDefined ensures that only a cloud or backend is defined.
 func (t *TerraformSetting) ensureOnlyCloudOrBackendDefined(body hcl.Body) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	content, _, moreDiags := body.PartialContent(&hcl.BodySchema{
 		Blocks: []hcl.BlockHeaderSchema{
@@ -100,7 +104,7 @@ func (t *TerraformSetting) ensureOnlyCloudOrBackendDefined(body hcl.Body) hcl.Di
 		},
 	})
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -216,14 +220,14 @@ func (t *TerraformSetting) decodeCloud(ctx *hcl.EvalContext, body hcl.Body) (hcl
 
 // decodeRequiredProviders decodes the "required_providers" block.
 func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content *hcl.BodyContent) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	for _, block := range content.Blocks.OfType("required_providers") {
 		diags = diags.Extend(verifyNoBlockInAttrOnlySchema(block.Body))
 
 		attrs, moreDiags := block.Body.JustAttributes()
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -231,7 +235,7 @@ func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content
 		for name, attr := range attrs {
 			val, moreDiags := attr.Expr.Value(ctx)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
 			}
 
@@ -285,14 +289,14 @@ func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content
 
 // decodeProviderMeta decodes the "provider_meta" block.
 func (t *TerraformSetting) decodeProviderMeta(ctx *hcl.EvalContext, content *hcl.BodyContent) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	for _, block := range content.Blocks.OfType("provider_meta") {
 		diags = diags.Extend(verifyNoBlockInAttrOnlySchema(block.Body))
 
 		attrs, moreDiags := block.Body.JustAttributes()
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
@@ -300,7 +304,7 @@ func (t *TerraformSetting) decodeProviderMeta(ctx *hcl.EvalContext, content *hcl
 		for _, attr := range attrs {
 			val, moreDiags := attr.Expr.Value(ctx)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
 			}
 			pm[attr.Name] = val
@@ -314,7 +318,7 @@ func (t *TerraformSetting) decodeProviderMeta(ctx *hcl.EvalContext, content *hcl
 
 // decodeBackend decodes the "backend" block.
 func (t *TerraformSetting) decodeBackend(ctx *hcl.EvalContext, content *hcl.BodyContent) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	for i, block := range content.Blocks.OfType("backend") {
 		if i != 0 {
@@ -354,7 +358,7 @@ func (t *TerraformSetting) decodeBackend(ctx *hcl.EvalContext, content *hcl.Body
 			}, ctx,
 		)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 		backend.Workspaces = val.AsValueMap()["workspaces"]
@@ -362,14 +366,16 @@ func (t *TerraformSetting) decodeBackend(ctx *hcl.EvalContext, content *hcl.Body
 		// NOTE: JustAttributes() will raise an error if the body has a block
 		// defined. At the time of writing even "hidden" blocks from partial
 		// decoding are not exempt, hence we're ignoring the error.
-		attrs, _ := remain.JustAttributes()
-		for _, attr := range attrs {
-			val, moreDiags := attr.Expr.Value(ctx)
-			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
-				continue
+		if remain != nil {
+			attrs, _ := remain.JustAttributes()
+			for _, attr := range attrs {
+				val, moreDiags := attr.Expr.Value(ctx)
+				diags = diags.Extend(moreDiags)
+				if moreDiags != nil && moreDiags.HasErrors() {
+					continue
+				}
+				backend.Attrs[attr.Name] = val
 			}
-			backend.Attrs[attr.Name] = val
 		}
 
 		t.Backend = backend

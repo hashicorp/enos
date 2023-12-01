@@ -57,12 +57,18 @@ func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) 
 		if err != nil {
 			return nil, err
 		}
+		if sampleVals == nil {
+			return nil, fmt.Errorf("cannot select elements from sample frame with no values")
+		}
 	}
 
 	if subsetFrame != nil && subsetFrame.SampleSubset != nil {
 		subsetVals, err = sampleAttrVals(subsetFrame.SampleSubset.Attributes)
 		if err != nil {
 			return nil, err
+		}
+		if subsetVals == nil {
+			return nil, fmt.Errorf("cannot select elements from sample subset frame with no values")
 		}
 	}
 
@@ -81,7 +87,7 @@ func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) 
 		if m != nil {
 			matrix = m.IntersectionContainsUnordered(matrix)
 		}
-		subElements = sampleElementsFor(s, subsetFrame, matrix.Vectors...)
+		subElements = sampleElementsFor(s, subsetFrame, matrix.GetVectors()...)
 	}
 
 	// Merge the subset vals into the sample vals. This will overwrite any outer keys.
@@ -119,10 +125,12 @@ func expandElementAttrs(elements []*pb.Sample_Element, vals map[string]cty.Value
 		// The value is singular so we'll add the value to each elements values.
 		if !aVal.CanIterateElements() {
 			for i := range elements {
-				if elementVals[i] == nil {
-					elementVals[i] = map[string]cty.Value{}
+				elmVal, ok := elementVals[i]
+				if !ok {
+					elmVal = map[string]cty.Value{}
 				}
-				elementVals[i][aKey] = aVal
+				elmVal[aKey] = aVal
+				elementVals[i] = elmVal
 			}
 
 			continue
@@ -135,6 +143,11 @@ func expandElementAttrs(elements []*pb.Sample_Element, vals map[string]cty.Value
 		}
 
 		vals := aVal.AsValueSlice()
+		if vals == nil {
+			// This shouldn't happen but AsValueSlice can return nil
+			continue
+		}
+
 		slices.SortStableFunc(vals, func(a, b cty.Value) int {
 			return cmp.Compare(a.GoString(), b.GoString())
 		})
@@ -163,10 +176,12 @@ func expandElementAttrs(elements []*pb.Sample_Element, vals map[string]cty.Value
 
 		// Write our values
 		for i, v := range valIdx {
-			if elementVals[i] == nil {
-				elementVals[i] = map[string]cty.Value{}
+			elmVal, ok := elementVals[i]
+			if !ok {
+				elmVal = map[string]cty.Value{}
 			}
-			elementVals[i][aKey] = vals[v]
+			elmVal[aKey] = vals[v]
+			elementVals[i] = elmVal
 		}
 	}
 

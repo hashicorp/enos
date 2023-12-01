@@ -28,19 +28,18 @@ func SampleFuncAll(ctx context.Context, frame *SampleFrame, r *rand.Rand) (*Samp
 		return nil, fmt.Errorf("filter is incompatible with returning all")
 	}
 
-	res := &SampleObservation{
-		SampleFrame:        frame,
-		SubsetObservations: map[string]*SampleSubsetObservation{},
-	}
-
+	observations := map[string]*SampleSubsetObservation{}
 	for name, subFrame := range frame.SubsetFrames {
-		res.SubsetObservations[name] = &SampleSubsetObservation{
+		observations[name] = &SampleSubsetObservation{
 			SampleSubsetFrame: subFrame,
 			Matrix:            subFrame.Matrix,
 		}
 	}
 
-	return res, nil
+	return &SampleObservation{
+		SampleFrame:        frame,
+		SubsetObservations: observations,
+	}, nil
 }
 
 // SampleFuncPurposiveStratified takes a sample frame and random number generator and returns a new

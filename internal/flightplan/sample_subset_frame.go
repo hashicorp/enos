@@ -63,6 +63,10 @@ func (s *SampleSubsetFrame) ObserveSimpleRandom(take int32, r *rand.Rand) (*Samp
 
 // Size returns the total size of elements in the frame.
 func (s *SampleSubsetFrame) Size() int32 {
+	if s == nil {
+		return 0
+	}
+
 	// Don't count blank frames.
 	if s.SampleSubset == nil && s.Matrix == nil {
 		return 0
@@ -70,7 +74,7 @@ func (s *SampleSubsetFrame) Size() int32 {
 
 	// If we have a matrix count one element per vertex
 	if s.Matrix != nil {
-		return int32(len(s.Matrix.Vectors))
+		return int32(len(s.Matrix.GetVectors()))
 	}
 
 	// We don't have a matrix so our size can only be a singular scenario

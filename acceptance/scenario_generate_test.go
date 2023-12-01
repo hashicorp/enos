@@ -95,14 +95,19 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 				})
 			}
 
+			var variants *pb.Matrix_Vector
+			if len(elements) > 0 {
+				variants = &pb.Matrix_Vector{
+					Elements: elements,
+				}
+			}
+
 			scenarioRef := &pb.Ref_Scenario{
 				Id: &pb.Scenario_ID{
-					Name:   test.name,
-					Filter: filter,
-					Uid:    test.uid,
-					Variants: &pb.Matrix_Vector{
-						Elements: elements,
-					},
+					Name:     test.name,
+					Filter:   filter,
+					Uid:      test.uid,
+					Variants: variants,
 				},
 			}
 

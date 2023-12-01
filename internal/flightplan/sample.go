@@ -43,19 +43,19 @@ func (s *Sample) Ref() *pb.Ref_Sample {
 
 // Decode decodes a sample from an HCL block and eval context.
 func (s *Sample) Decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 
 	s.Name = block.Labels[0]
 
 	content, moreDiags := block.Body.Content(sampleSchema)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
 	s.Attributes, moreDiags = decodeAndValidateSampleAttrs(content.Attributes["attributes"], ctx)
 	diags = diags.Extend(moreDiags)
-	if moreDiags.HasErrors() {
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
 
@@ -74,14 +74,14 @@ func (s *Sample) Decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagnostics 
 	for i := range subsets {
 		moreDiags := verifyBlockLabelsAreValidIdentifiers(subsets[i])
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
 		ss := &SampleSubset{}
 		moreDiags = ss.decode(subsets[i], ctx)
 		diags = diags.Extend(moreDiags)
-		if moreDiags.HasErrors() {
+		if moreDiags != nil && moreDiags.HasErrors() {
 			return diags
 		}
 
@@ -178,12 +178,14 @@ func (s *Sample) filterSubsets(filter *pb.Sample_Filter) []*SampleSubset {
 }
 
 func decodeAndValidateSampleAttrs(attr *hcl.Attribute, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	diags := hcl.Diagnostics{}
 	if attr == nil {
 		return cty.NilVal, nil
 	}
 
-	val, diags := attr.Expr.Value(ctx)
-	if diags.HasErrors() {
+	val, moreDiags := attr.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags != nil && moreDiags.HasErrors() {
 		return val, diags
 	}
 

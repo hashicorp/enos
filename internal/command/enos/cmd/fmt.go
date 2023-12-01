@@ -146,8 +146,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	/// Scan STDIN for content if we've been told to use STDIN either implicitly
-	// of explicitly.
+	// Scan STDIN for content if we've been told to use STDIN either implicitly of explicitly.
 	if (argP == "-" || argP == "") && len(req.GetFiles()) == 0 {
 		bytes, err := io.ReadAll(cmd.InOrStdin())
 		if err != nil {

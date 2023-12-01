@@ -31,7 +31,7 @@ func StepVariableVal(stepVar *StepVariable) cty.Value {
 
 // StepVariableFromVal returns the *StepVariable from a given value.
 func StepVariableFromVal(v cty.Value) (*StepVariable, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+	diags := hcl.Diagnostics{}
 	var stepVar *StepVariable
 
 	if !v.Type().Equals(StepVariableType) {
@@ -54,8 +54,11 @@ func StepVariableFromVal(v cty.Value) (*StepVariable, hcl.Diagnostics) {
 // variables you'll need to perform that in the module that is taking the value
 // as an input.
 func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Traversal, hcl.Diagnostics) {
-	traversal, diags := hcl.AbsTraversalForExpr(expr)
-	if !diags.HasErrors() {
+	diags := hcl.Diagnostics{}
+
+	traversal, moreDiags := hcl.AbsTraversalForExpr(expr)
+	diags = diags.Extend(moreDiags)
+	if moreDiags == nil || !moreDiags.HasErrors() {
 		// We have a valid absolute traversal
 		return traversal, diags
 	}
@@ -97,7 +100,7 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 			// if it's a valid step reference.
 			condResult, moreDiags := t.Condition.Value(ctx)
 			diags = diags.Extend(moreDiags)
-			if moreDiags.HasErrors() {
+			if moreDiags != nil && moreDiags.HasErrors() {
 				// Return the core expression diags to help troubleshooting
 				_, moreDiags := expr.Value(ctx)
 
@@ -145,7 +148,11 @@ func absTraversalForExpr(expr hcl.Expression, ctx *hcl.EvalContext) (hcl.Travers
 			// absolute traversal diagnostics to ease in solving the problem.
 			_, exprDiags := expr.Value(ctx)
 
-			return traversal, exprDiags.Extend(diags)
+			if exprDiags != nil {
+				return traversal, exprDiags.Extend(diags)
+			}
+
+			return traversal, diags
 		}
 	}
 }
@@ -171,7 +178,7 @@ func init() {
 						// output references. We'll do our best to support complex
 						// references but they have to be absolute traversals to
 						// "step"'s in the evaluation context.
-						var diags hcl.Diagnostics
+						diags := hcl.Diagnostics{}
 						stepVar := &StepVariable{
 							Value: cty.NilVal,
 						}
@@ -182,7 +189,7 @@ func init() {
 						// latter case we really only care about copying the
 						// contents of the value to avoid nesting stepvars.
 						absVal, moreDiags := expr.Value(ctx)
-						if !moreDiags.HasErrors() {
+						if moreDiags == nil || !moreDiags.HasErrors() {
 							// It's an known value. If it's a stepvar return
 							// it as we don't want to nest step vars.
 							if absVal.Type().Equals(StepVariableType) {
@@ -197,7 +204,7 @@ func init() {
 						// We have an unknown value. Let's find out if it's a
 						// valid traversal to another "step".
 						traversal, moreDiags := absTraversalForExpr(expr, ctx)
-						if moreDiags.HasErrors() {
+						if moreDiags != nil && moreDiags.HasErrors() {
 							// If it's not an absolute traversal we can't do
 							// static analysis.
 							return StepVariableVal(stepVar), diags.Extend(moreDiags)

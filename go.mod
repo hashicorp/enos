@@ -1,6 +1,6 @@
 module github.com/hashicorp/enos
 
-go 1.21.0
+go 1.21
 
 // https://github.com/ryancragun/go-cty/commit/b70d2866762dd2a09605c9755d4e8d997518f0c4
 replace github.com/zclconf/go-cty => github.com/ryancragun/go-cty v1.10.1-0.20230928174205-b70d2866762d
@@ -8,8 +8,8 @@ replace github.com/zclconf/go-cty => github.com/ryancragun/go-cty v1.10.1-0.2023
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/aws-sdk-go-v2/config v1.18.39
-	github.com/google/uuid v1.4.0
-	github.com/hashicorp/go-hclog v1.5.0
+	github.com/google/uuid v1.5.0
+	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/terraform-exec v0.19.0
@@ -22,10 +22,10 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.1
-	golang.org/x/net v0.18.0
-	golang.org/x/term v0.14.0
+	golang.org/x/net v0.19.0
+	golang.org/x/term v0.15.0
 	golang.org/x/text v0.14.0
-	google.golang.org/grpc v1.59.0
+	google.golang.org/grpc v1.60.0
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -65,10 +65,10 @@ require (
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/spf13/cast v1.5.1 // indirect
+	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -1,6 +1,6 @@
 module github.com/hashicorp/enos
 
-go 1.21
+go 1.22
 
 // https://github.com/ryancragun/go-cty/commit/b70d2866762dd2a09605c9755d4e8d997518f0c4
 replace github.com/zclconf/go-cty => github.com/ryancragun/go-cty v1.10.1-0.20230928174205-b70d2866762d

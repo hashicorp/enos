@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 module "foo" {
   source = "../scenario_generate_pass_0/modules/foo"
 }

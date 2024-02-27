@@ -13,7 +13,11 @@ GORACE=GORACE=log_path=/tmp/enos-gorace.log
 TEST_ACC=ENOS_ACC=1
 TEST_ACC_EXT=ENOS_ACC=1 ENOS_EXT=1
 
+.PHONY: default
 default: build
+
+.PHONY: all
+all: generate build profile build-profile
 
 .PHONY: generate
 generate: generate-proto
@@ -119,6 +123,10 @@ deps-build:
 deps-lint:
 	go install mvdan.cc/gofumpt@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+.PHONY: profile
+profile:
+	@$(CURRENT_DIRECTORY)/tools/profile/profile.sh
 
 .PHONY: version
 version:

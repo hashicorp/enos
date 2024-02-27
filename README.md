@@ -1,5 +1,110 @@
 # enos
-Enos is a CLI tool, which is part of the larger Enos framework, that powers Software Quality as Code. Users of Enos framework compose Quality Requirement scenarios using a declarative HCL DSL and reusable Terraform modules. They perform actions with those scenarios using the Enos CLI.
+
+Enos is a tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language.
+
+## What problem does Enos solve?
+
+You can use enos to _define and verify quality requirements of complex distributed software_.
+
+Before we go deeper we'll define some terms:
+  - *Software quality*
+    The degree to which a software product satisfies stated and implied needs when used under specified conditions.
+  - *Functional requirements*
+    The software’s primary domain function that performs one or many well defined tasks.
+  - *Nonfunctional requirements*
+    The software’s supporting systems which are not primary domain functions but are required to use the software, e.g. security, compliance, high availability, disaster recovery, durability, compatibility, etc.
+  - *Service-level objective*
+    An agreed upon means of measuring the performance of a service.
+  - *Quality characteristic*
+    An attribute of software that we wish to measure for quality purposes, e.g. reliability.
+  - *Product factors*
+    An observable property or function of a software product.
+  - *Quality requirement*
+    A stated desire to have a product factor fulfill a quality characteristic.
+  - *Quality requirement scenario*
+    An executable scenario that verifies one-or-more quality requirements of software.
+
+To understand why a tool like Enos exists we need to understand the differences that software delivery models make on both our quality requirements and the tools and strategies that we can utilize to ship quality software.
+
+For example, lets consider a hyphothetical software service application. What tools and strategies can we use to measure and verify the quality of our service? Say our application has lots of smaller unit tests that we execute regularly to verify some functional requirements before we deploy it. We run these often enough to give ourselves a sense of confidence in the correctness a unit level, but we don't verify our integrated product before changes in the source or deployment. Many of our services non-functional supporting systems like backups, high availability, and disaster recovery are provided by a platform team. Some of those requirements are fulfilled by external Cloud provider services and their SLAs. Our application is only deployed by us so we rarely have to worry about long term compatibility or data durability because we're only running a singular version of the application at one given time and it's regularly being updated to the latest version. We measure the quality of our service by defining various service level objectives and use instrumenation and observability tools to measure our SLO's and identify issues _after deployment_. We measure our velocity, which includes our time to recover from deployed bug. Our pipline is fast enough that we rely on being able to quickly patch issues and ship them.
+
+I want to emphasize that running a service is by no means trivial and our example omits plenty of challenges, but the tools and services we have available to measure quality (SLO's, velocity, observability) and move quickly with relative safety (automation, test verification, external tools and services with their SLAs) exist. Because our deployment model is limited and many of our non-functional requirements have been outsourced, our primary quality focus is limited to functional suitability and velocity. With these constraints a tool like Enos _could_ be useful for you but it was not designed for these constraints or requirements.
+
+Now lets consider a complex on-premises software product that we ship via binaries and packages. Lets say our product could be best described as a platform and that it services many different kinds of workloads, all with different access patterns and resource considerations. It has a vast array of deployment options and integrations. It has close to no telemetry and is often deployed in air-gapped environments, so even if the telemetry did exist it will never reach you. The deployment cycles for this can be up to a year in highly regulated environments, so its up the upmost importance that all functional, non-functional, and lifecycle actions behave as expected at all times, regardless of the many different ways the software might be deployed or used.
+
+This is by no means an apples to apples comparison with our SaaS example, but that's the point. Our software delivery method has changed by our quality requirements and our methods of quality verification. Instead of primarily focusing on the functional requirements of the system and velocity, we now have a larger responsibility of verification before the product is released. And on top of it, we also have so many other deployments variables like edition, version, platform, architecture, runtime, storage, network, cluster size, CPUs, memory, integrations, auditing, logging, HA, DR, etc, that we have to consider and ought to verify. In effect, we are now responsible for all functional, non-functional, and lifecycle quality, and since we no longer control most of the environmental variables we have to figure out how to verify our software in all sorts of environmental combinations.
+
+How do we ensure that our software behaves as expected under so many unique circumstances? What tools do we have for this? 
+
+  - *Unit tests*
+    Unit tests are really good at what they're supposed to do: verify the correctness of a routine. They're fast, easy, and relatively cheap, but they're isolated. Our application doesn't run in isolation, it runs integrated with everything else. We cannot rely on unit tests for reliability, efficiency, or non-functional quality requirements.
+  - *End-to-end tests, Acceptance Tests, Integration tests*
+    All of these are useful because they integrate more than one routine to give us more confidence in our application, we're actually testing our software in manner that more closely resembles reality. These tests might be a bit slow relative to our unit tests, but we'll still do a lot of these because they easy for building faster feedback loops during development. They're still not a good proxy for what we're going to ship because we're testing a binary on our local machine, or perhaps we're deployming a test build into containers. But a real application like we're building often is not sharing CPUs, doesn't use in-memory storage, and isn't relying on in-kernel networking. Not to mention the various load profiles, lifecycle changes, and external integrations. We can't rely on these for any non-functional requirements.
+  - *Interative Testing*
+    Manual testing is wonderful but it's really slow, expensive, prone to errors, and not repetable. We should include some of this but can't rely on it for most quality characteristics.
+  - *Load Testing, Performance Testing, Stress Testing*
+    These strategies are great testing our non-functional requirements. It's really useful but also quite slow and often expensive. We also have a problem of our deployment matrix. How do get a representative load test when there are so many different ways to deploy or software and so many different ways to use it?
+  - *Black box testing*
+    This is great for testing actual artifacts that we intend to ship, but we also have no good ways to testing all of our artifacts in representative ways.
+  - *Observability*
+    I wish, but we don't get telemetry. Most of these deployments are air-gapped and even if they were not, people might not want to spend on all that egress.
+  - *Simulation testing*
+    TBD. This might be a valid strategy at some point, but we don't get to control the environment.
+  - *Proofs?*
+    :weary: Maybe for some small routines. We simply don't have the budget or expertise to formally verify all of our software.
+
+This is not an exhaustive list of strategies but it does cover the most common answers. All of theses surely have their place in some parts of our quality workflow, but we've identified several gaps:
+
+#### Constraints
+* We have lots of different unique artifacts and they all need to have their quality characteristics verified.
+* We need to verify with myriad deployment options like architecture, runtime, operating system.
+* We need to verify myriad configuration options.
+* We need to verify myriad external integrations.
+* We need to verify our integrated systems in real-world scenarios.
+* We need to verify our non-functional requirements with various different deployments, runtimes, and workloads.
+* We need to verify the compatibility and durability when upgrading from various prior versions.
+* We need to verify our our migration behaviors.
+* We have a limited budget so we need choose the best cost/benefit solution.
+* We have limited time so we have to choose solutions that are relatively fast.
+* We woud like to automate whatever possible to improve our velocity and get sustained rewards for our time investment.
+
+#### Problems
+We needed a general purpose tool that allows us to author and execute fully end-to-end scenarios. It needed to support large matrices of options, handle all infrastructure set up and tear down, and allow sampling over scenario matrix products that could be in the millions.
+
+That's why we built Enos. It's designed to solve those problems specifically for HashiCorp products, but there are general purpose resources that might be valuable for your workflow.
+
+## What is Enos?
+
+Enos is a Terraform-based framework. In practice, an Enos scenario consists of one or more HCL configuration files that make use of Terraform providers and modules. These files are read and executed by the Enos CLI to spin up the specified resources and perform the specified verifications on them.
+
+The Enos framework is made up of several components:
+
+* **Terraform** is the engine of Enos. All steps of the quality requirement live within a Terraform root modules graph of resouces.
+* The **Domain Specific Language (DSL)** allows us to describe the scenario we want to run, including resources we want to spin up and actions or tests we want to perform upon them. Its syntax is very close to Terraform, with some differences that allow us to abstract away some of the complexities that would otherwise exist if we were to try to enable a matrix of scenarios using Terraform alone.
+* The **Command Line Interface (CLI)** allows us to execute actions within the context of the scenarios defined by the DSL. It provides a scenario based user interface, test scenario execution isolation, scenario sampling, dynamic module selection during generation, and many other features.
+* The **Enos Terraform provider** gives us access to Terraform resources and data sources that are useful for common Enos tasks like: running commands locally or on remote machines, discovering artifacts or local system information, downloading and installing artifacts, or setting up clusters of HashiCorp products. Cloud-specific Terraform providers like the AWS provider allow us to interact with resources supported by that platform. You can mix and match any Terraform resources to build a scenario.
+* **Terraform modules** allow us to group Terraform resources together. Scenarios are comprised of steps that implemented by such modules.
+* The **`action-setup-enos` Github Action** allows for easy installation of Enos in Github Actions workflows.
+
+## Should I use Enos?
+
+Are you developer working on HashiCorp products that are shipped as binaries or packages? If so, then yes, the product you're working on might already use enos.
+
+Are you working on something else? If so, then probably not but it's complicated. If you're into complication feel free to read on.
+
+The `enos` CLI itself is completely test target agnostic and can be used to execute any Terraform module(s). Quite a bit of the functionality of Enos scenarios is actually in the enos Terraform provider and its resources. The enos provider does provide some general purpose resources that you could use for non-HashiCorp software, but the vast majority of them have been built for specific HashiCorp needs and products.
+
+We want to be clear that *Enos and the Enos provider exist solely for HashiCorp products* and there are *no guarantees* that features for anything else will ever be priorizitied or built. You should expect *no support whatsoever if you choose to use the tools*, as they are intended for *internal use only* and should *never be used in production Terraform*.
+
+## How can I get started with Enos?
+
+If you're a HashiCorp developer, you can follow the Enos tutorials in the Engineering Handbook.
+
+If you're not, we don't currently have any examples or tutorials published yet, but you can install [Binaries](https://github.com/hashicorp/enos/releases/) and read about the various components below. There is also plenty of advanced Enos prior art in the Vault or Boundary repositories.
+
+## How is this different from `terraform test`?
+
+`terraform test` is a wonderful tool but has little overlap with Enos. Enos was started years before `terraform test` became a real thing and the responsibility of each is quite different. `terraform test` is a great way for testing your _Terraform Module_ while Enos is a great way to test _your application_ using Terraform as an engine. Enos _dynamically_ generates Terraform HCL and is intended for short to medium term test verification. `terrafrom test` is intended to test your static Terraform HCL.
 
 ## Components
 Enos can be thought of as framework to power Quality as Code as a part of your software delivery lifecycle. It has several components to help authors compose, execute, automate, and debug Quality Requirements.
@@ -10,16 +115,16 @@ The Enos DSL can be thought of as a Quality Requirement first, multiplexed Terra
 Enos Quality Requirement Scenarios are built upon Terraform and as such you can use any Terraform provider necessary to build or configure any dependencies.
 
 #### CLI
-The Enos CLI is responsible for decoding the enos.hcl and enos.vars.hcl into individual scenarios, generating Terraform modules of each scenario, performing Terraform actions against those modules, and tracking history of actions.
+The Enos CLI is primarily responsible for decoding the enos.hcl and enos.vars.hcl into individual scenarios, generating Terraform modules of each scenario, performing Terraform actions against those modules, and tracking history of actions. It is also used for advanced use cases like sampling, which is pseudo random execution of compatible scenarios for various test artifacts.
 
 #### Provider
-The [Enos Provider](https://github.com/hashicorp/enos-provider) is a Terraform provider that providers Terraform resources and datasources that are useful for using Terraform as a testing framework. There are helpers for running commands locally or on remote machines, discovering artifacts or local system information, installing artifacts, or setting up clusters of HashiCorp products.
+The [Enos Provider](https://github.com/hashicorp-forge/terraform-provider-enos) is a Terraform provider that provider Terraform resources and datasources that are useful for using Terraform as a testing framework. There are helpers for running commands locally or on remote machines, discovering artifacts or local system information, installing artifacts, or setting up clusters of HashiCorp products.
 
 #### Github Action
 The [Setup Enos Github Action](https://github.com/hashicorp/action-setup-enos) is a Github Action for installing and executing `enos` scenarios as part of Github Actions pipelines.
 
 #### Homebrew Formula
-The internal [Enos homebrew formula](https://github.com/hashicorp/homebrew-internal/tree/main/HomebrewFormula) is available to easily install releases of `enos` on your local machine. Github releases are also available for download in this repository.
+The hashicorp/internal homebrew tap allows you to install Enos on macOS. Binaries for various platforms are also published at Github Releases.
 
 ## Features
 ### DSL
@@ -33,22 +138,62 @@ The `module` block maps conceptually to a Terraform module that you want to make
 Example:
 ```hcl
 module "ec2_instance" {
-  source = "./modules/target"
+  source = "./modules/ec2_instance"
   tags   = var.tags
 }
 
-module "test_app" {
+module "load_balancer" {
+  source = "./modules/envoy"
+  tags   = var.tags
+}
+
+module "deploy" {
+  source = "./modules/deploy_app"
+  tags   = var.tags
+}
+
+module "e2e_tests" {
   source = "./modules/test_app"
   tags   = var.tags
 }
 
 scenario "test" {
-  step "target" {
+  step "create_db_instance" {
     module = module.ec2_instance
   }
 
-  step "test_app" {
+  step "create_app_instances" {
+    module = module.ec2_instance
+
+    variables {
+      instances = 3
+    }
+  }
+
+  step "create_proxy_instance" {
+    module = module.ec2_instance
+  }
+
+  step "deploy_app" {
+    module = module.deploy
+
+    variables {
+      app_addrs = step.create_app_instances.addrs
+      db_addr = step.create_db_instance.addrs[0]
+      proxy_addrs = step.create_proxy_instance.addrs
+    }
+  }
+
+  step "e2e_tests" {
+    depends_on = [
+      step.deploy_app
+    ]
+
     module = module.test_app
+
+    variables = {
+      addr = step.create_proxy_instance.addrs[0]
+    }
   }
 }
 ```
@@ -80,26 +225,18 @@ scenario "e2e" {
 ```
 
 #### Terraform CLI
-Terraform is generaally configured by any combination of environment variables, CLI flags, and rc configuration files. In order to support configuration group sets, Enos has a `terraform_cli` block that allows namespaced configuration sets to be used during operations of scenarios. All configuration that is currently supported in [configuration file](https://www.terraform.io/cli/config/config-file) should be supported in the `terraform_cli` block. In addtion to those configuration options and `env` attribute is available to specify a map of key/value pairs that should be set in the environment during execution, along with a `path` attribute that specifies where the `terraform` binary to execute resides. By default Enos will resolve `terraform` from the environment. A `terraform_cli` configuration block with the name of `default` will automatically be used for scenarios that do not set the `terraform_cli` attribute.
+Terraform is generaally configured by any combination of environment variables, CLI flags, and rc configuration files. In order to support configuration group sets, Enos has a `terraform_cli` block that allows namespaced configuration sets to be used during operations of scenarios. All configuration that is currently supported in [configuration file](https://www.terraform.io/cli/config/config-file) should be supported in the `terraform_cli` block. In addition to those configuration options and `env` attribute is available to specify a map of key/value pairs that should be set in the environment during execution, along with a `path` attribute that specifies where the `terraform` binary to execute resides. By default Enos will resolve `terraform` from the environment. A `terraform_cli` configuration block with the name of `default` will automatically be used for scenarios that do not set the `terraform_cli` attribute.
 
 Example:
 ```hcl
-terraform_cli "enos_from_s3" {
-  provider_installation {
-    network_mirror {
-      url = "https://enos-provider-current.s3.amazonaws.com/"
-      include = ["hashicorp.com/qti/enos"]
-    }
-    direct {
-      exclude = [
-        "hashicorp.com/qti/enos"
-      ]
-    }
+terraform_cli "with_private_modules" {
+  credentials "app.terraform.io" {
+    token = var.tfc_api_token // Credentials to install private modules from TFC
   }
 }
 
 scenario "test" {
-  terraform_cli = terraform_cli.enos_from_s3
+  terraform_cli = terraform_cli.with_private_modules
 }
 ```
 
@@ -109,12 +246,11 @@ Enos also has a concept of named Terraform settings, which can be selectively ap
 Example:
 ```hcl
 terraform "default" {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.6.0"
 
   required_providers {
     enos = {
-      version = ">= 0.1.13"
-      source  = "hashicorp.com/qti/enos"
+      version = ">= 0.0.1"
     }
 
     aws = {
@@ -490,36 +626,7 @@ $ enos scenario exec test arch:arm64 backend:consul distro:rhel --cmd "state sho
 
 ## Contrubuting
 
-All contributions are welcome! Please report any bugs or feature requests using
-the standard procedures on this repository. Feel free to drop into #team-quality
-or #talk-quality if you have any questions or questions.
-
-***
-
-## General tips
-
-### Save temporary Doormat credentials to local AWS credentials file
-
-- If you don’t already have active Doormat credentials, run
-
-    `doormat --refresh`
-- You will need your AWS account name, account ID, and access level. You can do this by checking them at https://doormat.hashicorp.services/, or by running `doormat aws --list` to see your eligible roles on the accounts you have access to.
-
-- Now, run the following, replacing `<account_number>`, `<account_name>`, and `<access_level>` with yours:
- 
-    `doormat aws --role arn:aws:iam::<account_number>:role/<account_name>-<access_level> -m`
-
-    (`-m` = manage (for AWS configs))
-
-- To check if it was successful:
-
-    `cd ~/.aws`
-    
-    `cat credentials`
-
-- It should show your updated `aws_access_key_id`, `aws_secret_access_key`, and `aws_session_token`.
-
-***
+Feel free to contribute if you wish.
 
 ## Release
 

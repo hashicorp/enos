@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "tags" {
   description = "Tags to add to AWS resources"
   type        = map(string)

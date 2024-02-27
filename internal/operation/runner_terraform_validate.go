@@ -2,7 +2,8 @@ package operation
 
 import (
 	"context"
-	"fmt"
+
+	"errors"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -71,7 +72,7 @@ func (r *Runner) terraformValidate(
 		)
 
 		if r.TFConfig.FailOnWarnings && !res.GetValid() {
-			err = fmt.Errorf("failing on validation warnings")
+			err = errors.New("failing on validation warnings")
 			// We'll handle this error below and exit after notifyFail
 		}
 	}

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ func newScenarioLaunchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "launch [FILTER]",
 		Short:             "Apply previously validated Terraform modules from matching scenarios",
-		Long:              fmt.Sprintf("Apply previously validated Terraform modules from matching scenarios. %s", scenarioFilterDesc),
+		Long:              "Apply previously validated Terraform modules from matching scenarios. " + scenarioFilterDesc,
 		RunE:              runScenarioLaunchCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}

@@ -269,7 +269,7 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 		return fp, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to create new flight plan",
-			Detail:   fmt.Sprintf("unable to create new flight plan: %s", err.Error()),
+			Detail:   "unable to create new flight plan: " + err.Error(),
 		})
 	}
 

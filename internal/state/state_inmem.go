@@ -1,7 +1,7 @@
 package state
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 
 	"github.com/hashicorp/enos/internal/flightplan"
@@ -70,7 +70,7 @@ func (i *InMemoryState) UpsertOperationResponse(res *pb.Operation_Response) erro
 		sid = scenario.UID()
 	}
 	if sid == "" {
-		return fmt.Errorf("invalid scenario id")
+		return errors.New("invalid scenario id")
 	}
 
 	resCopy := &pb.Operation_Response{}
@@ -81,7 +81,7 @@ func (i *InMemoryState) UpsertOperationResponse(res *pb.Operation_Response) erro
 
 	oid := resCopy.GetOp().GetId()
 	if oid == "" {
-		return fmt.Errorf("invalid operation id")
+		return errors.New("invalid operation id")
 	}
 
 	_, ok := i.responses[sid]
@@ -109,7 +109,7 @@ func (i *InMemoryState) AppendOperationEvent(event *pb.Operation_Event) error {
 		sid = scenario.UID()
 	}
 	if sid == "" {
-		return fmt.Errorf("invalid scenario id")
+		return errors.New("invalid scenario id")
 	}
 
 	eventCopy := &pb.Operation_Event{}
@@ -120,7 +120,7 @@ func (i *InMemoryState) AppendOperationEvent(event *pb.Operation_Event) error {
 
 	eid := eventCopy.GetOp().GetId()
 	if eid == "" {
-		return fmt.Errorf("invalid operation id")
+		return errors.New("invalid operation id")
 	}
 
 	eventsHistory, ok := i.events[sid]
@@ -153,27 +153,27 @@ func (i *InMemoryState) getOperationResponse(
 	scenario := flightplan.NewScenario()
 	scenarioRef := ref.GetScenario()
 	if scenarioRef == nil {
-		return nil, fmt.Errorf("state cannot retrieve response record without scenario reference")
+		return nil, errors.New("state cannot retrieve response record without scenario reference")
 	}
 	scenario.FromRef(scenarioRef)
 	sid := scenario.UID()
 	uid := ref.GetId()
 
 	if sid == "" {
-		return nil, fmt.Errorf("state cannot retrieve response record without scenario ID")
+		return nil, errors.New("state cannot retrieve response record without scenario ID")
 	}
 	if uid == "" {
-		return nil, fmt.Errorf("state cannot retrieve response record without operation ID")
+		return nil, errors.New("state cannot retrieve response record without operation ID")
 	}
 
 	_, ok := i.responses[sid]
 	if !ok {
-		return nil, fmt.Errorf("no operations matching scenario ID")
+		return nil, errors.New("no operations matching scenario ID")
 	}
 
 	op, ok := i.responses[sid][uid]
 	if !ok {
-		return nil, fmt.Errorf("no operations matching scenario and operation IDs")
+		return nil, errors.New("no operations matching scenario and operation IDs")
 	}
 
 	return op, nil
@@ -190,17 +190,17 @@ func (i *InMemoryState) getOperationEvents(
 	scenario := flightplan.NewScenario()
 	scenarioRef := ref.GetScenario()
 	if scenarioRef == nil {
-		return nil, fmt.Errorf("state cannot retrieve event stream without scenario reference")
+		return nil, errors.New("state cannot retrieve event stream without scenario reference")
 	}
 	scenario.FromRef(scenarioRef)
 	sid := scenario.UID()
 	uid := ref.GetId()
 
 	if sid == "" {
-		return nil, fmt.Errorf("state cannot retrieve event stream without scenario ID")
+		return nil, errors.New("state cannot retrieve event stream without scenario ID")
 	}
 	if uid == "" {
-		return nil, fmt.Errorf("state cannot retrieve event stream without operation ID")
+		return nil, errors.New("state cannot retrieve event stream without operation ID")
 	}
 
 	_, ok := i.events[sid]

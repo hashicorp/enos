@@ -2,6 +2,7 @@ package operation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -88,7 +89,7 @@ func (o *LocalOperator) Start(ctx context.Context) error {
 	defer o.mu.Unlock()
 
 	if o.running {
-		return fmt.Errorf("already running")
+		return errors.New("already running")
 	}
 	o.log.Info("starting")
 	ctx, o.ctxCancel = context.WithCancel(ctx)
@@ -150,7 +151,7 @@ func (o *LocalOperator) Dispatch(
 	}
 
 	if !o.running {
-		err = fmt.Errorf("unable to dispatch new operations as operator is not running")
+		err = errors.New("unable to dispatch new operations as operator is not running")
 		log.Error("failed to dispatch operation", "error", err)
 
 		return ref, diagnostics.FromErr(err)
@@ -202,7 +203,7 @@ func (o *LocalOperator) Dispatch(
 	default:
 		queueRes.Op = ref
 		queueRes.Status = pb.Operation_STATUS_FAILED
-		err = fmt.Errorf("failed to queue work request because the queue was full")
+		err = errors.New("failed to queue work request because the queue was full")
 		log.Error("failed to queue work request", "error", err)
 		diags := diagnostics.FromErr(err)
 
@@ -268,7 +269,7 @@ func (o *LocalOperator) drainWorkReqQueue() {
 		if err != nil {
 			err = fmt.Errorf("work request did not return a response: %w", err)
 		} else {
-			err = fmt.Errorf("work request did not return a response")
+			err = errors.New("work request did not return a response")
 		}
 		res.Status = pb.Operation_STATUS_CANCELLED
 		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)

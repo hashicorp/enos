@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -121,7 +122,7 @@ func Connect(ctx context.Context, opts ...Opt) (*Connection, error) {
 	}
 
 	if c.Addr == nil {
-		return nil, fmt.Errorf("you must supply a server address")
+		return nil, errors.New("you must supply a server address")
 	}
 
 	c.Trace("connecting to server", "addr", c.Addr.String())

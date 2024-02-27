@@ -3,6 +3,7 @@ package flightplan
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"slices"
@@ -56,19 +57,19 @@ func NewSampleObservationReq(opts ...SampleObservationOpt) (*SampleObservationRe
 	}
 
 	if req.Ws == nil {
-		return nil, fmt.Errorf("cannot sample without a configured workspace")
+		return nil, errors.New("cannot sample without a configured workspace")
 	}
 
 	if req.Ws.GetFlightplan() == nil {
-		return nil, fmt.Errorf("cannot sample without a configured flightplan")
+		return nil, errors.New("cannot sample without a configured flightplan")
 	}
 
 	if req.Filter == nil {
-		return nil, fmt.Errorf("cannot sample without a configured filter")
+		return nil, errors.New("cannot sample without a configured filter")
 	}
 
 	if req.Filter.GetSample().GetId().GetName() == "" {
-		return nil, fmt.Errorf("cannot sample without a sample name in the filter")
+		return nil, errors.New("cannot sample without a sample name in the filter")
 	}
 
 	// If we haven't configured a random number source then try and do it from the source seed.
@@ -85,7 +86,7 @@ func NewSampleObservationReq(opts ...SampleObservationOpt) (*SampleObservationRe
 	}
 
 	if req.Func == nil {
-		return nil, fmt.Errorf("cannot sample without a configured sampling function")
+		return nil, errors.New("cannot sample without a configured sampling function")
 	}
 
 	return req, nil
@@ -155,27 +156,27 @@ func (s *SampleObservationReq) getSample(ctx context.Context) (*Sample, *pb.Deco
 	decRes := &pb.DecodeResponse{}
 
 	if s.Ws == nil {
-		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("cannot sample without a configured workspace"))
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured workspace"))
 
 		return nil, decRes
 	}
 
 	if s.Filter == nil {
-		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("cannot sample without a configured filter"))
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured filter"))
 
 		return nil, decRes
 	}
 
 	sampleName := s.Filter.GetSample().GetId().GetName()
 	if sampleName == "" {
-		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("cannot sample without a sample name in the filter"))
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a sample name in the filter"))
 
 		return nil, decRes
 	}
 
 	efp := s.Ws.GetFlightplan()
 	if efp == nil {
-		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("cannot sample without a configured flightplan"))
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured flightplan"))
 
 		return nil, decRes
 	}
@@ -271,7 +272,7 @@ func (s *SampleObservation) Elements(r *rand.Rand) ([]*pb.Sample_Element, error)
 		if !ok {
 			// This should never happen but because Keys() isn't a range over the collection directly we
 			// could theoretically nil panic here if Keys() gives us invalid results.
-			return nil, fmt.Errorf("failed to get observation elements for subset")
+			return nil, errors.New("failed to get observation elements for subset")
 		}
 		subElements, err := s.SampleFrame.Elements(subsetObsv.SampleSubset.Name, r, subsetObsv.Matrix)
 		if err != nil {

@@ -1,7 +1,7 @@
 package flightplan
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -171,28 +171,28 @@ func (m *Module) FromCtyValue(val cty.Value) error {
 	}
 
 	if !val.IsWhollyKnown() {
-		return fmt.Errorf("cannot unmarshal unknown value")
+		return errors.New("cannot unmarshal unknown value")
 	}
 
 	if !val.CanIterateElements() {
-		return fmt.Errorf("value must be an object")
+		return errors.New("value must be an object")
 	}
 
 	for key, val := range val.AsValueMap() {
 		switch key {
 		case "source":
 			if val.Type() != cty.String {
-				return fmt.Errorf("source must be a string")
+				return errors.New("source must be a string")
 			}
 			m.Source = val.AsString()
 		case "name":
 			if val.Type() != cty.String {
-				return fmt.Errorf("name must be a string ")
+				return errors.New("name must be a string ")
 			}
 			m.Name = val.AsString()
 		case "version":
 			if val.Type() != cty.String {
-				return fmt.Errorf("version must be a string ")
+				return errors.New("version must be a string ")
 			}
 			m.Version = val.AsString()
 		default:

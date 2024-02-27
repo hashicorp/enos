@@ -2,6 +2,7 @@ package operation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -186,7 +187,7 @@ func (w *worker) runRequest(ctx context.Context, req *workReq) {
 			if err != nil {
 				err = fmt.Errorf("work request did not return a response: %w", err)
 			} else {
-				err = fmt.Errorf("work request did not return a response")
+				err = errors.New("work request did not return a response")
 			}
 			res.Status = pb.Operation_STATUS_FAILED
 			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
@@ -199,7 +200,7 @@ func (w *worker) runRequest(ctx context.Context, req *workReq) {
 		if err != nil {
 			err = fmt.Errorf("work request did not return a response: %w", err)
 		} else {
-			err = fmt.Errorf("work request did not return a response")
+			err = errors.New("work request did not return a response")
 		}
 		res.Status = pb.Operation_STATUS_CANCELLED
 		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)

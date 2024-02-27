@@ -2,6 +2,7 @@ package operation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -142,7 +143,7 @@ func scenarioAndModuleGeneratorForReq(ctx context.Context, req *pb.Operation_Req
 	scenarios := fp.Scenarios()
 	switch len(scenarios) {
 	case 0:
-		return nil, nil, diagnostics.FromErr(fmt.Errorf("no matching scenarios found"))
+		return nil, nil, diagnostics.FromErr(errors.New("no matching scenarios found"))
 	case 1:
 	default:
 		return nil, nil, diagnostics.FromErr(

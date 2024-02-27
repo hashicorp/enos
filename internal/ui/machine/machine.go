@@ -2,6 +2,7 @@ package machine
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -43,7 +44,7 @@ func NewErrUnsupportedEncodingFormat(format pb.UI_Settings_Format) error {
 		msg = fmt.Sprintf("%s: %s", msg, friendlyName)
 	}
 
-	return fmt.Errorf(msg)
+	return errors.New(msg)
 }
 
 // New takes options and returns a new basic.View.

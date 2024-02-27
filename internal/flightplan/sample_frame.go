@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -40,7 +41,7 @@ func (s *SampleFrame) Ref() *pb.Ref_Sample {
 // entire subset frame will be returned.
 func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) ([]*pb.Sample_Element, error) {
 	if s == nil || s.SubsetFrames == nil {
-		return nil, fmt.Errorf("cannot expand elements without subset frames")
+		return nil, errors.New("cannot expand elements without subset frames")
 	}
 
 	subsetFrame, ok := s.SubsetFrames[subsetFrameName]
@@ -58,7 +59,7 @@ func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) 
 			return nil, err
 		}
 		if sampleVals == nil {
-			return nil, fmt.Errorf("cannot select elements from sample frame with no values")
+			return nil, errors.New("cannot select elements from sample frame with no values")
 		}
 	}
 
@@ -68,7 +69,7 @@ func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) 
 			return nil, err
 		}
 		if subsetVals == nil {
-			return nil, fmt.Errorf("cannot select elements from sample subset frame with no values")
+			return nil, errors.New("cannot select elements from sample subset frame with no values")
 		}
 	}
 
@@ -139,7 +140,7 @@ func expandElementAttrs(elements []*pb.Sample_Element, vals map[string]cty.Value
 		// The value has multiple values. We'll randomly distribute our attributes values across all
 		// elements.
 		if r == nil {
-			return fmt.Errorf("no random number source given")
+			return errors.New("no random number source given")
 		}
 
 		vals := aVal.AsValueSlice()
@@ -198,11 +199,11 @@ func expandElementAttrs(elements []*pb.Sample_Element, vals map[string]cty.Value
 
 func (s *SampleFrame) FilterMin() (int32, error) {
 	if s == nil {
-		return 0, fmt.Errorf("get sample frame min: nil sample frame cannot have min")
+		return 0, errors.New("get sample frame min: nil sample frame cannot have min")
 	}
 
 	if s.Filter == nil {
-		return 0, fmt.Errorf("get sample frame min: sample does not have a filter")
+		return 0, errors.New("get sample frame min: sample does not have a filter")
 	}
 
 	return s.Filter.GetMinElements(), nil
@@ -210,11 +211,11 @@ func (s *SampleFrame) FilterMin() (int32, error) {
 
 func (s *SampleFrame) FilterMax() (int32, error) {
 	if s == nil {
-		return 0, fmt.Errorf("get sample frame max: nil sample frame cannot have max")
+		return 0, errors.New("get sample frame max: nil sample frame cannot have max")
 	}
 
 	if s.Filter == nil {
-		return 0, fmt.Errorf("get sample frame max: sample does not have a filter")
+		return 0, errors.New("get sample frame max: sample does not have a filter")
 	}
 
 	return s.Filter.GetMaxElements(), nil
@@ -222,11 +223,11 @@ func (s *SampleFrame) FilterMax() (int32, error) {
 
 func (s *SampleFrame) FilterPercentage() (float32, error) {
 	if s == nil {
-		return 0, fmt.Errorf("get sample frame pct: nil sample frame cannot have pct")
+		return 0, errors.New("get sample frame pct: nil sample frame cannot have pct")
 	}
 
 	if s.Filter == nil {
-		return 0, fmt.Errorf("get sample frame pct: sample does not have a filter")
+		return 0, errors.New("get sample frame pct: sample does not have a filter")
 	}
 
 	return s.Filter.GetPercentage(), nil
@@ -364,7 +365,7 @@ func sampleAttrVals(val cty.Value) (map[string]cty.Value, error) {
 	}
 
 	if !val.IsWhollyKnown() {
-		return nil, fmt.Errorf("sample attribute values cannot be unknowable")
+		return nil, errors.New("sample attribute values cannot be unknowable")
 	}
 
 	if !val.CanIterateElements() {

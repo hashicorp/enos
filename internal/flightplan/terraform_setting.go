@@ -1,6 +1,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
@@ -243,7 +244,7 @@ func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "unknown attribute value",
-					Detail:   fmt.Sprintf("%s required_providers value is not fully known", attr.Name),
+					Detail:   attr.Name + " required_providers value is not fully known",
 					Subject:  attr.Expr.Range().Ptr(),
 					Context:  attr.Range.Ptr(),
 				})
@@ -255,7 +256,7 @@ func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "unexpected attribute value",
-					Detail:   fmt.Sprintf("%s value must be an object", attr.Name),
+					Detail:   attr.Name + " value must be an object",
 					Subject:  attr.Expr.Range().Ptr(),
 					Context:  attr.Range.Ptr(),
 				})
@@ -270,7 +271,7 @@ func (t *TerraformSetting) decodeRequiredProviders(ctx *hcl.EvalContext, content
 					diags = diags.Append(&hcl.Diagnostic{
 						Severity: hcl.DiagError,
 						Summary:  "unexpected attribute",
-						Detail:   fmt.Sprintf("%s is not an allowed required_providers attribute", attr.Name),
+						Detail:   attr.Name + " is not an allowed required_providers attribute",
 						Subject:  attr.Expr.Range().Ptr(),
 						Context:  attr.Range.Ptr(),
 					})
@@ -389,7 +390,7 @@ func (t *TerraformSetting) decodeBackend(ctx *hcl.EvalContext, content *hcl.Body
 // is the cty.Value in the eval context.
 func (t *TerraformSetting) FromCtyValue(val cty.Value) error {
 	if !val.CanIterateElements() {
-		return fmt.Errorf("you must provide a cty.Value which can interate elements")
+		return errors.New("you must provide a cty.Value which can interate elements")
 	}
 
 	for k, v := range val.AsValueMap() {
@@ -411,7 +412,7 @@ func (t *TerraformSetting) FromCtyValue(val cty.Value) error {
 			}
 
 			if !v.CanIterateElements() {
-				return fmt.Errorf("required_providers must provide a cty.Value which can interate elements")
+				return errors.New("required_providers must provide a cty.Value which can interate elements")
 			}
 
 			for rpName, rpValue := range v.AsValueMap() {
@@ -423,12 +424,12 @@ func (t *TerraformSetting) FromCtyValue(val cty.Value) error {
 			}
 
 			if !v.CanIterateElements() {
-				return fmt.Errorf("provider_meta must provide a cty.Value which can interate elements")
+				return errors.New("provider_meta must provide a cty.Value which can interate elements")
 			}
 
 			for pmName, pmAttrs := range v.AsValueMap() {
 				if !pmAttrs.CanIterateElements() {
-					return fmt.Errorf("provider_meta attributes must provide a cty.Value which can interate elements")
+					return errors.New("provider_meta attributes must provide a cty.Value which can interate elements")
 				}
 
 				t.ProviderMetas[pmName] = pmAttrs.AsValueMap()
@@ -440,17 +441,17 @@ func (t *TerraformSetting) FromCtyValue(val cty.Value) error {
 			}
 
 			if !v.CanIterateElements() {
-				return fmt.Errorf("provider_meta must provide a cty.Value which can interate elements")
+				return errors.New("provider_meta must provide a cty.Value which can interate elements")
 			}
 
 			for beK, beV := range v.AsValueMap() {
 				switch beK {
 				case "name":
 					if beV.Type() != cty.String {
-						return fmt.Errorf("provider_meta name must be a string")
+						return errors.New("provider_meta name must be a string")
 					}
 					if !beV.IsWhollyKnown() {
-						return fmt.Errorf("backend name attribute must be known")
+						return errors.New("backend name attribute must be known")
 					}
 					t.Backend.Name = beV.AsString()
 				case "workspaces":

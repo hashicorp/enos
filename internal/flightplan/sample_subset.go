@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -43,13 +44,13 @@ func NewSampleSubset() *SampleSubset {
 func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubsetFrame, *pb.DecodeResponse) {
 	if s == nil {
 		return nil, &pb.DecodeResponse{
-			Diagnostics: diagnostics.FromErr(fmt.Errorf("cannot get frame from nil subset")),
+			Diagnostics: diagnostics.FromErr(errors.New("cannot get frame from nil subset")),
 		}
 	}
 
 	if ws == nil {
 		return nil, &pb.DecodeResponse{
-			Diagnostics: diagnostics.FromErr(fmt.Errorf("cannot get frame from nil workspace")),
+			Diagnostics: diagnostics.FromErr(errors.New("cannot get frame from nil workspace")),
 		}
 	}
 

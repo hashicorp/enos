@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -229,7 +230,14 @@ func readFlightPlanConfig(dir string, varFilePaths []string) (*pb.FlightPlan, er
 
 	var varsFiles flightplan.RawFiles
 	if len(varFilePaths) == 0 {
-		varsFiles, err = flightplan.FindRawFiles(dir, flightplan.VariablesNamePattern)
+		// Check home directory first and fallback to current directory search.
+		varsFiles, err = flightplan.LoadHomeVarsFile()
+		if err != nil && errors.Is(err, os.ErrNotExist) {
+			varsFiles, err = flightplan.FindRawFiles(dir, flightplan.VariablesNamePattern)
+			if err != nil {
+				return nil, err
+			}
+		}
 	} else {
 		varsFiles, err = flightplan.LoadRawFiles(varFilePaths)
 	}

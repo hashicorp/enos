@@ -15,6 +15,8 @@ var (
 	VariablesNamePattern      = regexp.MustCompile(`^enos[-\w]*?\.vars\.hcl$`)
 )
 
+const variablesHomeFilaname = ".enos.vars.hcl"
+
 // RawFiles are a map of flightplan configuration files and their contents.
 type RawFiles map[string][]byte
 
@@ -91,4 +93,31 @@ func LoadRawFiles(paths []string) (RawFiles, error) {
 	}
 
 	return rawFiles, nil
+}
+
+// LoadHomeVarsFile checks if .enos.vars.hcl exists in $HOME
+// and returns the file if found.
+func LoadHomeVarsFile() (RawFiles, error) {
+	rawFiles := RawFiles{}
+
+	home, _ := os.UserHomeDir()
+	homeVarsFile := filepath.Join(home, variablesHomeFilaname)
+	_, err := os.Stat(homeVarsFile)
+	if err != nil {
+		return rawFiles, err
+	}
+
+	f, err := os.Open(homeVarsFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	bytes, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	rawFiles[homeVarsFile] = bytes
+	return rawFiles, err
 }

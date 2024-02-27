@@ -484,9 +484,11 @@ func (m *Matrix) Compact() {
 		return
 	}
 
-	slices.CompactFunc(m.Vectors, func(a, b *Vector) bool {
+	vecs := slices.CompactFunc(m.Vectors, func(a, b *Vector) bool {
 		return a.Equal(b)
 	})
+
+	m.Vectors = vecs
 }
 
 // ContainsVectorUnordered returns whether or not a matrix has a Vector whose unordered values

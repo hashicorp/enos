@@ -2,7 +2,6 @@ package operation
 
 import (
 	"context"
-
 	"errors"
 
 	"github.com/hashicorp/enos/internal/diagnostics"

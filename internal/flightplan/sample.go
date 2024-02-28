@@ -207,7 +207,7 @@ func decodeAndValidateSampleAttrs(attr *hcl.Attribute, ctx *hcl.EvalContext) (ct
 		return val, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "sample attributes must be an object or map",
-			Detail:   fmt.Sprintf("cannot iterate elements of type %s", val.Type().GoString()),
+			Detail:   "cannot iterate elements of type " + val.Type().GoString(),
 			Subject:  attr.NameRange.Ptr(),
 			Context:  attr.Range.Ptr(),
 		})

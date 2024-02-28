@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -12,7 +10,7 @@ func newScenarioExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "exec [FILTER] [ARGS] --cmd TERRAFORM-SUB-COMMAND",
 		Short:             "Execute a terraform sub-command in the context of previously generated Terraform modules from matching scenarios",
-		Long:              fmt.Sprintf("Execute a terraform sub-command in the context of previously generated Terraform modules from matching scenarios. %s", scenarioFilterDesc),
+		Long:              "Execute a terraform sub-command in the context of previously generated Terraform modules from matching scenarios. " + scenarioFilterDesc,
 		RunE:              runScenarioExecCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}

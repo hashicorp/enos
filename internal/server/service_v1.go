@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -50,7 +51,7 @@ type Opt func(*ServiceV1) error
 func WithGRPCListenURL(url *url.URL) Opt {
 	return func(s *ServiceV1) error {
 		if url == nil {
-			return fmt.Errorf("cannot configure listener URL that is nil")
+			return errors.New("cannot configure listener URL that is nil")
 		}
 		s.configuredURL = url
 
@@ -135,7 +136,7 @@ func New(opts ...Opt) (*ServiceV1, error) {
 // Fatal errors encountered will automatically stop the server.
 func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
 	if s.configuredURL == nil {
-		return nil, fmt.Errorf("unable to start gRPC service: you must provider a listen address")
+		return nil, errors.New("unable to start gRPC service: you must provider a listen address")
 	}
 
 	s.log.Info("starting gRPC server",
@@ -213,7 +214,7 @@ func (s *ServiceV1) startListener(ctx context.Context) error {
 		addr, err = net.ResolveUnixAddr(s.configuredURL.Scheme, s.configuredURL.Host)
 	default:
 		if p := s.configuredURL.Port(); p == "" {
-			s.configuredURL.Host = fmt.Sprintf("%s:0", s.configuredURL.Host)
+			s.configuredURL.Host = s.configuredURL.Host + ":0"
 		}
 
 		addr, err = net.ResolveTCPAddr("tcp", s.configuredURL.Host)
@@ -336,9 +337,7 @@ func (s *ServiceV1) dispatch(
 
 	ws := baseReq.GetWorkspace()
 	if ws == nil {
-		diags = append(diags, diagnostics.FromErr(fmt.Errorf(
-			"unable to dispatch operations for requests without the required workspace",
-		))...)
+		diags = append(diags, diagnostics.FromErr(errors.New("unable to dispatch operations for requests without the required workspace"))...)
 	}
 
 	fp, decRes := flightplan.DecodeProto(
@@ -349,9 +348,7 @@ func (s *ServiceV1) dispatch(
 	)
 
 	if baseReq.GetValue() == nil {
-		diags = append(diags, diagnostics.FromErr(fmt.Errorf(
-			"failed to dispatch operation because operation request value has not been set",
-		))...)
+		diags = append(diags, diagnostics.FromErr(errors.New("failed to dispatch operation because operation request value has not been set"))...)
 	}
 
 	scenarios := fp.Scenarios()

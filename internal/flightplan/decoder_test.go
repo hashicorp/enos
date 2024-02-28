@@ -1,6 +1,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,7 +29,7 @@ func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 		return fmt.Errorf("%w: %s", err, msg.String())
 	}
 
-	return fmt.Errorf(msg.String())
+	return errors.New(msg.String())
 }
 
 //nolint:unparam // our decode target configurable to simplify some of our decode tests.

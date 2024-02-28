@@ -44,7 +44,7 @@ func (v *View) writeEventDecode(e *pb.Operation_Event, w *strings.Builder) {
 			}
 
 			if xi := extra.String(); xi != "" {
-				w.WriteString(fmt.Sprintf("\n%s", strings.TrimRight(xi, "\n")))
+				w.WriteString("\n" + strings.TrimRight(xi, "\n"))
 			}
 		}
 	}
@@ -71,7 +71,7 @@ func (v *View) writeEventGenerate(e *pb.Operation_Event, w *strings.Builder) {
 		}
 
 		if xi := extra.String(); xi != "" {
-			w.WriteString(fmt.Sprintf("\n%s", strings.TrimRight(xi, "\n")))
+			w.WriteString("\n" + strings.TrimRight(xi, "\n"))
 		}
 	}
 
@@ -120,7 +120,7 @@ func (v *View) writeEventValidate(e *pb.Operation_Event, w *strings.Builder) {
 	}
 
 	if xi := extra.String(); xi != "" {
-		w.WriteString(fmt.Sprintf("\n%s", strings.TrimRight(xi, "\n")))
+		w.WriteString("\n" + strings.TrimRight(xi, "\n"))
 	}
 
 	v.writeDiags(vl.GetDiagnostics(), w)
@@ -199,7 +199,7 @@ func (v *View) writeEventExec(e *pb.Operation_Event, w *strings.Builder) {
 	}
 
 	if xi := extra.String(); xi != "" {
-		w.WriteString(fmt.Sprintf("\n%s", strings.TrimRight(xi, "\n")))
+		w.WriteString("\n" + strings.TrimRight(xi, "\n"))
 	}
 
 	v.writeDiags(ex.GetDiagnostics(), w)

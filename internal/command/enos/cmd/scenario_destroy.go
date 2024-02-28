@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ func newScenarioDestroyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "destroy [FILTER]",
 		Short:             "Destroy previously generated Terraform modules from matching scenarios",
-		Long:              fmt.Sprintf("Destroy previously generated Terraform modules from matching scenarios. %s", scenarioFilterDesc),
+		Long:              "Destroy previously generated Terraform modules from matching scenarios. " + scenarioFilterDesc,
 		RunE:              runScenarioDestroyCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}

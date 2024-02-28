@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -13,7 +11,7 @@ func newScenarioGenerateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "generate [FILTER]",
 		Short:             "Generate Terraform modules from matching scenarios",
-		Long:              fmt.Sprintf("Generate a Terraform modules from matching scenarios. %s", scenarioFilterDesc),
+		Long:              "Generate a Terraform modules from matching scenarios. " + scenarioFilterDesc,
 		RunE:              runScenarioGenerateCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 		Hidden:            true, // This is hidden because it is intended for debug only

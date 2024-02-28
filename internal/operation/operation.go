@@ -1,7 +1,7 @@
 package operation
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
@@ -288,7 +288,7 @@ func NewEventFromResponse(res *pb.Operation_Response) (*pb.Operation_Event, erro
 			Output: t.Output.GetOutput(),
 		}
 	default:
-		err := fmt.Errorf("cannot convert response type to event")
+		err := errors.New("cannot convert response type to event")
 		merr = multierror.Append(merr, err)
 		event.Diagnostics = append(
 			event.GetDiagnostics(),
@@ -339,7 +339,7 @@ func NewResponseFromRequest(op *pb.Operation_Request) (*pb.Operation_Response, e
 	case *pb.Operation_Request_Output_:
 		res.Value = &pb.Operation_Response_Output_{}
 	default:
-		err := fmt.Errorf("cannot convert response type to event")
+		err := errors.New("cannot convert response type to event")
 		merr = multierror.Append(merr, err)
 		res.Diagnostics = append(
 			res.GetDiagnostics(),

@@ -1,6 +1,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
@@ -60,23 +61,23 @@ func (p *Provider) FromCtyValue(val cty.Value) error {
 	}
 
 	if !val.IsWhollyKnown() {
-		return fmt.Errorf("cannot unmarshal unknown value")
+		return errors.New("cannot unmarshal unknown value")
 	}
 
 	if !val.CanIterateElements() {
-		return fmt.Errorf("value must be an object")
+		return errors.New("value must be an object")
 	}
 
 	for key, val := range val.AsValueMap() {
 		switch key {
 		case "type":
 			if val.Type() != cty.String {
-				return fmt.Errorf("provider type must be a string")
+				return errors.New("provider type must be a string")
 			}
 			p.Type = val.AsString()
 		case "alias":
 			if val.Type() != cty.String {
-				return fmt.Errorf("provider alias must be a string ")
+				return errors.New("provider alias must be a string ")
 			}
 			p.Alias = val.AsString()
 		case "config":

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -14,7 +12,7 @@ func newScenarioOutputCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "output [FILTER]",
 		Short:             "Show the output of selected scenarios",
-		Long:              fmt.Sprintf("Show the output of selected scenarios. %s", scenarioFilterDesc),
+		Long:              "Show the output of selected scenarios. " + scenarioFilterDesc,
 		RunE:              runScenarioOutputCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}

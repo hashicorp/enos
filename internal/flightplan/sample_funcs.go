@@ -3,6 +3,7 @@ package flightplan
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -15,7 +16,7 @@ import (
 // If the frame filter is not compatible with returning all an error will be returned.
 func SampleFuncAll(ctx context.Context, frame *SampleFrame, r *rand.Rand) (*SampleObservation, error) {
 	if frame == nil {
-		return nil, fmt.Errorf("no sample frame was provided")
+		return nil, errors.New("no sample frame was provided")
 	}
 
 	// Make sure that our sample frame adheres to all filter requirements.
@@ -25,7 +26,7 @@ func SampleFuncAll(ctx context.Context, frame *SampleFrame, r *rand.Rand) (*Samp
 	}
 
 	if !returnAll {
-		return nil, fmt.Errorf("filter is incompatible with returning all")
+		return nil, errors.New("filter is incompatible with returning all")
 	}
 
 	observations := map[string]*SampleSubsetObservation{}
@@ -49,11 +50,11 @@ func SampleFuncAll(ctx context.Context, frame *SampleFrame, r *rand.Rand) (*Samp
 // elements across subsets evenly by order of subset remaining capacity.
 func SampleFuncPurposiveStratified(ctx context.Context, frame *SampleFrame, r *rand.Rand) (*SampleObservation, error) {
 	if frame == nil {
-		return nil, fmt.Errorf("no sample frame was provided")
+		return nil, errors.New("no sample frame was provided")
 	}
 
 	if r == nil {
-		return nil, fmt.Errorf("no source of random entropy was provided")
+		return nil, errors.New("no source of random entropy was provided")
 	}
 
 	// Make sure that our sample frame adheres to all filter requirements.
@@ -162,11 +163,11 @@ func sampleObserveSimpleRandom(
 	}
 
 	if frame == nil {
-		return nil, fmt.Errorf("a frame is required to observe subset samples")
+		return nil, errors.New("a frame is required to observe subset samples")
 	}
 
 	if r == nil {
-		return nil, fmt.Errorf("a random number source is required to observe subset samples")
+		return nil, errors.New("a random number source is required to observe subset samples")
 	}
 
 	sortSubsetSpecsByCapTaken(subsetSpecs)
@@ -327,7 +328,7 @@ func sampleAllocatePurposiveAllSubsetRepresented(subsetSpecs []*sampleSubsetObsS
 	}
 
 	if r == nil {
-		return fmt.Errorf("a random number source is required to observe subset samples")
+		return errors.New("a random number source is required to observe subset samples")
 	}
 
 	// Get the indices we wish to take from. If our take is less the frame width we'll select randomly
@@ -364,7 +365,7 @@ func sampleAllocatePurposiveCapSpace(subsetSpecs []*sampleSubsetObsSpec, take in
 		for i := range subsetSpecs {
 			if subsetSpecs[i].space == 0 {
 				// We don't have any more space. This should never happen but we'll check for it anyway.
-				return fmt.Errorf("unable to allocate subset elements")
+				return errors.New("unable to allocate subset elements")
 			}
 
 			if err := subsetSpecs[i].take(1); err == nil {

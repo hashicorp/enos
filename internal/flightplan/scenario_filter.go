@@ -1,6 +1,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -262,11 +263,11 @@ func (sf *ScenarioFilter) FromSampleSubset(subset *SampleSubset) error {
 	// where a sample subset might have configuration that conflicts with a scenario filter.
 	// These differences should be prevented during decoding time, but we'll still validate them here.
 	if subset.Name == "" && subset.ScenarioName == "" && subset.ScenarioFilter == "" {
-		return fmt.Errorf("cannot filter scenarios from subset, the subset does not include a scenario name")
+		return errors.New("cannot filter scenarios from subset, the subset does not include a scenario name")
 	}
 
 	if subset.ScenarioFilter != "" && subset.Matrix != nil && len(subset.Matrix.Vectors) > 0 {
-		return fmt.Errorf("cannot filter scenarios from subset, only of matrix and scenario_filter can be set")
+		return errors.New("cannot filter scenarios from subset, only of matrix and scenario_filter can be set")
 	}
 
 	// Set the name. It's either our subset name, our scenario_name, or the scenario name in the filter.

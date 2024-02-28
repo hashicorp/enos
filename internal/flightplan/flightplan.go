@@ -106,7 +106,7 @@ type FlightPlan struct {
 }
 
 func (fp *FlightPlan) Scenarios() []*Scenario {
-	if fp.ScenarioBlocks == nil || len(fp.ScenarioBlocks) < 1 {
+	if fp == nil || fp.ScenarioBlocks == nil || len(fp.ScenarioBlocks) < 1 {
 		return nil
 	}
 
@@ -561,7 +561,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 				return vec, diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "matrix attribute value must be a list of strings",
-					Detail:   fmt.Sprintf("found element with type %s", elm.GoString()),
+					Detail:   "found element with type " + elm.GoString(),
 					Subject:  attr.NameRange.Ptr(),
 					Context:  block.DefRange.Ptr(),
 				})
@@ -687,7 +687,7 @@ func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnost
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "invalid block in matrix",
-				Detail:   fmt.Sprintf("blocks of type include and exclude are supported in matrix blocks, found %s", mBlock.Type),
+				Detail:   "blocks of type include and exclude are supported in matrix blocks, found " + mBlock.Type,
 				Subject:  mBlock.TypeRange.Ptr(),
 				Context:  mBlock.DefRange.Ptr(),
 			})

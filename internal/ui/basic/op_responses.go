@@ -1,8 +1,6 @@
 package basic
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -55,8 +53,8 @@ func (v *View) writeGenerateResponse(out *pb.Operation_Response_Generate) {
 		if v.settings.GetIsTty() {
 			msg = "  Generate: ❌"
 		}
-		v.ui.Error(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
-		v.ui.Error(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
+		v.ui.Error("  Module path: " + out.GetTerraformModule().GetModulePath())
+		v.ui.Error("  Module rc path: " + out.GetTerraformModule().GetRcPath())
 		v.ui.Error(msg)
 		v.WriteDiagnostics(out.GetDiagnostics())
 
@@ -77,7 +75,7 @@ func (v *View) writeGenerateResponse(out *pb.Operation_Response_Generate) {
 	}
 
 	v.ui.Info(msg)
-	v.ui.Debug(fmt.Sprintf("  Module path: %s", out.GetTerraformModule().GetModulePath()))
-	v.ui.Debug(fmt.Sprintf("  Module rc path: %s", out.GetTerraformModule().GetRcPath()))
+	v.ui.Debug("  Module path: " + out.GetTerraformModule().GetModulePath())
+	v.ui.Debug("  Module rc path: " + out.GetTerraformModule().GetRcPath())
 	v.WriteDiagnostics(out.GetDiagnostics())
 }

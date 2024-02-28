@@ -1,6 +1,7 @@
 package status
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 
 // Error takes a message and optional errors to wrap and returns a new error.
 func Error(msg string, errs ...error) error {
-	err := fmt.Errorf(msg)
+	err := errors.New(msg)
 	for _, err2 := range errs {
 		if err2 != nil {
 			err = fmt.Errorf("%s: %w", err.Error(), err2)

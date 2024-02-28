@@ -1,6 +1,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
@@ -119,23 +120,23 @@ func (s *SchemalessBlock) FromCtyValue(val cty.Value) error {
 	}
 
 	if !val.IsWhollyKnown() {
-		return fmt.Errorf("cannot unmarshal unknown value")
+		return errors.New("cannot unmarshal unknown value")
 	}
 
 	if !val.CanIterateElements() {
-		return fmt.Errorf("value must be an object")
+		return errors.New("value must be an object")
 	}
 
 	for key, val := range val.AsValueMap() {
 		switch key {
 		case "type":
 			if val.Type() != cty.String {
-				return fmt.Errorf("block type must be a string")
+				return errors.New("block type must be a string")
 			}
 			s.Type = val.AsString()
 		case "labels":
 			if val.Type() != cty.List(cty.String) {
-				return fmt.Errorf("block aliases must be a list of strings")
+				return errors.New("block aliases must be a list of strings")
 			}
 			s.Labels = []string{}
 			for _, v := range val.AsValueSlice() {
@@ -146,7 +147,7 @@ func (s *SchemalessBlock) FromCtyValue(val cty.Value) error {
 			}
 		case "attrs":
 			if !val.CanIterateElements() {
-				return fmt.Errorf("provider attrs must a map of attributes")
+				return errors.New("provider attrs must a map of attributes")
 			}
 
 			for k, v := range val.AsValueMap() {
@@ -154,7 +155,7 @@ func (s *SchemalessBlock) FromCtyValue(val cty.Value) error {
 			}
 		case "blocks":
 			if !val.CanIterateElements() {
-				return fmt.Errorf("provider blocks must be a list of blocks")
+				return errors.New("provider blocks must be a list of blocks")
 			}
 
 			for _, v := range val.AsValueSlice() {

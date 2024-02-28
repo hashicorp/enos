@@ -266,7 +266,7 @@ sample "foo" {
 				frame, decRes := sub.Frame(context.Background(), test.ws)
 				msg := "expected an equal frame"
 				for _, d := range decRes.GetDiagnostics() {
-					msg += fmt.Sprintf(" %s", diagnostics.String(d))
+					msg += " " + diagnostics.String(d)
 				}
 				require.Emptyf(t, decRes.GetDiagnostics(), msg)
 

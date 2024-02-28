@@ -143,7 +143,7 @@ func (ss *ScenarioStep) decodeSkip(
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "skip_step must be a bool",
-			Detail:   fmt.Sprintf("skip_step must be a bool, not %s", val.Type().FriendlyName()),
+			Detail:   "skip_step must be a bool, not " + val.Type().FriendlyName(),
 			Subject:  skip.Expr.Range().Ptr(),
 		})
 	}
@@ -685,7 +685,7 @@ func (ss *ScenarioStep) decodeAndValidateProvidersAttribute(content *hcl.BodyCon
 		if err != nil {
 			diags = diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  fmt.Sprintf("unable to unmarshal provider value for %s", providerImportName),
+				Summary:  "unable to unmarshal provider value for " + providerImportName,
 				Detail:   err.Error(),
 				Subject:  providers.Expr.Range().Ptr(),
 				Context:  providers.Range.Ptr(),

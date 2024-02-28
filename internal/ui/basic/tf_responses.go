@@ -34,7 +34,7 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 		v.ui.Error(msg)
 		v.ui.Error(fmt.Sprintf("  Validation errors: %d", validate.GetErrorCount()))
 		v.ui.Error(fmt.Sprintf("  Validation warnings: %d", validate.GetWarningCount()))
-		v.ui.Debug(fmt.Sprintf("  Validation format: %s", validate.GetFormatVersion()))
+		v.ui.Debug("  Validation format: " + validate.GetFormatVersion())
 		v.WriteDiagnostics(validate.GetDiagnostics())
 
 		return
@@ -55,7 +55,7 @@ func (v *View) writeValidateResponse(validate *pb.Terraform_Command_Validate_Res
 	v.ui.Info(msg)
 	v.ui.Debug(fmt.Sprintf("  Validation errors: %d", validate.GetErrorCount()))
 	v.ui.Debug(fmt.Sprintf("  Validation warnings: %d", validate.GetWarningCount()))
-	v.ui.Debug(fmt.Sprintf("  Validation format: %s", validate.GetFormatVersion()))
+	v.ui.Debug("  Validation format: " + validate.GetFormatVersion())
 	v.WriteDiagnostics(validate.GetDiagnostics())
 }
 
@@ -69,7 +69,7 @@ func (v *View) writeExecResponse(exec *pb.Terraform_Command_Exec_Response) {
 		if v.settings.GetIsTty() {
 			msg = "  Exec: ❌"
 		}
-		v.ui.Error(fmt.Sprintf("  Sub-command: %s", exec.GetSubCommand()))
+		v.ui.Error("  Sub-command: " + exec.GetSubCommand())
 		v.ui.Error(msg)
 		if stdout := exec.GetStdout(); stdout != "" {
 			v.ui.Error(stdout)
@@ -84,7 +84,7 @@ func (v *View) writeExecResponse(exec *pb.Terraform_Command_Exec_Response) {
 
 	v.ui.Info(exec.GetStdout())
 	v.ui.Error(exec.GetStderr())
-	v.ui.Debug(fmt.Sprintf("  Sub-command: %s", exec.GetSubCommand()))
+	v.ui.Debug("  Sub-command: " + exec.GetSubCommand())
 	v.WriteDiagnostics(exec.GetDiagnostics())
 }
 
@@ -135,7 +135,7 @@ func (v *View) writeShowResponse(show *pb.Terraform_Command_Show_Response) {
 		}
 
 		if s := string(show.GetState()); s != "" {
-			v.ui.Error(fmt.Sprintf("  State: %s", s))
+			v.ui.Error("  State: " + s)
 			v.ui.Error(msg)
 		}
 
@@ -158,7 +158,7 @@ func (v *View) writeShowResponse(show *pb.Terraform_Command_Show_Response) {
 	}
 	v.ui.Info(msg)
 	if s := string(show.GetState()); s != "" {
-		v.ui.Debug(fmt.Sprintf("  State: %s", s))
+		v.ui.Debug("  State: " + s)
 	}
 
 	v.WriteDiagnostics(show.GetDiagnostics())

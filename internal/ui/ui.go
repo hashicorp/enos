@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"fmt"
+	"errors"
 	"io"
 
 	"github.com/hashicorp/enos/internal/ui/basic"
@@ -50,9 +50,9 @@ func New(s *pb.UI_Settings) (View, error) {
 		msg := "unsupported UI format"
 		name, ok := pb.UI_Settings_Format_name[int32(s.GetFormat())]
 		if ok {
-			msg = fmt.Sprintf("%s is not a supported UI format", name)
+			msg = name + " is not a supported UI format"
 		}
 
-		return nil, fmt.Errorf(msg)
+		return nil, errors.New(msg)
 	}
 }

@@ -139,7 +139,7 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 
 			cmd := fmt.Sprintf("scenario check --chdir %s --out %s --format json", path, outDir)
 			if failOnWarnings {
-				cmd = fmt.Sprintf("%s --fail-on-warnings", cmd)
+				cmd = cmd + " --fail-on-warnings"
 			}
 			out, err := enos.run(context.Background(), cmd)
 			if failOnWarnings {
@@ -165,7 +165,7 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 					Id: &pb.Scenario_ID{
 						Name:   "warning",
 						Uid:    uid,
-						Filter: fmt.Sprintf("warning mod:%s", variant),
+						Filter: "warning mod:" + variant,
 						Variants: &pb.Matrix_Vector{
 							Elements: elements,
 						},

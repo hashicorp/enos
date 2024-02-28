@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -38,15 +39,15 @@ func NewGenerator(opts ...Opt) (*Generator, error) {
 	}
 
 	if req.Scenario == nil {
-		return req, fmt.Errorf("unable to generate without a scenario")
+		return req, errors.New("unable to generate without a scenario")
 	}
 
 	if req.BaseDir == "" {
-		return req, fmt.Errorf("unable to generate without a base directory")
+		return req, errors.New("unable to generate without a base directory")
 	}
 
 	if req.OutDir == "" {
-		return req, fmt.Errorf("unable to generate without an out directory")
+		return req, errors.New("unable to generate without an out directory")
 	}
 
 	return req, nil
@@ -497,7 +498,7 @@ func (g *Generator) convertStepsToModules(rootBody *hclwrite.Body) error {
 		for k, v := range step.Module.Attrs {
 			stepVar, diags := flightplan.StepVariableFromVal(v)
 			if diags.HasErrors() {
-				return fmt.Errorf(diags.Error())
+				return errors.New(diags.Error())
 			}
 
 			// Use the absolute value
@@ -553,7 +554,7 @@ func (g *Generator) maybeWriteOutputs(rootBody *hclwrite.Body) error {
 
 			stepVar, diags := flightplan.StepVariableFromVal(output.Value)
 			if diags.HasErrors() {
-				return fmt.Errorf(diags.Error())
+				return errors.New(diags.Error())
 			}
 
 			// Use the absolute value if it exists
@@ -589,7 +590,7 @@ func (g *Generator) maybeWriteOutputs(rootBody *hclwrite.Body) error {
 
 func (g *Generator) write(path string, bytes []byte) error {
 	if g.UI != nil {
-		g.UI.Info(fmt.Sprintf("writing to %s", path))
+		g.UI.Info("writing to " + path)
 	}
 	file, err := os.Create(path)
 	if err != nil {
@@ -870,7 +871,7 @@ func relativePath(from, to string) (string, error) {
 	}
 
 	if !strings.HasPrefix(rel, ".") {
-		return fmt.Sprintf("./%s", rel), nil
+		return "./" + rel, nil
 	}
 
 	return rel, nil
@@ -884,7 +885,7 @@ func stepToModuleTraversal(in hcl.Traversal) error {
 	}
 	root, ok := in[0].(hcl.TraverseRoot)
 	if !ok {
-		return fmt.Errorf("malformed step variable reference")
+		return errors.New("malformed step variable reference")
 	}
 	root.Name = "module"
 	in[0] = root

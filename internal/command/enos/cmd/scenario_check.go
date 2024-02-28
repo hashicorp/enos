@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ func newScenarioCheckCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "check [FILTER]",
 		Short:             "Check that scenarios are valid",
-		Long:              fmt.Sprintf("Check that scenarios are valid by generating the Scenario's Terraform Root Module, initializing it, validating it, and planning. %s", scenarioFilterDesc),
+		Long:              "Check that scenarios are valid by generating the Scenario's Terraform Root Module, initializing it, validating it, and planning. " + scenarioFilterDesc,
 		RunE:              runScenarioCheckCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}

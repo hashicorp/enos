@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -52,7 +53,7 @@ func NewExclude(mode pb.Matrix_Exclude_Mode, vec *Vector) (*Exclude, error) {
 		pb.Matrix_Exclude_MODE_EQUAL_UNORDERED,
 		pb.Matrix_Exclude_MODE_CONTAINS:
 	case pb.Matrix_Exclude_MODE_UNSPECIFIED:
-		return ex, fmt.Errorf("exclusion mode was not specified")
+		return ex, errors.New("exclusion mode was not specified")
 	default:
 		return ex, fmt.Errorf("unknown exclusion mode: %d", mode)
 	}
@@ -483,9 +484,11 @@ func (m *Matrix) Compact() {
 		return
 	}
 
-	slices.CompactFunc(m.Vectors, func(a, b *Vector) bool {
+	vecs := slices.CompactFunc(m.Vectors, func(a, b *Vector) bool {
 		return a.Equal(b)
 	})
+
+	m.Vectors = vecs
 }
 
 // ContainsVectorUnordered returns whether or not a matrix has a Vector whose unordered values

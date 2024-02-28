@@ -1,7 +1,6 @@
 package basic
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -47,6 +46,6 @@ func (v *View) writeDiags(d []*pb.Diagnostic, w *strings.Builder) {
 	}
 
 	if diagnostics.HasErrors(d) || v.settings.GetLevel() >= pb.UI_Settings_LEVEL_WARN {
-		w.WriteString(fmt.Sprintf("\n%s", v.diagsToString(d)))
+		w.WriteString("\n" + v.diagsToString(d))
 	}
 }

@@ -2,7 +2,7 @@ package operation
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -12,7 +12,7 @@ import (
 // UnknownWorkFunc takes an operation request and returns a work func that will
 // fail because it is unknown.
 func UnknownWorkFunc(req *pb.Operation_Request) (WorkFunc, error) {
-	err := fmt.Errorf("no worker func for request")
+	err := errors.New("no worker func for request")
 
 	return func(
 		ctx context.Context,

@@ -2,6 +2,7 @@ package flightplan
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -408,7 +409,7 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 
 	if tfSettingsVal.IsNull() || !tfSettingsVal.IsWhollyKnown() {
 		return diags.Append(newDiag(
-			fmt.Errorf("invalid attribute"),
+			errors.New("invalid attribute"),
 			"terraform value must be set to a terraform block label or value",
 		))
 	}
@@ -423,7 +424,7 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 		setting, ok := terraformSettings.AsValueMap()[tfSettingsVal.AsString()]
 		if !ok {
 			return diags.Append(newDiag(
-				fmt.Errorf("terraform references an undefined terraform block"),
+				errors.New("terraform references an undefined terraform block"),
 				fmt.Sprintf("no terraform block with a name label %s exists", tfSettingsVal.AsString()),
 			))
 		}
@@ -440,7 +441,7 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 	// Okay, it's not a string, it must be an exact terraform settings value.
 	if !tfSettingsVal.CanIterateElements() {
 		return diags.Append(newDiag(
-			fmt.Errorf("invalid attribute value"),
+			errors.New("invalid attribute value"),
 			"terraform value must be set to a terraform block label or value",
 		))
 	}
@@ -448,14 +449,14 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 	settingsName, ok := tfSettingsVal.AsValueMap()["name"]
 	if !ok {
 		return diags.Append(newDiag(
-			fmt.Errorf("missing required attribute"),
+			errors.New("missing required attribute"),
 			"terraform value does not have the required name attribute",
 		))
 	}
 
 	if settingsName.IsNull() || !settingsName.IsWhollyKnown() {
 		return diags.Append(newDiag(
-			fmt.Errorf("missing required attribute"),
+			errors.New("missing required attribute"),
 			"terraform name value must be known",
 		))
 	}
@@ -463,14 +464,14 @@ func (s *Scenario) decodeAndValidateTerraformSettingsAttribute(
 	setting, ok := terraformSettings.AsValueMap()[settingsName.AsString()]
 	if !ok {
 		return diags.Append(newDiag(
-			fmt.Errorf("references an undefined terraform block"),
+			errors.New("references an undefined terraform block"),
 			fmt.Sprintf("no terraform block with a name label %s exists", settingsName.AsString()),
 		))
 	}
 
 	if tfSettingsVal.Equals(setting) != cty.True {
 		return diags.Append(newDiag(
-			fmt.Errorf("invalid attribute"),
+			errors.New("invalid attribute"),
 			"terraform value and configured value don't match",
 		))
 	}

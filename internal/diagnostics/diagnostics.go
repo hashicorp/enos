@@ -314,7 +314,7 @@ func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic
 									value.Statement = "will be known only after apply"
 								}
 							default:
-								value.Statement = fmt.Sprintf("is %s", compactValueStr(val))
+								value.Statement = "is " + compactValueStr(val)
 							}
 							values = append(values, value)
 							seen[traversalStr] = struct{}{}
@@ -471,7 +471,7 @@ func appendSourceSnippets(buf *bytes.Buffer, diag *pb.Diagnostic, color *colorst
 
 	var contextStr string
 	if diag.GetSnippet().GetContext() != "" {
-		contextStr = fmt.Sprintf(", in %s", diag.GetSnippet().GetContext())
+		contextStr = ", in " + diag.GetSnippet().GetContext()
 	}
 	fmt.Fprintf(buf, "  on %s line %d%s:\n", diag.GetRange().GetFilename(), diag.GetRange().GetStart().GetLine(), contextStr)
 

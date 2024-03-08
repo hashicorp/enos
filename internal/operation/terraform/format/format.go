@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package format provides functions for formatting Terraform and cty as
 // text. The implemenation comes from a modified version of the repl package
 // in Terraform.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package status
 
 import "github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"

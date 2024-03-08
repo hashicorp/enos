@@ -1,0 +1,68 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+---
+name: Set up golangci-lint from Github releases
+description: Set up golangci-lint from Github releases
+
+inputs:
+  destination:
+    description: "Where to install the golangci-lint binary (default: $HOME/bin/golangci-lint)"
+    type: boolean
+    default: "$HOME/bin/golangci-lint"
+  version:
+    description: "The version to install (default: latest)"
+    type: string
+    default: Latest
+
+outputs:
+  destination:
+    description: Where the installed golangci-lint binary is
+    value: ${{ steps.install.outputs.destination }}
+  destination-dir:
+    description: The directory where the installed golangci-lint binary is
+    value: ${{ steps.install.outputs.destination-dir }}
+  version:
+    description: The installed version of golangci-lint
+    value: ${{ steps.install.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        VERSION=$(gh release list -R golangci/golangci-lint --exclude-drafts --exclude-pre-releases | grep ${{ inputs.version }} | cut -f1)
+
+        mkdir -p $(dirname ${{ inputs.destination }})
+        DESTINATION="$(readlink -f "${{ inputs.destination }}")"
+        DESTINATION_DIR="$(dirname "$DESTINATION")"
+        echo "$DESTINATION_DIR" >> "$GITHUB_PATH"
+
+        {
+          echo "destination=$DESTINATION"
+          echo "destination-dir=$DESTINATION_DIR"
+          echo "version=$VERSION"
+        } | tee -a "$GITHUB_OUTPUT"
+
+        ARCH="$(echo "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')"
+        OS="$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')"
+        if [ "$ARCH" = "x64" ]; then
+          export ARCH="amd64"
+        fi
+        if [ "$OS" = "macos" ]; then
+          export OS="darwin"
+        fi
+
+        V2=${VERSION#v}
+
+        mkdir -p tmp/golangci-lint
+        pushd tmp/golangci-lint
+        gh release download "$VERSION" -p "golangci-lint-${V2}-${OS}-${ARCH}.tar.gz" -O golangci-lint.tgz -R golangci/golangci-lint
+        tar -xvf golangci-lint.tgz
+        chmod +x "golangci-lint-${V2}-${OS}-${ARCH}/golangci-lint"
+        mv "golangci-lint-${V2}-${OS}-${ARCH}/golangci-lint" "$DESTINATION"
+        popd
+        rm -rf tmp/golangci-lint

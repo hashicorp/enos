@@ -16,9 +16,6 @@ on:
       artifact-name:
         required: true
         type: string
-    secrets:
-      ENOS_CI_SSH_PRIVATE_KEY:
-        required: true
 
 # These permissions are necessary for the doormat-action to function
 permissions:
@@ -26,54 +23,42 @@ permissions:
   id-token: write
 
 jobs:
-  lint:
-    name: "Lint"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
-        with:
-          go-version-file: .go-version
-      - name: golangci-lint
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint run -v -c .golangci.yml --out-format=github-actions --timeout=5m0s
-
-  fmt:
+  static-analysis:
     name: "Format"
-    runs-on: ubuntu-latest
+    runs-on: linux
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .go-version
+      - uses: ./.github/actions/set-up-buf
+      - uses: ./.github/actions/set-up-gofumpt
+      - uses: ./.github/actions/set-up-golangci-lint
       - uses: hashicorp/setup-terraform@v2
         with:
           # the terraform wrapper will break terraform execution in enos because
           # it changes the output to text when we expect it to be JSON.
           terraform_wrapper: false
-      - name: Download Artifact
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{inputs.artifact-name }}
-      - name: Acceptance Tests
+      - name: unzip
         run: |
           ls -l ${{inputs.artifact-name }}
           unzip ${{inputs.artifact-name }} -d dist
       - name: fmt-check
-        run: |
-          go install mvdan.cc/gofumpt@latest
-          go install github.com/bufbuild/buf/cmd/buf@latest
-          make fmt-check
+        run: make fmt-check
+      - name: lint
+        run: golangci-lint run -v -c .golangci.yml --out-format=github-actions --timeout=5m0s
 
-  acceptance:
-    name: "Acceptance Tests CI"
-    runs-on: ubuntu-latest
+  test:
+    name: Go tests
+    runs-on: linux
     env:
       CI: true
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .go-version
       - uses: hashicorp/setup-terraform@v2
@@ -97,7 +82,7 @@ jobs:
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{inputs.artifact-name }}
-      - name: Acceptance Tests
+      - name: Run all Go tests (unit, acceptance, external deps)
         run: |
           ls -l ${{inputs.artifact-name }}
           unzip ${{inputs.artifact-name }} -d dist

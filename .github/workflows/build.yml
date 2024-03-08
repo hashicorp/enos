@@ -18,7 +18,7 @@ jobs:
       filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
       product-version: ${{ steps.product-metadata.outputs.product-version }}
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - id: product-metadata
         run: |
           make version
@@ -41,8 +41,8 @@ jobs:
     outputs:
       profile-path: ${{ steps.final-profile.outputs.profile-path }}
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .go-version
       - id: product-metadata
@@ -89,11 +89,11 @@ jobs:
     outputs:
       artifact-name: ${{ steps.build.outputs.artifact-name }}
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .go-version
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # v4.1.2
         id: download
         with:
           name: ${{ needs.profile-binary.outputs.profile-path }}
@@ -157,7 +157,7 @@ jobs:
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: hashicorp/actions-docker-build@v1
         with:
           version: ${{env.version}}
@@ -170,8 +170,7 @@ jobs:
   validate-artifact:
     name: Validate Artifact
     needs: [build, product-metadata]
-    uses: hashicorp/enos/.github/workflows/validate.yml@main
+    uses: ./.github/workflows/validate.yml
     with:
       artifact-name: "enos_${{ needs.product-metadata.outputs.product-version }}_linux_amd64.zip"
-    secrets:
-      ENOS_CI_SSH_PRIVATE_KEY: ${{ secrets.ENOS_CI_SSH_PRIVATE_KEY }}
+    secrets: inherit

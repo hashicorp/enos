@@ -36,4 +36,6 @@ terraform.rc
 
 **/.enos/*
 
-*.pprof
+# Profile data
+*pprof*
+default.pgo

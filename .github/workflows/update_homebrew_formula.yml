@@ -49,7 +49,7 @@ on:
 jobs:
   update-formula:
     name: "Update Homebrew formula definition"
-    runs-on: ubuntu-latest
+    runs-on: linux
     env:
       # Note: `gh` CLI automatically looks for and uses `env.GH_TOKEN` for authentication.
       # This token must have read:org scope in order to authenticate on a different repo.
@@ -68,10 +68,10 @@ jobs:
       # Checkout Enos repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
       - name: Checkout enos repo
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           path: enos-checkout
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: enos-checkout/.go-version
       # Set up bob CLI
@@ -100,7 +100,7 @@ jobs:
       # in order to accommodate checking out multiple repos.
       # A token with sufficient permissions for the target repo is required.
       - name: Checkout homebrew-internal
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           repository: ${{ env.TARGET_REPO }}
           path: ${{ env.TARGET_REPO_FILEPATH }}

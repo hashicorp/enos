@@ -9,7 +9,7 @@ on:
 jobs:
 # If the PR does not have one of the four designated `changelog/` labels applied, this job will fail.
   check-for-changelog-label:
-    runs-on: ubuntu-latest
+    runs-on: linux
     if: (!contains(github.event.pull_request.labels.*.name, 'changelog/none')) && (!contains(github.event.pull_request.labels.*.name, 'changelog/bug')) && (!contains(github.event.pull_request.labels.*.name, 'changelog/feat')) && (!contains(github.event.pull_request.labels.*.name, 'changelog/other'))
     steps:
       - name: Changelog label not found

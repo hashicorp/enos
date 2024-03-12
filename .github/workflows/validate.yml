@@ -17,11 +17,6 @@ on:
         required: true
         type: string
 
-# These permissions are necessary for the doormat-action to function
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
   static-analysis:
     name: "Format"
@@ -66,12 +61,14 @@ jobs:
           # the terraform wrapper will break terraform execution in enos because
           # it changes the output to text when we expect it to be JSON.
           terraform_wrapper: false
-      - uses: hashicorp/doormat-action@v1
+      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # v4.0.1
         with:
-          # This role, the associated policy, the workflow event types, and the
-          # the allowed git refs are managed via the Terraform in the
-          # hashicorp/enos-ci repository.
-          aws-role-arn: arn:aws:iam::147451547303:role/enos
+          # The github actions service user creds for this account managed in hashicorp/enos-ci
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-skip-session-tagging: true
       - name: Setup Enos SSH Keys
         id: sshkey
         run: |

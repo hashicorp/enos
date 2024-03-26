@@ -2,6 +2,8 @@
 
 Enos is a tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language.
 
+![Enos_2023-transparent (1)](https://github.com/hashicorp/enos/assets/65058/4551b240-61d2-49f0-b037-90bc54e88b30)
+
 ## What problem does Enos solve?
 
 You can use enos to _define and verify quality requirements of complex distributed software_.

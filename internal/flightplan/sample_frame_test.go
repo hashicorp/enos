@@ -42,7 +42,6 @@ func Test_SampleFrame_Ref(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.EqualValues(t, test.expected, test.in.Ref())
@@ -389,8 +388,6 @@ sample "all" {
 			},
 		},
 	} {
-		subsetName := subsetName
-		test := test
 		t.Run(subsetName, func(t *testing.T) {
 			t.Parallel()
 
@@ -454,7 +451,6 @@ func Test_SampleFrame_FilterMin(t *testing.T) {
 			expected: int32(2),
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			min, err := test.in.FilterMin()
@@ -493,7 +489,6 @@ func Test_SampleFrame_FilterMax(t *testing.T) {
 			expected: int32(16),
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			max, err := test.in.FilterMax()
@@ -532,7 +527,6 @@ func Test_SampleFrame_FilterPercentage(t *testing.T) {
 			expected: float32(99),
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			pct, err := test.in.FilterPercentage()
@@ -749,7 +743,6 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 			max: 3,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			min, max, err := test.in.FilterMinMax()
@@ -847,7 +840,6 @@ func Test_SampleFrame_Size(t *testing.T) {
 			expected: 6,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.expected, test.in.Size())

@@ -28,7 +28,6 @@ func TestAcc_Cmd_Version(t *testing.T) {
 			out: regexp.MustCompile(`Enos version: \d*\.\d*\.\d* sha: \w*`),
 		},
 	} {
-		test := test
 		t.Run(test.cmd, func(t *testing.T) {
 			t.Parallel()
 

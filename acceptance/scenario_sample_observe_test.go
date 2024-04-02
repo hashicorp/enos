@@ -140,7 +140,6 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)

@@ -333,7 +333,6 @@ func (fp *FlightPlan) ScenariosSelect(f *ScenarioFilter) []*Scenario {
 
 	scenarios := []*Scenario{}
 	for _, s := range fp.Scenarios() {
-		s := s
 		if !s.Match(f) {
 			continue
 		}

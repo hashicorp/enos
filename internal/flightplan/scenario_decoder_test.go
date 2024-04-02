@@ -42,7 +42,6 @@ func Test_NewScenarioDecoder(t *testing.T) {
 			opts: []ScenarioDecoderOpt{WithScenarioDecoderDecodeTarget(DecodeTargetAll)},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			_, err := NewScenarioDecoder(test.opts...)
@@ -109,7 +108,6 @@ func Test_DecodedScenarioBlocks_Diagnostics(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.EqualValues(t, test.expected, test.in.Diagnostics())
@@ -193,7 +191,6 @@ func Test_DecodedScenarioBlocks_Scenarios(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.EqualValues(t, test.expected, test.in.Scenarios())
@@ -263,7 +260,6 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 			}},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			if test.expected == nil {
@@ -417,7 +413,6 @@ func Test_ScenarioDecoder_filterScenarioBlocks(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 

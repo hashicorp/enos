@@ -44,7 +44,6 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 			false,
 		},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("%s %s %s %t", test.dir, test.name, test.variants, test.launch), func(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())

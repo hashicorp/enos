@@ -445,7 +445,7 @@ func (m *Matrix) CartesianProduct() *Matrix {
 		// Create our next product Vector by reading our Element index address
 		// for each Vector in our vector index.
 		vec := NewVector()
-		for i := 0; i < vlen; i++ {
+		for i := range vlen {
 			vec.Add(m.Vectors[i].elements[vecIdx[i]])
 		}
 		product.Vectors = append(product.Vectors, vec)

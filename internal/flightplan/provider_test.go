@@ -601,7 +601,6 @@ scenario "k8s" {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -682,7 +681,6 @@ func Test_Provider_Cty_RoundTrip(t *testing.T) {
 			},
 		},
 	} {
-		p := p
 		t.Run(p.testName, func(t *testing.T) {
 			t.Parallel()
 

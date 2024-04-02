@@ -45,7 +45,6 @@ func Test_SampleInt(t *testing.T) {
 			expected: []int{8, 5, 0, 2, 6, 1, 9, 4},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			//nolint:gosec// G404 we're using a weak random number generator because secure random

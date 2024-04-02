@@ -38,7 +38,6 @@ func Test_Module_EvalContext_Functions(t *testing.T) {
 			expected: "something",
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -193,7 +192,6 @@ scenario "backend" {
 `, modulePath),
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 

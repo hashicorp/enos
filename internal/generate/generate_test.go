@@ -119,7 +119,6 @@ func Test_MaybeUpdateRelativeSourcePaths(t *testing.T) {
 			expected: "gcs::https://www.googleapis.com/storage/v1/modules/foomodule.zip",
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 

@@ -163,7 +163,6 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			value: testMakeStepVarValue(cty.ListVal([]cty.Value{cty.StringVal("*")})),
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 

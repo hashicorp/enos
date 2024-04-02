@@ -37,7 +37,6 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 			[][]string{{"skip", "keep"}, {"skip", "skip"}},
 		},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
 			t.Parallel()
 
@@ -129,7 +128,6 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 	t.Cleanup(func() { os.RemoveAll(tmpDir) })
 
 	for _, failOnWarnings := range []bool{true, false} {
-		failOnWarnings := failOnWarnings
 		t.Run(fmt.Sprintf("fail_on_warnings_%t", failOnWarnings), func(t *testing.T) {
 			t.Parallel()
 			outDir := filepath.Join(tmpDir, "scenario_generate_has_warnings")

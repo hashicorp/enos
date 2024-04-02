@@ -197,7 +197,6 @@ scenario "backend" {
 `, modulePath),
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 

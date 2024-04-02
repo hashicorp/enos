@@ -50,7 +50,6 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
 

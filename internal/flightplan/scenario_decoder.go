@@ -423,7 +423,7 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 		}
 	}
 
-	for i := 0; i < runtime.NumCPU(); i++ {
+	for range runtime.NumCPU() {
 		workerWg.Add(1)
 		go decodeScenario()
 	}

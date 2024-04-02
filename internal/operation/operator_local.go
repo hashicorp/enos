@@ -98,7 +98,7 @@ func (o *LocalOperator) Start(ctx context.Context) error {
 	ctx, o.ctxCancel = context.WithCancel(ctx)
 	o.startEventHandler(ctx)
 
-	for i := int32(0); i < o.workerCount; i++ {
+	for i := range o.workerCount {
 		go newWorker(
 			strconv.Itoa(int(i)),
 			o.workRequests,

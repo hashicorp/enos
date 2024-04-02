@@ -241,7 +241,6 @@ sample "foo" {
 			expected: nil,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 

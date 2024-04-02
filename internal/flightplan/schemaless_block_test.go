@@ -99,7 +99,6 @@ provider "is" "anything" {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -187,7 +186,6 @@ func Test_SchemalessBlock_Roundtrip(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 

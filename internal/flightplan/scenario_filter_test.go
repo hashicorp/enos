@@ -113,7 +113,6 @@ func Test_ScenarioFilter_WithScenarioFilterFromSampleSubset(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			sf, err := NewScenarioFilter(WithScenarioFilterFromSampleSubset(test.in))
@@ -234,7 +233,6 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			[]*Scenario{},
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -296,7 +294,6 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.desc, func(t *testing.T) {
 			t.Parallel()
 

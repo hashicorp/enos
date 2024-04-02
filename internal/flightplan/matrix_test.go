@@ -310,7 +310,6 @@ scenario "nighttime" {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -350,7 +349,6 @@ func Test_Matrix_Vector_Equal(t *testing.T) {
 			false,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.equal, test.in.Equal(test.other))
@@ -392,7 +390,6 @@ func Test_Matrix_Vector_ContainsUnordered(t *testing.T) {
 			false,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.match, test.in.ContainsUnordered(test.other))
@@ -424,7 +421,6 @@ func Test_Matrix_Vector_EqualUnordered(t *testing.T) {
 			true,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.equal, test.in.EqualUnordered(test.other))
@@ -493,7 +489,6 @@ func Test_Matrix_CartesianProduct(t *testing.T) {
 			}},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.expected.Vectors, test.in.CartesianProduct().Vectors)
@@ -579,8 +574,6 @@ func Test_Matrix_HasVectorSorted(t *testing.T) {
 			vec: NewVector(NewElement("arch", "arm64"), NewElement("arch", "amd64"), NewElement("arch", "ppc64")),
 		},
 	} {
-		desc := desc
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			test.vec.Sort()
@@ -730,7 +723,6 @@ func Test_Matrix_Filter_Filter_Parse(t *testing.T) {
 			}},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -967,7 +959,6 @@ func Test_Matrix_Filter_ScenarioFilter(t *testing.T) {
 			}},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.True(t, test.expected.EqualUnordered(test.in.Filter(test.filter)))
@@ -1046,7 +1037,6 @@ func Test_Matrix_Equal(t *testing.T) {
 			expected: true,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -1137,7 +1127,6 @@ func Test_Matrix_EqualUnordered(t *testing.T) {
 			expected: true,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -1260,7 +1249,6 @@ func Test_Matrix_Exclude(t *testing.T) {
 			}},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -1362,7 +1350,6 @@ func Test_Matrix_IntersectionUnordered(t *testing.T) {
 			}},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -1465,7 +1452,6 @@ func Test_Matrix_SymmetricDifferenceUnordered(t *testing.T) {
 			expected: nil,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 

@@ -222,7 +222,6 @@ func Test_SampleFuncAll(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -618,7 +617,6 @@ func Test_SampleFuncStratified(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 

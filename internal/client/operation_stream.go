@@ -140,7 +140,6 @@ func (c *Connection) streamResponses(
 	}()
 
 	for _, ref := range refs {
-		ref := ref
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

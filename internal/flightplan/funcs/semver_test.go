@@ -29,7 +29,6 @@ func TestServerConstraint(t *testing.T) {
 			true,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 

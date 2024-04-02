@@ -101,7 +101,6 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 			fail: true,
 		},
 	} {
-		test := test
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)

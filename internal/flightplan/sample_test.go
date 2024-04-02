@@ -322,7 +322,6 @@ sample "foo" {
 			fail: true,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -639,7 +638,6 @@ sample "foodle" {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
@@ -1339,7 +1337,6 @@ func Test_Sample_filterSubsets(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.EqualValues(t, test.expected, test.in.filterSubsets(test.filter))

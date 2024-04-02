@@ -137,7 +137,6 @@ func TestOperationResponsesHandlesFailures(t *testing.T) {
 			shouldFail: true,
 		},
 	} {
-		test := test
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 

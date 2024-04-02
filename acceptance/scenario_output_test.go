@@ -34,7 +34,6 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 			fmt.Sprintf("%x", sha256.Sum256([]byte("step_vars [arch:arm distro:rhel]"))),
 		},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("%s %s %s", test.dir, test.name, test.variants), func(t *testing.T) {
 			t.Parallel()
 

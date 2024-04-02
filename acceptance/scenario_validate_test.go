@@ -32,7 +32,6 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			fail: true,
 		},
 	} {
-		test := test
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)
@@ -71,8 +70,6 @@ func TestAcc_Cmd_Scenario_Validate_filtered(t *testing.T) {
 			fail: true,
 		},
 	} {
-		test := test
-		filter := filter
 		t.Run(filter, func(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)

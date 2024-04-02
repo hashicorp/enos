@@ -1,3 +1,4 @@
+<!-- vim: ts=2 sw=2 -->
 # enos
 
 Enos is a tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language.
@@ -283,6 +284,63 @@ module "ec2_instance" {
 }
 ```
 
+#### Globals
+Globals in Enos are similar to `locals` in a `scenario` except they are global to all scenarios. Globals are evaluated after variables and must be known values at decode time.
+
+Example:
+```hcl
+globals {
+  tags = merge({
+    "Project Name" : var.project_name
+    "Environment" : "ci"
+  }, var.tags)
+}
+
+module "test_my_app" {
+  source = "./modules/test_my_app"
+
+  tags = global.tags
+}
+```
+
+#### Quality
+Quality blocks are a way to define quality characteristics that you intend to validate with your scenario. When a step in your scenario verifies a quality requirement you can assign a quality to that steps `verifies` attribute to make the association. This allow us to track all the qualities that are validated by a scenario step. The full outline of this can be seen with the `enos scenario outline` command.
+
+Example:
+```hcl
+quality "can_create_post" {
+  description = "We can use the the /api/post API to write data"
+}
+
+quality "post_data_is_valid_after_upgrade" {
+  description = <<-EOF
+    After we upgrade the application we verify that all previous state is valid and durable
+EOF
+}
+
+quality "has_correct_version_after_upgrade" {
+  description = <<EOF
+After we upgrade the application has the correct version
+EOF
+}
+
+scenario "post" {
+  // ...
+  step "create_post" {
+    // ...
+    verifies = quality.can_create_post
+  }
+
+  step "upgrade" {
+    // ...
+    verifies = [
+      quality.has_correct_version_after_upgrade,
+      quality.post_data_is_valid_after_upgrade,
+    ]
+  }
+}
+```
+
 #### Scenario
 The scenario can be considered one of the possible root terraform modules that Enos might execute. The `scenario` is comprised of one-or-more `step` blocks which perform some bit of policy. Each step block must have a `module` attribute that maps to the name of a defined `module` or to the `module` object.
 
@@ -388,8 +446,20 @@ module "test_fresh_install" {
   source = "./modules/test_fresh_install"
 }
 
-module "test_license" {
-  source = "./modules/test_license"
+module "test_kv_data" {
+  source = "./modules/test_kv_data"
+}
+
+quality "data_is_durable_after_upgrade_migration" {
+  description = "The application state is valid after the upgrade migrates it"
+}
+
+quality "can_create_kv_data" {
+  description = "We can successfully create kv data"
+}
+
+quality "can_create_kv_data" {
+  description = "We can successfully create kv data"
 }
 
 provider "aws" "east" {
@@ -422,7 +492,7 @@ scenario "matrix" {
     arch          = ["arm64", "amd64"]
     edition       = ["ent", "ent.hsm", "oss"]
     artifact_type = ["bundle", "package"]
-    test          = ["upgrade", "fresh_install", "license"]
+    test          = ["upgrade", "fresh_install", "kv_data"]
     distro        = ["ubuntu", "rhel"]
 
     // Manual addtions to the matrix.
@@ -497,8 +567,97 @@ scenario "matrix" {
   step "test" {
     module = "test_${matrix.test}"
 
+    verifies = [
+      quality.can_create_kv_data,
+      quality.data_is_durable_after_upgrade_migration,
+    ]
+
     variables {
       skip = local.skip_test[matrix.test]
+    }
+  }
+}
+```
+
+#### Sample
+Enos scenarios support multi-variant matrices which commonly include parameters like architecture, Linux distro, storage backend, expected version, expected edition, and many more configurations. These matrices allow us to test across every possible combination of these variants, which is part of what makes Enos such a powerful tool for testing.
+
+Of course, as our matrices grow, so does the total number of possible combinations — exponentially. It's not uncommon for a scenario to reach hundreds of thousands of possible variant combinations. Samples help us deal with some of the challenges that such large matrices introduce:
+
+- Not all scenarios and/or variant combinations are supported for a given test artifact. How do we filter our scenarios on a per-artifact basis?
+- Running all scenario and variant combinations is prohibitively expensive at any given point in a CI pipeline. Is there a way to get an acceptance sampling strategy by algorithmically selecting scenario variants at each multiple stages of the pipeline?
+- How can we automate our selection and execution of scenarios in the pipeline?
+
+Samples allow us to handle all of those challenges by defining named sample groups. Within hese sample groups you to define subsets with different scenario filters, matrices, and attributes that describe the total allowed sample field, which can be tailored anywhere from all scenarios and variant combinations to a single scenario variant.
+
+The Enos CLI is then able to interact with the Enos server to "observe" a given sample, that is, to choose scenario specimens that we can test. All you need to do is provide the sample boundaries, i.e. minimum number of elements, maximum number of elements, or a percentage of total elements in the frame, and then Enos handles 
+shaping the sample frame and selecting which scenario variants to test using its sampling algorithm.
+
+To ensure that we get coverage over all scenarios, Enos uses its own purposive stratified sampling algorithm. Depending on our sample size limitations, it favors breadth across all samples before dividing the subsets by size and sampling based on overall proportions.
+
+Samples also support injecting additional metadata into sample observations and subsets, which is then distributed to each sample element during observation. This allows us to dynamically configure the Enos variables for a sample and pass any other additional data through to our execution environment.
+
+When taking an observation, the Enos CLI supports human or machine readable output. The machine readable output can be used to generate a Github Actions matrix to execute scenarios on a per-workflow basis.
+
+Example:
+```hcl
+module "upgrade" {
+  source = "./modules/upgrade"
+}
+
+scenario "upgrade" {
+  matrix {
+    backend = ["raft", "consul"]
+    seal    = ["shamir", "awskms", "cloudhsm"]
+  }
+
+  step "upgrade" {
+    module = module.upgrade
+  }
+
+  variables {
+    backend = matrix.raft
+    seal    = matrix.seal
+  }
+}
+
+sample "simple" {
+  subset "raft_cloudhsm" {
+    scenario_filter = "upgrade backend:raft seal:cloudhsm"
+  }
+}
+
+globals {
+  upgrade_attrs = {
+    initial_version = "1.13.2"
+  }
+}
+
+sample "complex" {
+  attributes = {
+    aws-region        = ["us-west-1", "us-west-2"]
+    continue-on-error = false
+  }
+
+  subset "upgrade_consul" {
+    scenario_name = "upgrade"
+
+    attributes = {
+      continue-on-error = true
+    }
+
+    matrix {
+      backend = ["consul"]
+    }
+  }
+
+  subset "upgrade_raft" {
+    scenario_name = "replication"
+    attributes    = global.upgrade_attrs
+
+    matrix {
+      arch    = ["amd64", "arm64"]
+      backend = ["raft"]
     }
   }
 }
@@ -519,8 +678,8 @@ Example:
 enos scenario run '!artifact_type:bundle' backend:raft edition:fips1402'
 ```
 
-#### List
-The `list` sub-command lists all decoded scenarios, along with any variant spefic information.
+#### Scenario List
+The `scenario list` sub-command lists all decoded scenarios, along with any variant spefic information.
 
 Example:
 ```
@@ -548,8 +707,8 @@ matrix [arch:amd64 artifact_type:package backend:consul distro:rhel edition:ent.
 ...
 ```
 
-#### Generate
-The `generate` sub-command generates the Terraform root modules any any associated
+#### Scenario Generate
+The `scenario generate` sub-command generates the Terraform root modules any any associated
 Terraform CLI configuration. All other sub-commands that need a Terraform root
 module and configuration will generate this if necessary, but this command exists
 primary for troubleshooting.
@@ -562,9 +721,9 @@ writing to /.../.../.enos/6d8749c4fe00b757c1bc1c376a99f31d1bd38b422d44f5b6aa2d6a
 writing to /.../.../.enos/6d8749c4fe00b757c1bc1c376a99f31d1bd38b422d44f5b6aa2d6a6c5e975cba/scenario.tf
 ```
 
-#### Validate
-The `validate` sub-command generates the Terraform root modules any any associated
-Terraform CLI configuration and then passed the results to Terraform for module
+#### Scenario Validate
+The `scenario validate` sub-command generates the Terraform root modules any any associated
+Terraform CLI configuration and then passes the results to Terraform for module
 validation. This will attempt to download and required modules and providers and
 plan it.
 
@@ -586,8 +745,8 @@ Upgrading modules...
 ...
 ```
 
-#### Launch
-The `launch` sub-command applies the Terraform plan. You would usually do this
+#### Scenario Launch
+The `scenario launch` sub-command applies the Terraform plan. You would usually do this
 after you've validated a scenario.
 
 Example:
@@ -596,8 +755,8 @@ $ enos scenario launch
 ...
 ```
 
-#### Destroy
-The `destroy` sub-command destroys the Terraform plan. You would usually do this
+#### Scenario Destroy
+The `scenario destroy` sub-command destroys the Terraform plan. You would usually do this
 after you've launched a scenario.
 
 Example:
@@ -606,8 +765,8 @@ $ enos scenario destroy
 ...
 ```
 
-#### Run
-The `run` sub-command generates, validates, launches a scenario. In the event
+#### Scenario Run
+The `scenario run` sub-command generates, validates, launches a scenario. In the event
 that it is succcessful it will also destroy the resources afterwards.
 
 Example:
@@ -616,9 +775,10 @@ $ enos scenario run
 ...
 ```
 
-#### Exec
-The `exec` sub-command allows you to run any Terraform sub-command within the
-context of a Scenario. This is useful for debugging.
+#### Scenario Exec
+The `scenario exec` sub-command allows you to run any Terraform sub-command within the
+context of a Scenario. This is useful for debugging as you can inspect the state for any resource
+that is created during launch.
 
 Example:
 ```
@@ -626,9 +786,44 @@ $ enos scenario exec test arch:arm64 backend:consul distro:rhel --cmd "state sho
 ...
 ```
 
+#### Scenario Sample List
+The `scenario sample` sub-command allows you to list which samples are available in your Enos
+directory.
+
+Example:
+```
+$ enos scenario sample list
+...
+```
+
+#### Scenario Sample Observe
+The `scenario sample observe` sub-command allows you to take a sample "observation". That is, decode
+the sample blocks and scenarios to define the total sample field, take your given boundaries like
+maximum and minimum scenario elements, and then uses the sampling algorithm to select specimens for
+testing.
+
+Example:
+```
+$ enos scenario sample observe <sample-name> --min 1 --max 5 --format json
+...
+```
+
+#### Scenario Outline
+The `scenario outline` sub-command allows you to generate outlines of the scenarios and quality
+characteristics that you have defined in your Enos directory. The outline provides a way to quickly
+get up to speed with what a scenario does and which quality characteristics it verifies.
+
+You can you generate both a text, JSON, HTML output of the outline.
+
+Example:
+```
+$ enos scenario outline <scenario-name> --format html > outline.html
+$ open outline.html
+```
+
 ## Contrubuting
 
-Feel free to contribute if you wish.
+Feel free to contribute if you wish. You'll need to sign the CLA and adhere to the [Code of Conduct](https://www.hashicorp.com/community-guidelines).
 
 ## Release
 
@@ -638,7 +833,7 @@ The `Require Changelog Label` workflow verifies whether a PR has at least one of
 
 ### Validate Workflow
 
-The `validate` workflow is a re-usable GitHub workflow that is called by `PR_build` workflow, when a PR is created against the `main` branch and is also called by the `build` workflow after a PR is merged to `main` branch. This workflow runs Lint, Unit and Acceptance tests. The Acceptance tests are run on `linux/amd64` artifacts created by the caller workflows (`PR_build` or `build`).
+The `validate` workflow is a reusable GitHub workflow that is called by `PR_build` workflow, when a PR is created against the `main` branch and is also called by the `build` workflow after a PR is merged to `main` branch. This workflow runs Lint, Unit and Acceptance tests. The Acceptance tests are run on `linux/amd64` artifacts created by the caller workflows (`PR_build` or `build`).
 
 ### PR Build Workflow
 

@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/hashicorp/enos/internal/ui/basic"
+	"github.com/hashicorp/enos/internal/ui/html"
 	"github.com/hashicorp/enos/internal/ui/machine"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -30,6 +31,7 @@ type View interface {
 	ShowVersion(all bool, res *pb.GetVersionResponse) error
 	ShowFormat(cfg *pb.FormatRequest_Config, res *pb.FormatResponse) error
 	ShowScenarioList(res *pb.ListScenariosResponse) error
+	ShowScenarioOutline(res *pb.OutlineScenariosResponse) error
 	ShowDecode(res *pb.DecodeResponse, incremental bool) error
 	ShowOutput(res *pb.OperationResponses) error
 	ShowScenariosValidateConfig(res *pb.ValidateScenariosConfigurationResponse) error
@@ -47,6 +49,8 @@ func New(s *pb.UI_Settings) (View, error) {
 		return machine.New(machine.WithUISettings(s))
 	case pb.UI_Settings_FORMAT_BASIC_TEXT:
 		return basic.New(basic.WithUISettings(s))
+	case pb.UI_Settings_FORMAT_HTML:
+		return html.New(html.WithUISettings(s))
 	case pb.UI_Settings_FORMAT_UNSPECIFIED:
 		return basic.New(basic.WithUISettings(s))
 	default:

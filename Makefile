@@ -66,7 +66,7 @@ lint-fix-golang:
 
 .PHONY: lint-proto
 lint-proto:
-	pushd proto && buf lint --error-format=$(BUF_LINT_OUT_FORMAT)
+	buf lint --error-format=$(BUF_LINT_OUT_FORMAT)
 
 .PHONY: fmt
 fmt: fmt-golang fmt-proto fmt-terraform fmt-enos

@@ -129,6 +129,13 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 		}
 	}
 
+	if expected.Qualities != nil {
+		require.Len(t, fp.Qualities, len(expected.Qualities))
+		for i := range expected.Qualities {
+			require.EqualValues(t, expected.Qualities[i], fp.Qualities[i])
+		}
+	}
+
 	if expected.TerraformCLIs != nil {
 		require.Len(t, expected.TerraformCLIs, len(fp.TerraformCLIs))
 		for i := range expected.TerraformCLIs {
@@ -155,7 +162,9 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 
 		for j := range expected.ScenarioBlocks[i].Scenarios {
 			require.EqualValues(t, expected.ScenarioBlocks[i].Name, gotBlock.Name)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Name, gotBlock.Name)
 			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Name, gotBlock.Scenarios[j].Name)
+			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Description, gotBlock.Scenarios[j].Description)
 			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformSetting, gotBlock.Scenarios[j].TerraformSetting)
 			require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].TerraformCLI, gotBlock.Scenarios[j].TerraformCLI)
 			if expected.ScenarioBlocks[i].Scenarios[j].Variants == nil {
@@ -189,8 +198,10 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 			require.Len(t, expected.ScenarioBlocks[i].Scenarios[j].Steps, len(gotBlock.Scenarios[j].Steps))
 			for is := range expected.ScenarioBlocks[i].Scenarios[j].Steps {
 				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Name, gotBlock.Scenarios[j].Steps[is].Name)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Description, gotBlock.Scenarios[j].Steps[is].Description)
 				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Providers, gotBlock.Scenarios[j].Steps[is].Providers)
 				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].DependsOn, gotBlock.Scenarios[j].Steps[is].DependsOn)
+				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Verifies, gotBlock.Scenarios[j].Steps[is].Verifies)
 				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Skip, gotBlock.Scenarios[j].Steps[is].Skip)
 				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Name, gotBlock.Scenarios[j].Steps[is].Module.Name)
 				require.EqualValues(t, expected.ScenarioBlocks[i].Scenarios[j].Steps[is].Module.Source, gotBlock.Scenarios[j].Steps[is].Module.Source)

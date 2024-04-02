@@ -171,6 +171,15 @@ func (v *View) ShowScenarioList(res *pb.ListScenariosResponse) error {
 	return status.ListScenarios(v.settings.GetFailOnWarnings(), res)
 }
 
+// ShowScenarioOutline shows the scenario outlines.
+func (v *View) ShowScenarioOutline(res *pb.OutlineScenariosResponse) error {
+	if err := v.write(res); err != nil {
+		return err
+	}
+
+	return status.OutlineScenarios(v.settings.GetFailOnWarnings(), res)
+}
+
 // ShowSampleList shows the a list of samples.
 func (v *View) ShowSampleList(res *pb.ListSamplesResponse) error {
 	if err := v.write(res); err != nil {
@@ -278,7 +287,7 @@ func (v *View) writeError(err error) error {
 		}
 
 		return nil
-	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT:
+	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT, pb.UI_Settings_FORMAT_HTML:
 		err := tryJSON(fmt.Errorf("%w: %s", err, NewErrUnsupportedEncodingFormat(v.settings.GetFormat()).Error()))
 		if err != nil {
 			return tryPlainText(err)
@@ -341,7 +350,7 @@ func (v *View) writeDiagnostics(diags []*pb.Diagnostic) error {
 		}
 
 		return nil
-	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT:
+	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT, pb.UI_Settings_FORMAT_HTML:
 		diags = append(diags, diagnostics.FromErr(
 			NewErrUnsupportedEncodingFormat(v.settings.GetFormat()),
 		)...)
@@ -375,7 +384,7 @@ func (v *View) write(msg proto.Message) error {
 		if err != nil {
 			return err
 		}
-	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT:
+	case pb.UI_Settings_FORMAT_UNSPECIFIED, pb.UI_Settings_FORMAT_BASIC_TEXT, pb.UI_Settings_FORMAT_HTML:
 		return NewErrUnsupportedEncodingFormat(v.settings.GetFormat())
 	default:
 		return NewErrUnsupportedEncodingFormat(v.settings.GetFormat())

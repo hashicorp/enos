@@ -459,6 +459,110 @@ scenario "depends_on" {
 `, modulePath),
 		},
 		{
+			desc: "step description and verifies",
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+quality "tests_pass" {
+  description = "the tests pass"
+}
+
+quality "data_is_durable" {
+  description = "the data is durable"
+}
+
+scenario "test_verifies" {
+  step "verifies_singular" {
+    description = "test a single verifies"
+
+    verifies = quality.tests_pass
+
+    module = module.one
+  }
+
+  step "verifies_mutiple_and_inline" {
+    description = "tests multiple and inline verifies"
+
+    verifies = [
+			{ name: "inline", description: "inline quality" },
+      quality.data_is_durable,
+    ]
+
+    module = module.one
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "one",
+						Source: modulePath,
+					},
+				},
+				Qualities: []*Quality{
+					{
+						Name:        "tests_pass",
+						Description: "the tests pass",
+					},
+					{
+						Name:        "data_is_durable",
+						Description: "the data is durable",
+					},
+				},
+				ScenarioBlocks: DecodedScenarioBlocks{
+					{
+						Name: "test_verifies",
+						Scenarios: []*Scenario{
+							{
+								Name:         "test_verifies",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name:        "verifies_singular",
+										Description: "test a single verifies",
+										Verifies: []*Quality{
+											{
+												Name:        "tests_pass",
+												Description: "the tests pass",
+											},
+										},
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+									},
+									{
+										Name:        "verifies_mutiple_and_inline",
+										Description: "tests multiple and inline verifies",
+										Verifies: []*Quality{
+											{
+												Name:        "data_is_durable",
+												Description: "the data is durable",
+											},
+											{
+												Name:        "inline",
+												Description: "inline quality",
+											},
+										},
+										Module: &Module{
+											Name:   "one",
+											Source: modulePath,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
 			desc: "step depends_on valid string",
 			hcl: fmt.Sprintf(`
 module "one" {

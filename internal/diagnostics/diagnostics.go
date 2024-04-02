@@ -169,7 +169,7 @@ func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 // FromHCL takes a map of hcl.Files and hcl.Diagnostics and returns pb diagnostics.
 // When possible it will attempt to create a valid snippet.
 //
-//nolint:gocylo,cyclop // converting snippets from HCL to our wire format is complexity we can't avoid
+//nolint:cyclop // converting snippets from HCL to our wire format is complexity we can't avoid
 func FromHCL(files map[string]*hcl.File, diags hcl.Diagnostics) []*pb.Diagnostic {
 	if len(diags) < 1 {
 		return nil

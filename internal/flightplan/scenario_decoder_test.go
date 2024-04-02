@@ -216,12 +216,14 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 		"one": {
 			in: DecodedScenarioBlocks{
 				{
-					Matrix: &Matrix{Vectors: []*Vector{
-						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
-						NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
-						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
-						NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
-					}},
+					DecodedMatrices: &DecodedMatrices{
+						FinalProduct: &Matrix{Vectors: []*Vector{
+							NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+							NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+							NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
+							NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
+						}},
+					},
 				},
 			},
 			expected: &Matrix{Vectors: []*Vector{
@@ -234,20 +236,24 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 		"multiple": {
 			in: DecodedScenarioBlocks{
 				{
-					Matrix: &Matrix{Vectors: []*Vector{
-						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
-						NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
-						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
-						NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
-					}},
+					DecodedMatrices: &DecodedMatrices{
+						FinalProduct: &Matrix{Vectors: []*Vector{
+							NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+							NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+							NewVector(NewElement("backend", "raft"), NewElement("arch", "arm64")),
+							NewVector(NewElement("backend", "consul"), NewElement("arch", "arm64")),
+						}},
+					},
 				},
 				{
-					Matrix: &Matrix{Vectors: []*Vector{
-						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
-						NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
-						NewVector(NewElement("backend", "postgres"), NewElement("arch", "aarch65")),
-						NewVector(NewElement("backend", "mysql"), NewElement("arch", "s309x")),
-					}},
+					DecodedMatrices: &DecodedMatrices{
+						FinalProduct: &Matrix{Vectors: []*Vector{
+							NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+							NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
+							NewVector(NewElement("backend", "postgres"), NewElement("arch", "aarch65")),
+							NewVector(NewElement("backend", "mysql"), NewElement("arch", "s309x")),
+						}},
+					},
 				},
 			},
 			expected: &Matrix{Vectors: []*Vector{

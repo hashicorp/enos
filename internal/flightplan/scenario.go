@@ -20,6 +20,7 @@ import (
 
 var scenarioSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
+		{Name: "description", Required: false},
 		{Name: "terraform_cli", Required: false},
 		{Name: "terraform", Required: false},
 		{Name: "providers", Required: false},
@@ -43,6 +44,7 @@ var matrixSchema = &hcl.BodySchema{
 // Scenario represents an Enos scenario.
 type Scenario struct {
 	Name             string
+	Description      string
 	Variants         *Vector
 	TerraformCLI     *TerraformCLI
 	TerraformSetting *TerraformSetting
@@ -80,10 +82,11 @@ func (s *Scenario) UID() string {
 func (s *Scenario) Ref() *pb.Ref_Scenario {
 	return &pb.Ref_Scenario{
 		Id: &pb.Scenario_ID{
-			Name:     s.Name,
-			Variants: s.Variants.Proto(),
-			Uid:      s.UID(),
-			Filter:   s.FilterStr(),
+			Name:        s.Name,
+			Description: s.Description,
+			Variants:    s.Variants.Proto(),
+			Uid:         s.UID(),
+			Filter:      s.FilterStr(),
 		},
 	}
 }
@@ -152,6 +155,34 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 	return true
 }
 
+// Outline returns the scenario as a scenario outline.
+func (s *Scenario) Outline() *pb.Scenario_Outline {
+	if s == nil {
+		return nil
+	}
+
+	out := &pb.Scenario_Outline{
+		Scenario: s.Ref(),
+	}
+	// Outlines are not currently specific to individual scenarios so we'll remove that metadata
+	out.Scenario.Id.Uid = ""
+	out.Scenario.Id.Filter = ""
+	out.Scenario.Id.Variants = nil
+
+	qualities := map[string]*pb.Quality{}
+	for _, step := range s.Steps {
+		out.Steps = append(out.GetSteps(), step.outline())
+		for _, qual := range step.Verifies {
+			qualities[qual.Name] = qual.ToProto()
+		}
+	}
+	for _, qual := range qualities {
+		out.Verifies = append(out.GetVerifies(), qual)
+	}
+
+	return out
+}
+
 // decode takes an HCL block and an evaluation context and it decodes itself
 // from the block. Any errors that are encountered during decoding will be
 // returned as hcl diagnostics.
@@ -178,6 +209,17 @@ func (s *Scenario) decode(block *hcl.Block, ctx *hcl.EvalContext, target DecodeT
 			Detail:   "scenarios require one or more step blocks",
 			Subject:  block.Body.MissingItemRange().Ptr(),
 		})
+	}
+
+	// Decode our scenario description
+	desc, ok := content.Attributes["description"]
+	if ok {
+		val, moreDiags := desc.Expr.Value(ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags != nil && moreDiags.HasErrors() {
+			return diags
+		}
+		s.Description = val.AsString()
 	}
 
 	// Decode our locals

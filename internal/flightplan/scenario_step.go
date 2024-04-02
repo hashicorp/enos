@@ -6,12 +6,14 @@ package flightplan
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
 
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 )
@@ -19,10 +21,12 @@ import (
 // scenarioStepSchema is our knowable scenario step schema.
 var scenarioStepSchema = &hcl.BodySchema{
 	Attributes: []hcl.AttributeSchema{
+		{Name: "description", Required: false},
 		{Name: "module", Required: true},
 		{Name: "providers", Required: false},
 		{Name: "depends_on", Required: false},
 		{Name: "skip_step", Required: false},
+		{Name: "verifies", Required: false},
 	},
 	Blocks: []hcl.BlockHeaderSchema{
 		{Type: blockTypeVariables},
@@ -31,11 +35,13 @@ var scenarioStepSchema = &hcl.BodySchema{
 
 // ScenarioStep is a step in an Enos scenario.
 type ScenarioStep struct {
-	Name      string
-	Module    *Module
-	Providers map[string]*Provider
-	DependsOn []string
-	Skip      bool
+	Name        string
+	Description string
+	Module      *Module
+	Providers   map[string]*Provider
+	DependsOn   []string
+	Verifies    []*Quality
+	Skip        bool
 }
 
 // NewScenarioStep returns a new Scenario step.
@@ -65,6 +71,17 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 	// Decode our name
 	ss.Name = block.Labels[0]
 
+	// Decode our description
+	desc, ok := content.Attributes["description"]
+	if ok {
+		val, moreDiags := desc.Expr.Value(ctx)
+		diags = diags.Extend(moreDiags)
+		if moreDiags != nil && moreDiags.HasErrors() {
+			return diags
+		}
+		ss.Description = val.AsString()
+	}
+
 	// Decode skip
 	moreDiags, shouldSkip := ss.decodeSkip(content, ctx)
 	diags = diags.Extend(moreDiags)
@@ -75,6 +92,13 @@ func (ss *ScenarioStep) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagn
 
 	// Decode depends_on
 	moreDiags = ss.decodeAndValidateDependsOn(content, ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags != nil && moreDiags.HasErrors() {
+		return diags
+	}
+
+	// Decode verifies
+	moreDiags = ss.decodeAndValidateVerifies(content, ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
@@ -532,6 +556,104 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 	return diags
 }
 
+// decodeAndValidateVerifies decodess the verifies attribute. This attribute is one-or-more Verifies
+// that have either been defined at the top leve and should therefore be accessible in the eval context,
+// or defined in-inline for singular qualities.
+func (ss *ScenarioStep) decodeAndValidateVerifies(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
+	diags := hcl.Diagnostics{}
+
+	verifies, ok := content.Attributes["verifies"]
+	if !ok {
+		return diags
+	}
+
+	ss.Verifies = []*Quality{}
+
+	verifiesVal, moreDiags := verifies.Expr.Value(ctx)
+	diags = diags.Extend(moreDiags)
+	if moreDiags != nil && moreDiags.HasErrors() {
+		return diags
+	}
+
+	if verifiesVal.IsNull() || !verifiesVal.IsWhollyKnown() {
+		return diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "verifies value must be knowable at compile time",
+			Subject:  verifies.Expr.Range().Ptr(),
+			Context:  verifies.Range.Ptr(),
+		})
+	}
+
+	// We allow configuring the verifies attribute as a single quality or a slice of qualities.
+	// Handle the simple case first
+	if !verifiesVal.CanIterateElements() {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "invalid input for 'verifies' attribute. Must be one-or-more qualities",
+			Subject:  verifies.Expr.Range().Ptr(),
+			Context:  verifies.Range.Ptr(),
+		})
+
+		return diags
+	}
+
+	if !verifiesVal.Type().IsTupleType() {
+		quality := NewQuality()
+		err := quality.FromCtyValue(verifiesVal)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "invalid input for 'verifies' attribute. Must be one-or-more qualities",
+				Detail:   err.Error(),
+				Subject:  verifies.Expr.Range().Ptr(),
+				Context:  verifies.Range.Ptr(),
+			})
+		}
+
+		ss.Verifies = append(ss.Verifies, quality)
+
+		return diags
+	}
+
+	// Iterate over the verifies attributes and decode them. Prevent the same quality from being
+	// defined twice.
+	verifiesSet := map[string]struct{}{}
+	for _, vv := range verifiesVal.AsValueSlice() {
+		quality := NewQuality()
+		err := quality.FromCtyValue(vv)
+		if err != nil {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "invalid input for 'verifies' attribute. Must be one-or-more qualities",
+				Detail:   err.Error(),
+				Subject:  verifies.Expr.Range().Ptr(),
+				Context:  verifies.Range.Ptr(),
+			})
+
+			continue
+		}
+
+		if _, exists := verifiesSet[quality.Name]; exists {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Detail:   "cannot define the same quality more than once",
+				Summary:  "quality verification of " + quality.Name + " cannot be specified more than once",
+				Subject:  verifies.Expr.Range().Ptr(),
+				Context:  verifies.Range.Ptr(),
+			})
+
+			continue
+		}
+
+		verifiesSet[quality.Name] = struct{}{}
+		ss.Verifies = append(ss.Verifies, quality)
+	}
+
+	slices.SortStableFunc(ss.Verifies, compareQuality)
+
+	return diags
+}
+
 // decodeAndValidateProvidersAttribute decodess the providers attribute
 // from the content and validates that each sub-attribute references a defined
 // provider.
@@ -849,4 +971,21 @@ func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
 	ctx.Variables["step"] = cty.ObjectVal(steps)
 
 	return diags
+}
+
+func (ss *ScenarioStep) outline() *pb.Scenario_Outline_Step {
+	if ss == nil {
+		return nil
+	}
+
+	out := &pb.Scenario_Outline_Step{
+		Name:        ss.Name,
+		Description: ss.Description,
+	}
+
+	for _, qual := range ss.Verifies {
+		out.Verifies = append(out.GetVerifies(), qual.ToProto())
+	}
+
+	return out
 }

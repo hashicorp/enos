@@ -29,6 +29,7 @@ const (
 	DecodeTargetVariables
 	DecodeTargetGlobals
 	DecodeTargetSamples
+	DecodeTargetQualities
 	DecodeTargetScenariosNamesNoVariants
 	DecodeTargetScenariosMatrixOnly
 	DecodeTargetScenariosNamesExpandVariants
@@ -36,6 +37,7 @@ const (
 	DecodeTargetTerraformCLIs
 	DecodeTargetProviders
 	DecodeTargetModules
+	DecodeTargetScenariosOutlines
 	DecodeTargetScenariosComplete
 	DecodeTargetAll // Make sure this is always the latest decoding target
 )
@@ -348,22 +350,24 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 			diags = diags.Extend(fp.decodeSamples(evalCtx))
 		}
 
-		if d.target == DecodeTargetScenariosNamesNoVariants {
+		if d.target >= DecodeTargetQualities {
+			// Decode out qualities and add them to the eval context.
+			diags = diags.Extend(fp.decodeQualities(evalCtx))
+		}
+
+		switch d.target {
+		case
 			// Decode to only our scenario names. Useful for only decoding the scenario names for
 			// listing but not validating their internal references or expanding their variants.
-			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
-		}
-
-		if d.target == DecodeTargetScenariosMatrixOnly {
+			DecodeTargetScenariosNamesNoVariants,
 			// Decode scenarios to name and matrix only. Useful for shallow decoding scenarios
 			// and building sample frames.
-			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
-		}
-
-		if d.target == DecodeTargetScenariosNamesExpandVariants {
+			DecodeTargetScenariosMatrixOnly,
 			// Decode to only our scenario names and variants. Useful for listing all scenarios
 			// and variant combinations.
+			DecodeTargetScenariosNamesExpandVariants:
 			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+		default:
 		}
 
 		if d.target >= DecodeTargetTerraformSettings {
@@ -380,6 +384,11 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 
 		if d.target >= DecodeTargetModules {
 			diags = diags.Extend(fp.decodeModules(evalCtx))
+		}
+
+		// Decode the fewest scenarios possible to generate an outline and return.
+		if d.target == DecodeTargetScenariosOutlines {
+			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
 		}
 
 		if d.target >= DecodeTargetScenariosComplete {

@@ -91,7 +91,7 @@ func (v *View) writeEventInit(e *pb.Operation_Event, w *strings.Builder) {
 
 	if stderr := i.GetStderr(); stderr != "" &&
 		v.settings.GetLevel() > pb.UI_Settings_LEVEL_INFO {
-		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
+		fmt.Fprintf(w, "\n  Stderr: %s\n", stderr)
 	}
 
 	v.writeDiags(i.GetDiagnostics(), w)
@@ -139,7 +139,7 @@ func (v *View) writeEventPlan(e *pb.Operation_Event, w *strings.Builder) {
 
 	if stderr := p.GetStderr(); stderr != "" &&
 		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
-		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
+		fmt.Fprintf(w, "\n  Stderr: %s\n", stderr)
 	}
 
 	v.writeDiags(p.GetDiagnostics(), w)
@@ -155,7 +155,7 @@ func (v *View) writeEventApply(e *pb.Operation_Event, w *strings.Builder) {
 
 	if stderr := a.GetStderr(); stderr != "" &&
 		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
-		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
+		fmt.Fprintf(w, "\n  Stderr: %s\n", stderr)
 	}
 
 	v.writeDiags(a.GetDiagnostics(), w)
@@ -171,7 +171,7 @@ func (v *View) writeEventDestroy(e *pb.Operation_Event, w *strings.Builder) {
 
 	if stderr := d.GetStderr(); stderr != "" &&
 		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
-		w.WriteString(fmt.Sprintf("\n  Stderr: %s\n", stderr))
+		fmt.Fprintf(w, "\n  Stderr: %s\n", stderr)
 	}
 
 	v.writeDiags(d.GetDiagnostics(), w)
@@ -228,7 +228,7 @@ func (v *View) writeEventOutput(e *pb.Operation_Event, w *strings.Builder) {
 		if i != 0 {
 			w.WriteString("\n")
 		}
-		w.WriteString(fmt.Sprintf("  %s = %s", meta.GetName(), s))
+		fmt.Fprintf(w, "  %s = %s", meta.GetName(), s)
 	}
 
 	v.writeDiags(diags, w)
@@ -265,9 +265,9 @@ func (v *View) writeEventHeader(
 	scenario := flightplan.NewScenario()
 	scenario.FromRef(event.GetOp().GetScenario())
 
-	w.WriteString(fmt.Sprintf("%s %s: %s",
+	fmt.Fprintf(w, "%s %s: %s",
 		scenario.String(),
 		action,
 		v.opStatusString(event.GetStatus()),
-	))
+	)
 }

@@ -79,6 +79,7 @@ func newScenarioCmd() *cobra.Command {
 	scenarioCmd.AddCommand(newScenarioOutputCmd())
 	scenarioCmd.AddCommand(newScenarioValidateConfigCmd())
 	scenarioCmd.AddCommand(newScenarioSampleCmd())
+	scenarioCmd.AddCommand(newScenarioOutlineCmd())
 
 	return scenarioCmd
 }

@@ -147,11 +147,14 @@ module "backend" {
 }
 
 globals {
-  something = "another"
-  another   = global.something
+  something   = "another"
+  another     = global.something
+	description = "the backend scenario"
 }
 
 scenario "backend" {
+	description = global.description
+
   step "first" {
     module = module.backend
   }
@@ -178,6 +181,7 @@ scenario "backend" {
 						Scenarios: []*Scenario{
 							{
 								Name:         "backend",
+								Description:  "the backend scenario",
 								TerraformCLI: DefaultTerraformCLI(),
 								Steps: []*ScenarioStep{
 									{

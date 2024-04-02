@@ -98,7 +98,7 @@ func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubs
 	return &SampleSubsetFrame{
 		SampleSubset:   s,
 		ScenarioFilter: sf.Proto(),
-		Matrix:         fp.ScenarioBlocks[0].Matrix,
+		Matrix:         fp.ScenarioBlocks[0].Matrix(),
 	}, nil
 }
 
@@ -145,11 +145,12 @@ func (s *SampleSubset) decode(block *hcl.Block, ctx *hcl.EvalContext) hcl.Diagno
 	}
 
 	// Decode the matrix block if there is one.
-	s.Matrix, moreDiags = decodeMatrix(ctx, block)
+	decodedMatrices, moreDiags := decodeMatrix(ctx, block)
 	diags = diags.Extend(moreDiags)
 	if moreDiags != nil && moreDiags.HasErrors() {
 		return diags
 	}
+	s.Matrix = decodedMatrices.Matrix()
 
 	if s.Name == "" && s.ScenarioName == "" && s.ScenarioFilter == "" {
 		diags = diags.Append(&hcl.Diagnostic{

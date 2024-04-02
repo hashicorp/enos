@@ -27,6 +27,7 @@ service EnosService {
   rpc Operation(OperationRequest) returns (OperationResponse) {}
   rpc ListSamples(ListSamplesRequest) returns (ListSamplesResponse) {}
   rpc ObserveSample(ObserveSampleRequest) returns (ObserveSampleResponse) {}
+  rpc OutlineScenarios(OutlineScenariosRequest) returns (OutlineScenariosResponse) {}
 }
 
 // UI contains messages related to the UI calling the server. This information
@@ -52,6 +53,7 @@ message UI {
       FORMAT_UNSPECIFIED = 0;
       FORMAT_BASIC_TEXT = 1;
       FORMAT_JSON = 2;
+      FORMAT_HTML = 3;
     }
 
     enum Level {
@@ -147,6 +149,7 @@ message Scenario {
     Matrix.Vector variants = 2;
     string uid = 3;
     string filter = 4;
+    string description = 5;
   }
 
   // Filter is a scenario filter.
@@ -158,6 +161,19 @@ message Scenario {
     Matrix intersection_matrix = 5 [json_name = "intersection_matrix"];
 
     message SelectAll {}
+  }
+
+  message Outline {
+    Ref.Scenario scenario = 1;
+    Matrix matrix = 2;
+    repeated Step steps = 3;
+    repeated Quality verifies = 4;
+
+    message Step {
+      string name = 1;
+      string description = 2;
+      repeated Quality verifies = 3;
+    }
   }
 }
 
@@ -737,4 +753,22 @@ message OperationResponses {
   repeated Diagnostic diagnostics = 1;
   DecodeResponse decode = 2;
   repeated Operation.Response responses = 3;
+}
+
+message OutlineScenariosRequest {
+  Workspace workspace = 1;
+  Scenario.Filter filter = 2;
+}
+
+message OutlineScenariosResponse {
+  repeated Diagnostic diagnostics = 1;
+  DecodeResponse decode = 2;
+  repeated Scenario.Outline outlines = 3;
+  repeated Quality verifies = 4;
+}
+
+// Quality describes a quality chracteristic that a scenario step can verify.
+message Quality {
+  string name = 1;
+  string description = 2;
 }

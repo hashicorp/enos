@@ -49,7 +49,7 @@ on:
 jobs:
   update-formula:
     name: "Update Homebrew formula definition"
-    runs-on: linux
+    runs-on: ubuntu-latest
     env:
       # Note: `gh` CLI automatically looks for and uses `env.GH_TOKEN` for authentication.
       # This token must have read:org scope in order to authenticate on a different repo.

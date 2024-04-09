@@ -13,7 +13,7 @@ env:
 
 jobs:
   product-metadata:
-    runs-on: linux
+    runs-on: ubuntu-latest
     outputs:
       filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
       product-version: ${{ steps.product-metadata.outputs.product-version }}
@@ -34,7 +34,7 @@ jobs:
           path: ${{ steps.generate-metadata-file.outputs.filepath }}
 
   profile-binary:
-    runs-on: linux
+    runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
       TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
@@ -76,7 +76,7 @@ jobs:
     needs:
       - product-metadata
       - profile-binary
-    runs-on: linux
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         goos: [linux, darwin]
@@ -147,7 +147,7 @@ jobs:
     needs:
       - product-metadata
       - build
-    runs-on: linux
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         arch: ["arm64", "amd64"]

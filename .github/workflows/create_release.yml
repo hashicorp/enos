@@ -29,7 +29,7 @@ on:
 jobs:
   create-release:
     name: Create Release
-    runs-on: linux
+    runs-on: ubuntu-latest
     env:
       GOPRIVATE: 'github.com/hashicorp/*'
       GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}

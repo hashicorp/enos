@@ -52,7 +52,7 @@ func CompareQuality(a, b *Quality) int {
 	return cmp.Compare(a.Description, b.Description)
 }
 
-// CompareQuality implements a slices.SortFunc for pb.Quality's
+// CompareQuality implements a slices.SortFunc for pb.Quality's.
 func CompareQualityProto(ap, bp *pb.Quality) int {
 	a := NewQuality()
 	b := NewQuality()

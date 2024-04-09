@@ -509,6 +509,7 @@ func (fp *FlightPlan) decodeScenarios(
 	target DecodeTarget,
 	filter *ScenarioFilter,
 ) hcl.Diagnostics {
+	diags := hcl.Diagnostics{}
 	blocks := fp.BodyContent.Blocks.OfType(blockTypeScenario)
 	if len(blocks) < 1 {
 		return nil
@@ -520,7 +521,6 @@ func (fp *FlightPlan) decodeScenarios(
 		WithScenarioDecoderScenarioFilter(filter),
 	)
 	if err != nil {
-		diags := hcl.Diagnostics{}
 		return diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to initialize scenario decoder",
@@ -530,11 +530,8 @@ func (fp *FlightPlan) decodeScenarios(
 	}
 
 	fp.ScenarioBlocks = scenarioDecoder.DecodeScenarioBlocks(ctx, blocks)
-	if fp.ScenarioBlocks != nil {
-		return fp.ScenarioBlocks.Diagnostics()
-	}
 
-	return nil
+	return diags.Extend(fp.ScenarioBlocks.Diagnostics())
 }
 
 // decodeMatrix takes an eval context and scenario blocks and decodes only the

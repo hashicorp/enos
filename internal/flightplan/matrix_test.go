@@ -30,161 +30,153 @@ func Test_Decode_Scenario_Matrix(t *testing.T) {
 		"matrix with label": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix "something" {
-			    cathat = ["thing1", "thing2"]
-			  }
+      scenario "backend" {
+        matrix "something" {
+          cathat = ["thing1", "thing2"]
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"more than one matrix block": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    cathat = ["thing1", "thing2"]
-			  }
+      scenario "backend" {
+        matrix {
+          cathat = ["thing1", "thing2"]
+        }
 
-			  matrix {
-			    onefish = ["redfish", "bluefish"]
-			  }
+        matrix {
+          onefish = ["redfish", "bluefish"]
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"invalid matrix value": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    onefish = "redfish"
-			  }
+      scenario "backend" {
+        matrix {
+          onefish = "redfish"
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"invalid block": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    anotherthing {
-			    }
-			  }
+      scenario "backend" {
+        matrix {
+          anotherthing {
+          }
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"invalid value include": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    include {
-			      onefish = "redfish"
-			    }
-			  }
+      scenario "backend" {
+        matrix {
+          include {
+            onefish = "redfish"
+          }
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"invalid block include": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    include {
-			      something {
-			      }
-			    }
-			  }
+      scenario "backend" {
+        matrix {
+          include {
+            something {
+            }
+          }
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"invalid value exclude": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    exclude {
-			      onefish = "redfish"
-			    }
-			  }
+      scenario "backend" {
+        matrix {
+          exclude {
+            onefish = "redfish"
+          }
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"invalid block exclude": {
 			fail: true,
 			hcl: fmt.Sprintf(`
-			module "backend" {
-			  source = "%s"
-			}
+      module "backend" {
+        source = "%s"
+      }
 
-			scenario "backend" {
-			  matrix {
-			    exclude {
-			      something {
-			      }
-			    }
-			  }
+      scenario "backend" {
+        matrix {
+          exclude {
+            something {
+            }
+          }
+        }
 
-			  step "first" {
-			    module = module.backend
-			  }
-			}
-			`, modulePath),
+        step "first" {
+          module = module.backend
+        }
+      }`, modulePath),
 		},
 		"valid matrix": {
 			hcl: fmt.Sprintf(`
@@ -195,29 +187,28 @@ module "books" {
 scenario "nighttime" {
   matrix {
     cathat  = ["thing1", "thing2"]
-	onefish = ["redfish", "bluefish"]
+    onefish = ["redfish", "bluefish"]
 
-	include {
-	  cathat  = ["sally", "conrad"]
-	  onefish = ["twofish"]
-	}
+    include {
+      cathat  = ["sally", "conrad"]
+      onefish = ["twofish"]
+    }
 
-	exclude {
-	  cathat  = ["thing1"]
-	  onefish = ["redfish", "bluefish"]
-	}
+    exclude {
+      cathat  = ["thing1"]
+      onefish = ["redfish", "bluefish"]
+    }
   }
 
   step "read" {
     module = module.books
 
-	variables {
-	  cathat  = matrix.cathat
-	  onefish = matrix.onefish
-	}
+    variables {
+      cathat  = matrix.cathat
+      onefish = matrix.onefish
+    }
   }
-}
-`, modulePath),
+}`, modulePath),
 			expected: &FlightPlan{
 				TerraformCLIs: []*TerraformCLI{
 					DefaultTerraformCLI(),

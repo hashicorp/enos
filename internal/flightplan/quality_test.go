@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 )

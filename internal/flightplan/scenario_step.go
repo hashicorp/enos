@@ -557,7 +557,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 }
 
 // decodeAndValidateVerifies decodess the verifies attribute. This attribute is one-or-more Verifies
-// that have either been defined at the top leve and should therefore be accessible in the eval context,
+// that have either been defined at the top level and should therefore be accessible in the eval context,
 // or defined in-inline for singular qualities.
 func (ss *ScenarioStep) decodeAndValidateVerifies(content *hcl.BodyContent, ctx *hcl.EvalContext) hcl.Diagnostics {
 	diags := hcl.Diagnostics{}

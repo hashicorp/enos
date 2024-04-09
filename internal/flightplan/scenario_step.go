@@ -649,7 +649,7 @@ func (ss *ScenarioStep) decodeAndValidateVerifies(content *hcl.BodyContent, ctx 
 		ss.Verifies = append(ss.Verifies, quality)
 	}
 
-	slices.SortStableFunc(ss.Verifies, compareQuality)
+	slices.SortStableFunc(ss.Verifies, CompareQuality)
 
 	return diags
 }

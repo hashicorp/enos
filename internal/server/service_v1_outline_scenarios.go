@@ -4,7 +4,6 @@
 package server
 
 import (
-	"cmp"
 	"context"
 	"slices"
 
@@ -56,17 +55,13 @@ func (s *ServiceV1) OutlineScenarios(
 		}
 	}
 
+	verifies := []*pb.Quality{}
 	for _, qual := range qualities {
-		res.Verifies = append(res.GetVerifies(), qual)
+		verifies = append(verifies, qual)
 	}
+	slices.SortStableFunc(verifies, flightplan.CompareQualityProto)
 
-	slices.SortStableFunc(res.GetVerifies(), func(a, b *pb.Quality) int {
-		if n := cmp.Compare(a.GetName(), b.GetName()); n != 0 {
-			return n
-		}
-
-		return cmp.Compare(a.GetDescription(), b.GetDescription())
-	})
+	res.Verifies = verifies
 
 	return res, nil
 }

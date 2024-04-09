@@ -4,8 +4,10 @@
 package flightplan
 
 import (
+	"slices"
 	"testing"
 
+	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -162,6 +164,48 @@ scenario "basic" {
 			}
 			require.NoError(t, err)
 			testRequireEqualFP(t, fp, test.expected)
+		})
+	}
+}
+
+// TestCompareQualityProto tests that our comparison function is able to stable sort.
+func TestCompareQualityProto(t *testing.T) {
+	t.Parallel()
+
+	expected := []*pb.Quality{
+		{Name: "aaaa", Description: "aaaa"},
+		{Name: "aaaa", Description: "bbbb"},
+		{Name: "bbbb", Description: "aaaa"},
+		{Name: "bbbb", Description: "bbbb"},
+	}
+	for name, qualities := range map[string][]*pb.Quality{
+		"presorted": {
+			&pb.Quality{Name: "aaaa", Description: "aaaa"},
+			&pb.Quality{Name: "aaaa", Description: "bbbb"},
+			&pb.Quality{Name: "bbbb", Description: "aaaa"},
+			&pb.Quality{Name: "bbbb", Description: "bbbb"},
+		},
+		"reversed": {
+			&pb.Quality{Name: "bbbb", Description: "bbbb"},
+			&pb.Quality{Name: "bbbb", Description: "aaaa"},
+			&pb.Quality{Name: "aaaa", Description: "bbbb"},
+			&pb.Quality{Name: "aaaa", Description: "aaaa"},
+		},
+		"mixed": {
+			&pb.Quality{Name: "bbbb", Description: "bbbb"},
+			&pb.Quality{Name: "aaaa", Description: "aaaa"},
+			&pb.Quality{Name: "bbbb", Description: "aaaa"},
+			&pb.Quality{Name: "aaaa", Description: "bbbb"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			slices.SortStableFunc(qualities, CompareQualityProto)
+			for i := range expected {
+				require.EqualValues(t, expected[i].GetName(), qualities[i].GetName())
+				require.EqualValues(t, expected[i].GetDescription(), qualities[i].GetDescription())
+			}
 		})
 	}
 }

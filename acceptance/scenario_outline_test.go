@@ -147,6 +147,7 @@ func TestAcc_Cmd_Scenario_Outline(t *testing.T) {
 				require.EqualValues(t, test.out.GetOutlines()[i].GetScenario().GetId().GetFilter(), got.GetOutlines()[i].GetScenario().GetId().GetFilter())
 				require.EqualValues(t, test.out.GetOutlines()[i].GetScenario().GetId().GetUid(), got.GetOutlines()[i].GetScenario().GetId().GetUid())
 				require.EqualValues(t, test.out.GetOutlines()[i].GetMatrix().String(), got.GetOutlines()[i].GetMatrix().String())
+				require.Len(t, got.GetOutlines()[i].GetVerifies(), len(test.out.GetOutlines()[i].GetVerifies()))
 				for q := range test.out.GetOutlines()[i].GetVerifies() {
 					require.EqualValues(t, test.out.GetOutlines()[i].GetVerifies()[q].GetName(), got.GetOutlines()[i].GetVerifies()[q].GetName())
 					require.EqualValues(t, test.out.GetOutlines()[i].GetVerifies()[q].GetDescription(), got.GetOutlines()[i].GetVerifies()[q].GetDescription())

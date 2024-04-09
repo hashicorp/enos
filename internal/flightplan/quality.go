@@ -31,13 +31,35 @@ func NewQuality() *Quality {
 	return &Quality{}
 }
 
-// compareQuality implements a slices.SortFunc for Quality's.
-func compareQuality(a, b *Quality) int {
+// CompareQuality implements a slices.SortFunc for Quality's.
+func CompareQuality(a, b *Quality) int {
+	if a == nil && b == nil {
+		return 0
+	}
+
+	if a != nil && b == nil {
+		return 1
+	}
+
+	if a == nil && b != nil {
+		return -1
+	}
+
 	if n := cmp.Compare(a.Name, b.Name); n != 0 {
 		return n
 	}
 
 	return cmp.Compare(a.Description, b.Description)
+}
+
+// CompareQuality implements a slices.SortFunc for pb.Quality's
+func CompareQualityProto(ap, bp *pb.Quality) int {
+	a := NewQuality()
+	b := NewQuality()
+	a.FromProto(ap)
+	b.FromProto(bp)
+
+	return CompareQuality(a, b)
 }
 
 // ToProto coverts the Quality struct to the wire representation.
@@ -50,6 +72,16 @@ func (q *Quality) ToProto() *pb.Quality {
 		Name:        q.Name,
 		Description: q.Description,
 	}
+}
+
+// FromProto unmarshal the Quality wire representation onto the struct.
+func (q *Quality) FromProto(p *pb.Quality) {
+	if q == nil || p == nil {
+		return
+	}
+
+	q.Name = p.GetName()
+	q.Description = p.GetDescription()
 }
 
 // ToCtyValue returns the quality contents as an object cty.Value. We can then

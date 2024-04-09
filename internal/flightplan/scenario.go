@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -169,6 +170,7 @@ func (s *Scenario) Outline() *pb.Scenario_Outline {
 	out.Scenario.Id.Filter = ""
 	out.Scenario.Id.Variants = nil
 
+	// Create a set of qualities we verify
 	qualities := map[string]*pb.Quality{}
 	for _, step := range s.Steps {
 		out.Steps = append(out.GetSteps(), step.outline())
@@ -176,9 +178,14 @@ func (s *Scenario) Outline() *pb.Scenario_Outline {
 			qualities[qual.Name] = qual.ToProto()
 		}
 	}
+
+	// Sort them
+	verifies := []*pb.Quality{}
 	for _, qual := range qualities {
-		out.Verifies = append(out.GetVerifies(), qual)
+		verifies = append(verifies, qual)
 	}
+	slices.SortStableFunc(verifies, CompareQualityProto)
+	out.Verifies = verifies
 
 	return out
 }

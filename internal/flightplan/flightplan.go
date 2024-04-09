@@ -13,7 +13,6 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
@@ -34,6 +33,7 @@ const (
 	blockTypeOutput            = "output"
 	blockTypeProvider          = "provider"
 	blockTypeProviderMeta      = "provider_meta"
+	blockTypeQuality           = "quality"
 	blockTypeRequiredProviders = "required_providers"
 	blockTypeSample            = "sample"
 	blockTypeSampleSubset      = "subset"
@@ -53,6 +53,7 @@ var flightPlanSchema = &hcl.BodySchema{
 		{Type: blockTypeTerraformSetting, LabelNames: []string{attrLabelNameDefault}},
 		{Type: blockTypeTerraformCLI, LabelNames: []string{attrLabelNameDefault}},
 		{Type: blockTypeProvider, LabelNames: []string{attrLabelNameType, attrLabelNameAlias}},
+		{Type: blockTypeQuality, LabelNames: []string{attrLabelNameDefault}},
 		{Type: blockTypeScenario, LabelNames: []string{attrLabelNameDefault}},
 		{Type: blockTypeModule, LabelNames: []string{attrLabelNameDefault}},
 		{Type: blockTypeVariable, LabelNames: []string{attrLabelNameDefault}},
@@ -100,12 +101,13 @@ type FlightPlan struct {
 	BaseDir           string
 	BodyContent       *hcl.BodyContent
 	Files             map[string]*hcl.File
-	Samples           []*Sample
+	Modules           []*Module
+	Providers         []*Provider
+	Qualities         []*Quality
 	TerraformSettings []*TerraformSetting
 	TerraformCLIs     []*TerraformCLI
-	Providers         []*Provider
+	Samples           []*Sample
 	ScenarioBlocks    DecodedScenarioBlocks
-	Modules           []*Module
 }
 
 func (fp *FlightPlan) Scenarios() []*Scenario {
@@ -334,6 +336,46 @@ func (fp *FlightPlan) decodeTerraformSettings(ctx *hcl.EvalContext) hcl.Diagnost
 	return diags
 }
 
+// decodeQualities decodes "quality" blocks that are defined in the top-level schema.
+func (fp *FlightPlan) decodeQualities(ctx *hcl.EvalContext) hcl.Diagnostics {
+	diags := hcl.Diagnostics{}
+	qualities := map[string]cty.Value{}
+
+	for _, block := range fp.BodyContent.Blocks.OfType(blockTypeQuality) {
+		moreDiags := verifyBlockLabelsAreValidIdentifiers(block)
+		diags = diags.Extend(moreDiags)
+		if moreDiags != nil && moreDiags.HasErrors() {
+			continue
+		}
+
+		quality := NewQuality()
+		moreDiags = quality.decode(block, ctx.NewChild())
+		diags = diags.Extend(moreDiags)
+		if moreDiags != nil && moreDiags.HasErrors() {
+			continue
+		}
+
+		_, previouslyDefined := qualities[quality.Name]
+		if previouslyDefined {
+			diags = diags.Append(&hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "quality has previously been defined",
+				Detail:   fmt.Sprintf(`quality %s has already been defined`, quality.Name),
+				Subject:  block.DefRange.Ptr(),
+			})
+
+			continue
+		}
+
+		qualities[quality.Name] = quality.ToCtyValue()
+		fp.Qualities = append(fp.Qualities, quality)
+	}
+
+	ctx.Variables["quality"] = cty.ObjectVal(qualities)
+
+	return diags
+}
+
 // decodeTerraformCLIs decodes "terraform_cli" blocks that are defined in the
 // top-level schema.
 func (fp *FlightPlan) decodeTerraformCLIs(ctx *hcl.EvalContext) hcl.Diagnostics {
@@ -467,6 +509,7 @@ func (fp *FlightPlan) decodeScenarios(
 	target DecodeTarget,
 	filter *ScenarioFilter,
 ) hcl.Diagnostics {
+	diags := hcl.Diagnostics{}
 	blocks := fp.BodyContent.Blocks.OfType(blockTypeScenario)
 	if len(blocks) < 1 {
 		return nil
@@ -478,7 +521,6 @@ func (fp *FlightPlan) decodeScenarios(
 		WithScenarioDecoderScenarioFilter(filter),
 	)
 	if err != nil {
-		diags := hcl.Diagnostics{}
 		return diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to initialize scenario decoder",
@@ -488,220 +530,16 @@ func (fp *FlightPlan) decodeScenarios(
 	}
 
 	fp.ScenarioBlocks = scenarioDecoder.DecodeScenarioBlocks(ctx, blocks)
-	if fp.ScenarioBlocks != nil {
-		return fp.ScenarioBlocks.Diagnostics()
-	}
 
-	return nil
+	return diags.Extend(fp.ScenarioBlocks.Diagnostics())
 }
 
 // decodeMatrix takes an eval context and scenario blocks and decodes only the
 // matrix block. It returns a unique matrix with vectors for all unique variant
 // value combinations.
-//
-//nolint:cyclop // matrix decode has a high cyclomatic complexity due to it having a lot of HCL
-func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*Matrix, hcl.Diagnostics) {
-	diags := hcl.Diagnostics{}
-	mContent, _, moreDiags := block.Body.PartialContent(matrixSchema)
-	diags = diags.Extend(moreDiags)
-	if moreDiags != nil && moreDiags.HasErrors() {
-		return nil, diags
-	}
-
-	mBlocks := mContent.Blocks.OfType(blockTypeMatrix)
-	switch len(mBlocks) {
-	case 0:
-		// We have no matrix block defined
-		return nil, diags
-	case 1:
-		// Continue
-		break
-	default:
-		return nil, diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "scenario has more than one matrix block defined",
-			Detail:   fmt.Sprintf("a single matrix block can be set, found %d", len(mBlocks)),
-			Subject:  block.TypeRange.Ptr(),
-			Context:  block.DefRange.Ptr(),
-		})
-	}
-
-	// Let's decode our matrix block into a matrix
-	block = mBlocks[0]
-	matrix := NewMatrix()
-
-	decodeMatrixAttribute := func(block *hcl.Block, attr *hcl.Attribute) (*Vector, hcl.Diagnostics) {
-		diags := hcl.Diagnostics{}
-		vec := NewVector()
-
-		val, moreDiags := attr.Expr.Value(ctx)
-		diags = diags.Extend(moreDiags)
-		if moreDiags != nil && moreDiags.HasErrors() {
-			return vec, diags
-		}
-
-		if !val.CanIterateElements() {
-			return vec, diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "matrix attribute value must be a list of strings",
-				Detail:   fmt.Sprintf("expected value for %s to be a list of strings, found %s", attr.Name, val.Type().GoString()),
-				Subject:  attr.NameRange.Ptr(),
-				Context:  block.DefRange.Ptr(),
-			})
-		}
-
-		if len(val.AsValueSlice()) == 0 {
-			return vec, diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "matrix attribute values cannot be empty lists",
-				Subject:  attr.NameRange.Ptr(),
-				Context:  block.DefRange.Ptr(),
-			})
-		}
-
-		for _, elm := range val.AsValueSlice() {
-			if !elm.Type().Equals(cty.String) {
-				return vec, diags.Append(&hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "matrix attribute value must be a list of strings",
-					Detail:   "found element with type " + elm.GoString(),
-					Subject:  attr.NameRange.Ptr(),
-					Context:  block.DefRange.Ptr(),
-				})
-			}
-
-			vec.Add(NewElement(attr.Name, elm.AsString()))
-		}
-
-		return vec, diags
-	}
-
-	// Go maps are intentionally unordered. We need to sort our attributes
-	// so that our variants elements are deterministic every time we
-	// decode our flightplan.
-	sortAttributes := func(attrs map[string]*hcl.Attribute) []*hcl.Attribute {
-		sorted := []*hcl.Attribute{}
-		for _, attr := range attrs {
-			sorted = append(sorted, attr)
-		}
-		sort.Slice(sorted, func(i, j int) bool {
-			return sorted[i].Name < sorted[j].Name
-		})
-
-		return sorted
-	}
-
-	// Each attribute in the matrix should be a variant name whose value must
-	// be a list of strings. Convert the value into a matrix vector and add it.
-	// We're ignoring the diagnostics JustAttributes() will return here because
-	// there might also be include and exclude blocks.
-	mAttrs, _ := block.Body.JustAttributes()
-	for _, attr := range sortAttributes(mAttrs) {
-		vec, moreDiags := decodeMatrixAttribute(block, attr)
-		diags = diags.Extend(moreDiags)
-		if moreDiags != nil && moreDiags.HasErrors() {
-			continue
-		}
-
-		matrix.AddVector(vec)
-	}
-
-	// Now that we have our basic variant vectors in our matrix, we need to combine
-	// all vectors into a product that matches all possible unique value combinations.
-	matrix = matrix.CartesianProduct().UniqueValues()
-
-	// Now we need to go through all of our blocks and process include and exclude
-	// directives. Since HCL allows us to use ordering we'll apply them in the
-	// order in which they're defined.
-	blockC, remain, moreDiags := block.Body.PartialContent(&hcl.BodySchema{
-		Blocks: []hcl.BlockHeaderSchema{
-			{Type: blockTypeMatrixInclude},
-			{Type: blockTypeMatrixExclude},
-		},
-	})
-	diags = diags.Extend(moreDiags)
-	if moreDiags != nil && moreDiags.HasErrors() {
-		return nil, diags
-	}
-	diags = diags.Extend(verifyBodyOnlyHasBlocksWithLabels(
-		remain, blockTypeMatrixInclude, blockTypeMatrixExclude,
-	))
-
-	for _, mBlock := range blockC.Blocks {
-		switch mBlock.Type {
-		case "include":
-			iMatrix := NewMatrix()
-			iAttrs, moreDiags := mBlock.Body.JustAttributes()
-			diags = diags.Extend(moreDiags)
-			if moreDiags != nil && moreDiags.HasErrors() {
-				continue
-			}
-
-			for _, attr := range sortAttributes(iAttrs) {
-				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
-				diags = diags.Extend(moreDiags)
-				if moreDiags != nil && moreDiags.HasErrors() {
-					continue
-				}
-
-				iMatrix.AddVector(vec)
-			}
-
-			// Generate our possible include vectors and add them to our main
-			// matrix.
-			for _, vec := range iMatrix.CartesianProduct().UniqueValues().GetVectors() {
-				matrix.AddVector(vec)
-			}
-		case "exclude":
-			eMatrix := NewMatrix()
-			eAttrs, moreDiags := mBlock.Body.JustAttributes()
-			diags = diags.Extend(moreDiags)
-			if moreDiags != nil && moreDiags.HasErrors() {
-				continue
-			}
-
-			for _, attr := range sortAttributes(eAttrs) {
-				vec, moreDiags := decodeMatrixAttribute(mBlock, attr)
-				diags = diags.Extend(moreDiags)
-				if moreDiags != nil && moreDiags.HasErrors() {
-					continue
-				}
-				eMatrix.AddVector(vec)
-			}
-
-			excludes := []*Exclude{}
-			for _, vec := range eMatrix.CartesianProduct().UniqueValues().GetVectors() {
-				ex, err := NewExclude(pb.Matrix_Exclude_MODE_CONTAINS, vec)
-				if err != nil {
-					diags = diags.Append(&hcl.Diagnostic{
-						Severity: hcl.DiagError,
-						Summary:  "unable to generate exclusion filter",
-						Detail:   err.Error(),
-						Subject:  hcl.RangeBetween(mBlock.LabelRanges[0], mBlock.LabelRanges[1]).Ptr(),
-						Context:  mBlock.DefRange.Ptr(),
-					})
-				}
-				excludes = append(excludes, ex)
-			}
-
-			// Update our matrix to a copy which has vectors which match our exclusions
-			matrix = matrix.Exclude(excludes...)
-		default:
-			diags = diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "invalid block in matrix",
-				Detail:   "blocks of type include and exclude are supported in matrix blocks, found " + mBlock.Type,
-				Subject:  mBlock.TypeRange.Ptr(),
-				Context:  mBlock.DefRange.Ptr(),
-			})
-
-			continue
-		}
-	}
-
-	// Return our matrix but do one final pass removing any duplicates that might
-	// have been introduced during our inclusions.
-	return matrix.UniqueValues(), diags
+func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*DecodedMatrices, hcl.Diagnostics) {
+	decoder := newMatrixDecoder()
+	return decoder.decodeMatrix(ctx, block)
 }
 
 // filterTerraformMetaAttrs does our best to ensure that the given set of

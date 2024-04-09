@@ -1,3 +1,4 @@
+<!-- vim: set ts=2 sw=2 expandtab: -->
 # enos
 
 Enos is a tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language.
@@ -28,34 +29,34 @@ Before we go deeper we'll define some terms:
 
 To understand why a tool like Enos exists we need to understand the differences that software delivery models make on both our quality requirements and the tools and strategies that we can utilize to ship quality software.
 
-For example, lets consider a hyphothetical software service application. What tools and strategies can we use to measure and verify the quality of our service? Say our application has lots of smaller unit tests that we execute regularly to verify some functional requirements before we deploy it. We run these often enough to give ourselves a sense of confidence in the correctness a unit level, but we don't verify our integrated product before changes in the source or deployment. Many of our services non-functional supporting systems like backups, high availability, and disaster recovery are provided by a platform team. Some of those requirements are fulfilled by external Cloud provider services and their SLAs. Our application is only deployed by us so we rarely have to worry about long term compatibility or data durability because we're only running a singular version of the application at one given time and it's regularly being updated to the latest version. We measure the quality of our service by defining various service level objectives and use instrumenation and observability tools to measure our SLO's and identify issues _after deployment_. We measure our velocity, which includes our time to recover from deployed bug. Our pipline is fast enough that we rely on being able to quickly patch issues and ship them.
+For example, lets consider a hyphothetical software service application. What tools and strategies can we use to measure and verify the quality of our service? Say our application has lots of smaller unit tests that we execute regularly to verify some functional requirements before we deploy it. We run these often enough to give ourselves a sense of confidence in the correctness a unit level, but we don't verify our integrated product before changes in the source or deployment. Many of our services non-functional supporting systems like backups, high availability, and disaster recovery are provided by a platform team. Some of those requirements are fulfilled by external Cloud provider services and their SLAs. Our application is only deployed by us so we rarely have to worry about long term compatibility or data durability because we're only running a singular version of the application at one given time and it's regularly being updated to the latest version. We measure the quality of our service by defining various service level objectives and use instrumentation and observability tools to measure our SLO's and identify issues _after deployment_. We measure our velocity, which includes our time to recover from escaped defect, as our primary quality metric. Our pipline is fast enough that we rely on being able to quickly patch issues and ship them.
 
 I want to emphasize that running a service is by no means trivial and our example omits plenty of challenges, but the tools and services we have available to measure quality (SLO's, velocity, observability) and move quickly with relative safety (automation, test verification, external tools and services with their SLAs) exist. Because our deployment model is limited and many of our non-functional requirements have been outsourced, our primary quality focus is limited to functional suitability and velocity. With these constraints a tool like Enos _could_ be useful for you but it was not designed for these constraints or requirements.
 
-Now lets consider a complex on-premises software product that we ship via binaries and packages. Lets say our product could be best described as a platform and that it services many different kinds of workloads, all with different access patterns and resource considerations. It has a vast array of deployment options and integrations. It has close to no telemetry and is often deployed in air-gapped environments, so even if the telemetry did exist it will never reach you. The deployment cycles for this can be up to a year in highly regulated environments, so its up the upmost importance that all functional, non-functional, and lifecycle actions behave as expected at all times, regardless of the many different ways the software might be deployed or used.
+Now lets consider a complex on-premises software product that we ship via binaries and packages. Lets say our product could be best described as a platform that services many different kinds of workloads, all with different access patterns and resource considerations. It has a vast array of deployment options and integrations. It has close to no telemetry and is often deployed in air-gapped environments, so even if the telemetry did exist it will never reach you. Downstream operator deployment cycles for this application can be up to a year in highly regulated environments so its up the utmost importance that all functional, non-functional, and lifecycle actions behave as expected at all times, regardless of the many different ways the software might be deployed or used.
 
-This is by no means an apples to apples comparison with our SaaS example, but that's the point. Our software delivery method has changed by our quality requirements and our methods of quality verification. Instead of primarily focusing on the functional requirements of the system and velocity, we now have a larger responsibility of verification before the product is released. And on top of it, we also have so many other deployments variables like edition, version, platform, architecture, runtime, storage, network, cluster size, CPUs, memory, integrations, auditing, logging, HA, DR, etc, that we have to consider and ought to verify. In effect, we are now responsible for all functional, non-functional, and lifecycle quality, and since we no longer control most of the environmental variables we have to figure out how to verify our software in all sorts of environmental combinations.
+This is by no means an apples to apples comparison with our SaaS example, but that's the point. Our software delivery method has changed our quality requirements and our methods of quality verification. Instead of primarily focusing on the functional requirements of the system and velocity, we now have a larger responsibility of verification before the product is released. And on top of it, we also have so many other deployments variables like edition, version, platform, architecture, runtime, storage, network, cluster size, CPUs, memory, integrations, auditing, logging, HA, DR, etc., that we have to consider and ought to verify. In effect, we are now responsible for all functional, non-functional, and lifecycle quality, and since we no longer control most of the environmental variables we have to figure out how to verify our software in all sorts of environmental combinations.
 
 How do we ensure that our software behaves as expected under so many unique circumstances? What tools do we have for this? 
 
   - *Unit tests*
     Unit tests are really good at what they're supposed to do: verify the correctness of a routine. They're fast, easy, and relatively cheap, but they're isolated. Our application doesn't run in isolation, it runs integrated with everything else. We cannot rely on unit tests for reliability, efficiency, or non-functional quality requirements.
   - *End-to-end tests, Acceptance Tests, Integration tests*
-    All of these are useful because they integrate more than one routine to give us more confidence in our application, we're actually testing our software in manner that more closely resembles reality. These tests might be a bit slow relative to our unit tests, but we'll still do a lot of these because they easy for building faster feedback loops during development. They're still not a good proxy for what we're going to ship because we're testing a binary on our local machine, or perhaps we're deployming a test build into containers. But a real application like we're building often is not sharing CPUs, doesn't use in-memory storage, and isn't relying on in-kernel networking. Not to mention the various load profiles, lifecycle changes, and external integrations. We can't rely on these for any non-functional requirements.
+    All of these are useful because they integrate more than one routine to give us more confidence in our application because we're actually testing our software in manner that more closely resembles reality. These tests might be a bit slow relative to our unit tests but we'll still do a lot of these because they're easy for building faster feedback loops during development. They're still not a good proxy for what we're going to ship because we're testing a binary on our local machine or in a container. A real application like we're building often is not sharing CPUs, doesn't use in-memory storage, and isn't relying on in-kernel networking. Not to mention the various load profiles, lifecycle changes, and external integrations. We can't rely on these for any non-functional requirements.
   - *Interative Testing*
     Manual testing is wonderful but it's really slow, expensive, prone to errors, and not repetable. We should include some of this but can't rely on it for most quality characteristics.
   - *Load Testing, Performance Testing, Stress Testing*
     These strategies are great testing our non-functional requirements. It's really useful but also quite slow and often expensive. We also have a problem of our deployment matrix. How do get a representative load test when there are so many different ways to deploy or software and so many different ways to use it?
   - *Black box testing*
-    This is great for testing actual artifacts that we intend to ship, but we also have no good ways to testing all of our artifacts in representative ways.
+    This is great for testing actual artifacts that we intend to ship but we also have no good ways to testing all of our artifacts in representative ways.
   - *Observability*
-    I wish, but we don't get telemetry. Most of these deployments are air-gapped and even if they were not, people might not want to spend on all that egress.
+    I wish, but we don't get telemetry. Most of these deployments are air-gapped and even if they were not, people wouldn't want to spend on all that network egress.
   - *Simulation testing*
-    TBD. This might be a valid strategy at some point, but we don't get to control the environment.
+    TBD. This might be a valid strategy at some point but we don't get to control the environment.
   - *Proofs?*
     :weary: Maybe for some small routines. We simply don't have the budget or expertise to formally verify all of our software.
 
-This is not an exhaustive list of strategies but it does cover the most common answers. All of theses surely have their place in some parts of our quality workflow, but we've identified several gaps:
+This is not an exhaustive list of strategies but it does cover the most common answers. All of these have their place in some parts of our quality workflow but we've identified several gaps:
 
 #### Constraints
 * We have lots of different unique artifacts and they all need to have their quality characteristics verified.
@@ -73,7 +74,7 @@ This is not an exhaustive list of strategies but it does cover the most common a
 #### Problems
 We needed a general purpose tool that allows us to author and execute fully end-to-end scenarios. It needed to support large matrices of options, handle all infrastructure set up and tear down, and allow sampling over scenario matrix products that could be in the millions.
 
-That's why we built Enos. It's designed to solve those problems specifically for HashiCorp products, but there are general purpose resources that might be valuable for your workflow.
+That's why we built Enos. It's designed to solve those problems specifically for HashiCorp products but the frameworkd does include general purpose resources that might be valuable for your workflow.
 
 ## What is Enos?
 
@@ -96,17 +97,21 @@ Are you working on something else? If so, then probably not but it's complicated
 
 The `enos` CLI itself is completely test target agnostic and can be used to execute any Terraform module(s). Quite a bit of the functionality of Enos scenarios is actually in the enos Terraform provider and its resources. The enos provider does provide some general purpose resources that you could use for non-HashiCorp software, but the vast majority of them have been built for specific HashiCorp needs and products.
 
-We want to be clear that *Enos and the Enos provider exist solely for HashiCorp products* and there are *no guarantees* that features for anything else will ever be priorizitied or built. You should expect *no support whatsoever if you choose to use the tools*, as they are intended for *internal use only* and should *never be used in production Terraform*.
+We want to be clear that **Enos and the Enos provider exist solely for HashiCorp products** and there are **no guarantees** that features for anything else will ever be priorizitied or built. You should expect **no support whatsoever if you choose to use the tools**, as they are intended for **internal use only** and should **never be used in production Terraform**.
 
 ## How can I get started with Enos?
 
-If you're a HashiCorp developer, you can follow the Enos tutorials in the Engineering Handbook.
+If you're a HashiCorp developer you can follow the Enos tutorials in the Engineering Handbook.
 
-If you're not, we don't currently have any examples or tutorials published yet, but you can install [Binaries](https://github.com/hashicorp/enos/releases/) and read about the various components below. There is also plenty of advanced Enos prior art in the Vault or Boundary repositories.
+If you're not, sorry, but we don't currently have any examples or tutorials published yet. You can install [Binaries](https://github.com/hashicorp/enos/releases/) and read about the various components below. There is also plenty of advanced Enos prior art in the Vault or Boundary repositories.
 
 ## How is this different from `terraform test`?
 
-`terraform test` is a wonderful tool but has little overlap with Enos. Enos was started years before `terraform test` became a real thing and the responsibility of each is quite different. `terraform test` is a great way for testing your _Terraform Module_ while Enos is a great way to test _your application_ using Terraform as an engine. Enos _dynamically_ generates Terraform HCL and is intended for short to medium term test verification. `terrafrom test` is intended to test your static Terraform HCL.
+`terraform test` is a wonderful tool but has little overlap with Enos. Enos was started years before `terraform test` became a real thing and the responsibility of each is quite different. `terraform test` is a great way for testing your _Terraform Module_ while Enos is a great way to test _your application_ using Terraform as an engine. Enos dynamically generates Terraform HCL and is intended for short to medium term test verification. `terraform test` is intended to test your static Terraform HCL for production infrastructure.
+
+## Why the name?
+
+The name enos was chosen for several reasons: it's short, if you squint it resembles "errno", but mostly we just really like [chimpanzees](https://en.wikipedia.org/wiki/Enos_(chimpanzee)).
 
 ## Components
 Enos can be thought of as framework to power Quality as Code as a part of your software delivery lifecycle. It has several components to help authors compose, execute, automate, and debug Quality Requirements.
@@ -227,7 +232,7 @@ scenario "e2e" {
 ```
 
 #### Terraform CLI
-Terraform is generaally configured by any combination of environment variables, CLI flags, and rc configuration files. In order to support configuration group sets, Enos has a `terraform_cli` block that allows namespaced configuration sets to be used during operations of scenarios. All configuration that is currently supported in [configuration file](https://www.terraform.io/cli/config/config-file) should be supported in the `terraform_cli` block. In addition to those configuration options and `env` attribute is available to specify a map of key/value pairs that should be set in the environment during execution, along with a `path` attribute that specifies where the `terraform` binary to execute resides. By default Enos will resolve `terraform` from the environment. A `terraform_cli` configuration block with the name of `default` will automatically be used for scenarios that do not set the `terraform_cli` attribute.
+Terraform is generally configured by any combination of environment variables, CLI flags, and rc configuration files. In order to support configuration group sets, Enos has a `terraform_cli` block that allows namespaced configuration sets to be used during operations of scenarios. All configuration that is currently supported in [configuration file](https://www.terraform.io/cli/config/config-file) should be supported in the `terraform_cli` block. In addition to those configuration options and `env` attribute is available to specify a map of key/value pairs that should be set in the environment during execution, along with a `path` attribute that specifies where the `terraform` binary to execute resides. By default Enos will resolve `terraform` from the environment. A `terraform_cli` configuration block with the name of `default` will automatically be used for scenarios that do not set the `terraform_cli` attribute.
 
 Example:
 ```hcl
@@ -280,6 +285,63 @@ variable "tags" {
 module "ec2_instance" {
   source = "./modules/target"
   tags   = var.tags
+}
+```
+
+#### Globals
+Globals in Enos are similar to `locals` in a `scenario` except they are global to all scenarios. Globals are evaluated after variables and must be known values at decode time.
+
+Example:
+```hcl
+globals {
+  tags = merge({
+    "Project Name" : var.project_name
+    "Environment" : "ci"
+  }, var.tags)
+}
+
+module "test_my_app" {
+  source = "./modules/test_my_app"
+
+  tags = global.tags
+}
+```
+
+#### Quality
+Quality blocks are a way to define quality characteristics that you intend to validate with your scenario. When a step in your scenario verifies a quality requirement you can assign a quality to that steps `verifies` attribute to make the association. This allow us to track all the qualities that are validated by a scenario step. The full outline of this can be seen with the `enos scenario outline` command.
+
+Example:
+```hcl
+quality "can_create_post" {
+  description = "We can use the the /api/post API to write data"
+}
+
+quality "post_data_is_valid_after_upgrade" {
+  description = <<-EOF
+    After we upgrade the application we verify that all previous state is valid and durable
+EOF
+}
+
+quality "has_correct_version_after_upgrade" {
+  description = <<EOF
+After we upgrade the application has the correct version
+EOF
+}
+
+scenario "post" {
+  // ...
+  step "create_post" {
+    // ...
+    verifies = quality.can_create_post
+  }
+
+  step "upgrade" {
+    // ...
+    verifies = [
+      quality.has_correct_version_after_upgrade,
+      quality.post_data_is_valid_after_upgrade,
+    ]
+  }
 }
 ```
 
@@ -388,8 +450,20 @@ module "test_fresh_install" {
   source = "./modules/test_fresh_install"
 }
 
-module "test_license" {
-  source = "./modules/test_license"
+module "test_kv_data" {
+  source = "./modules/test_kv_data"
+}
+
+quality "data_is_durable_after_upgrade_migration" {
+  description = "The application state is valid after the upgrade migrates it"
+}
+
+quality "can_create_kv_data" {
+  description = "We can successfully create kv data"
+}
+
+quality "can_create_kv_data" {
+  description = "We can successfully create kv data"
 }
 
 provider "aws" "east" {
@@ -422,7 +496,7 @@ scenario "matrix" {
     arch          = ["arm64", "amd64"]
     edition       = ["ent", "ent.hsm", "oss"]
     artifact_type = ["bundle", "package"]
-    test          = ["upgrade", "fresh_install", "license"]
+    test          = ["upgrade", "fresh_install", "kv_data"]
     distro        = ["ubuntu", "rhel"]
 
     // Manual addtions to the matrix.
@@ -497,8 +571,97 @@ scenario "matrix" {
   step "test" {
     module = "test_${matrix.test}"
 
+    verifies = [
+      quality.can_create_kv_data,
+      quality.data_is_durable_after_upgrade_migration,
+    ]
+
     variables {
       skip = local.skip_test[matrix.test]
+    }
+  }
+}
+```
+
+#### Sample
+Enos scenarios support multi-variant matrices which commonly include parameters like architecture, Linux distro, storage backend, expected version, expected edition, and many more configurations. These matrices allow us to test across every possible combination of these variants, which is part of what makes Enos such a powerful tool for testing.
+
+Of course, as our matrices grow, so does the total number of possible combinations — exponentially. It's not uncommon for a scenario to reach hundreds of thousands of possible variant combinations. Samples help us deal with some of the challenges that such large matrices introduce:
+
+- Not all scenarios and/or variant combinations are supported for a given test artifact. How do we filter our scenarios on a per-artifact basis?
+- Running all scenario and variant combinations is prohibitively expensive at any given point in a CI pipeline. Is there a way to get an acceptance sampling strategy by algorithmically selecting scenario variants at each multiple stages of the pipeline?
+- How can we automate our selection and execution of scenarios in the pipeline?
+
+Samples allow us to handle all of those challenges by defining named sample groups. Within hese sample groups you to define subsets with different scenario filters, matrices, and attributes that describe the total allowed sample field, which can be tailored anywhere from all scenarios and variant combinations to a single scenario variant.
+
+The Enos CLI is then able to interact with the Enos server to "observe" a given sample, that is, to choose scenario specimens that we can test. All you need to do is provide the sample boundaries, i.e. minimum number of elements, maximum number of elements, or a percentage of total elements in the frame, and then Enos handles 
+shaping the sample frame and selecting which scenario variants to test using its sampling algorithm.
+
+To ensure that we get coverage over all scenarios, Enos uses its own purposive stratified sampling algorithm. Depending on our sample size limitations, it favors breadth across all samples before dividing the subsets by size and sampling based on overall proportions.
+
+Samples also support injecting additional metadata into sample observations and subsets, which is then distributed to each sample element during observation. This allows us to dynamically configure the Enos variables for a sample and pass any other additional data through to our execution environment.
+
+When taking an observation, the Enos CLI supports human or machine readable output. The machine readable output can be used to generate a Github Actions matrix to execute scenarios on a per-workflow basis.
+
+Example:
+```hcl
+module "upgrade" {
+  source = "./modules/upgrade"
+}
+
+scenario "upgrade" {
+  matrix {
+    backend = ["raft", "consul"]
+    seal    = ["shamir", "awskms", "cloudhsm"]
+  }
+
+  step "upgrade" {
+    module = module.upgrade
+  }
+
+  variables {
+    backend = matrix.raft
+    seal    = matrix.seal
+  }
+}
+
+sample "simple" {
+  subset "raft_cloudhsm" {
+    scenario_filter = "upgrade backend:raft seal:cloudhsm"
+  }
+}
+
+globals {
+  upgrade_attrs = {
+    initial_version = "1.13.2"
+  }
+}
+
+sample "complex" {
+  attributes = {
+    aws-region        = ["us-west-1", "us-west-2"]
+    continue-on-error = false
+  }
+
+  subset "upgrade_consul" {
+    scenario_name = "upgrade"
+
+    attributes = {
+      continue-on-error = true
+    }
+
+    matrix {
+      backend = ["consul"]
+    }
+  }
+
+  subset "upgrade_raft" {
+    scenario_name = "replication"
+    attributes    = global.upgrade_attrs
+
+    matrix {
+      arch    = ["amd64", "arm64"]
+      backend = ["raft"]
     }
   }
 }
@@ -519,8 +682,8 @@ Example:
 enos scenario run '!artifact_type:bundle' backend:raft edition:fips1402'
 ```
 
-#### List
-The `list` sub-command lists all decoded scenarios, along with any variant spefic information.
+#### Scenario List
+The `scenario list` sub-command lists all decoded scenarios, along with any variant spefic information.
 
 Example:
 ```
@@ -548,8 +711,8 @@ matrix [arch:amd64 artifact_type:package backend:consul distro:rhel edition:ent.
 ...
 ```
 
-#### Generate
-The `generate` sub-command generates the Terraform root modules any any associated
+#### Scenario Generate
+The `scenario generate` sub-command generates the Terraform root modules any any associated
 Terraform CLI configuration. All other sub-commands that need a Terraform root
 module and configuration will generate this if necessary, but this command exists
 primary for troubleshooting.
@@ -562,9 +725,9 @@ writing to /.../.../.enos/6d8749c4fe00b757c1bc1c376a99f31d1bd38b422d44f5b6aa2d6a
 writing to /.../.../.enos/6d8749c4fe00b757c1bc1c376a99f31d1bd38b422d44f5b6aa2d6a6c5e975cba/scenario.tf
 ```
 
-#### Validate
-The `validate` sub-command generates the Terraform root modules any any associated
-Terraform CLI configuration and then passed the results to Terraform for module
+#### Scenario Validate
+The `scenario validate` sub-command generates the Terraform root modules any any associated
+Terraform CLI configuration and then passes the results to Terraform for module
 validation. This will attempt to download and required modules and providers and
 plan it.
 
@@ -586,8 +749,8 @@ Upgrading modules...
 ...
 ```
 
-#### Launch
-The `launch` sub-command applies the Terraform plan. You would usually do this
+#### Scenario Launch
+The `scenario launch` sub-command applies the Terraform plan. You would usually do this
 after you've validated a scenario.
 
 Example:
@@ -596,8 +759,8 @@ $ enos scenario launch
 ...
 ```
 
-#### Destroy
-The `destroy` sub-command destroys the Terraform plan. You would usually do this
+#### Scenario Destroy
+The `scenario destroy` sub-command destroys the Terraform plan. You would usually do this
 after you've launched a scenario.
 
 Example:
@@ -606,8 +769,8 @@ $ enos scenario destroy
 ...
 ```
 
-#### Run
-The `run` sub-command generates, validates, launches a scenario. In the event
+#### Scenario Run
+The `scenario run` sub-command generates, validates, launches a scenario. In the event
 that it is succcessful it will also destroy the resources afterwards.
 
 Example:
@@ -616,9 +779,10 @@ $ enos scenario run
 ...
 ```
 
-#### Exec
-The `exec` sub-command allows you to run any Terraform sub-command within the
-context of a Scenario. This is useful for debugging.
+#### Scenario Exec
+The `scenario exec` sub-command allows you to run any Terraform sub-command within the
+context of a Scenario. This is useful for debugging as you can inspect the state for any resource
+that is created during launch.
 
 Example:
 ```
@@ -626,9 +790,44 @@ $ enos scenario exec test arch:arm64 backend:consul distro:rhel --cmd "state sho
 ...
 ```
 
+#### Scenario Sample List
+The `scenario sample` sub-command allows you to list which samples are available in your Enos
+directory.
+
+Example:
+```
+$ enos scenario sample list
+...
+```
+
+#### Scenario Sample Observe
+The `scenario sample observe` sub-command allows you to take a sample "observation". That is, decode
+the sample blocks and scenarios to define the total sample field, take your given boundaries like
+maximum and minimum scenario elements, and then uses the sampling algorithm to select specimens for
+testing.
+
+Example:
+```
+$ enos scenario sample observe <sample-name> --min 1 --max 5 --format json
+...
+```
+
+#### Scenario Outline
+The `scenario outline` sub-command allows you to generate outlines of the scenarios and quality
+characteristics that you have defined in your Enos directory. The outline provides a way to quickly
+get up to speed with what a scenario does and which quality characteristics it verifies.
+
+You can you generate both a text, JSON, HTML output of the outline.
+
+Example:
+```
+$ enos scenario outline <scenario-name> --format html > outline.html
+$ open outline.html
+```
+
 ## Contrubuting
 
-Feel free to contribute if you wish.
+Feel free to contribute if you wish. You'll need to sign the CLA and adhere to the [Code of Conduct](https://www.hashicorp.com/community-guidelines).
 
 ## Release
 
@@ -638,7 +837,7 @@ The `Require Changelog Label` workflow verifies whether a PR has at least one of
 
 ### Validate Workflow
 
-The `validate` workflow is a re-usable GitHub workflow that is called by `PR_build` workflow, when a PR is created against the `main` branch and is also called by the `build` workflow after a PR is merged to `main` branch. This workflow runs Lint, Unit and Acceptance tests. The Acceptance tests are run on `linux/amd64` artifacts created by the caller workflows (`PR_build` or `build`).
+The `validate` workflow is a reusable GitHub workflow that is called by `PR_build` workflow, when a PR is created against the `main` branch and is also called by the `build` workflow after a PR is merged to `main` branch. This workflow runs Lint, Unit and Acceptance tests. The Acceptance tests are run on `linux/amd64` artifacts created by the caller workflows (`PR_build` or `build`).
 
 ### PR Build Workflow
 
@@ -648,7 +847,7 @@ The `PR_build` workflow is run when a PR is created against the `main` branch.  
 The `build` workflow is run after PR merge to `main` and only if `version.go` is updated. The `build` workflow creates build artifacts for `Linux` and `Darwin` on `amd64` and `arm64` architectures. It also creates `rpm`, `deb` packages, and `Docker` images. All created artifacts are uploaded to GH workflow. It then calls the `validate` workflow which downloads the `linux/amd64` artifact and runs Lint, Unit, and Acceptance tests on it.
 
 ### CRT Workflow
-The `ci.hcl` is responsible for configuring the CRT workflow orchestration app. The orchestration app will read this configuration and trigger common workflows from the CRT repo. These workflows are responsible for uploading the release artifacts to Artifactory, notarizing macOS binaries, signing binaries and packages with the appropriate HashiCorp certificates, security scanning, and binary verification. The `build` workflow is a required prerequisite as it is responsible for building the release artifacts and generating the required metadata.
+The `.release/ci.hcl` is responsible for configuring the CRT workflow orchestration app. The orchestration app will read this configuration and trigger common workflows from the CRT repo. These workflows are responsible for uploading the release artifacts to Artifactory, notarizing macOS binaries, signing binaries and packages with the appropriate HashiCorp certificates, security scanning, and binary verification. The `build` workflow is a required prerequisite as it is responsible for building the release artifacts and generating the required metadata.
 
 ### Enos Release
 Enos is made available as a Github release, via the `create_release` workflow. This workflow is manually triggered via the Github UI. It has three required inputs: the git SHA of the artifacts in Artifactory to be used in this release; the version number to be used in this release; and the Artifactory channel from which to download the release assets (this defaults to `stable`). It also has one optional input: a `pre-release` checkbox. If `pre-release` is selected, the release will be marked on the Github UI with a `pre-release` label and its tag will take the form `v<version>-pre+<first 5 characters of SHA>` i.e. `v0.0.1-pre+bd25a`. Regular release tags will take the form `v<version>` i.e. `v.0.0.1`.

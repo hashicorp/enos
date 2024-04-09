@@ -110,6 +110,10 @@ func setupCLIUI() error {
 		uiCfg.Format = pb.UI_Settings_FORMAT_JSON
 	}
 
+	if rootState.format == "html" {
+		uiCfg.Format = pb.UI_Settings_FORMAT_HTML
+	}
+
 	if term.IsTerminal(int(os.Stdout.Fd())) {
 		uiCfg.IsTty = true
 		uiCfg.UseColor = true

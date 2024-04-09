@@ -55,3 +55,12 @@ func ListScenarios(failOnWarn bool, res *pb.ListScenariosResponse) error {
 
 	return nil
 }
+
+// OutlineScenarios returns the status response for a scenario outline.
+func OutlineScenarios(failOnWarn bool, res *pb.OutlineScenariosResponse) error {
+	if HasFailed(failOnWarn, res, res.GetDecode()) {
+		return Error("failed to outline scenarios")
+	}
+
+	return nil
+}

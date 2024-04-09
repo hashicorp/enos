@@ -160,6 +160,14 @@ func (v *View) opStatusString(status pb.Operation_Status) string {
 	return res
 }
 
+func (v *View) UI() *terminal.UI {
+	if v == nil {
+		return nil
+	}
+
+	return v.ui
+}
+
 func (v *View) writeMsg(
 	status pb.Operation_Status,
 	msg string,

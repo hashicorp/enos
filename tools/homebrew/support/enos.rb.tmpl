@@ -1,46 +1,35 @@
-require_relative "../Strategies/private_strategy"
 class Enos < Formula
-  desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable and shareable declarative language."
+  desc "A tool for powering Software Quality as Code by writing Terraform-based quality requirement scenarios using a composable, modular, and declarative language."
   homepage "https://github.com/hashicorp/enos"
   version "{{.Version}}"
 
   depends_on "hashicorp/tap/terraform"
 
-  on_macos do
-    if Hardware::CPU.arm?
-      url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_darwin_arm64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-      sha256 "{{.DarwinARM64SHA}}"
-
-      def install
-        bin.install "enos"
-      end
-    end
-    if Hardware::CPU.intel?
-      url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_darwin_amd64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-      sha256 "{{.DarwinAMD64SHA}}"
-
-      def install
-        bin.install "enos"
-      end
-    end
+  if OS.mac? && Hardware::CPU.arm?
+    url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_darwin_arm64.zip"
+    sha256 "{{.DarwinARM64SHA}}"
   end
 
-  on_linux do
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_linux_arm64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-      sha256 "{{.LinuxARM64SHA}}"
+  if OS.mac? && Hardware::CPU.intel?
+    url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_darwin_amd64.zip"
+    sha256 "{{.DarwinAMD64SHA}}"
+  end
 
-      def install
-        bin.install "enos"
-      end
-    end
-    if Hardware::CPU.intel?
-      url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_linux_amd64.zip", :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-      sha256 "{{.LinuxAMD64SHA}}"
+  if OS.linux? && Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+    url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_linux_arm64.zip"
+    sha256 "{{.LinuxARM64SHA}}"
+  end
 
-      def install
-        bin.install "enos"
-      end
-    end
+  if OS.linux? && Hardware::CPU.intel?
+    url "https://github.com/hashicorp/enos/releases/download/{{.VersionTag}}/enos_{{.Version}}_linux_amd64.zip"
+    sha256 "{{.LinuxAMD64SHA}}"
+  end
+
+  def install
+    bin.install "enos"
+  end
+
+  test do
+    system "#{bin}/enos --version"
   end
 end

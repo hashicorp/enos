@@ -131,7 +131,7 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 		t.Run(fmt.Sprintf("fail_on_warnings_%t", failOnWarnings), func(t *testing.T) {
 			t.Parallel()
 			outDir := filepath.Join(tmpDir, "scenario_generate_has_warnings")
-			err = os.MkdirAll(outDir, 0o755)
+			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)

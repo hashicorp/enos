@@ -44,7 +44,7 @@ on:
       version:
         required: true
         type: string
-        description: The version number to be used in this release (e.g. 0.0.1)
+        description: The version number to be used in this release (e.g. 0.0.27)
 
 jobs:
   update-formula:
@@ -54,15 +54,15 @@ jobs:
       # Note: `gh` CLI automatically looks for and uses `env.GH_TOKEN` for authentication.
       # This token must have read:org scope in order to authenticate on a different repo.
       GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
-      TARGET_REPO: hashicorp/homebrew-internal
-      TARGET_REPO_FILEPATH: homebrew-internal-checkout
+      TARGET_REPO: hashicorp/homebrew-tap
+      TARGET_REPO_FILEPATH: homebrew-tap-checkout
       BASE_BRANCH: main
       PR_BRANCH: enos_homebrew_formula_update_v${{ inputs.version }}
       PR_TITLE: "Homebrew formula update for Enos version v${{ inputs.version }}"
       PR_BODY: "This is an automatically generated PR to update the Homebrew formula for Enos after a release has been completed. It must be manually approved and merged by a reviewer."
       COMMIT_MSG: "Update Homebrew formula for Enos version v${{ inputs.version }}"
-      GIT_USER_EMAIL: team-secure-quality@hashicorp.com
-      GIT_USER_NAME: Secure Quality Team
+      GIT_USER_EMAIL: team-vault-quality@hashicorp.com
+      GIT_USER_NAME: Vault Quality Team
       REVIEWER: quality-team
     steps:
       # Checkout Enos repo and place it in the specified relative path within the runner's main directory,
@@ -99,7 +99,7 @@ jobs:
       # Checkout target repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
       # A token with sufficient permissions for the target repo is required.
-      - name: Checkout homebrew-internal
+      - name: Checkout homebrew-tap
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           repository: ${{ env.TARGET_REPO }}
@@ -112,8 +112,8 @@ jobs:
           git config user.email "${{ env.GIT_USER_EMAIL }}"
           git config user.name "${{ env.GIT_USER_NAME }}"
           git checkout -b ${{ env.PR_BRANCH }}
-          mv ../enos-checkout/enos.rb ./HomebrewFormula/enos.rb
-          git add HomebrewFormula/enos.rb
+          mv ../enos-checkout/enos.rb ./Formula/enos.rb
+          git add Formula/enos.rb
           git commit -m "${{ env.COMMIT_MSG }}"
           git push origin ${{ env.PR_BRANCH }}
 

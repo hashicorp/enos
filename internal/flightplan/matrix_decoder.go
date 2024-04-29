@@ -35,6 +35,30 @@ func (d *DecodedMatrices) Matrix() *Matrix {
 	return d.FinalProduct
 }
 
+func (d *DecodedMatrices) GetOriginal() *Matrix {
+	if d == nil {
+		return nil
+	}
+
+	return d.Original
+}
+
+func (d *DecodedMatrices) GetIncludeProducts() []*Matrix {
+	if d == nil {
+		return nil
+	}
+
+	return d.IncludeProducts
+}
+
+func (d *DecodedMatrices) GetExcludes() []*Exclude {
+	if d == nil {
+		return nil
+	}
+
+	return d.Excludes
+}
+
 func (d *DecodedMatrices) Filter(f *ScenarioFilter) *Matrix {
 	if d == nil || d.FinalProduct == nil {
 		return nil

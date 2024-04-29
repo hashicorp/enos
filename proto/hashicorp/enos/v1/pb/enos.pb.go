@@ -1368,6 +1368,87 @@ func (x *ListScenariosResponse) GetScenarios() []*Ref_Scenario {
 	return nil
 }
 
+type EnosServiceListScenariosResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Response:
+	//
+	//	*EnosServiceListScenariosResponse_Scenario
+	//	*EnosServiceListScenariosResponse_Decode
+	Response isEnosServiceListScenariosResponse_Response `protobuf_oneof:"response"`
+}
+
+func (x *EnosServiceListScenariosResponse) Reset() {
+	*x = EnosServiceListScenariosResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enos_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnosServiceListScenariosResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnosServiceListScenariosResponse) ProtoMessage() {}
+
+func (x *EnosServiceListScenariosResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_enos_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnosServiceListScenariosResponse.ProtoReflect.Descriptor instead.
+func (*EnosServiceListScenariosResponse) Descriptor() ([]byte, []int) {
+	return file_enos_proto_rawDescGZIP(), []int{19}
+}
+
+func (m *EnosServiceListScenariosResponse) GetResponse() isEnosServiceListScenariosResponse_Response {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+func (x *EnosServiceListScenariosResponse) GetScenario() *Ref_Scenario {
+	if x, ok := x.GetResponse().(*EnosServiceListScenariosResponse_Scenario); ok {
+		return x.Scenario
+	}
+	return nil
+}
+
+func (x *EnosServiceListScenariosResponse) GetDecode() *DecodeResponse {
+	if x, ok := x.GetResponse().(*EnosServiceListScenariosResponse_Decode); ok {
+		return x.Decode
+	}
+	return nil
+}
+
+type isEnosServiceListScenariosResponse_Response interface {
+	isEnosServiceListScenariosResponse_Response()
+}
+
+type EnosServiceListScenariosResponse_Scenario struct {
+	Scenario *Ref_Scenario `protobuf:"bytes,1,opt,name=scenario,proto3,oneof"`
+}
+
+type EnosServiceListScenariosResponse_Decode struct {
+	Decode *DecodeResponse `protobuf:"bytes,3,opt,name=decode,proto3,oneof"`
+}
+
+func (*EnosServiceListScenariosResponse_Scenario) isEnosServiceListScenariosResponse_Response() {}
+
+func (*EnosServiceListScenariosResponse_Decode) isEnosServiceListScenariosResponse_Response() {}
+
 type GenerateScenariosRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1380,7 +1461,7 @@ type GenerateScenariosRequest struct {
 func (x *GenerateScenariosRequest) Reset() {
 	*x = GenerateScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[19]
+		mi := &file_enos_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1393,7 +1474,7 @@ func (x *GenerateScenariosRequest) String() string {
 func (*GenerateScenariosRequest) ProtoMessage() {}
 
 func (x *GenerateScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[19]
+	mi := &file_enos_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1406,7 +1487,7 @@ func (x *GenerateScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateScenariosRequest.ProtoReflect.Descriptor instead.
 func (*GenerateScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{19}
+	return file_enos_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GenerateScenariosRequest) GetWorkspace() *Workspace {
@@ -1436,7 +1517,7 @@ type GenerateScenariosResponse struct {
 func (x *GenerateScenariosResponse) Reset() {
 	*x = GenerateScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[20]
+		mi := &file_enos_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1449,7 +1530,7 @@ func (x *GenerateScenariosResponse) String() string {
 func (*GenerateScenariosResponse) ProtoMessage() {}
 
 func (x *GenerateScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[20]
+	mi := &file_enos_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1462,7 +1543,7 @@ func (x *GenerateScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateScenariosResponse.ProtoReflect.Descriptor instead.
 func (*GenerateScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{20}
+	return file_enos_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GenerateScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -1498,7 +1579,7 @@ type CheckScenariosRequest struct {
 func (x *CheckScenariosRequest) Reset() {
 	*x = CheckScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[21]
+		mi := &file_enos_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1511,7 +1592,7 @@ func (x *CheckScenariosRequest) String() string {
 func (*CheckScenariosRequest) ProtoMessage() {}
 
 func (x *CheckScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[21]
+	mi := &file_enos_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1524,7 +1605,7 @@ func (x *CheckScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckScenariosRequest.ProtoReflect.Descriptor instead.
 func (*CheckScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{21}
+	return file_enos_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CheckScenariosRequest) GetWorkspace() *Workspace {
@@ -1554,7 +1635,7 @@ type CheckScenariosResponse struct {
 func (x *CheckScenariosResponse) Reset() {
 	*x = CheckScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[22]
+		mi := &file_enos_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1567,7 +1648,7 @@ func (x *CheckScenariosResponse) String() string {
 func (*CheckScenariosResponse) ProtoMessage() {}
 
 func (x *CheckScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[22]
+	mi := &file_enos_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1580,7 +1661,7 @@ func (x *CheckScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckScenariosResponse.ProtoReflect.Descriptor instead.
 func (*CheckScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{22}
+	return file_enos_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CheckScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -1616,7 +1697,7 @@ type LaunchScenariosRequest struct {
 func (x *LaunchScenariosRequest) Reset() {
 	*x = LaunchScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[23]
+		mi := &file_enos_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1629,7 +1710,7 @@ func (x *LaunchScenariosRequest) String() string {
 func (*LaunchScenariosRequest) ProtoMessage() {}
 
 func (x *LaunchScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[23]
+	mi := &file_enos_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1642,7 +1723,7 @@ func (x *LaunchScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LaunchScenariosRequest.ProtoReflect.Descriptor instead.
 func (*LaunchScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{23}
+	return file_enos_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *LaunchScenariosRequest) GetWorkspace() *Workspace {
@@ -1672,7 +1753,7 @@ type LaunchScenariosResponse struct {
 func (x *LaunchScenariosResponse) Reset() {
 	*x = LaunchScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[24]
+		mi := &file_enos_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1685,7 +1766,7 @@ func (x *LaunchScenariosResponse) String() string {
 func (*LaunchScenariosResponse) ProtoMessage() {}
 
 func (x *LaunchScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[24]
+	mi := &file_enos_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1698,7 +1779,7 @@ func (x *LaunchScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LaunchScenariosResponse.ProtoReflect.Descriptor instead.
 func (*LaunchScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{24}
+	return file_enos_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *LaunchScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -1734,7 +1815,7 @@ type DestroyScenariosRequest struct {
 func (x *DestroyScenariosRequest) Reset() {
 	*x = DestroyScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[25]
+		mi := &file_enos_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1747,7 +1828,7 @@ func (x *DestroyScenariosRequest) String() string {
 func (*DestroyScenariosRequest) ProtoMessage() {}
 
 func (x *DestroyScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[25]
+	mi := &file_enos_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1760,7 +1841,7 @@ func (x *DestroyScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DestroyScenariosRequest.ProtoReflect.Descriptor instead.
 func (*DestroyScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{25}
+	return file_enos_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DestroyScenariosRequest) GetWorkspace() *Workspace {
@@ -1790,7 +1871,7 @@ type DestroyScenariosResponse struct {
 func (x *DestroyScenariosResponse) Reset() {
 	*x = DestroyScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[26]
+		mi := &file_enos_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1803,7 +1884,7 @@ func (x *DestroyScenariosResponse) String() string {
 func (*DestroyScenariosResponse) ProtoMessage() {}
 
 func (x *DestroyScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[26]
+	mi := &file_enos_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1816,7 +1897,7 @@ func (x *DestroyScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DestroyScenariosResponse.ProtoReflect.Descriptor instead.
 func (*DestroyScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{26}
+	return file_enos_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DestroyScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -1852,7 +1933,7 @@ type RunScenariosRequest struct {
 func (x *RunScenariosRequest) Reset() {
 	*x = RunScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[27]
+		mi := &file_enos_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1865,7 +1946,7 @@ func (x *RunScenariosRequest) String() string {
 func (*RunScenariosRequest) ProtoMessage() {}
 
 func (x *RunScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[27]
+	mi := &file_enos_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1878,7 +1959,7 @@ func (x *RunScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunScenariosRequest.ProtoReflect.Descriptor instead.
 func (*RunScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{27}
+	return file_enos_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RunScenariosRequest) GetWorkspace() *Workspace {
@@ -1908,7 +1989,7 @@ type RunScenariosResponse struct {
 func (x *RunScenariosResponse) Reset() {
 	*x = RunScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[28]
+		mi := &file_enos_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1921,7 +2002,7 @@ func (x *RunScenariosResponse) String() string {
 func (*RunScenariosResponse) ProtoMessage() {}
 
 func (x *RunScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[28]
+	mi := &file_enos_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1934,7 +2015,7 @@ func (x *RunScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RunScenariosResponse.ProtoReflect.Descriptor instead.
 func (*RunScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{28}
+	return file_enos_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *RunScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -1970,7 +2051,7 @@ type ExecScenariosRequest struct {
 func (x *ExecScenariosRequest) Reset() {
 	*x = ExecScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[29]
+		mi := &file_enos_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1983,7 +2064,7 @@ func (x *ExecScenariosRequest) String() string {
 func (*ExecScenariosRequest) ProtoMessage() {}
 
 func (x *ExecScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[29]
+	mi := &file_enos_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1996,7 +2077,7 @@ func (x *ExecScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecScenariosRequest.ProtoReflect.Descriptor instead.
 func (*ExecScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{29}
+	return file_enos_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ExecScenariosRequest) GetWorkspace() *Workspace {
@@ -2026,7 +2107,7 @@ type ExecScenariosResponse struct {
 func (x *ExecScenariosResponse) Reset() {
 	*x = ExecScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[30]
+		mi := &file_enos_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2039,7 +2120,7 @@ func (x *ExecScenariosResponse) String() string {
 func (*ExecScenariosResponse) ProtoMessage() {}
 
 func (x *ExecScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[30]
+	mi := &file_enos_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2052,7 +2133,7 @@ func (x *ExecScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecScenariosResponse.ProtoReflect.Descriptor instead.
 func (*ExecScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{30}
+	return file_enos_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ExecScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -2088,7 +2169,7 @@ type OutputScenariosRequest struct {
 func (x *OutputScenariosRequest) Reset() {
 	*x = OutputScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[31]
+		mi := &file_enos_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2101,7 +2182,7 @@ func (x *OutputScenariosRequest) String() string {
 func (*OutputScenariosRequest) ProtoMessage() {}
 
 func (x *OutputScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[31]
+	mi := &file_enos_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2114,7 +2195,7 @@ func (x *OutputScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutputScenariosRequest.ProtoReflect.Descriptor instead.
 func (*OutputScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{31}
+	return file_enos_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *OutputScenariosRequest) GetWorkspace() *Workspace {
@@ -2144,7 +2225,7 @@ type OutputScenariosResponse struct {
 func (x *OutputScenariosResponse) Reset() {
 	*x = OutputScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[32]
+		mi := &file_enos_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2157,7 +2238,7 @@ func (x *OutputScenariosResponse) String() string {
 func (*OutputScenariosResponse) ProtoMessage() {}
 
 func (x *OutputScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[32]
+	mi := &file_enos_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2170,7 +2251,7 @@ func (x *OutputScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutputScenariosResponse.ProtoReflect.Descriptor instead.
 func (*OutputScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{32}
+	return file_enos_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *OutputScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -2205,7 +2286,7 @@ type ListSamplesRequest struct {
 func (x *ListSamplesRequest) Reset() {
 	*x = ListSamplesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[33]
+		mi := &file_enos_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2218,7 +2299,7 @@ func (x *ListSamplesRequest) String() string {
 func (*ListSamplesRequest) ProtoMessage() {}
 
 func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[33]
+	mi := &file_enos_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2231,7 +2312,7 @@ func (x *ListSamplesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesRequest.ProtoReflect.Descriptor instead.
 func (*ListSamplesRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{33}
+	return file_enos_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ListSamplesRequest) GetWorkspace() *Workspace {
@@ -2254,7 +2335,7 @@ type ListSamplesResponse struct {
 func (x *ListSamplesResponse) Reset() {
 	*x = ListSamplesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[34]
+		mi := &file_enos_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2267,7 +2348,7 @@ func (x *ListSamplesResponse) String() string {
 func (*ListSamplesResponse) ProtoMessage() {}
 
 func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[34]
+	mi := &file_enos_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2280,7 +2361,7 @@ func (x *ListSamplesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSamplesResponse.ProtoReflect.Descriptor instead.
 func (*ListSamplesResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{34}
+	return file_enos_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ListSamplesResponse) GetDiagnostics() []*Diagnostic {
@@ -2316,7 +2397,7 @@ type ObserveSampleRequest struct {
 func (x *ObserveSampleRequest) Reset() {
 	*x = ObserveSampleRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[35]
+		mi := &file_enos_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2329,7 +2410,7 @@ func (x *ObserveSampleRequest) String() string {
 func (*ObserveSampleRequest) ProtoMessage() {}
 
 func (x *ObserveSampleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[35]
+	mi := &file_enos_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2342,7 +2423,7 @@ func (x *ObserveSampleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ObserveSampleRequest.ProtoReflect.Descriptor instead.
 func (*ObserveSampleRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{35}
+	return file_enos_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ObserveSampleRequest) GetWorkspace() *Workspace {
@@ -2372,7 +2453,7 @@ type ObserveSampleResponse struct {
 func (x *ObserveSampleResponse) Reset() {
 	*x = ObserveSampleResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[36]
+		mi := &file_enos_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2385,7 +2466,7 @@ func (x *ObserveSampleResponse) String() string {
 func (*ObserveSampleResponse) ProtoMessage() {}
 
 func (x *ObserveSampleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[36]
+	mi := &file_enos_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2398,7 +2479,7 @@ func (x *ObserveSampleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ObserveSampleResponse.ProtoReflect.Descriptor instead.
 func (*ObserveSampleResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{36}
+	return file_enos_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ObserveSampleResponse) GetDiagnostics() []*Diagnostic {
@@ -2434,7 +2515,7 @@ type FormatRequest struct {
 func (x *FormatRequest) Reset() {
 	*x = FormatRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[37]
+		mi := &file_enos_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2447,7 +2528,7 @@ func (x *FormatRequest) String() string {
 func (*FormatRequest) ProtoMessage() {}
 
 func (x *FormatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[37]
+	mi := &file_enos_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2460,7 +2541,7 @@ func (x *FormatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormatRequest.ProtoReflect.Descriptor instead.
 func (*FormatRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{37}
+	return file_enos_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *FormatRequest) GetFiles() []*FormatRequest_File {
@@ -2489,7 +2570,7 @@ type FormatResponse struct {
 func (x *FormatResponse) Reset() {
 	*x = FormatResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[38]
+		mi := &file_enos_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2502,7 +2583,7 @@ func (x *FormatResponse) String() string {
 func (*FormatResponse) ProtoMessage() {}
 
 func (x *FormatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[38]
+	mi := &file_enos_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2515,7 +2596,7 @@ func (x *FormatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormatResponse.ProtoReflect.Descriptor instead.
 func (*FormatResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{38}
+	return file_enos_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *FormatResponse) GetDiagnostics() []*Diagnostic {
@@ -2543,7 +2624,7 @@ type OperationEventStreamRequest struct {
 func (x *OperationEventStreamRequest) Reset() {
 	*x = OperationEventStreamRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[39]
+		mi := &file_enos_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2556,7 +2637,7 @@ func (x *OperationEventStreamRequest) String() string {
 func (*OperationEventStreamRequest) ProtoMessage() {}
 
 func (x *OperationEventStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[39]
+	mi := &file_enos_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2569,7 +2650,7 @@ func (x *OperationEventStreamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationEventStreamRequest.ProtoReflect.Descriptor instead.
 func (*OperationEventStreamRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{39}
+	return file_enos_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *OperationEventStreamRequest) GetOp() *Ref_Operation {
@@ -2591,7 +2672,7 @@ type OperationEventStreamResponse struct {
 func (x *OperationEventStreamResponse) Reset() {
 	*x = OperationEventStreamResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[40]
+		mi := &file_enos_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2604,7 +2685,7 @@ func (x *OperationEventStreamResponse) String() string {
 func (*OperationEventStreamResponse) ProtoMessage() {}
 
 func (x *OperationEventStreamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[40]
+	mi := &file_enos_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2617,7 +2698,7 @@ func (x *OperationEventStreamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationEventStreamResponse.ProtoReflect.Descriptor instead.
 func (*OperationEventStreamResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{40}
+	return file_enos_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *OperationEventStreamResponse) GetDiagnostics() []*Diagnostic {
@@ -2645,7 +2726,7 @@ type OperationRequest struct {
 func (x *OperationRequest) Reset() {
 	*x = OperationRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[41]
+		mi := &file_enos_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2658,7 +2739,7 @@ func (x *OperationRequest) String() string {
 func (*OperationRequest) ProtoMessage() {}
 
 func (x *OperationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[41]
+	mi := &file_enos_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2671,7 +2752,7 @@ func (x *OperationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationRequest.ProtoReflect.Descriptor instead.
 func (*OperationRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{41}
+	return file_enos_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *OperationRequest) GetOp() *Ref_Operation {
@@ -2693,7 +2774,7 @@ type OperationResponse struct {
 func (x *OperationResponse) Reset() {
 	*x = OperationResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[42]
+		mi := &file_enos_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2706,7 +2787,7 @@ func (x *OperationResponse) String() string {
 func (*OperationResponse) ProtoMessage() {}
 
 func (x *OperationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[42]
+	mi := &file_enos_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2719,7 +2800,7 @@ func (x *OperationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationResponse.ProtoReflect.Descriptor instead.
 func (*OperationResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{42}
+	return file_enos_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *OperationResponse) GetDiagnostics() []*Diagnostic {
@@ -2749,7 +2830,7 @@ type OperationResponses struct {
 func (x *OperationResponses) Reset() {
 	*x = OperationResponses{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[43]
+		mi := &file_enos_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2762,7 +2843,7 @@ func (x *OperationResponses) String() string {
 func (*OperationResponses) ProtoMessage() {}
 
 func (x *OperationResponses) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[43]
+	mi := &file_enos_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2775,7 +2856,7 @@ func (x *OperationResponses) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationResponses.ProtoReflect.Descriptor instead.
 func (*OperationResponses) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{43}
+	return file_enos_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *OperationResponses) GetDiagnostics() []*Diagnostic {
@@ -2811,7 +2892,7 @@ type OutlineScenariosRequest struct {
 func (x *OutlineScenariosRequest) Reset() {
 	*x = OutlineScenariosRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[44]
+		mi := &file_enos_proto_msgTypes[45]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2824,7 +2905,7 @@ func (x *OutlineScenariosRequest) String() string {
 func (*OutlineScenariosRequest) ProtoMessage() {}
 
 func (x *OutlineScenariosRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[44]
+	mi := &file_enos_proto_msgTypes[45]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2837,7 +2918,7 @@ func (x *OutlineScenariosRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutlineScenariosRequest.ProtoReflect.Descriptor instead.
 func (*OutlineScenariosRequest) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{44}
+	return file_enos_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *OutlineScenariosRequest) GetWorkspace() *Workspace {
@@ -2868,7 +2949,7 @@ type OutlineScenariosResponse struct {
 func (x *OutlineScenariosResponse) Reset() {
 	*x = OutlineScenariosResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[45]
+		mi := &file_enos_proto_msgTypes[46]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2881,7 +2962,7 @@ func (x *OutlineScenariosResponse) String() string {
 func (*OutlineScenariosResponse) ProtoMessage() {}
 
 func (x *OutlineScenariosResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[45]
+	mi := &file_enos_proto_msgTypes[46]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2894,7 +2975,7 @@ func (x *OutlineScenariosResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OutlineScenariosResponse.ProtoReflect.Descriptor instead.
 func (*OutlineScenariosResponse) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{45}
+	return file_enos_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *OutlineScenariosResponse) GetDiagnostics() []*Diagnostic {
@@ -2938,7 +3019,7 @@ type Quality struct {
 func (x *Quality) Reset() {
 	*x = Quality{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[46]
+		mi := &file_enos_proto_msgTypes[47]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2951,7 +3032,7 @@ func (x *Quality) String() string {
 func (*Quality) ProtoMessage() {}
 
 func (x *Quality) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[46]
+	mi := &file_enos_proto_msgTypes[47]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2964,7 +3045,7 @@ func (x *Quality) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Quality.ProtoReflect.Descriptor instead.
 func (*Quality) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{46}
+	return file_enos_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *Quality) GetName() string {
@@ -3004,7 +3085,7 @@ type UI_Settings struct {
 func (x *UI_Settings) Reset() {
 	*x = UI_Settings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[47]
+		mi := &file_enos_proto_msgTypes[48]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3017,7 +3098,7 @@ func (x *UI_Settings) String() string {
 func (*UI_Settings) ProtoMessage() {}
 
 func (x *UI_Settings) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[47]
+	mi := &file_enos_proto_msgTypes[48]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3105,7 +3186,7 @@ type Diagnostic_Snippet struct {
 func (x *Diagnostic_Snippet) Reset() {
 	*x = Diagnostic_Snippet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[48]
+		mi := &file_enos_proto_msgTypes[49]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3118,7 +3199,7 @@ func (x *Diagnostic_Snippet) String() string {
 func (*Diagnostic_Snippet) ProtoMessage() {}
 
 func (x *Diagnostic_Snippet) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[48]
+	mi := &file_enos_proto_msgTypes[49]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3188,7 +3269,7 @@ type Diagnostic_ExpressionValue struct {
 func (x *Diagnostic_ExpressionValue) Reset() {
 	*x = Diagnostic_ExpressionValue{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[49]
+		mi := &file_enos_proto_msgTypes[50]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3201,7 +3282,7 @@ func (x *Diagnostic_ExpressionValue) String() string {
 func (*Diagnostic_ExpressionValue) ProtoMessage() {}
 
 func (x *Diagnostic_ExpressionValue) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[49]
+	mi := &file_enos_proto_msgTypes[50]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3244,7 +3325,7 @@ type Range_Pos struct {
 func (x *Range_Pos) Reset() {
 	*x = Range_Pos{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[50]
+		mi := &file_enos_proto_msgTypes[51]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3257,7 +3338,7 @@ func (x *Range_Pos) String() string {
 func (*Range_Pos) ProtoMessage() {}
 
 func (x *Range_Pos) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[50]
+	mi := &file_enos_proto_msgTypes[51]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3310,7 +3391,7 @@ type Scenario_ID struct {
 func (x *Scenario_ID) Reset() {
 	*x = Scenario_ID{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[53]
+		mi := &file_enos_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3323,7 +3404,7 @@ func (x *Scenario_ID) String() string {
 func (*Scenario_ID) ProtoMessage() {}
 
 func (x *Scenario_ID) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[53]
+	mi := &file_enos_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3390,7 +3471,7 @@ type Scenario_Filter struct {
 func (x *Scenario_Filter) Reset() {
 	*x = Scenario_Filter{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[54]
+		mi := &file_enos_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3403,7 +3484,7 @@ func (x *Scenario_Filter) String() string {
 func (*Scenario_Filter) ProtoMessage() {}
 
 func (x *Scenario_Filter) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[54]
+	mi := &file_enos_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3468,7 +3549,7 @@ type Scenario_Outline struct {
 func (x *Scenario_Outline) Reset() {
 	*x = Scenario_Outline{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[55]
+		mi := &file_enos_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3481,7 +3562,7 @@ func (x *Scenario_Outline) String() string {
 func (*Scenario_Outline) ProtoMessage() {}
 
 func (x *Scenario_Outline) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[55]
+	mi := &file_enos_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3534,7 +3615,7 @@ type Scenario_Filter_SelectAll struct {
 func (x *Scenario_Filter_SelectAll) Reset() {
 	*x = Scenario_Filter_SelectAll{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[56]
+		mi := &file_enos_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3547,7 +3628,7 @@ func (x *Scenario_Filter_SelectAll) String() string {
 func (*Scenario_Filter_SelectAll) ProtoMessage() {}
 
 func (x *Scenario_Filter_SelectAll) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[56]
+	mi := &file_enos_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3576,7 +3657,7 @@ type Scenario_Outline_Step struct {
 func (x *Scenario_Outline_Step) Reset() {
 	*x = Scenario_Outline_Step{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[57]
+		mi := &file_enos_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3589,7 +3670,7 @@ func (x *Scenario_Outline_Step) String() string {
 func (*Scenario_Outline_Step) ProtoMessage() {}
 
 func (x *Scenario_Outline_Step) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[57]
+	mi := &file_enos_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3638,7 +3719,7 @@ type Operator_Config struct {
 func (x *Operator_Config) Reset() {
 	*x = Operator_Config{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[58]
+		mi := &file_enos_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3651,7 +3732,7 @@ func (x *Operator_Config) String() string {
 func (*Operator_Config) ProtoMessage() {}
 
 func (x *Operator_Config) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[58]
+	mi := &file_enos_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3699,7 +3780,7 @@ type Operation_Request struct {
 func (x *Operation_Request) Reset() {
 	*x = Operation_Request{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[59]
+		mi := &file_enos_proto_msgTypes[60]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3712,7 +3793,7 @@ func (x *Operation_Request) String() string {
 func (*Operation_Request) ProtoMessage() {}
 
 func (x *Operation_Request) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[59]
+	mi := &file_enos_proto_msgTypes[60]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3881,7 +3962,7 @@ type Operation_Response struct {
 func (x *Operation_Response) Reset() {
 	*x = Operation_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[60]
+		mi := &file_enos_proto_msgTypes[61]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3894,7 +3975,7 @@ func (x *Operation_Response) String() string {
 func (*Operation_Response) ProtoMessage() {}
 
 func (x *Operation_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[60]
+	mi := &file_enos_proto_msgTypes[61]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4069,7 +4150,7 @@ type Operation_Event struct {
 func (x *Operation_Event) Reset() {
 	*x = Operation_Event{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[61]
+		mi := &file_enos_proto_msgTypes[62]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4082,7 +4163,7 @@ func (x *Operation_Event) String() string {
 func (*Operation_Event) ProtoMessage() {}
 
 func (x *Operation_Event) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[61]
+	mi := &file_enos_proto_msgTypes[62]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4283,7 +4364,7 @@ type Operation_Request_Generate struct {
 func (x *Operation_Request_Generate) Reset() {
 	*x = Operation_Request_Generate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[62]
+		mi := &file_enos_proto_msgTypes[63]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4296,7 +4377,7 @@ func (x *Operation_Request_Generate) String() string {
 func (*Operation_Request_Generate) ProtoMessage() {}
 
 func (x *Operation_Request_Generate) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[62]
+	mi := &file_enos_proto_msgTypes[63]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4321,7 +4402,7 @@ type Operation_Request_Check struct {
 func (x *Operation_Request_Check) Reset() {
 	*x = Operation_Request_Check{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[63]
+		mi := &file_enos_proto_msgTypes[64]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4334,7 +4415,7 @@ func (x *Operation_Request_Check) String() string {
 func (*Operation_Request_Check) ProtoMessage() {}
 
 func (x *Operation_Request_Check) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[63]
+	mi := &file_enos_proto_msgTypes[64]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4359,7 +4440,7 @@ type Operation_Request_Launch struct {
 func (x *Operation_Request_Launch) Reset() {
 	*x = Operation_Request_Launch{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[64]
+		mi := &file_enos_proto_msgTypes[65]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4372,7 +4453,7 @@ func (x *Operation_Request_Launch) String() string {
 func (*Operation_Request_Launch) ProtoMessage() {}
 
 func (x *Operation_Request_Launch) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[64]
+	mi := &file_enos_proto_msgTypes[65]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4397,7 +4478,7 @@ type Operation_Request_Destroy struct {
 func (x *Operation_Request_Destroy) Reset() {
 	*x = Operation_Request_Destroy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[65]
+		mi := &file_enos_proto_msgTypes[66]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4410,7 +4491,7 @@ func (x *Operation_Request_Destroy) String() string {
 func (*Operation_Request_Destroy) ProtoMessage() {}
 
 func (x *Operation_Request_Destroy) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[65]
+	mi := &file_enos_proto_msgTypes[66]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4435,7 +4516,7 @@ type Operation_Request_Run struct {
 func (x *Operation_Request_Run) Reset() {
 	*x = Operation_Request_Run{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[66]
+		mi := &file_enos_proto_msgTypes[67]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4448,7 +4529,7 @@ func (x *Operation_Request_Run) String() string {
 func (*Operation_Request_Run) ProtoMessage() {}
 
 func (x *Operation_Request_Run) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[66]
+	mi := &file_enos_proto_msgTypes[67]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4473,7 +4554,7 @@ type Operation_Request_Exec struct {
 func (x *Operation_Request_Exec) Reset() {
 	*x = Operation_Request_Exec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[67]
+		mi := &file_enos_proto_msgTypes[68]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4486,7 +4567,7 @@ func (x *Operation_Request_Exec) String() string {
 func (*Operation_Request_Exec) ProtoMessage() {}
 
 func (x *Operation_Request_Exec) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[67]
+	mi := &file_enos_proto_msgTypes[68]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4511,7 +4592,7 @@ type Operation_Request_Output struct {
 func (x *Operation_Request_Output) Reset() {
 	*x = Operation_Request_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[68]
+		mi := &file_enos_proto_msgTypes[69]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4524,7 +4605,7 @@ func (x *Operation_Request_Output) String() string {
 func (*Operation_Request_Output) ProtoMessage() {}
 
 func (x *Operation_Request_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[68]
+	mi := &file_enos_proto_msgTypes[69]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4552,7 +4633,7 @@ type Operation_Response_Generate struct {
 func (x *Operation_Response_Generate) Reset() {
 	*x = Operation_Response_Generate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[69]
+		mi := &file_enos_proto_msgTypes[70]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4565,7 +4646,7 @@ func (x *Operation_Response_Generate) String() string {
 func (*Operation_Response_Generate) ProtoMessage() {}
 
 func (x *Operation_Response_Generate) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[69]
+	mi := &file_enos_proto_msgTypes[70]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4610,7 +4691,7 @@ type Operation_Response_Check struct {
 func (x *Operation_Response_Check) Reset() {
 	*x = Operation_Response_Check{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[70]
+		mi := &file_enos_proto_msgTypes[71]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4623,7 +4704,7 @@ func (x *Operation_Response_Check) String() string {
 func (*Operation_Response_Check) ProtoMessage() {}
 
 func (x *Operation_Response_Check) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[70]
+	mi := &file_enos_proto_msgTypes[71]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4690,7 +4771,7 @@ type Operation_Response_Launch struct {
 func (x *Operation_Response_Launch) Reset() {
 	*x = Operation_Response_Launch{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[71]
+		mi := &file_enos_proto_msgTypes[72]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4703,7 +4784,7 @@ func (x *Operation_Response_Launch) String() string {
 func (*Operation_Response_Launch) ProtoMessage() {}
 
 func (x *Operation_Response_Launch) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[71]
+	mi := &file_enos_proto_msgTypes[72]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4776,7 +4857,7 @@ type Operation_Response_Destroy struct {
 func (x *Operation_Response_Destroy) Reset() {
 	*x = Operation_Response_Destroy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[72]
+		mi := &file_enos_proto_msgTypes[73]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4789,7 +4870,7 @@ func (x *Operation_Response_Destroy) String() string {
 func (*Operation_Response_Destroy) ProtoMessage() {}
 
 func (x *Operation_Response_Destroy) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[72]
+	mi := &file_enos_proto_msgTypes[73]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4858,7 +4939,7 @@ type Operation_Response_Run struct {
 func (x *Operation_Response_Run) Reset() {
 	*x = Operation_Response_Run{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[73]
+		mi := &file_enos_proto_msgTypes[74]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4871,7 +4952,7 @@ func (x *Operation_Response_Run) String() string {
 func (*Operation_Response_Run) ProtoMessage() {}
 
 func (x *Operation_Response_Run) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[73]
+	mi := &file_enos_proto_msgTypes[74]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4956,7 +5037,7 @@ type Operation_Response_Exec struct {
 func (x *Operation_Response_Exec) Reset() {
 	*x = Operation_Response_Exec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[74]
+		mi := &file_enos_proto_msgTypes[75]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4969,7 +5050,7 @@ func (x *Operation_Response_Exec) String() string {
 func (*Operation_Response_Exec) ProtoMessage() {}
 
 func (x *Operation_Response_Exec) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[74]
+	mi := &file_enos_proto_msgTypes[75]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5019,7 +5100,7 @@ type Operation_Response_Output struct {
 func (x *Operation_Response_Output) Reset() {
 	*x = Operation_Response_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[75]
+		mi := &file_enos_proto_msgTypes[76]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5032,7 +5113,7 @@ func (x *Operation_Response_Output) String() string {
 func (*Operation_Response_Output) ProtoMessage() {}
 
 func (x *Operation_Response_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[75]
+	mi := &file_enos_proto_msgTypes[76]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5082,7 +5163,7 @@ type Terraform_Module struct {
 func (x *Terraform_Module) Reset() {
 	*x = Terraform_Module{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[76]
+		mi := &file_enos_proto_msgTypes[77]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5095,7 +5176,7 @@ func (x *Terraform_Module) String() string {
 func (*Terraform_Module) ProtoMessage() {}
 
 func (x *Terraform_Module) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[76]
+	mi := &file_enos_proto_msgTypes[77]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5141,7 +5222,7 @@ type Terraform_Command struct {
 func (x *Terraform_Command) Reset() {
 	*x = Terraform_Command{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[77]
+		mi := &file_enos_proto_msgTypes[78]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5154,7 +5235,7 @@ func (x *Terraform_Command) String() string {
 func (*Terraform_Command) ProtoMessage() {}
 
 func (x *Terraform_Command) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[77]
+	mi := &file_enos_proto_msgTypes[78]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5181,7 +5262,7 @@ type Terraform_Runner struct {
 func (x *Terraform_Runner) Reset() {
 	*x = Terraform_Runner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[78]
+		mi := &file_enos_proto_msgTypes[79]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5194,7 +5275,7 @@ func (x *Terraform_Runner) String() string {
 func (*Terraform_Runner) ProtoMessage() {}
 
 func (x *Terraform_Runner) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[78]
+	mi := &file_enos_proto_msgTypes[79]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5226,7 +5307,7 @@ type Terraform_Command_Init struct {
 func (x *Terraform_Command_Init) Reset() {
 	*x = Terraform_Command_Init{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[79]
+		mi := &file_enos_proto_msgTypes[80]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5239,7 +5320,7 @@ func (x *Terraform_Command_Init) String() string {
 func (*Terraform_Command_Init) ProtoMessage() {}
 
 func (x *Terraform_Command_Init) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[79]
+	mi := &file_enos_proto_msgTypes[80]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5264,7 +5345,7 @@ type Terraform_Command_Validate struct {
 func (x *Terraform_Command_Validate) Reset() {
 	*x = Terraform_Command_Validate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[80]
+		mi := &file_enos_proto_msgTypes[81]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5277,7 +5358,7 @@ func (x *Terraform_Command_Validate) String() string {
 func (*Terraform_Command_Validate) ProtoMessage() {}
 
 func (x *Terraform_Command_Validate) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[80]
+	mi := &file_enos_proto_msgTypes[81]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5302,7 +5383,7 @@ type Terraform_Command_Plan struct {
 func (x *Terraform_Command_Plan) Reset() {
 	*x = Terraform_Command_Plan{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[81]
+		mi := &file_enos_proto_msgTypes[82]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5315,7 +5396,7 @@ func (x *Terraform_Command_Plan) String() string {
 func (*Terraform_Command_Plan) ProtoMessage() {}
 
 func (x *Terraform_Command_Plan) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[81]
+	mi := &file_enos_proto_msgTypes[82]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5340,7 +5421,7 @@ type Terraform_Command_Apply struct {
 func (x *Terraform_Command_Apply) Reset() {
 	*x = Terraform_Command_Apply{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[82]
+		mi := &file_enos_proto_msgTypes[83]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5353,7 +5434,7 @@ func (x *Terraform_Command_Apply) String() string {
 func (*Terraform_Command_Apply) ProtoMessage() {}
 
 func (x *Terraform_Command_Apply) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[82]
+	mi := &file_enos_proto_msgTypes[83]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5378,7 +5459,7 @@ type Terraform_Command_Destroy struct {
 func (x *Terraform_Command_Destroy) Reset() {
 	*x = Terraform_Command_Destroy{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[83]
+		mi := &file_enos_proto_msgTypes[84]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5391,7 +5472,7 @@ func (x *Terraform_Command_Destroy) String() string {
 func (*Terraform_Command_Destroy) ProtoMessage() {}
 
 func (x *Terraform_Command_Destroy) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[83]
+	mi := &file_enos_proto_msgTypes[84]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5416,7 +5497,7 @@ type Terraform_Command_Exec struct {
 func (x *Terraform_Command_Exec) Reset() {
 	*x = Terraform_Command_Exec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[84]
+		mi := &file_enos_proto_msgTypes[85]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5429,7 +5510,7 @@ func (x *Terraform_Command_Exec) String() string {
 func (*Terraform_Command_Exec) ProtoMessage() {}
 
 func (x *Terraform_Command_Exec) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[84]
+	mi := &file_enos_proto_msgTypes[85]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5454,7 +5535,7 @@ type Terraform_Command_Output struct {
 func (x *Terraform_Command_Output) Reset() {
 	*x = Terraform_Command_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[85]
+		mi := &file_enos_proto_msgTypes[86]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5467,7 +5548,7 @@ func (x *Terraform_Command_Output) String() string {
 func (*Terraform_Command_Output) ProtoMessage() {}
 
 func (x *Terraform_Command_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[85]
+	mi := &file_enos_proto_msgTypes[86]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5492,7 +5573,7 @@ type Terraform_Command_Show struct {
 func (x *Terraform_Command_Show) Reset() {
 	*x = Terraform_Command_Show{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[86]
+		mi := &file_enos_proto_msgTypes[87]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5505,7 +5586,7 @@ func (x *Terraform_Command_Show) String() string {
 func (*Terraform_Command_Show) ProtoMessage() {}
 
 func (x *Terraform_Command_Show) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[86]
+	mi := &file_enos_proto_msgTypes[87]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5533,7 +5614,7 @@ type Terraform_Command_Init_Response struct {
 func (x *Terraform_Command_Init_Response) Reset() {
 	*x = Terraform_Command_Init_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[87]
+		mi := &file_enos_proto_msgTypes[88]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5546,7 +5627,7 @@ func (x *Terraform_Command_Init_Response) String() string {
 func (*Terraform_Command_Init_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Init_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[87]
+	mi := &file_enos_proto_msgTypes[88]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5591,7 +5672,7 @@ type Terraform_Command_Validate_Response struct {
 func (x *Terraform_Command_Validate_Response) Reset() {
 	*x = Terraform_Command_Validate_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[88]
+		mi := &file_enos_proto_msgTypes[89]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5604,7 +5685,7 @@ func (x *Terraform_Command_Validate_Response) String() string {
 func (*Terraform_Command_Validate_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Validate_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[88]
+	mi := &file_enos_proto_msgTypes[89]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5668,7 +5749,7 @@ type Terraform_Command_Plan_Response struct {
 func (x *Terraform_Command_Plan_Response) Reset() {
 	*x = Terraform_Command_Plan_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[89]
+		mi := &file_enos_proto_msgTypes[90]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5681,7 +5762,7 @@ func (x *Terraform_Command_Plan_Response) String() string {
 func (*Terraform_Command_Plan_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Plan_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[89]
+	mi := &file_enos_proto_msgTypes[90]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5730,7 +5811,7 @@ type Terraform_Command_Apply_Response struct {
 func (x *Terraform_Command_Apply_Response) Reset() {
 	*x = Terraform_Command_Apply_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[90]
+		mi := &file_enos_proto_msgTypes[91]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5743,7 +5824,7 @@ func (x *Terraform_Command_Apply_Response) String() string {
 func (*Terraform_Command_Apply_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Apply_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[90]
+	mi := &file_enos_proto_msgTypes[91]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5785,7 +5866,7 @@ type Terraform_Command_Destroy_Response struct {
 func (x *Terraform_Command_Destroy_Response) Reset() {
 	*x = Terraform_Command_Destroy_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[91]
+		mi := &file_enos_proto_msgTypes[92]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5798,7 +5879,7 @@ func (x *Terraform_Command_Destroy_Response) String() string {
 func (*Terraform_Command_Destroy_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Destroy_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[91]
+	mi := &file_enos_proto_msgTypes[92]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5842,7 +5923,7 @@ type Terraform_Command_Exec_Response struct {
 func (x *Terraform_Command_Exec_Response) Reset() {
 	*x = Terraform_Command_Exec_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[92]
+		mi := &file_enos_proto_msgTypes[93]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5855,7 +5936,7 @@ func (x *Terraform_Command_Exec_Response) String() string {
 func (*Terraform_Command_Exec_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Exec_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[92]
+	mi := &file_enos_proto_msgTypes[93]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5911,7 +5992,7 @@ type Terraform_Command_Output_Response struct {
 func (x *Terraform_Command_Output_Response) Reset() {
 	*x = Terraform_Command_Output_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[93]
+		mi := &file_enos_proto_msgTypes[94]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5924,7 +6005,7 @@ func (x *Terraform_Command_Output_Response) String() string {
 func (*Terraform_Command_Output_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Output_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[93]
+	mi := &file_enos_proto_msgTypes[94]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5969,7 +6050,7 @@ type Terraform_Command_Output_Response_Meta struct {
 func (x *Terraform_Command_Output_Response_Meta) Reset() {
 	*x = Terraform_Command_Output_Response_Meta{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[94]
+		mi := &file_enos_proto_msgTypes[95]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5982,7 +6063,7 @@ func (x *Terraform_Command_Output_Response_Meta) String() string {
 func (*Terraform_Command_Output_Response_Meta) ProtoMessage() {}
 
 func (x *Terraform_Command_Output_Response_Meta) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[94]
+	mi := &file_enos_proto_msgTypes[95]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6048,7 +6129,7 @@ type Terraform_Command_Show_Response struct {
 func (x *Terraform_Command_Show_Response) Reset() {
 	*x = Terraform_Command_Show_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[95]
+		mi := &file_enos_proto_msgTypes[96]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6061,7 +6142,7 @@ func (x *Terraform_Command_Show_Response) String() string {
 func (*Terraform_Command_Show_Response) ProtoMessage() {}
 
 func (x *Terraform_Command_Show_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[95]
+	mi := &file_enos_proto_msgTypes[96]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6117,7 +6198,7 @@ type Terraform_Runner_Config struct {
 func (x *Terraform_Runner_Config) Reset() {
 	*x = Terraform_Runner_Config{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[96]
+		mi := &file_enos_proto_msgTypes[97]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6130,7 +6211,7 @@ func (x *Terraform_Runner_Config) String() string {
 func (*Terraform_Runner_Config) ProtoMessage() {}
 
 func (x *Terraform_Runner_Config) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[96]
+	mi := &file_enos_proto_msgTypes[97]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6233,7 +6314,7 @@ type Terraform_Runner_Config_Flags struct {
 func (x *Terraform_Runner_Config_Flags) Reset() {
 	*x = Terraform_Runner_Config_Flags{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[98]
+		mi := &file_enos_proto_msgTypes[99]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6246,7 +6327,7 @@ func (x *Terraform_Runner_Config_Flags) String() string {
 func (*Terraform_Runner_Config_Flags) ProtoMessage() {}
 
 func (x *Terraform_Runner_Config_Flags) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[98]
+	mi := &file_enos_proto_msgTypes[99]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6343,7 +6424,7 @@ type Matrix_Vector struct {
 func (x *Matrix_Vector) Reset() {
 	*x = Matrix_Vector{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[99]
+		mi := &file_enos_proto_msgTypes[100]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6356,7 +6437,7 @@ func (x *Matrix_Vector) String() string {
 func (*Matrix_Vector) ProtoMessage() {}
 
 func (x *Matrix_Vector) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[99]
+	mi := &file_enos_proto_msgTypes[100]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6391,7 +6472,7 @@ type Matrix_Element struct {
 func (x *Matrix_Element) Reset() {
 	*x = Matrix_Element{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[100]
+		mi := &file_enos_proto_msgTypes[101]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6404,7 +6485,7 @@ func (x *Matrix_Element) String() string {
 func (*Matrix_Element) ProtoMessage() {}
 
 func (x *Matrix_Element) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[100]
+	mi := &file_enos_proto_msgTypes[101]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6446,7 +6527,7 @@ type Matrix_Exclude struct {
 func (x *Matrix_Exclude) Reset() {
 	*x = Matrix_Exclude{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[101]
+		mi := &file_enos_proto_msgTypes[102]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6459,7 +6540,7 @@ func (x *Matrix_Exclude) String() string {
 func (*Matrix_Exclude) ProtoMessage() {}
 
 func (x *Matrix_Exclude) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[101]
+	mi := &file_enos_proto_msgTypes[102]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6501,7 +6582,7 @@ type Sample_ID struct {
 func (x *Sample_ID) Reset() {
 	*x = Sample_ID{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[102]
+		mi := &file_enos_proto_msgTypes[103]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6514,7 +6595,7 @@ func (x *Sample_ID) String() string {
 func (*Sample_ID) ProtoMessage() {}
 
 func (x *Sample_ID) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[102]
+	mi := &file_enos_proto_msgTypes[103]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6553,7 +6634,7 @@ type Sample_Subset struct {
 func (x *Sample_Subset) Reset() {
 	*x = Sample_Subset{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[103]
+		mi := &file_enos_proto_msgTypes[104]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6566,7 +6647,7 @@ func (x *Sample_Subset) String() string {
 func (*Sample_Subset) ProtoMessage() {}
 
 func (x *Sample_Subset) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[103]
+	mi := &file_enos_proto_msgTypes[104]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6636,7 +6717,7 @@ type Sample_Filter struct {
 func (x *Sample_Filter) Reset() {
 	*x = Sample_Filter{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[104]
+		mi := &file_enos_proto_msgTypes[105]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6649,7 +6730,7 @@ func (x *Sample_Filter) String() string {
 func (*Sample_Filter) ProtoMessage() {}
 
 func (x *Sample_Filter) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[104]
+	mi := &file_enos_proto_msgTypes[105]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6729,7 +6810,7 @@ type Sample_Element struct {
 func (x *Sample_Element) Reset() {
 	*x = Sample_Element{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[105]
+		mi := &file_enos_proto_msgTypes[106]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6742,7 +6823,7 @@ func (x *Sample_Element) String() string {
 func (*Sample_Element) ProtoMessage() {}
 
 func (x *Sample_Element) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[105]
+	mi := &file_enos_proto_msgTypes[106]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6800,7 +6881,7 @@ type Sample_Observation struct {
 func (x *Sample_Observation) Reset() {
 	*x = Sample_Observation{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[106]
+		mi := &file_enos_proto_msgTypes[107]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6813,7 +6894,7 @@ func (x *Sample_Observation) String() string {
 func (*Sample_Observation) ProtoMessage() {}
 
 func (x *Sample_Observation) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[106]
+	mi := &file_enos_proto_msgTypes[107]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6865,7 +6946,7 @@ type Sample_Attribute struct {
 func (x *Sample_Attribute) Reset() {
 	*x = Sample_Attribute{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[107]
+		mi := &file_enos_proto_msgTypes[108]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6878,7 +6959,7 @@ func (x *Sample_Attribute) String() string {
 func (*Sample_Attribute) ProtoMessage() {}
 
 func (x *Sample_Attribute) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[107]
+	mi := &file_enos_proto_msgTypes[108]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6926,7 +7007,7 @@ type Sample_Subset_ID struct {
 func (x *Sample_Subset_ID) Reset() {
 	*x = Sample_Subset_ID{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[108]
+		mi := &file_enos_proto_msgTypes[109]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6939,7 +7020,7 @@ func (x *Sample_Subset_ID) String() string {
 func (*Sample_Subset_ID) ProtoMessage() {}
 
 func (x *Sample_Subset_ID) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[108]
+	mi := &file_enos_proto_msgTypes[109]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6973,7 +7054,7 @@ type Ref_Scenario struct {
 func (x *Ref_Scenario) Reset() {
 	*x = Ref_Scenario{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[109]
+		mi := &file_enos_proto_msgTypes[110]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6986,7 +7067,7 @@ func (x *Ref_Scenario) String() string {
 func (*Ref_Scenario) ProtoMessage() {}
 
 func (x *Ref_Scenario) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[109]
+	mi := &file_enos_proto_msgTypes[110]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7021,7 +7102,7 @@ type Ref_Operation struct {
 func (x *Ref_Operation) Reset() {
 	*x = Ref_Operation{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[110]
+		mi := &file_enos_proto_msgTypes[111]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7034,7 +7115,7 @@ func (x *Ref_Operation) String() string {
 func (*Ref_Operation) ProtoMessage() {}
 
 func (x *Ref_Operation) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[110]
+	mi := &file_enos_proto_msgTypes[111]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7075,7 +7156,7 @@ type Ref_Sample struct {
 func (x *Ref_Sample) Reset() {
 	*x = Ref_Sample{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[111]
+		mi := &file_enos_proto_msgTypes[112]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7088,7 +7169,7 @@ func (x *Ref_Sample) String() string {
 func (*Ref_Sample) ProtoMessage() {}
 
 func (x *Ref_Sample) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[111]
+	mi := &file_enos_proto_msgTypes[112]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7122,7 +7203,7 @@ type Ref_Sample_Subset struct {
 func (x *Ref_Sample_Subset) Reset() {
 	*x = Ref_Sample_Subset{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[112]
+		mi := &file_enos_proto_msgTypes[113]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7135,7 +7216,7 @@ func (x *Ref_Sample_Subset) String() string {
 func (*Ref_Sample_Subset) ProtoMessage() {}
 
 func (x *Ref_Sample_Subset) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[112]
+	mi := &file_enos_proto_msgTypes[113]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7170,7 +7251,7 @@ type FormatRequest_File struct {
 func (x *FormatRequest_File) Reset() {
 	*x = FormatRequest_File{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[113]
+		mi := &file_enos_proto_msgTypes[114]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7183,7 +7264,7 @@ func (x *FormatRequest_File) String() string {
 func (*FormatRequest_File) ProtoMessage() {}
 
 func (x *FormatRequest_File) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[113]
+	mi := &file_enos_proto_msgTypes[114]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7196,7 +7277,7 @@ func (x *FormatRequest_File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormatRequest_File.ProtoReflect.Descriptor instead.
 func (*FormatRequest_File) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{37, 0}
+	return file_enos_proto_rawDescGZIP(), []int{38, 0}
 }
 
 func (x *FormatRequest_File) GetPath() string {
@@ -7228,7 +7309,7 @@ type FormatRequest_Config struct {
 func (x *FormatRequest_Config) Reset() {
 	*x = FormatRequest_Config{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[114]
+		mi := &file_enos_proto_msgTypes[115]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7241,7 +7322,7 @@ func (x *FormatRequest_Config) String() string {
 func (*FormatRequest_Config) ProtoMessage() {}
 
 func (x *FormatRequest_Config) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[114]
+	mi := &file_enos_proto_msgTypes[115]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7254,7 +7335,7 @@ func (x *FormatRequest_Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormatRequest_Config.ProtoReflect.Descriptor instead.
 func (*FormatRequest_Config) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{37, 1}
+	return file_enos_proto_rawDescGZIP(), []int{38, 1}
 }
 
 func (x *FormatRequest_Config) GetWrite() bool {
@@ -7307,7 +7388,7 @@ type FormatResponse_Response struct {
 func (x *FormatResponse_Response) Reset() {
 	*x = FormatResponse_Response{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enos_proto_msgTypes[115]
+		mi := &file_enos_proto_msgTypes[116]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7320,7 +7401,7 @@ func (x *FormatResponse_Response) String() string {
 func (*FormatResponse_Response) ProtoMessage() {}
 
 func (x *FormatResponse_Response) ProtoReflect() protoreflect.Message {
-	mi := &file_enos_proto_msgTypes[115]
+	mi := &file_enos_proto_msgTypes[116]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7333,7 +7414,7 @@ func (x *FormatResponse_Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormatResponse_Response.ProtoReflect.Descriptor instead.
 func (*FormatResponse_Response) Descriptor() ([]byte, []int) {
-	return file_enos_proto_rawDescGZIP(), []int{38, 0}
+	return file_enos_proto_rawDescGZIP(), []int{39, 0}
 }
 
 func (x *FormatResponse_Response) GetDiagnostics() []*Diagnostic {
@@ -8236,62 +8317,50 @@ var file_enos_proto_rawDesc = []byte{
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
 	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x53, 0x63, 0x65,
 	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x52, 0x09, 0x73, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73,
-	0x22, 0x92, 0x01, 0x0a, 0x18, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65,
-	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a,
-	0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09,
-	0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68,
-	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63,
-	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66,
-	0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd9, 0x01, 0x0a, 0x19, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61,
-	0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69,
-	0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
-	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61,
-	0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73,
-	0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02,
+	0x22, 0xaa, 0x01, 0x0a, 0x20, 0x45, 0x6e, 0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x4c, 0x69, 0x73, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x08, 0x73, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
+	0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e,
+	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x48, 0x00, 0x52, 0x08, 0x73, 0x63, 0x65, 0x6e,
+	0x61, 0x72, 0x69, 0x6f, 0x12, 0x3b, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x03,
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
 	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12,
-	0x40, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x73, 0x22, 0x8f, 0x01, 0x0a, 0x15, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e, 0x61,
-	0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77,
-	0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f,
-	0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65,
-	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e,
-	0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x22, 0xd6, 0x01, 0x0a, 0x16, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65,
-	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f,
-	0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
-	0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12,
-	0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70,
-	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x90, 0x01, 0x0a,
-	0x16, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73,
-	0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73,
-	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57,
-	0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70,
-	0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
-	0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22,
-	0xd7, 0x01, 0x0a, 0x17, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64,
+	0x65, 0x42, 0x0a, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x92, 0x01,
+	0x0a, 0x18, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72,
+	0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f,
+	0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e,
+	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
+	0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72,
+	0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
+	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61,
+	0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74,
+	0x65, 0x72, 0x22, 0xd9, 0x01, 0x0a, 0x19, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53,
+	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f,
+	0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63,
+	0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a,
+	0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x8f,
+	0x01, 0x0a, 0x15, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
+	0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x22, 0xd6, 0x01, 0x0a, 0x16, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72,
 	0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64,
 	0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
@@ -8304,85 +8373,40 @@ var file_enos_proto_rawDesc = []byte{
 	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61,
 	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
 	0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f,
-	0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x91, 0x01, 0x0a, 0x17, 0x44, 0x65,
-	0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61,
-	0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
-	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72,
-	0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
-	0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
-	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46,
-	0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd8, 0x01,
-	0x0a, 0x18, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
-	0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69,
-	0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b,
-	0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64,
-	0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06,
-	0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73,
-	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52,
-	0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70,
-	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x8d, 0x01, 0x0a, 0x13, 0x52, 0x75, 0x6e,
-	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
-	0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06,
-	0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68,
-	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72,
-	0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd4, 0x01, 0x0a, 0x14, 0x52, 0x75, 0x6e,
-	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e,
-	0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69,
-	0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
-	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a,
-	0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
-	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22,
-	0x8e, 0x01, 0x0a, 0x14, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
-	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b,
-	0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73,
-	0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
-	0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72,
-	0x22, 0xd5, 0x01, 0x0a, 0x15, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
-	0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69,
-	0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b,
-	0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64,
-	0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06,
-	0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73,
-	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52,
-	0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70,
-	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x90, 0x01, 0x0a, 0x16, 0x4f, 0x75, 0x74,
-	0x70, 0x75, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73,
-	0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12,
-	0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd7, 0x01, 0x0a, 0x17,
-	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
+	0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x90, 0x01, 0x0a, 0x16, 0x4c, 0x61,
+	0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65,
+	0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69,
+	0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd7, 0x01, 0x0a,
+	0x17, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67,
+	0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
+	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
+	0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69,
+	0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63,
+	0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65,
+	0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65,
+	0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66,
+	0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x91, 0x01, 0x0a, 0x17, 0x44, 0x65, 0x73, 0x74, 0x72,
+	0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a,
+	0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74,
+	0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd8, 0x01, 0x0a, 0x18, 0x44,
+	0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e,
 	0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68,
 	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
@@ -8395,118 +8419,63 @@ var file_enos_proto_rawDesc = []byte{
 	0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
 	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e,
 	0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x50, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77,
-	0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f,
-	0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x22, 0xca, 0x01, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74,
-	0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73,
-	0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73,
-	0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x37, 0x0a, 0x07, 0x73,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68,
-	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x52, 0x65, 0x66, 0x2e, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x07, 0x73, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x73, 0x22, 0x8c, 0x01, 0x0a, 0x14, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65,
-	0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x8d, 0x01, 0x0a, 0x13, 0x52, 0x75, 0x6e, 0x53, 0x63, 0x65,
+	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a,
 	0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
 	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09,
-	0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x38, 0x0a, 0x06, 0x66, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68,
-	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x22, 0xdc, 0x01, 0x0a, 0x15, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65, 0x53,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a,
-	0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
-	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69,
-	0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39,
-	0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21,
+	0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c,
+	0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63,
+	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66,
+	0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd4, 0x01, 0x0a, 0x14, 0x52, 0x75, 0x6e, 0x53, 0x63, 0x65,
+	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f,
+	0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
+	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
+	0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12,
+	0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20,
 	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x47, 0x0a, 0x0b, 0x6f, 0x62, 0x73,
-	0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x22, 0xb9, 0x02, 0x0a, 0x0d, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x3b, 0x0a, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x05, 0x66, 0x69, 0x6c, 0x65,
-	0x73, 0x12, 0x3f, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
-	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x1a, 0x2e, 0x0a, 0x04, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61,
-	0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x12,
-	0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x62, 0x6f,
-	0x64, 0x79, 0x1a, 0x7a, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x14, 0x0a, 0x05,
-	0x77, 0x72, 0x69, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x77, 0x72, 0x69,
-	0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x04, 0x6c, 0x69, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x12, 0x12, 0x0a, 0x04,
-	0x64, 0x69, 0x66, 0x66, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x64, 0x69, 0x66, 0x66,
-	0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x75, 0x72, 0x73, 0x69, 0x76, 0x65, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x08, 0x52, 0x09, 0x72, 0x65, 0x63, 0x75, 0x72, 0x73, 0x69, 0x76, 0x65, 0x22, 0xbf,
-	0x02, 0x0a, 0x0e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e,
-	0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69,
-	0x63, 0x73, 0x12, 0x48, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18,
-	0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
-	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x1a, 0xa1, 0x01, 0x0a,
-	0x08, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61,
-	0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64,
-	0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61,
-	0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x18,
-	0x0a, 0x07, 0x63, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x07, 0x63, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x69, 0x66, 0x66,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x69, 0x66, 0x66, 0x12, 0x12, 0x0a, 0x04,
-	0x62, 0x6f, 0x64, 0x79, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79,
-	0x22, 0x4f, 0x0a, 0x1b, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x30, 0x0a, 0x02, 0x6f, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x02, 0x6f,
-	0x70, 0x22, 0x99, 0x01, 0x0a, 0x1c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67,
-	0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
-	0x69, 0x63, 0x73, 0x12, 0x38, 0x0a, 0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
-	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x22, 0x44, 0x0a,
-	0x10, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x30, 0x0a, 0x02, 0x6f, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e,
-	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
-	0x02, 0x6f, 0x70, 0x22, 0x97, 0x01, 0x0a, 0x11, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61,
-	0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64,
-	0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x41, 0x0a, 0x08, 0x72, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x68,
+	0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x8e, 0x01, 0x0a,
+	0x14, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61,
+	0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72,
+	0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46,
+	0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd5, 0x01,
+	0x0a, 0x15, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e,
+	0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68,
 	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd5, 0x01,
-	0x0a, 0x12, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x73, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
+	0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61,
+	0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f,
+	0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63,
+	0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63,
+	0x6f, 0x64, 0x65, 0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e,
+	0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x90, 0x01, 0x0a, 0x16, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
+	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06,
+	0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0xd7, 0x01, 0x0a, 0x17, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
 	0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68,
 	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69,
 	0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f,
@@ -8514,152 +8483,275 @@ var file_enos_proto_rawDesc = []byte{
 	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
 	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65,
-	0x12, 0x43, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x03, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x73, 0x22, 0x91, 0x01, 0x0a, 0x17, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e,
-	0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61,
-	0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a,
-	0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e,
+	0x12, 0x40, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x03,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x73, 0x22, 0x50, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x22, 0xca, 0x01, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b,
+	0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63,
+	0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a,
+	0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e,
 	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65,
-	0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0x8f, 0x02, 0x0a, 0x18, 0x4f, 0x75,
-	0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65,
+	0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x37, 0x0a, 0x07, 0x73, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65,
+	0x66, 0x2e, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x07, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x73, 0x22, 0x8c, 0x01, 0x0a, 0x14, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65, 0x53, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a, 0x0a, 0x09, 0x77, 0x6f,
+	0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e,
+	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
+	0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72,
+	0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x38, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
+	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x61, 0x6d, 0x70, 0x6c,
+	0x65, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x22, 0xdc, 0x01, 0x0a, 0x15, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65, 0x53, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69,
+	0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b,
+	0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64,
+	0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06,
+	0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x47, 0x0a, 0x0b, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x0b, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
+	0xb9, 0x02, 0x0a, 0x0d, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x3b, 0x0a, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x12, 0x3f,
+	0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x1a,
+	0x2e, 0x0a, 0x04, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x62,
+	0x6f, 0x64, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x1a,
+	0x7a, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x14, 0x0a, 0x05, 0x77, 0x72, 0x69,
+	0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x77, 0x72, 0x69, 0x74, 0x65, 0x12,
+	0x12, 0x0a, 0x04, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x6c,
+	0x69, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x05, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x69, 0x66,
+	0x66, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x64, 0x69, 0x66, 0x66, 0x12, 0x1c, 0x0a,
+	0x09, 0x72, 0x65, 0x63, 0x75, 0x72, 0x73, 0x69, 0x76, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x09, 0x72, 0x65, 0x63, 0x75, 0x72, 0x73, 0x69, 0x76, 0x65, 0x22, 0xbf, 0x02, 0x0a, 0x0e,
+	0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f,
+	0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
+	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74,
+	0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12,
+	0x48, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
+	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09,
+	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x1a, 0xa1, 0x01, 0x0a, 0x08, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f,
 	0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61,
 	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
 	0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67,
-	0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f,
-	0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f,
-	0x64, 0x65, 0x12, 0x3f, 0x0a, 0x08, 0x6f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x18, 0x03,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
-	0x6f, 0x2e, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x08, 0x6f, 0x75, 0x74, 0x6c, 0x69,
-	0x6e, 0x65, 0x73, 0x12, 0x36, 0x0a, 0x08, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x65, 0x73, 0x18,
-	0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
-	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x61, 0x6c, 0x69, 0x74,
-	0x79, 0x52, 0x08, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x65, 0x73, 0x22, 0x3f, 0x0a, 0x07, 0x51,
-	0x75, 0x61, 0x6c, 0x69, 0x74, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65,
-	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0xb2, 0x0d, 0x0a,
-	0x0b, 0x45, 0x6e, 0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x5b, 0x0a, 0x0a,
-	0x47, 0x65, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x24, 0x2e, 0x68, 0x61, 0x73,
-	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47,
-	0x65, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x97, 0x01, 0x0a, 0x1e, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x43,
-	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x38, 0x2e, 0x68,
-	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
-	0x6f, 0x73, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x39, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x18, 0x0a, 0x07, 0x63,
+	0x68, 0x61, 0x6e, 0x67, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x63, 0x68,
+	0x61, 0x6e, 0x67, 0x65, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x69, 0x66, 0x66, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x69, 0x66, 0x66, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64,
+	0x79, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x22, 0x4f, 0x0a,
+	0x1b, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53,
+	0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x30, 0x0a, 0x02,
+	0x6f, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x66,
+	0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x02, 0x6f, 0x70, 0x22, 0x99,
+	0x01, 0x0a, 0x1c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73,
+	0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73,
+	0x12, 0x38, 0x0a, 0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x52, 0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x22, 0x44, 0x0a, 0x10, 0x4f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x30,
+	0x0a, 0x02, 0x6f, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52,
+	0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x02, 0x6f, 0x70,
+	0x22, 0x97, 0x01, 0x0a, 0x11, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f,
+	0x73, 0x74, 0x69, 0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x44, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67,
+	0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12, 0x41, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd5, 0x01, 0x0a, 0x12, 0x4f,
+	0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x73, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
+	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61, 0x67, 0x6e,
+	0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69,
+	0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
+	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x43, 0x0a,
+	0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x73, 0x22, 0x91, 0x01, 0x0a, 0x17, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63,
+	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3a,
+	0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52,
+	0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x3a, 0x0a, 0x06, 0x66, 0x69,
+	0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53,
+	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06,
+	0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x22, 0x8f, 0x02, 0x0a, 0x18, 0x4f, 0x75, 0x74, 0x6c, 0x69,
+	0x6e, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69,
+	0x63, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x69, 0x61,
+	0x67, 0x6e, 0x6f, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x67, 0x6e, 0x6f, 0x73,
+	0x74, 0x69, 0x63, 0x73, 0x12, 0x39, 0x0a, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x06, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x12,
+	0x3f, 0x0a, 0x08, 0x6f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x2e, 0x4f,
+	0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x08, 0x6f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x73,
+	0x12, 0x36, 0x0a, 0x08, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x65, 0x73, 0x18, 0x04, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
+	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x61, 0x6c, 0x69, 0x74, 0x79, 0x52, 0x08,
+	0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x65, 0x73, 0x22, 0x3f, 0x0a, 0x07, 0x51, 0x75, 0x61, 0x6c,
+	0x69, 0x74, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72,
+	0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65,
+	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0xbf, 0x0d, 0x0a, 0x0b, 0x45, 0x6e,
+	0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x5b, 0x0a, 0x0a, 0x47, 0x65, 0x74,
+	0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x24, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x56,
+	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e,
+	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
+	0x31, 0x2e, 0x47, 0x65, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x97, 0x01, 0x0a, 0x1e, 0x56, 0x61, 0x6c, 0x69, 0x64,
 	0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x43, 0x6f, 0x6e, 0x66,
-	0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x00, 0x12, 0x64, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61,
-	0x72, 0x69, 0x6f, 0x73, 0x12, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x63, 0x65,
-	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e,
-	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x67, 0x0a, 0x0e, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x28, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
-	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53,
-	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x70, 0x0a, 0x11, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53, 0x63,
-	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x2b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65,
-	0x72, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74,
-	0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x12, 0x6a, 0x0a, 0x0f, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63,
-	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x29, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x61, 0x75, 0x6e,
-	0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
-	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65,
-	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x12, 0x6d, 0x0a, 0x10, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61,
-	0x72, 0x69, 0x6f, 0x73, 0x12, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79,
-	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e,
-	0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x61, 0x0a, 0x0c, 0x52, 0x75, 0x6e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12,
-	0x26, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x53,
-	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x64, 0x0a, 0x0d, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72,
-	0x69, 0x6f, 0x73, 0x12, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e,
-	0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x68,
-	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
-	0x2e, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6a, 0x0a, 0x0f, 0x4f, 0x75, 0x74, 0x70,
-	0x75, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x29, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x70, 0x75,
-	0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x12, 0x4f, 0x0a, 0x06, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x20,
-	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x7b, 0x0a, 0x14, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x12, 0x2e, 0x2e,
-	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74,
-	0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e,
-	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74,
-	0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x30, 0x01, 0x12, 0x58, 0x0a, 0x09, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12,
-	0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x5e, 0x0a, 0x0b,
-	0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x12, 0x25, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x26, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
-	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x64, 0x0a, 0x0d,
-	0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x12, 0x27, 0x2e,
-	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
-	0x31, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72,
-	0x76, 0x65, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x6d, 0x0a, 0x10, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63, 0x65,
-	0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x6c, 0x69,
-	0x6e, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65,
-	0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63,
+	0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x38, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x39, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
+	0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65,
+	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x71, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
+	0x73, 0x12, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72,
+	0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45,
+	0x6e, 0x6f, 0x73, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x63,
 	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2f, 0x65, 0x6e, 0x6f, 0x73, 0x2f, 0x69,
-	0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x70, 0x62, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x00, 0x30, 0x01, 0x12, 0x67, 0x0a, 0x0e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e,
+	0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53,
+	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x29, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
+	0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x70, 0x0a, 0x11,
+	0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
+	0x73, 0x12, 0x2b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53, 0x63,
+	0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61,
+	0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6a,
+	0x0a, 0x0f, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
+	0x73, 0x12, 0x29, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e,
+	0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x4c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6d, 0x0a, 0x10, 0x44, 0x65,
+	0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x2a,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72,
+	0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x44,
+	0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x61, 0x0a, 0x0c, 0x52, 0x75, 0x6e,
+	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x26, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75,
+	0x6e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e,
+	0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69,
+	0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x64, 0x0a, 0x0d,
+	0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x27, 0x2e,
+	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76,
+	0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
+	0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x53,
+	0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x12, 0x6a, 0x0a, 0x0f, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x53, 0x63, 0x65, 0x6e,
+	0x61, 0x72, 0x69, 0x6f, 0x73, 0x12, 0x29, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x53, 0x63, 0x65, 0x6e, 0x61,
+	0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x4f,
+	0x0a, 0x06, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x6f, 0x72,
+	0x6d, 0x61, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x46,
+	0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x7b, 0x0a, 0x14, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x12, 0x2e, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x30, 0x01, 0x12, 0x58, 0x0a, 0x09,
+	0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68,
+	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e,
+	0x76, 0x31, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x5e, 0x0a, 0x0b, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x73, 0x12, 0x25, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x64, 0x0a, 0x0d, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76,
+	0x65, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x12, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x62, 0x73, 0x65,
+	0x72, 0x76, 0x65, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x28, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x65, 0x53, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6d, 0x0a, 0x10,
+	0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f, 0x73,
+	0x12, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63, 0x65, 0x6e,
+	0x61, 0x72, 0x69, 0x6f, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x65, 0x6e, 0x6f, 0x73, 0x2e, 0x76, 0x31,
+	0x2e, 0x4f, 0x75, 0x74, 0x6c, 0x69, 0x6e, 0x65, 0x53, 0x63, 0x65, 0x6e, 0x61, 0x72, 0x69, 0x6f,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x2a, 0x5a, 0x28, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2f, 0x65, 0x6e, 0x6f, 0x73, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61,
+	0x6c, 0x2f, 0x70, 0x62, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -8675,7 +8767,7 @@ func file_enos_proto_rawDescGZIP() []byte {
 }
 
 var file_enos_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_enos_proto_msgTypes = make([]protoimpl.MessageInfo, 116)
+var file_enos_proto_msgTypes = make([]protoimpl.MessageInfo, 117)
 var file_enos_proto_goTypes = []interface{}{
 	(UI_Settings_Format)(0),    // 0: hashicorp.enos.v1.UI.Settings.Format
 	(UI_Settings_Level)(0),     // 1: hashicorp.enos.v1.UI.Settings.Level
@@ -8701,349 +8793,352 @@ var file_enos_proto_goTypes = []interface{}{
 	(*ValidateScenariosConfigurationResponse)(nil), // 21: hashicorp.enos.v1.ValidateScenariosConfigurationResponse
 	(*ListScenariosRequest)(nil),                   // 22: hashicorp.enos.v1.ListScenariosRequest
 	(*ListScenariosResponse)(nil),                  // 23: hashicorp.enos.v1.ListScenariosResponse
-	(*GenerateScenariosRequest)(nil),               // 24: hashicorp.enos.v1.GenerateScenariosRequest
-	(*GenerateScenariosResponse)(nil),              // 25: hashicorp.enos.v1.GenerateScenariosResponse
-	(*CheckScenariosRequest)(nil),                  // 26: hashicorp.enos.v1.CheckScenariosRequest
-	(*CheckScenariosResponse)(nil),                 // 27: hashicorp.enos.v1.CheckScenariosResponse
-	(*LaunchScenariosRequest)(nil),                 // 28: hashicorp.enos.v1.LaunchScenariosRequest
-	(*LaunchScenariosResponse)(nil),                // 29: hashicorp.enos.v1.LaunchScenariosResponse
-	(*DestroyScenariosRequest)(nil),                // 30: hashicorp.enos.v1.DestroyScenariosRequest
-	(*DestroyScenariosResponse)(nil),               // 31: hashicorp.enos.v1.DestroyScenariosResponse
-	(*RunScenariosRequest)(nil),                    // 32: hashicorp.enos.v1.RunScenariosRequest
-	(*RunScenariosResponse)(nil),                   // 33: hashicorp.enos.v1.RunScenariosResponse
-	(*ExecScenariosRequest)(nil),                   // 34: hashicorp.enos.v1.ExecScenariosRequest
-	(*ExecScenariosResponse)(nil),                  // 35: hashicorp.enos.v1.ExecScenariosResponse
-	(*OutputScenariosRequest)(nil),                 // 36: hashicorp.enos.v1.OutputScenariosRequest
-	(*OutputScenariosResponse)(nil),                // 37: hashicorp.enos.v1.OutputScenariosResponse
-	(*ListSamplesRequest)(nil),                     // 38: hashicorp.enos.v1.ListSamplesRequest
-	(*ListSamplesResponse)(nil),                    // 39: hashicorp.enos.v1.ListSamplesResponse
-	(*ObserveSampleRequest)(nil),                   // 40: hashicorp.enos.v1.ObserveSampleRequest
-	(*ObserveSampleResponse)(nil),                  // 41: hashicorp.enos.v1.ObserveSampleResponse
-	(*FormatRequest)(nil),                          // 42: hashicorp.enos.v1.FormatRequest
-	(*FormatResponse)(nil),                         // 43: hashicorp.enos.v1.FormatResponse
-	(*OperationEventStreamRequest)(nil),            // 44: hashicorp.enos.v1.OperationEventStreamRequest
-	(*OperationEventStreamResponse)(nil),           // 45: hashicorp.enos.v1.OperationEventStreamResponse
-	(*OperationRequest)(nil),                       // 46: hashicorp.enos.v1.OperationRequest
-	(*OperationResponse)(nil),                      // 47: hashicorp.enos.v1.OperationResponse
-	(*OperationResponses)(nil),                     // 48: hashicorp.enos.v1.OperationResponses
-	(*OutlineScenariosRequest)(nil),                // 49: hashicorp.enos.v1.OutlineScenariosRequest
-	(*OutlineScenariosResponse)(nil),               // 50: hashicorp.enos.v1.OutlineScenariosResponse
-	(*Quality)(nil),                                // 51: hashicorp.enos.v1.Quality
-	(*UI_Settings)(nil),                            // 52: hashicorp.enos.v1.UI.Settings
-	(*Diagnostic_Snippet)(nil),                     // 53: hashicorp.enos.v1.Diagnostic.Snippet
-	(*Diagnostic_ExpressionValue)(nil),             // 54: hashicorp.enos.v1.Diagnostic.ExpressionValue
-	(*Range_Pos)(nil),                              // 55: hashicorp.enos.v1.Range.Pos
-	nil,                                            // 56: hashicorp.enos.v1.FlightPlan.EnosHclEntry
-	nil,                                            // 57: hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
-	(*Scenario_ID)(nil),                            // 58: hashicorp.enos.v1.Scenario.ID
-	(*Scenario_Filter)(nil),                        // 59: hashicorp.enos.v1.Scenario.Filter
-	(*Scenario_Outline)(nil),                       // 60: hashicorp.enos.v1.Scenario.Outline
-	(*Scenario_Filter_SelectAll)(nil),              // 61: hashicorp.enos.v1.Scenario.Filter.SelectAll
-	(*Scenario_Outline_Step)(nil),                  // 62: hashicorp.enos.v1.Scenario.Outline.Step
-	(*Operator_Config)(nil),                        // 63: hashicorp.enos.v1.Operator.Config
-	(*Operation_Request)(nil),                      // 64: hashicorp.enos.v1.Operation.Request
-	(*Operation_Response)(nil),                     // 65: hashicorp.enos.v1.Operation.Response
-	(*Operation_Event)(nil),                        // 66: hashicorp.enos.v1.Operation.Event
-	(*Operation_Request_Generate)(nil),             // 67: hashicorp.enos.v1.Operation.Request.Generate
-	(*Operation_Request_Check)(nil),                // 68: hashicorp.enos.v1.Operation.Request.Check
-	(*Operation_Request_Launch)(nil),               // 69: hashicorp.enos.v1.Operation.Request.Launch
-	(*Operation_Request_Destroy)(nil),              // 70: hashicorp.enos.v1.Operation.Request.Destroy
-	(*Operation_Request_Run)(nil),                  // 71: hashicorp.enos.v1.Operation.Request.Run
-	(*Operation_Request_Exec)(nil),                 // 72: hashicorp.enos.v1.Operation.Request.Exec
-	(*Operation_Request_Output)(nil),               // 73: hashicorp.enos.v1.Operation.Request.Output
-	(*Operation_Response_Generate)(nil),            // 74: hashicorp.enos.v1.Operation.Response.Generate
-	(*Operation_Response_Check)(nil),               // 75: hashicorp.enos.v1.Operation.Response.Check
-	(*Operation_Response_Launch)(nil),              // 76: hashicorp.enos.v1.Operation.Response.Launch
-	(*Operation_Response_Destroy)(nil),             // 77: hashicorp.enos.v1.Operation.Response.Destroy
-	(*Operation_Response_Run)(nil),                 // 78: hashicorp.enos.v1.Operation.Response.Run
-	(*Operation_Response_Exec)(nil),                // 79: hashicorp.enos.v1.Operation.Response.Exec
-	(*Operation_Response_Output)(nil),              // 80: hashicorp.enos.v1.Operation.Response.Output
-	(*Terraform_Module)(nil),                       // 81: hashicorp.enos.v1.Terraform.Module
-	(*Terraform_Command)(nil),                      // 82: hashicorp.enos.v1.Terraform.Command
-	(*Terraform_Runner)(nil),                       // 83: hashicorp.enos.v1.Terraform.Runner
-	(*Terraform_Command_Init)(nil),                 // 84: hashicorp.enos.v1.Terraform.Command.Init
-	(*Terraform_Command_Validate)(nil),             // 85: hashicorp.enos.v1.Terraform.Command.Validate
-	(*Terraform_Command_Plan)(nil),                 // 86: hashicorp.enos.v1.Terraform.Command.Plan
-	(*Terraform_Command_Apply)(nil),                // 87: hashicorp.enos.v1.Terraform.Command.Apply
-	(*Terraform_Command_Destroy)(nil),              // 88: hashicorp.enos.v1.Terraform.Command.Destroy
-	(*Terraform_Command_Exec)(nil),                 // 89: hashicorp.enos.v1.Terraform.Command.Exec
-	(*Terraform_Command_Output)(nil),               // 90: hashicorp.enos.v1.Terraform.Command.Output
-	(*Terraform_Command_Show)(nil),                 // 91: hashicorp.enos.v1.Terraform.Command.Show
-	(*Terraform_Command_Init_Response)(nil),        // 92: hashicorp.enos.v1.Terraform.Command.Init.Response
-	(*Terraform_Command_Validate_Response)(nil),    // 93: hashicorp.enos.v1.Terraform.Command.Validate.Response
-	(*Terraform_Command_Plan_Response)(nil),        // 94: hashicorp.enos.v1.Terraform.Command.Plan.Response
-	(*Terraform_Command_Apply_Response)(nil),       // 95: hashicorp.enos.v1.Terraform.Command.Apply.Response
-	(*Terraform_Command_Destroy_Response)(nil),     // 96: hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	(*Terraform_Command_Exec_Response)(nil),        // 97: hashicorp.enos.v1.Terraform.Command.Exec.Response
-	(*Terraform_Command_Output_Response)(nil),      // 98: hashicorp.enos.v1.Terraform.Command.Output.Response
-	(*Terraform_Command_Output_Response_Meta)(nil), // 99: hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
-	(*Terraform_Command_Show_Response)(nil),        // 100: hashicorp.enos.v1.Terraform.Command.Show.Response
-	(*Terraform_Runner_Config)(nil),                // 101: hashicorp.enos.v1.Terraform.Runner.Config
-	nil,                                            // 102: hashicorp.enos.v1.Terraform.Runner.Config.EnvEntry
-	(*Terraform_Runner_Config_Flags)(nil),          // 103: hashicorp.enos.v1.Terraform.Runner.Config.Flags
-	(*Matrix_Vector)(nil),                          // 104: hashicorp.enos.v1.Matrix.Vector
-	(*Matrix_Element)(nil),                         // 105: hashicorp.enos.v1.Matrix.Element
-	(*Matrix_Exclude)(nil),                         // 106: hashicorp.enos.v1.Matrix.Exclude
-	(*Sample_ID)(nil),                              // 107: hashicorp.enos.v1.Sample.ID
-	(*Sample_Subset)(nil),                          // 108: hashicorp.enos.v1.Sample.Subset
-	(*Sample_Filter)(nil),                          // 109: hashicorp.enos.v1.Sample.Filter
-	(*Sample_Element)(nil),                         // 110: hashicorp.enos.v1.Sample.Element
-	(*Sample_Observation)(nil),                     // 111: hashicorp.enos.v1.Sample.Observation
-	(*Sample_Attribute)(nil),                       // 112: hashicorp.enos.v1.Sample.Attribute
-	(*Sample_Subset_ID)(nil),                       // 113: hashicorp.enos.v1.Sample.Subset.ID
-	(*Ref_Scenario)(nil),                           // 114: hashicorp.enos.v1.Ref.Scenario
-	(*Ref_Operation)(nil),                          // 115: hashicorp.enos.v1.Ref.Operation
-	(*Ref_Sample)(nil),                             // 116: hashicorp.enos.v1.Ref.Sample
-	(*Ref_Sample_Subset)(nil),                      // 117: hashicorp.enos.v1.Ref.Sample.Subset
-	(*FormatRequest_File)(nil),                     // 118: hashicorp.enos.v1.FormatRequest.File
-	(*FormatRequest_Config)(nil),                   // 119: hashicorp.enos.v1.FormatRequest.Config
-	(*FormatResponse_Response)(nil),                // 120: hashicorp.enos.v1.FormatResponse.Response
-	(*timestamppb.Timestamp)(nil),                  // 121: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),                    // 122: google.protobuf.Duration
-	(*structpb.Struct)(nil),                        // 123: google.protobuf.Struct
+	(*EnosServiceListScenariosResponse)(nil),       // 24: hashicorp.enos.v1.EnosServiceListScenariosResponse
+	(*GenerateScenariosRequest)(nil),               // 25: hashicorp.enos.v1.GenerateScenariosRequest
+	(*GenerateScenariosResponse)(nil),              // 26: hashicorp.enos.v1.GenerateScenariosResponse
+	(*CheckScenariosRequest)(nil),                  // 27: hashicorp.enos.v1.CheckScenariosRequest
+	(*CheckScenariosResponse)(nil),                 // 28: hashicorp.enos.v1.CheckScenariosResponse
+	(*LaunchScenariosRequest)(nil),                 // 29: hashicorp.enos.v1.LaunchScenariosRequest
+	(*LaunchScenariosResponse)(nil),                // 30: hashicorp.enos.v1.LaunchScenariosResponse
+	(*DestroyScenariosRequest)(nil),                // 31: hashicorp.enos.v1.DestroyScenariosRequest
+	(*DestroyScenariosResponse)(nil),               // 32: hashicorp.enos.v1.DestroyScenariosResponse
+	(*RunScenariosRequest)(nil),                    // 33: hashicorp.enos.v1.RunScenariosRequest
+	(*RunScenariosResponse)(nil),                   // 34: hashicorp.enos.v1.RunScenariosResponse
+	(*ExecScenariosRequest)(nil),                   // 35: hashicorp.enos.v1.ExecScenariosRequest
+	(*ExecScenariosResponse)(nil),                  // 36: hashicorp.enos.v1.ExecScenariosResponse
+	(*OutputScenariosRequest)(nil),                 // 37: hashicorp.enos.v1.OutputScenariosRequest
+	(*OutputScenariosResponse)(nil),                // 38: hashicorp.enos.v1.OutputScenariosResponse
+	(*ListSamplesRequest)(nil),                     // 39: hashicorp.enos.v1.ListSamplesRequest
+	(*ListSamplesResponse)(nil),                    // 40: hashicorp.enos.v1.ListSamplesResponse
+	(*ObserveSampleRequest)(nil),                   // 41: hashicorp.enos.v1.ObserveSampleRequest
+	(*ObserveSampleResponse)(nil),                  // 42: hashicorp.enos.v1.ObserveSampleResponse
+	(*FormatRequest)(nil),                          // 43: hashicorp.enos.v1.FormatRequest
+	(*FormatResponse)(nil),                         // 44: hashicorp.enos.v1.FormatResponse
+	(*OperationEventStreamRequest)(nil),            // 45: hashicorp.enos.v1.OperationEventStreamRequest
+	(*OperationEventStreamResponse)(nil),           // 46: hashicorp.enos.v1.OperationEventStreamResponse
+	(*OperationRequest)(nil),                       // 47: hashicorp.enos.v1.OperationRequest
+	(*OperationResponse)(nil),                      // 48: hashicorp.enos.v1.OperationResponse
+	(*OperationResponses)(nil),                     // 49: hashicorp.enos.v1.OperationResponses
+	(*OutlineScenariosRequest)(nil),                // 50: hashicorp.enos.v1.OutlineScenariosRequest
+	(*OutlineScenariosResponse)(nil),               // 51: hashicorp.enos.v1.OutlineScenariosResponse
+	(*Quality)(nil),                                // 52: hashicorp.enos.v1.Quality
+	(*UI_Settings)(nil),                            // 53: hashicorp.enos.v1.UI.Settings
+	(*Diagnostic_Snippet)(nil),                     // 54: hashicorp.enos.v1.Diagnostic.Snippet
+	(*Diagnostic_ExpressionValue)(nil),             // 55: hashicorp.enos.v1.Diagnostic.ExpressionValue
+	(*Range_Pos)(nil),                              // 56: hashicorp.enos.v1.Range.Pos
+	nil,                                            // 57: hashicorp.enos.v1.FlightPlan.EnosHclEntry
+	nil,                                            // 58: hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
+	(*Scenario_ID)(nil),                            // 59: hashicorp.enos.v1.Scenario.ID
+	(*Scenario_Filter)(nil),                        // 60: hashicorp.enos.v1.Scenario.Filter
+	(*Scenario_Outline)(nil),                       // 61: hashicorp.enos.v1.Scenario.Outline
+	(*Scenario_Filter_SelectAll)(nil),              // 62: hashicorp.enos.v1.Scenario.Filter.SelectAll
+	(*Scenario_Outline_Step)(nil),                  // 63: hashicorp.enos.v1.Scenario.Outline.Step
+	(*Operator_Config)(nil),                        // 64: hashicorp.enos.v1.Operator.Config
+	(*Operation_Request)(nil),                      // 65: hashicorp.enos.v1.Operation.Request
+	(*Operation_Response)(nil),                     // 66: hashicorp.enos.v1.Operation.Response
+	(*Operation_Event)(nil),                        // 67: hashicorp.enos.v1.Operation.Event
+	(*Operation_Request_Generate)(nil),             // 68: hashicorp.enos.v1.Operation.Request.Generate
+	(*Operation_Request_Check)(nil),                // 69: hashicorp.enos.v1.Operation.Request.Check
+	(*Operation_Request_Launch)(nil),               // 70: hashicorp.enos.v1.Operation.Request.Launch
+	(*Operation_Request_Destroy)(nil),              // 71: hashicorp.enos.v1.Operation.Request.Destroy
+	(*Operation_Request_Run)(nil),                  // 72: hashicorp.enos.v1.Operation.Request.Run
+	(*Operation_Request_Exec)(nil),                 // 73: hashicorp.enos.v1.Operation.Request.Exec
+	(*Operation_Request_Output)(nil),               // 74: hashicorp.enos.v1.Operation.Request.Output
+	(*Operation_Response_Generate)(nil),            // 75: hashicorp.enos.v1.Operation.Response.Generate
+	(*Operation_Response_Check)(nil),               // 76: hashicorp.enos.v1.Operation.Response.Check
+	(*Operation_Response_Launch)(nil),              // 77: hashicorp.enos.v1.Operation.Response.Launch
+	(*Operation_Response_Destroy)(nil),             // 78: hashicorp.enos.v1.Operation.Response.Destroy
+	(*Operation_Response_Run)(nil),                 // 79: hashicorp.enos.v1.Operation.Response.Run
+	(*Operation_Response_Exec)(nil),                // 80: hashicorp.enos.v1.Operation.Response.Exec
+	(*Operation_Response_Output)(nil),              // 81: hashicorp.enos.v1.Operation.Response.Output
+	(*Terraform_Module)(nil),                       // 82: hashicorp.enos.v1.Terraform.Module
+	(*Terraform_Command)(nil),                      // 83: hashicorp.enos.v1.Terraform.Command
+	(*Terraform_Runner)(nil),                       // 84: hashicorp.enos.v1.Terraform.Runner
+	(*Terraform_Command_Init)(nil),                 // 85: hashicorp.enos.v1.Terraform.Command.Init
+	(*Terraform_Command_Validate)(nil),             // 86: hashicorp.enos.v1.Terraform.Command.Validate
+	(*Terraform_Command_Plan)(nil),                 // 87: hashicorp.enos.v1.Terraform.Command.Plan
+	(*Terraform_Command_Apply)(nil),                // 88: hashicorp.enos.v1.Terraform.Command.Apply
+	(*Terraform_Command_Destroy)(nil),              // 89: hashicorp.enos.v1.Terraform.Command.Destroy
+	(*Terraform_Command_Exec)(nil),                 // 90: hashicorp.enos.v1.Terraform.Command.Exec
+	(*Terraform_Command_Output)(nil),               // 91: hashicorp.enos.v1.Terraform.Command.Output
+	(*Terraform_Command_Show)(nil),                 // 92: hashicorp.enos.v1.Terraform.Command.Show
+	(*Terraform_Command_Init_Response)(nil),        // 93: hashicorp.enos.v1.Terraform.Command.Init.Response
+	(*Terraform_Command_Validate_Response)(nil),    // 94: hashicorp.enos.v1.Terraform.Command.Validate.Response
+	(*Terraform_Command_Plan_Response)(nil),        // 95: hashicorp.enos.v1.Terraform.Command.Plan.Response
+	(*Terraform_Command_Apply_Response)(nil),       // 96: hashicorp.enos.v1.Terraform.Command.Apply.Response
+	(*Terraform_Command_Destroy_Response)(nil),     // 97: hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	(*Terraform_Command_Exec_Response)(nil),        // 98: hashicorp.enos.v1.Terraform.Command.Exec.Response
+	(*Terraform_Command_Output_Response)(nil),      // 99: hashicorp.enos.v1.Terraform.Command.Output.Response
+	(*Terraform_Command_Output_Response_Meta)(nil), // 100: hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
+	(*Terraform_Command_Show_Response)(nil),        // 101: hashicorp.enos.v1.Terraform.Command.Show.Response
+	(*Terraform_Runner_Config)(nil),                // 102: hashicorp.enos.v1.Terraform.Runner.Config
+	nil,                                            // 103: hashicorp.enos.v1.Terraform.Runner.Config.EnvEntry
+	(*Terraform_Runner_Config_Flags)(nil),          // 104: hashicorp.enos.v1.Terraform.Runner.Config.Flags
+	(*Matrix_Vector)(nil),                          // 105: hashicorp.enos.v1.Matrix.Vector
+	(*Matrix_Element)(nil),                         // 106: hashicorp.enos.v1.Matrix.Element
+	(*Matrix_Exclude)(nil),                         // 107: hashicorp.enos.v1.Matrix.Exclude
+	(*Sample_ID)(nil),                              // 108: hashicorp.enos.v1.Sample.ID
+	(*Sample_Subset)(nil),                          // 109: hashicorp.enos.v1.Sample.Subset
+	(*Sample_Filter)(nil),                          // 110: hashicorp.enos.v1.Sample.Filter
+	(*Sample_Element)(nil),                         // 111: hashicorp.enos.v1.Sample.Element
+	(*Sample_Observation)(nil),                     // 112: hashicorp.enos.v1.Sample.Observation
+	(*Sample_Attribute)(nil),                       // 113: hashicorp.enos.v1.Sample.Attribute
+	(*Sample_Subset_ID)(nil),                       // 114: hashicorp.enos.v1.Sample.Subset.ID
+	(*Ref_Scenario)(nil),                           // 115: hashicorp.enos.v1.Ref.Scenario
+	(*Ref_Operation)(nil),                          // 116: hashicorp.enos.v1.Ref.Operation
+	(*Ref_Sample)(nil),                             // 117: hashicorp.enos.v1.Ref.Sample
+	(*Ref_Sample_Subset)(nil),                      // 118: hashicorp.enos.v1.Ref.Sample.Subset
+	(*FormatRequest_File)(nil),                     // 119: hashicorp.enos.v1.FormatRequest.File
+	(*FormatRequest_Config)(nil),                   // 120: hashicorp.enos.v1.FormatRequest.Config
+	(*FormatResponse_Response)(nil),                // 121: hashicorp.enos.v1.FormatResponse.Response
+	(*timestamppb.Timestamp)(nil),                  // 122: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),                    // 123: google.protobuf.Duration
+	(*structpb.Struct)(nil),                        // 124: google.protobuf.Struct
 }
 var file_enos_proto_depIdxs = []int32{
 	2,   // 0: hashicorp.enos.v1.Diagnostic.severity:type_name -> hashicorp.enos.v1.Diagnostic.Severity
 	7,   // 1: hashicorp.enos.v1.Diagnostic.range:type_name -> hashicorp.enos.v1.Range
-	53,  // 2: hashicorp.enos.v1.Diagnostic.snippet:type_name -> hashicorp.enos.v1.Diagnostic.Snippet
-	55,  // 3: hashicorp.enos.v1.Range.start:type_name -> hashicorp.enos.v1.Range.Pos
-	55,  // 4: hashicorp.enos.v1.Range.end:type_name -> hashicorp.enos.v1.Range.Pos
+	54,  // 2: hashicorp.enos.v1.Diagnostic.snippet:type_name -> hashicorp.enos.v1.Diagnostic.Snippet
+	56,  // 3: hashicorp.enos.v1.Range.start:type_name -> hashicorp.enos.v1.Range.Pos
+	56,  // 4: hashicorp.enos.v1.Range.end:type_name -> hashicorp.enos.v1.Range.Pos
 	9,   // 5: hashicorp.enos.v1.Workspace.flightplan:type_name -> hashicorp.enos.v1.FlightPlan
-	101, // 6: hashicorp.enos.v1.Workspace.tf_exec_cfg:type_name -> hashicorp.enos.v1.Terraform.Runner.Config
-	56,  // 7: hashicorp.enos.v1.FlightPlan.enos_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosHclEntry
-	57,  // 8: hashicorp.enos.v1.FlightPlan.enos_vars_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
+	102, // 6: hashicorp.enos.v1.Workspace.tf_exec_cfg:type_name -> hashicorp.enos.v1.Terraform.Runner.Config
+	57,  // 7: hashicorp.enos.v1.FlightPlan.enos_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosHclEntry
+	58,  // 8: hashicorp.enos.v1.FlightPlan.enos_vars_hcl:type_name -> hashicorp.enos.v1.FlightPlan.EnosVarsHclEntry
 	6,   // 9: hashicorp.enos.v1.DecodeResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
 	9,   // 10: hashicorp.enos.v1.DecodeResponse.flightplan:type_name -> hashicorp.enos.v1.FlightPlan
-	63,  // 11: hashicorp.enos.v1.Operator.config:type_name -> hashicorp.enos.v1.Operator.Config
-	104, // 12: hashicorp.enos.v1.Matrix.vectors:type_name -> hashicorp.enos.v1.Matrix.Vector
-	104, // 13: hashicorp.enos.v1.Matrix.include:type_name -> hashicorp.enos.v1.Matrix.Vector
-	106, // 14: hashicorp.enos.v1.Matrix.exclude:type_name -> hashicorp.enos.v1.Matrix.Exclude
-	107, // 15: hashicorp.enos.v1.Sample.id:type_name -> hashicorp.enos.v1.Sample.ID
-	112, // 16: hashicorp.enos.v1.Sample.attributes:type_name -> hashicorp.enos.v1.Sample.Attribute
-	108, // 17: hashicorp.enos.v1.Sample.subsets:type_name -> hashicorp.enos.v1.Sample.Subset
+	64,  // 11: hashicorp.enos.v1.Operator.config:type_name -> hashicorp.enos.v1.Operator.Config
+	105, // 12: hashicorp.enos.v1.Matrix.vectors:type_name -> hashicorp.enos.v1.Matrix.Vector
+	105, // 13: hashicorp.enos.v1.Matrix.include:type_name -> hashicorp.enos.v1.Matrix.Vector
+	107, // 14: hashicorp.enos.v1.Matrix.exclude:type_name -> hashicorp.enos.v1.Matrix.Exclude
+	108, // 15: hashicorp.enos.v1.Sample.id:type_name -> hashicorp.enos.v1.Sample.ID
+	113, // 16: hashicorp.enos.v1.Sample.attributes:type_name -> hashicorp.enos.v1.Sample.Attribute
+	109, // 17: hashicorp.enos.v1.Sample.subsets:type_name -> hashicorp.enos.v1.Sample.Subset
 	6,   // 18: hashicorp.enos.v1.GetVersionResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
 	8,   // 19: hashicorp.enos.v1.ValidateScenariosConfigurationRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 20: hashicorp.enos.v1.ValidateScenariosConfigurationRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	60,  // 20: hashicorp.enos.v1.ValidateScenariosConfigurationRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	6,   // 21: hashicorp.enos.v1.ValidateScenariosConfigurationResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
 	10,  // 22: hashicorp.enos.v1.ValidateScenariosConfigurationResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
 	8,   // 23: hashicorp.enos.v1.ListScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 24: hashicorp.enos.v1.ListScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	60,  // 24: hashicorp.enos.v1.ListScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
 	6,   // 25: hashicorp.enos.v1.ListScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
 	10,  // 26: hashicorp.enos.v1.ListScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	114, // 27: hashicorp.enos.v1.ListScenariosResponse.scenarios:type_name -> hashicorp.enos.v1.Ref.Scenario
-	8,   // 28: hashicorp.enos.v1.GenerateScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 29: hashicorp.enos.v1.GenerateScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 30: hashicorp.enos.v1.GenerateScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 31: hashicorp.enos.v1.GenerateScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 32: hashicorp.enos.v1.GenerateScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 33: hashicorp.enos.v1.CheckScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 34: hashicorp.enos.v1.CheckScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 35: hashicorp.enos.v1.CheckScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 36: hashicorp.enos.v1.CheckScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 37: hashicorp.enos.v1.CheckScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 38: hashicorp.enos.v1.LaunchScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 39: hashicorp.enos.v1.LaunchScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 40: hashicorp.enos.v1.LaunchScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 41: hashicorp.enos.v1.LaunchScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 42: hashicorp.enos.v1.LaunchScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 43: hashicorp.enos.v1.DestroyScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 44: hashicorp.enos.v1.DestroyScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 45: hashicorp.enos.v1.DestroyScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 46: hashicorp.enos.v1.DestroyScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 47: hashicorp.enos.v1.DestroyScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 48: hashicorp.enos.v1.RunScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 49: hashicorp.enos.v1.RunScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 50: hashicorp.enos.v1.RunScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 51: hashicorp.enos.v1.RunScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 52: hashicorp.enos.v1.RunScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 53: hashicorp.enos.v1.ExecScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 54: hashicorp.enos.v1.ExecScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 55: hashicorp.enos.v1.ExecScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 56: hashicorp.enos.v1.ExecScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 57: hashicorp.enos.v1.ExecScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 58: hashicorp.enos.v1.OutputScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 59: hashicorp.enos.v1.OutputScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 60: hashicorp.enos.v1.OutputScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 61: hashicorp.enos.v1.OutputScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	115, // 62: hashicorp.enos.v1.OutputScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
-	8,   // 63: hashicorp.enos.v1.ListSamplesRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	6,   // 64: hashicorp.enos.v1.ListSamplesResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 65: hashicorp.enos.v1.ListSamplesResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	116, // 66: hashicorp.enos.v1.ListSamplesResponse.samples:type_name -> hashicorp.enos.v1.Ref.Sample
-	8,   // 67: hashicorp.enos.v1.ObserveSampleRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	109, // 68: hashicorp.enos.v1.ObserveSampleRequest.filter:type_name -> hashicorp.enos.v1.Sample.Filter
-	6,   // 69: hashicorp.enos.v1.ObserveSampleResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 70: hashicorp.enos.v1.ObserveSampleResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	111, // 71: hashicorp.enos.v1.ObserveSampleResponse.observation:type_name -> hashicorp.enos.v1.Sample.Observation
-	118, // 72: hashicorp.enos.v1.FormatRequest.files:type_name -> hashicorp.enos.v1.FormatRequest.File
-	119, // 73: hashicorp.enos.v1.FormatRequest.config:type_name -> hashicorp.enos.v1.FormatRequest.Config
-	6,   // 74: hashicorp.enos.v1.FormatResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	120, // 75: hashicorp.enos.v1.FormatResponse.responses:type_name -> hashicorp.enos.v1.FormatResponse.Response
-	115, // 76: hashicorp.enos.v1.OperationEventStreamRequest.op:type_name -> hashicorp.enos.v1.Ref.Operation
-	6,   // 77: hashicorp.enos.v1.OperationEventStreamResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	66,  // 78: hashicorp.enos.v1.OperationEventStreamResponse.event:type_name -> hashicorp.enos.v1.Operation.Event
-	115, // 79: hashicorp.enos.v1.OperationRequest.op:type_name -> hashicorp.enos.v1.Ref.Operation
-	6,   // 80: hashicorp.enos.v1.OperationResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	65,  // 81: hashicorp.enos.v1.OperationResponse.response:type_name -> hashicorp.enos.v1.Operation.Response
-	6,   // 82: hashicorp.enos.v1.OperationResponses.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 83: hashicorp.enos.v1.OperationResponses.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	65,  // 84: hashicorp.enos.v1.OperationResponses.responses:type_name -> hashicorp.enos.v1.Operation.Response
-	8,   // 85: hashicorp.enos.v1.OutlineScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
-	59,  // 86: hashicorp.enos.v1.OutlineScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
-	6,   // 87: hashicorp.enos.v1.OutlineScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	10,  // 88: hashicorp.enos.v1.OutlineScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	60,  // 89: hashicorp.enos.v1.OutlineScenariosResponse.outlines:type_name -> hashicorp.enos.v1.Scenario.Outline
-	51,  // 90: hashicorp.enos.v1.OutlineScenariosResponse.verifies:type_name -> hashicorp.enos.v1.Quality
-	0,   // 91: hashicorp.enos.v1.UI.Settings.format:type_name -> hashicorp.enos.v1.UI.Settings.Format
-	1,   // 92: hashicorp.enos.v1.UI.Settings.level:type_name -> hashicorp.enos.v1.UI.Settings.Level
-	54,  // 93: hashicorp.enos.v1.Diagnostic.Snippet.values:type_name -> hashicorp.enos.v1.Diagnostic.ExpressionValue
-	104, // 94: hashicorp.enos.v1.Scenario.ID.variants:type_name -> hashicorp.enos.v1.Matrix.Vector
-	61,  // 95: hashicorp.enos.v1.Scenario.Filter.select_all:type_name -> hashicorp.enos.v1.Scenario.Filter.SelectAll
-	104, // 96: hashicorp.enos.v1.Scenario.Filter.include:type_name -> hashicorp.enos.v1.Matrix.Vector
-	106, // 97: hashicorp.enos.v1.Scenario.Filter.exclude:type_name -> hashicorp.enos.v1.Matrix.Exclude
-	15,  // 98: hashicorp.enos.v1.Scenario.Filter.intersection_matrix:type_name -> hashicorp.enos.v1.Matrix
-	114, // 99: hashicorp.enos.v1.Scenario.Outline.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
-	15,  // 100: hashicorp.enos.v1.Scenario.Outline.matrix:type_name -> hashicorp.enos.v1.Matrix
-	62,  // 101: hashicorp.enos.v1.Scenario.Outline.steps:type_name -> hashicorp.enos.v1.Scenario.Outline.Step
-	51,  // 102: hashicorp.enos.v1.Scenario.Outline.verifies:type_name -> hashicorp.enos.v1.Quality
-	51,  // 103: hashicorp.enos.v1.Scenario.Outline.Step.verifies:type_name -> hashicorp.enos.v1.Quality
-	114, // 104: hashicorp.enos.v1.Operation.Request.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
-	8,   // 105: hashicorp.enos.v1.Operation.Request.workspace:type_name -> hashicorp.enos.v1.Workspace
-	67,  // 106: hashicorp.enos.v1.Operation.Request.generate:type_name -> hashicorp.enos.v1.Operation.Request.Generate
-	68,  // 107: hashicorp.enos.v1.Operation.Request.check:type_name -> hashicorp.enos.v1.Operation.Request.Check
-	69,  // 108: hashicorp.enos.v1.Operation.Request.launch:type_name -> hashicorp.enos.v1.Operation.Request.Launch
-	70,  // 109: hashicorp.enos.v1.Operation.Request.destroy:type_name -> hashicorp.enos.v1.Operation.Request.Destroy
-	71,  // 110: hashicorp.enos.v1.Operation.Request.run:type_name -> hashicorp.enos.v1.Operation.Request.Run
-	72,  // 111: hashicorp.enos.v1.Operation.Request.exec:type_name -> hashicorp.enos.v1.Operation.Request.Exec
-	73,  // 112: hashicorp.enos.v1.Operation.Request.output:type_name -> hashicorp.enos.v1.Operation.Request.Output
-	6,   // 113: hashicorp.enos.v1.Operation.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	115, // 114: hashicorp.enos.v1.Operation.Response.op:type_name -> hashicorp.enos.v1.Ref.Operation
-	3,   // 115: hashicorp.enos.v1.Operation.Response.status:type_name -> hashicorp.enos.v1.Operation.Status
-	74,  // 116: hashicorp.enos.v1.Operation.Response.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
-	75,  // 117: hashicorp.enos.v1.Operation.Response.check:type_name -> hashicorp.enos.v1.Operation.Response.Check
-	76,  // 118: hashicorp.enos.v1.Operation.Response.launch:type_name -> hashicorp.enos.v1.Operation.Response.Launch
-	77,  // 119: hashicorp.enos.v1.Operation.Response.destroy:type_name -> hashicorp.enos.v1.Operation.Response.Destroy
-	78,  // 120: hashicorp.enos.v1.Operation.Response.run:type_name -> hashicorp.enos.v1.Operation.Response.Run
-	79,  // 121: hashicorp.enos.v1.Operation.Response.exec:type_name -> hashicorp.enos.v1.Operation.Response.Exec
-	80,  // 122: hashicorp.enos.v1.Operation.Response.output:type_name -> hashicorp.enos.v1.Operation.Response.Output
-	6,   // 123: hashicorp.enos.v1.Operation.Event.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	115, // 124: hashicorp.enos.v1.Operation.Event.op:type_name -> hashicorp.enos.v1.Ref.Operation
-	3,   // 125: hashicorp.enos.v1.Operation.Event.status:type_name -> hashicorp.enos.v1.Operation.Status
-	121, // 126: hashicorp.enos.v1.Operation.Event.published_at:type_name -> google.protobuf.Timestamp
-	10,  // 127: hashicorp.enos.v1.Operation.Event.decode:type_name -> hashicorp.enos.v1.DecodeResponse
-	74,  // 128: hashicorp.enos.v1.Operation.Event.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
-	92,  // 129: hashicorp.enos.v1.Operation.Event.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	93,  // 130: hashicorp.enos.v1.Operation.Event.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	94,  // 131: hashicorp.enos.v1.Operation.Event.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	95,  // 132: hashicorp.enos.v1.Operation.Event.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
-	96,  // 133: hashicorp.enos.v1.Operation.Event.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	97,  // 134: hashicorp.enos.v1.Operation.Event.exec:type_name -> hashicorp.enos.v1.Terraform.Command.Exec.Response
-	98,  // 135: hashicorp.enos.v1.Operation.Event.output:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response
-	100, // 136: hashicorp.enos.v1.Operation.Event.show:type_name -> hashicorp.enos.v1.Terraform.Command.Show.Response
-	6,   // 137: hashicorp.enos.v1.Operation.Response.Generate.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	81,  // 138: hashicorp.enos.v1.Operation.Response.Generate.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	6,   // 139: hashicorp.enos.v1.Operation.Response.Check.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	74,  // 140: hashicorp.enos.v1.Operation.Response.Check.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
-	92,  // 141: hashicorp.enos.v1.Operation.Response.Check.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	93,  // 142: hashicorp.enos.v1.Operation.Response.Check.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	94,  // 143: hashicorp.enos.v1.Operation.Response.Check.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	6,   // 144: hashicorp.enos.v1.Operation.Response.Launch.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	74,  // 145: hashicorp.enos.v1.Operation.Response.Launch.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
-	92,  // 146: hashicorp.enos.v1.Operation.Response.Launch.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	93,  // 147: hashicorp.enos.v1.Operation.Response.Launch.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	94,  // 148: hashicorp.enos.v1.Operation.Response.Launch.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	95,  // 149: hashicorp.enos.v1.Operation.Response.Launch.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
-	6,   // 150: hashicorp.enos.v1.Operation.Response.Destroy.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	100, // 151: hashicorp.enos.v1.Operation.Response.Destroy.prior_state_show:type_name -> hashicorp.enos.v1.Terraform.Command.Show.Response
-	74,  // 152: hashicorp.enos.v1.Operation.Response.Destroy.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
-	92,  // 153: hashicorp.enos.v1.Operation.Response.Destroy.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	96,  // 154: hashicorp.enos.v1.Operation.Response.Destroy.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	6,   // 155: hashicorp.enos.v1.Operation.Response.Run.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	74,  // 156: hashicorp.enos.v1.Operation.Response.Run.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
-	92,  // 157: hashicorp.enos.v1.Operation.Response.Run.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
-	93,  // 158: hashicorp.enos.v1.Operation.Response.Run.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
-	94,  // 159: hashicorp.enos.v1.Operation.Response.Run.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
-	95,  // 160: hashicorp.enos.v1.Operation.Response.Run.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
-	100, // 161: hashicorp.enos.v1.Operation.Response.Run.prior_state_show:type_name -> hashicorp.enos.v1.Terraform.Command.Show.Response
-	96,  // 162: hashicorp.enos.v1.Operation.Response.Run.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
-	6,   // 163: hashicorp.enos.v1.Operation.Response.Exec.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	81,  // 164: hashicorp.enos.v1.Operation.Response.Exec.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	97,  // 165: hashicorp.enos.v1.Operation.Response.Exec.exec:type_name -> hashicorp.enos.v1.Terraform.Command.Exec.Response
-	6,   // 166: hashicorp.enos.v1.Operation.Response.Output.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	81,  // 167: hashicorp.enos.v1.Operation.Response.Output.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
-	98,  // 168: hashicorp.enos.v1.Operation.Response.Output.output:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response
-	114, // 169: hashicorp.enos.v1.Terraform.Module.scenario_ref:type_name -> hashicorp.enos.v1.Ref.Scenario
-	101, // 170: hashicorp.enos.v1.Terraform.Runner.config:type_name -> hashicorp.enos.v1.Terraform.Runner.Config
-	6,   // 171: hashicorp.enos.v1.Terraform.Command.Init.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	6,   // 172: hashicorp.enos.v1.Terraform.Command.Validate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	6,   // 173: hashicorp.enos.v1.Terraform.Command.Plan.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	6,   // 174: hashicorp.enos.v1.Terraform.Command.Apply.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	6,   // 175: hashicorp.enos.v1.Terraform.Command.Destroy.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	6,   // 176: hashicorp.enos.v1.Terraform.Command.Exec.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	6,   // 177: hashicorp.enos.v1.Terraform.Command.Output.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	99,  // 178: hashicorp.enos.v1.Terraform.Command.Output.Response.meta:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
-	6,   // 179: hashicorp.enos.v1.Terraform.Command.Show.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	103, // 180: hashicorp.enos.v1.Terraform.Runner.Config.flags:type_name -> hashicorp.enos.v1.Terraform.Runner.Config.Flags
-	102, // 181: hashicorp.enos.v1.Terraform.Runner.Config.env:type_name -> hashicorp.enos.v1.Terraform.Runner.Config.EnvEntry
-	122, // 182: hashicorp.enos.v1.Terraform.Runner.Config.Flags.lock_timeout:type_name -> google.protobuf.Duration
-	105, // 183: hashicorp.enos.v1.Matrix.Vector.elements:type_name -> hashicorp.enos.v1.Matrix.Element
-	104, // 184: hashicorp.enos.v1.Matrix.Exclude.vector:type_name -> hashicorp.enos.v1.Matrix.Vector
-	4,   // 185: hashicorp.enos.v1.Matrix.Exclude.mode:type_name -> hashicorp.enos.v1.Matrix.Exclude.Mode
-	113, // 186: hashicorp.enos.v1.Sample.Subset.id:type_name -> hashicorp.enos.v1.Sample.Subset.ID
-	112, // 187: hashicorp.enos.v1.Sample.Subset.attributes:type_name -> hashicorp.enos.v1.Sample.Attribute
-	15,  // 188: hashicorp.enos.v1.Sample.Subset.matrix:type_name -> hashicorp.enos.v1.Matrix
-	116, // 189: hashicorp.enos.v1.Sample.Filter.sample:type_name -> hashicorp.enos.v1.Ref.Sample
-	113, // 190: hashicorp.enos.v1.Sample.Filter.subsets:type_name -> hashicorp.enos.v1.Sample.Subset.ID
-	113, // 191: hashicorp.enos.v1.Sample.Filter.exclude_subsets:type_name -> hashicorp.enos.v1.Sample.Subset.ID
-	116, // 192: hashicorp.enos.v1.Sample.Element.sample:type_name -> hashicorp.enos.v1.Ref.Sample
-	117, // 193: hashicorp.enos.v1.Sample.Element.subset:type_name -> hashicorp.enos.v1.Ref.Sample.Subset
-	114, // 194: hashicorp.enos.v1.Sample.Element.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
-	123, // 195: hashicorp.enos.v1.Sample.Element.attributes:type_name -> google.protobuf.Struct
-	6,   // 196: hashicorp.enos.v1.Sample.Observation.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	110, // 197: hashicorp.enos.v1.Sample.Observation.elements:type_name -> hashicorp.enos.v1.Sample.Element
-	109, // 198: hashicorp.enos.v1.Sample.Observation.filter:type_name -> hashicorp.enos.v1.Sample.Filter
-	58,  // 199: hashicorp.enos.v1.Ref.Scenario.id:type_name -> hashicorp.enos.v1.Scenario.ID
-	114, // 200: hashicorp.enos.v1.Ref.Operation.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
-	107, // 201: hashicorp.enos.v1.Ref.Sample.id:type_name -> hashicorp.enos.v1.Sample.ID
-	113, // 202: hashicorp.enos.v1.Ref.Sample.Subset.id:type_name -> hashicorp.enos.v1.Sample.Subset.ID
-	6,   // 203: hashicorp.enos.v1.FormatResponse.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
-	18,  // 204: hashicorp.enos.v1.EnosService.GetVersion:input_type -> hashicorp.enos.v1.GetVersionRequest
-	20,  // 205: hashicorp.enos.v1.EnosService.ValidateScenariosConfiguration:input_type -> hashicorp.enos.v1.ValidateScenariosConfigurationRequest
-	22,  // 206: hashicorp.enos.v1.EnosService.ListScenarios:input_type -> hashicorp.enos.v1.ListScenariosRequest
-	26,  // 207: hashicorp.enos.v1.EnosService.CheckScenarios:input_type -> hashicorp.enos.v1.CheckScenariosRequest
-	24,  // 208: hashicorp.enos.v1.EnosService.GenerateScenarios:input_type -> hashicorp.enos.v1.GenerateScenariosRequest
-	28,  // 209: hashicorp.enos.v1.EnosService.LaunchScenarios:input_type -> hashicorp.enos.v1.LaunchScenariosRequest
-	30,  // 210: hashicorp.enos.v1.EnosService.DestroyScenarios:input_type -> hashicorp.enos.v1.DestroyScenariosRequest
-	32,  // 211: hashicorp.enos.v1.EnosService.RunScenarios:input_type -> hashicorp.enos.v1.RunScenariosRequest
-	34,  // 212: hashicorp.enos.v1.EnosService.ExecScenarios:input_type -> hashicorp.enos.v1.ExecScenariosRequest
-	36,  // 213: hashicorp.enos.v1.EnosService.OutputScenarios:input_type -> hashicorp.enos.v1.OutputScenariosRequest
-	42,  // 214: hashicorp.enos.v1.EnosService.Format:input_type -> hashicorp.enos.v1.FormatRequest
-	44,  // 215: hashicorp.enos.v1.EnosService.OperationEventStream:input_type -> hashicorp.enos.v1.OperationEventStreamRequest
-	46,  // 216: hashicorp.enos.v1.EnosService.Operation:input_type -> hashicorp.enos.v1.OperationRequest
-	38,  // 217: hashicorp.enos.v1.EnosService.ListSamples:input_type -> hashicorp.enos.v1.ListSamplesRequest
-	40,  // 218: hashicorp.enos.v1.EnosService.ObserveSample:input_type -> hashicorp.enos.v1.ObserveSampleRequest
-	49,  // 219: hashicorp.enos.v1.EnosService.OutlineScenarios:input_type -> hashicorp.enos.v1.OutlineScenariosRequest
-	19,  // 220: hashicorp.enos.v1.EnosService.GetVersion:output_type -> hashicorp.enos.v1.GetVersionResponse
-	21,  // 221: hashicorp.enos.v1.EnosService.ValidateScenariosConfiguration:output_type -> hashicorp.enos.v1.ValidateScenariosConfigurationResponse
-	23,  // 222: hashicorp.enos.v1.EnosService.ListScenarios:output_type -> hashicorp.enos.v1.ListScenariosResponse
-	27,  // 223: hashicorp.enos.v1.EnosService.CheckScenarios:output_type -> hashicorp.enos.v1.CheckScenariosResponse
-	25,  // 224: hashicorp.enos.v1.EnosService.GenerateScenarios:output_type -> hashicorp.enos.v1.GenerateScenariosResponse
-	29,  // 225: hashicorp.enos.v1.EnosService.LaunchScenarios:output_type -> hashicorp.enos.v1.LaunchScenariosResponse
-	31,  // 226: hashicorp.enos.v1.EnosService.DestroyScenarios:output_type -> hashicorp.enos.v1.DestroyScenariosResponse
-	33,  // 227: hashicorp.enos.v1.EnosService.RunScenarios:output_type -> hashicorp.enos.v1.RunScenariosResponse
-	35,  // 228: hashicorp.enos.v1.EnosService.ExecScenarios:output_type -> hashicorp.enos.v1.ExecScenariosResponse
-	37,  // 229: hashicorp.enos.v1.EnosService.OutputScenarios:output_type -> hashicorp.enos.v1.OutputScenariosResponse
-	43,  // 230: hashicorp.enos.v1.EnosService.Format:output_type -> hashicorp.enos.v1.FormatResponse
-	45,  // 231: hashicorp.enos.v1.EnosService.OperationEventStream:output_type -> hashicorp.enos.v1.OperationEventStreamResponse
-	47,  // 232: hashicorp.enos.v1.EnosService.Operation:output_type -> hashicorp.enos.v1.OperationResponse
-	39,  // 233: hashicorp.enos.v1.EnosService.ListSamples:output_type -> hashicorp.enos.v1.ListSamplesResponse
-	41,  // 234: hashicorp.enos.v1.EnosService.ObserveSample:output_type -> hashicorp.enos.v1.ObserveSampleResponse
-	50,  // 235: hashicorp.enos.v1.EnosService.OutlineScenarios:output_type -> hashicorp.enos.v1.OutlineScenariosResponse
-	220, // [220:236] is the sub-list for method output_type
-	204, // [204:220] is the sub-list for method input_type
-	204, // [204:204] is the sub-list for extension type_name
-	204, // [204:204] is the sub-list for extension extendee
-	0,   // [0:204] is the sub-list for field type_name
+	115, // 27: hashicorp.enos.v1.ListScenariosResponse.scenarios:type_name -> hashicorp.enos.v1.Ref.Scenario
+	115, // 28: hashicorp.enos.v1.EnosServiceListScenariosResponse.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
+	10,  // 29: hashicorp.enos.v1.EnosServiceListScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	8,   // 30: hashicorp.enos.v1.GenerateScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 31: hashicorp.enos.v1.GenerateScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 32: hashicorp.enos.v1.GenerateScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 33: hashicorp.enos.v1.GenerateScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 34: hashicorp.enos.v1.GenerateScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 35: hashicorp.enos.v1.CheckScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 36: hashicorp.enos.v1.CheckScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 37: hashicorp.enos.v1.CheckScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 38: hashicorp.enos.v1.CheckScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 39: hashicorp.enos.v1.CheckScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 40: hashicorp.enos.v1.LaunchScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 41: hashicorp.enos.v1.LaunchScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 42: hashicorp.enos.v1.LaunchScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 43: hashicorp.enos.v1.LaunchScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 44: hashicorp.enos.v1.LaunchScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 45: hashicorp.enos.v1.DestroyScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 46: hashicorp.enos.v1.DestroyScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 47: hashicorp.enos.v1.DestroyScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 48: hashicorp.enos.v1.DestroyScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 49: hashicorp.enos.v1.DestroyScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 50: hashicorp.enos.v1.RunScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 51: hashicorp.enos.v1.RunScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 52: hashicorp.enos.v1.RunScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 53: hashicorp.enos.v1.RunScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 54: hashicorp.enos.v1.RunScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 55: hashicorp.enos.v1.ExecScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 56: hashicorp.enos.v1.ExecScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 57: hashicorp.enos.v1.ExecScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 58: hashicorp.enos.v1.ExecScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 59: hashicorp.enos.v1.ExecScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 60: hashicorp.enos.v1.OutputScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 61: hashicorp.enos.v1.OutputScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 62: hashicorp.enos.v1.OutputScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 63: hashicorp.enos.v1.OutputScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	116, // 64: hashicorp.enos.v1.OutputScenariosResponse.operations:type_name -> hashicorp.enos.v1.Ref.Operation
+	8,   // 65: hashicorp.enos.v1.ListSamplesRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	6,   // 66: hashicorp.enos.v1.ListSamplesResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 67: hashicorp.enos.v1.ListSamplesResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	117, // 68: hashicorp.enos.v1.ListSamplesResponse.samples:type_name -> hashicorp.enos.v1.Ref.Sample
+	8,   // 69: hashicorp.enos.v1.ObserveSampleRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	110, // 70: hashicorp.enos.v1.ObserveSampleRequest.filter:type_name -> hashicorp.enos.v1.Sample.Filter
+	6,   // 71: hashicorp.enos.v1.ObserveSampleResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 72: hashicorp.enos.v1.ObserveSampleResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	112, // 73: hashicorp.enos.v1.ObserveSampleResponse.observation:type_name -> hashicorp.enos.v1.Sample.Observation
+	119, // 74: hashicorp.enos.v1.FormatRequest.files:type_name -> hashicorp.enos.v1.FormatRequest.File
+	120, // 75: hashicorp.enos.v1.FormatRequest.config:type_name -> hashicorp.enos.v1.FormatRequest.Config
+	6,   // 76: hashicorp.enos.v1.FormatResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	121, // 77: hashicorp.enos.v1.FormatResponse.responses:type_name -> hashicorp.enos.v1.FormatResponse.Response
+	116, // 78: hashicorp.enos.v1.OperationEventStreamRequest.op:type_name -> hashicorp.enos.v1.Ref.Operation
+	6,   // 79: hashicorp.enos.v1.OperationEventStreamResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	67,  // 80: hashicorp.enos.v1.OperationEventStreamResponse.event:type_name -> hashicorp.enos.v1.Operation.Event
+	116, // 81: hashicorp.enos.v1.OperationRequest.op:type_name -> hashicorp.enos.v1.Ref.Operation
+	6,   // 82: hashicorp.enos.v1.OperationResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	66,  // 83: hashicorp.enos.v1.OperationResponse.response:type_name -> hashicorp.enos.v1.Operation.Response
+	6,   // 84: hashicorp.enos.v1.OperationResponses.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 85: hashicorp.enos.v1.OperationResponses.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	66,  // 86: hashicorp.enos.v1.OperationResponses.responses:type_name -> hashicorp.enos.v1.Operation.Response
+	8,   // 87: hashicorp.enos.v1.OutlineScenariosRequest.workspace:type_name -> hashicorp.enos.v1.Workspace
+	60,  // 88: hashicorp.enos.v1.OutlineScenariosRequest.filter:type_name -> hashicorp.enos.v1.Scenario.Filter
+	6,   // 89: hashicorp.enos.v1.OutlineScenariosResponse.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	10,  // 90: hashicorp.enos.v1.OutlineScenariosResponse.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	61,  // 91: hashicorp.enos.v1.OutlineScenariosResponse.outlines:type_name -> hashicorp.enos.v1.Scenario.Outline
+	52,  // 92: hashicorp.enos.v1.OutlineScenariosResponse.verifies:type_name -> hashicorp.enos.v1.Quality
+	0,   // 93: hashicorp.enos.v1.UI.Settings.format:type_name -> hashicorp.enos.v1.UI.Settings.Format
+	1,   // 94: hashicorp.enos.v1.UI.Settings.level:type_name -> hashicorp.enos.v1.UI.Settings.Level
+	55,  // 95: hashicorp.enos.v1.Diagnostic.Snippet.values:type_name -> hashicorp.enos.v1.Diagnostic.ExpressionValue
+	105, // 96: hashicorp.enos.v1.Scenario.ID.variants:type_name -> hashicorp.enos.v1.Matrix.Vector
+	62,  // 97: hashicorp.enos.v1.Scenario.Filter.select_all:type_name -> hashicorp.enos.v1.Scenario.Filter.SelectAll
+	105, // 98: hashicorp.enos.v1.Scenario.Filter.include:type_name -> hashicorp.enos.v1.Matrix.Vector
+	107, // 99: hashicorp.enos.v1.Scenario.Filter.exclude:type_name -> hashicorp.enos.v1.Matrix.Exclude
+	15,  // 100: hashicorp.enos.v1.Scenario.Filter.intersection_matrix:type_name -> hashicorp.enos.v1.Matrix
+	115, // 101: hashicorp.enos.v1.Scenario.Outline.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
+	15,  // 102: hashicorp.enos.v1.Scenario.Outline.matrix:type_name -> hashicorp.enos.v1.Matrix
+	63,  // 103: hashicorp.enos.v1.Scenario.Outline.steps:type_name -> hashicorp.enos.v1.Scenario.Outline.Step
+	52,  // 104: hashicorp.enos.v1.Scenario.Outline.verifies:type_name -> hashicorp.enos.v1.Quality
+	52,  // 105: hashicorp.enos.v1.Scenario.Outline.Step.verifies:type_name -> hashicorp.enos.v1.Quality
+	115, // 106: hashicorp.enos.v1.Operation.Request.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
+	8,   // 107: hashicorp.enos.v1.Operation.Request.workspace:type_name -> hashicorp.enos.v1.Workspace
+	68,  // 108: hashicorp.enos.v1.Operation.Request.generate:type_name -> hashicorp.enos.v1.Operation.Request.Generate
+	69,  // 109: hashicorp.enos.v1.Operation.Request.check:type_name -> hashicorp.enos.v1.Operation.Request.Check
+	70,  // 110: hashicorp.enos.v1.Operation.Request.launch:type_name -> hashicorp.enos.v1.Operation.Request.Launch
+	71,  // 111: hashicorp.enos.v1.Operation.Request.destroy:type_name -> hashicorp.enos.v1.Operation.Request.Destroy
+	72,  // 112: hashicorp.enos.v1.Operation.Request.run:type_name -> hashicorp.enos.v1.Operation.Request.Run
+	73,  // 113: hashicorp.enos.v1.Operation.Request.exec:type_name -> hashicorp.enos.v1.Operation.Request.Exec
+	74,  // 114: hashicorp.enos.v1.Operation.Request.output:type_name -> hashicorp.enos.v1.Operation.Request.Output
+	6,   // 115: hashicorp.enos.v1.Operation.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	116, // 116: hashicorp.enos.v1.Operation.Response.op:type_name -> hashicorp.enos.v1.Ref.Operation
+	3,   // 117: hashicorp.enos.v1.Operation.Response.status:type_name -> hashicorp.enos.v1.Operation.Status
+	75,  // 118: hashicorp.enos.v1.Operation.Response.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
+	76,  // 119: hashicorp.enos.v1.Operation.Response.check:type_name -> hashicorp.enos.v1.Operation.Response.Check
+	77,  // 120: hashicorp.enos.v1.Operation.Response.launch:type_name -> hashicorp.enos.v1.Operation.Response.Launch
+	78,  // 121: hashicorp.enos.v1.Operation.Response.destroy:type_name -> hashicorp.enos.v1.Operation.Response.Destroy
+	79,  // 122: hashicorp.enos.v1.Operation.Response.run:type_name -> hashicorp.enos.v1.Operation.Response.Run
+	80,  // 123: hashicorp.enos.v1.Operation.Response.exec:type_name -> hashicorp.enos.v1.Operation.Response.Exec
+	81,  // 124: hashicorp.enos.v1.Operation.Response.output:type_name -> hashicorp.enos.v1.Operation.Response.Output
+	6,   // 125: hashicorp.enos.v1.Operation.Event.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	116, // 126: hashicorp.enos.v1.Operation.Event.op:type_name -> hashicorp.enos.v1.Ref.Operation
+	3,   // 127: hashicorp.enos.v1.Operation.Event.status:type_name -> hashicorp.enos.v1.Operation.Status
+	122, // 128: hashicorp.enos.v1.Operation.Event.published_at:type_name -> google.protobuf.Timestamp
+	10,  // 129: hashicorp.enos.v1.Operation.Event.decode:type_name -> hashicorp.enos.v1.DecodeResponse
+	75,  // 130: hashicorp.enos.v1.Operation.Event.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
+	93,  // 131: hashicorp.enos.v1.Operation.Event.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	94,  // 132: hashicorp.enos.v1.Operation.Event.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	95,  // 133: hashicorp.enos.v1.Operation.Event.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	96,  // 134: hashicorp.enos.v1.Operation.Event.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
+	97,  // 135: hashicorp.enos.v1.Operation.Event.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	98,  // 136: hashicorp.enos.v1.Operation.Event.exec:type_name -> hashicorp.enos.v1.Terraform.Command.Exec.Response
+	99,  // 137: hashicorp.enos.v1.Operation.Event.output:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response
+	101, // 138: hashicorp.enos.v1.Operation.Event.show:type_name -> hashicorp.enos.v1.Terraform.Command.Show.Response
+	6,   // 139: hashicorp.enos.v1.Operation.Response.Generate.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	82,  // 140: hashicorp.enos.v1.Operation.Response.Generate.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	6,   // 141: hashicorp.enos.v1.Operation.Response.Check.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	75,  // 142: hashicorp.enos.v1.Operation.Response.Check.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
+	93,  // 143: hashicorp.enos.v1.Operation.Response.Check.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	94,  // 144: hashicorp.enos.v1.Operation.Response.Check.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	95,  // 145: hashicorp.enos.v1.Operation.Response.Check.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	6,   // 146: hashicorp.enos.v1.Operation.Response.Launch.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	75,  // 147: hashicorp.enos.v1.Operation.Response.Launch.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
+	93,  // 148: hashicorp.enos.v1.Operation.Response.Launch.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	94,  // 149: hashicorp.enos.v1.Operation.Response.Launch.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	95,  // 150: hashicorp.enos.v1.Operation.Response.Launch.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	96,  // 151: hashicorp.enos.v1.Operation.Response.Launch.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
+	6,   // 152: hashicorp.enos.v1.Operation.Response.Destroy.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	101, // 153: hashicorp.enos.v1.Operation.Response.Destroy.prior_state_show:type_name -> hashicorp.enos.v1.Terraform.Command.Show.Response
+	75,  // 154: hashicorp.enos.v1.Operation.Response.Destroy.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
+	93,  // 155: hashicorp.enos.v1.Operation.Response.Destroy.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	97,  // 156: hashicorp.enos.v1.Operation.Response.Destroy.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	6,   // 157: hashicorp.enos.v1.Operation.Response.Run.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	75,  // 158: hashicorp.enos.v1.Operation.Response.Run.generate:type_name -> hashicorp.enos.v1.Operation.Response.Generate
+	93,  // 159: hashicorp.enos.v1.Operation.Response.Run.init:type_name -> hashicorp.enos.v1.Terraform.Command.Init.Response
+	94,  // 160: hashicorp.enos.v1.Operation.Response.Run.validate:type_name -> hashicorp.enos.v1.Terraform.Command.Validate.Response
+	95,  // 161: hashicorp.enos.v1.Operation.Response.Run.plan:type_name -> hashicorp.enos.v1.Terraform.Command.Plan.Response
+	96,  // 162: hashicorp.enos.v1.Operation.Response.Run.apply:type_name -> hashicorp.enos.v1.Terraform.Command.Apply.Response
+	101, // 163: hashicorp.enos.v1.Operation.Response.Run.prior_state_show:type_name -> hashicorp.enos.v1.Terraform.Command.Show.Response
+	97,  // 164: hashicorp.enos.v1.Operation.Response.Run.destroy:type_name -> hashicorp.enos.v1.Terraform.Command.Destroy.Response
+	6,   // 165: hashicorp.enos.v1.Operation.Response.Exec.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	82,  // 166: hashicorp.enos.v1.Operation.Response.Exec.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	98,  // 167: hashicorp.enos.v1.Operation.Response.Exec.exec:type_name -> hashicorp.enos.v1.Terraform.Command.Exec.Response
+	6,   // 168: hashicorp.enos.v1.Operation.Response.Output.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	82,  // 169: hashicorp.enos.v1.Operation.Response.Output.terraform_module:type_name -> hashicorp.enos.v1.Terraform.Module
+	99,  // 170: hashicorp.enos.v1.Operation.Response.Output.output:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response
+	115, // 171: hashicorp.enos.v1.Terraform.Module.scenario_ref:type_name -> hashicorp.enos.v1.Ref.Scenario
+	102, // 172: hashicorp.enos.v1.Terraform.Runner.config:type_name -> hashicorp.enos.v1.Terraform.Runner.Config
+	6,   // 173: hashicorp.enos.v1.Terraform.Command.Init.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	6,   // 174: hashicorp.enos.v1.Terraform.Command.Validate.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	6,   // 175: hashicorp.enos.v1.Terraform.Command.Plan.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	6,   // 176: hashicorp.enos.v1.Terraform.Command.Apply.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	6,   // 177: hashicorp.enos.v1.Terraform.Command.Destroy.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	6,   // 178: hashicorp.enos.v1.Terraform.Command.Exec.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	6,   // 179: hashicorp.enos.v1.Terraform.Command.Output.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	100, // 180: hashicorp.enos.v1.Terraform.Command.Output.Response.meta:type_name -> hashicorp.enos.v1.Terraform.Command.Output.Response.Meta
+	6,   // 181: hashicorp.enos.v1.Terraform.Command.Show.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	104, // 182: hashicorp.enos.v1.Terraform.Runner.Config.flags:type_name -> hashicorp.enos.v1.Terraform.Runner.Config.Flags
+	103, // 183: hashicorp.enos.v1.Terraform.Runner.Config.env:type_name -> hashicorp.enos.v1.Terraform.Runner.Config.EnvEntry
+	123, // 184: hashicorp.enos.v1.Terraform.Runner.Config.Flags.lock_timeout:type_name -> google.protobuf.Duration
+	106, // 185: hashicorp.enos.v1.Matrix.Vector.elements:type_name -> hashicorp.enos.v1.Matrix.Element
+	105, // 186: hashicorp.enos.v1.Matrix.Exclude.vector:type_name -> hashicorp.enos.v1.Matrix.Vector
+	4,   // 187: hashicorp.enos.v1.Matrix.Exclude.mode:type_name -> hashicorp.enos.v1.Matrix.Exclude.Mode
+	114, // 188: hashicorp.enos.v1.Sample.Subset.id:type_name -> hashicorp.enos.v1.Sample.Subset.ID
+	113, // 189: hashicorp.enos.v1.Sample.Subset.attributes:type_name -> hashicorp.enos.v1.Sample.Attribute
+	15,  // 190: hashicorp.enos.v1.Sample.Subset.matrix:type_name -> hashicorp.enos.v1.Matrix
+	117, // 191: hashicorp.enos.v1.Sample.Filter.sample:type_name -> hashicorp.enos.v1.Ref.Sample
+	114, // 192: hashicorp.enos.v1.Sample.Filter.subsets:type_name -> hashicorp.enos.v1.Sample.Subset.ID
+	114, // 193: hashicorp.enos.v1.Sample.Filter.exclude_subsets:type_name -> hashicorp.enos.v1.Sample.Subset.ID
+	117, // 194: hashicorp.enos.v1.Sample.Element.sample:type_name -> hashicorp.enos.v1.Ref.Sample
+	118, // 195: hashicorp.enos.v1.Sample.Element.subset:type_name -> hashicorp.enos.v1.Ref.Sample.Subset
+	115, // 196: hashicorp.enos.v1.Sample.Element.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
+	124, // 197: hashicorp.enos.v1.Sample.Element.attributes:type_name -> google.protobuf.Struct
+	6,   // 198: hashicorp.enos.v1.Sample.Observation.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	111, // 199: hashicorp.enos.v1.Sample.Observation.elements:type_name -> hashicorp.enos.v1.Sample.Element
+	110, // 200: hashicorp.enos.v1.Sample.Observation.filter:type_name -> hashicorp.enos.v1.Sample.Filter
+	59,  // 201: hashicorp.enos.v1.Ref.Scenario.id:type_name -> hashicorp.enos.v1.Scenario.ID
+	115, // 202: hashicorp.enos.v1.Ref.Operation.scenario:type_name -> hashicorp.enos.v1.Ref.Scenario
+	108, // 203: hashicorp.enos.v1.Ref.Sample.id:type_name -> hashicorp.enos.v1.Sample.ID
+	114, // 204: hashicorp.enos.v1.Ref.Sample.Subset.id:type_name -> hashicorp.enos.v1.Sample.Subset.ID
+	6,   // 205: hashicorp.enos.v1.FormatResponse.Response.diagnostics:type_name -> hashicorp.enos.v1.Diagnostic
+	18,  // 206: hashicorp.enos.v1.EnosService.GetVersion:input_type -> hashicorp.enos.v1.GetVersionRequest
+	20,  // 207: hashicorp.enos.v1.EnosService.ValidateScenariosConfiguration:input_type -> hashicorp.enos.v1.ValidateScenariosConfigurationRequest
+	22,  // 208: hashicorp.enos.v1.EnosService.ListScenarios:input_type -> hashicorp.enos.v1.ListScenariosRequest
+	27,  // 209: hashicorp.enos.v1.EnosService.CheckScenarios:input_type -> hashicorp.enos.v1.CheckScenariosRequest
+	25,  // 210: hashicorp.enos.v1.EnosService.GenerateScenarios:input_type -> hashicorp.enos.v1.GenerateScenariosRequest
+	29,  // 211: hashicorp.enos.v1.EnosService.LaunchScenarios:input_type -> hashicorp.enos.v1.LaunchScenariosRequest
+	31,  // 212: hashicorp.enos.v1.EnosService.DestroyScenarios:input_type -> hashicorp.enos.v1.DestroyScenariosRequest
+	33,  // 213: hashicorp.enos.v1.EnosService.RunScenarios:input_type -> hashicorp.enos.v1.RunScenariosRequest
+	35,  // 214: hashicorp.enos.v1.EnosService.ExecScenarios:input_type -> hashicorp.enos.v1.ExecScenariosRequest
+	37,  // 215: hashicorp.enos.v1.EnosService.OutputScenarios:input_type -> hashicorp.enos.v1.OutputScenariosRequest
+	43,  // 216: hashicorp.enos.v1.EnosService.Format:input_type -> hashicorp.enos.v1.FormatRequest
+	45,  // 217: hashicorp.enos.v1.EnosService.OperationEventStream:input_type -> hashicorp.enos.v1.OperationEventStreamRequest
+	47,  // 218: hashicorp.enos.v1.EnosService.Operation:input_type -> hashicorp.enos.v1.OperationRequest
+	39,  // 219: hashicorp.enos.v1.EnosService.ListSamples:input_type -> hashicorp.enos.v1.ListSamplesRequest
+	41,  // 220: hashicorp.enos.v1.EnosService.ObserveSample:input_type -> hashicorp.enos.v1.ObserveSampleRequest
+	50,  // 221: hashicorp.enos.v1.EnosService.OutlineScenarios:input_type -> hashicorp.enos.v1.OutlineScenariosRequest
+	19,  // 222: hashicorp.enos.v1.EnosService.GetVersion:output_type -> hashicorp.enos.v1.GetVersionResponse
+	21,  // 223: hashicorp.enos.v1.EnosService.ValidateScenariosConfiguration:output_type -> hashicorp.enos.v1.ValidateScenariosConfigurationResponse
+	24,  // 224: hashicorp.enos.v1.EnosService.ListScenarios:output_type -> hashicorp.enos.v1.EnosServiceListScenariosResponse
+	28,  // 225: hashicorp.enos.v1.EnosService.CheckScenarios:output_type -> hashicorp.enos.v1.CheckScenariosResponse
+	26,  // 226: hashicorp.enos.v1.EnosService.GenerateScenarios:output_type -> hashicorp.enos.v1.GenerateScenariosResponse
+	30,  // 227: hashicorp.enos.v1.EnosService.LaunchScenarios:output_type -> hashicorp.enos.v1.LaunchScenariosResponse
+	32,  // 228: hashicorp.enos.v1.EnosService.DestroyScenarios:output_type -> hashicorp.enos.v1.DestroyScenariosResponse
+	34,  // 229: hashicorp.enos.v1.EnosService.RunScenarios:output_type -> hashicorp.enos.v1.RunScenariosResponse
+	36,  // 230: hashicorp.enos.v1.EnosService.ExecScenarios:output_type -> hashicorp.enos.v1.ExecScenariosResponse
+	38,  // 231: hashicorp.enos.v1.EnosService.OutputScenarios:output_type -> hashicorp.enos.v1.OutputScenariosResponse
+	44,  // 232: hashicorp.enos.v1.EnosService.Format:output_type -> hashicorp.enos.v1.FormatResponse
+	46,  // 233: hashicorp.enos.v1.EnosService.OperationEventStream:output_type -> hashicorp.enos.v1.OperationEventStreamResponse
+	48,  // 234: hashicorp.enos.v1.EnosService.Operation:output_type -> hashicorp.enos.v1.OperationResponse
+	40,  // 235: hashicorp.enos.v1.EnosService.ListSamples:output_type -> hashicorp.enos.v1.ListSamplesResponse
+	42,  // 236: hashicorp.enos.v1.EnosService.ObserveSample:output_type -> hashicorp.enos.v1.ObserveSampleResponse
+	51,  // 237: hashicorp.enos.v1.EnosService.OutlineScenarios:output_type -> hashicorp.enos.v1.OutlineScenariosResponse
+	222, // [222:238] is the sub-list for method output_type
+	206, // [206:222] is the sub-list for method input_type
+	206, // [206:206] is the sub-list for extension type_name
+	206, // [206:206] is the sub-list for extension extendee
+	0,   // [0:206] is the sub-list for field type_name
 }
 
 func init() { file_enos_proto_init() }
@@ -9281,7 +9376,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GenerateScenariosRequest); i {
+			switch v := v.(*EnosServiceListScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9293,7 +9388,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GenerateScenariosResponse); i {
+			switch v := v.(*GenerateScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9305,7 +9400,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CheckScenariosRequest); i {
+			switch v := v.(*GenerateScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9317,7 +9412,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CheckScenariosResponse); i {
+			switch v := v.(*CheckScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9329,7 +9424,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LaunchScenariosRequest); i {
+			switch v := v.(*CheckScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9341,7 +9436,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LaunchScenariosResponse); i {
+			switch v := v.(*LaunchScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9353,7 +9448,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DestroyScenariosRequest); i {
+			switch v := v.(*LaunchScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9365,7 +9460,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DestroyScenariosResponse); i {
+			switch v := v.(*DestroyScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9377,7 +9472,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RunScenariosRequest); i {
+			switch v := v.(*DestroyScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9389,7 +9484,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RunScenariosResponse); i {
+			switch v := v.(*RunScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9401,7 +9496,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecScenariosRequest); i {
+			switch v := v.(*RunScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9413,7 +9508,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecScenariosResponse); i {
+			switch v := v.(*ExecScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9425,7 +9520,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutputScenariosRequest); i {
+			switch v := v.(*ExecScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9437,7 +9532,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutputScenariosResponse); i {
+			switch v := v.(*OutputScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9449,7 +9544,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSamplesRequest); i {
+			switch v := v.(*OutputScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9461,7 +9556,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSamplesResponse); i {
+			switch v := v.(*ListSamplesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9473,7 +9568,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ObserveSampleRequest); i {
+			switch v := v.(*ListSamplesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9485,7 +9580,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ObserveSampleResponse); i {
+			switch v := v.(*ObserveSampleRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9497,7 +9592,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FormatRequest); i {
+			switch v := v.(*ObserveSampleResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9509,7 +9604,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FormatResponse); i {
+			switch v := v.(*FormatRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9521,7 +9616,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OperationEventStreamRequest); i {
+			switch v := v.(*FormatResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9533,7 +9628,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OperationEventStreamResponse); i {
+			switch v := v.(*OperationEventStreamRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9545,7 +9640,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OperationRequest); i {
+			switch v := v.(*OperationEventStreamResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9557,7 +9652,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OperationResponse); i {
+			switch v := v.(*OperationRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9569,7 +9664,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OperationResponses); i {
+			switch v := v.(*OperationResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9581,7 +9676,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutlineScenariosRequest); i {
+			switch v := v.(*OperationResponses); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9593,7 +9688,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutlineScenariosResponse); i {
+			switch v := v.(*OutlineScenariosRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9605,7 +9700,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Quality); i {
+			switch v := v.(*OutlineScenariosResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9617,7 +9712,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UI_Settings); i {
+			switch v := v.(*Quality); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9629,7 +9724,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Diagnostic_Snippet); i {
+			switch v := v.(*UI_Settings); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9641,7 +9736,7 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Diagnostic_ExpressionValue); i {
+			switch v := v.(*Diagnostic_Snippet); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9653,6 +9748,18 @@ func file_enos_proto_init() {
 			}
 		}
 		file_enos_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Diagnostic_ExpressionValue); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enos_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Range_Pos); i {
 			case 0:
 				return &v.state
@@ -9664,7 +9771,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_ID); i {
 			case 0:
 				return &v.state
@@ -9676,7 +9783,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter); i {
 			case 0:
 				return &v.state
@@ -9688,7 +9795,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Outline); i {
 			case 0:
 				return &v.state
@@ -9700,7 +9807,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Filter_SelectAll); i {
 			case 0:
 				return &v.state
@@ -9712,7 +9819,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Scenario_Outline_Step); i {
 			case 0:
 				return &v.state
@@ -9724,7 +9831,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operator_Config); i {
 			case 0:
 				return &v.state
@@ -9736,7 +9843,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request); i {
 			case 0:
 				return &v.state
@@ -9748,7 +9855,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response); i {
 			case 0:
 				return &v.state
@@ -9760,7 +9867,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Event); i {
 			case 0:
 				return &v.state
@@ -9772,7 +9879,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Generate); i {
 			case 0:
 				return &v.state
@@ -9784,7 +9891,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Check); i {
 			case 0:
 				return &v.state
@@ -9796,7 +9903,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Launch); i {
 			case 0:
 				return &v.state
@@ -9808,7 +9915,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Destroy); i {
 			case 0:
 				return &v.state
@@ -9820,7 +9927,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Run); i {
 			case 0:
 				return &v.state
@@ -9832,7 +9939,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Exec); i {
 			case 0:
 				return &v.state
@@ -9844,7 +9951,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Request_Output); i {
 			case 0:
 				return &v.state
@@ -9856,7 +9963,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Generate); i {
 			case 0:
 				return &v.state
@@ -9868,7 +9975,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Check); i {
 			case 0:
 				return &v.state
@@ -9880,7 +9987,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Launch); i {
 			case 0:
 				return &v.state
@@ -9892,7 +9999,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Destroy); i {
 			case 0:
 				return &v.state
@@ -9904,7 +10011,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[74].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Run); i {
 			case 0:
 				return &v.state
@@ -9916,7 +10023,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[74].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[75].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Exec); i {
 			case 0:
 				return &v.state
@@ -9928,7 +10035,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[75].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[76].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Operation_Response_Output); i {
 			case 0:
 				return &v.state
@@ -9940,7 +10047,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[76].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[77].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Module); i {
 			case 0:
 				return &v.state
@@ -9952,7 +10059,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[77].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[78].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command); i {
 			case 0:
 				return &v.state
@@ -9964,7 +10071,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[78].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[79].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Runner); i {
 			case 0:
 				return &v.state
@@ -9976,7 +10083,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[79].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[80].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Init); i {
 			case 0:
 				return &v.state
@@ -9988,7 +10095,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[80].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[81].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Validate); i {
 			case 0:
 				return &v.state
@@ -10000,7 +10107,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[81].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[82].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Plan); i {
 			case 0:
 				return &v.state
@@ -10012,7 +10119,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[82].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[83].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Apply); i {
 			case 0:
 				return &v.state
@@ -10024,7 +10131,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[83].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[84].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Destroy); i {
 			case 0:
 				return &v.state
@@ -10036,7 +10143,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[84].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[85].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Exec); i {
 			case 0:
 				return &v.state
@@ -10048,7 +10155,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[85].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[86].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Output); i {
 			case 0:
 				return &v.state
@@ -10060,7 +10167,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[86].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[87].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Show); i {
 			case 0:
 				return &v.state
@@ -10072,7 +10179,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[87].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[88].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Init_Response); i {
 			case 0:
 				return &v.state
@@ -10084,7 +10191,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[88].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[89].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Validate_Response); i {
 			case 0:
 				return &v.state
@@ -10096,7 +10203,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[89].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[90].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Plan_Response); i {
 			case 0:
 				return &v.state
@@ -10108,7 +10215,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[90].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[91].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Apply_Response); i {
 			case 0:
 				return &v.state
@@ -10120,7 +10227,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[91].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[92].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Destroy_Response); i {
 			case 0:
 				return &v.state
@@ -10132,7 +10239,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[92].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[93].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Exec_Response); i {
 			case 0:
 				return &v.state
@@ -10144,7 +10251,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[93].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[94].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Output_Response); i {
 			case 0:
 				return &v.state
@@ -10156,7 +10263,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[94].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[95].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Output_Response_Meta); i {
 			case 0:
 				return &v.state
@@ -10168,7 +10275,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[95].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[96].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Command_Show_Response); i {
 			case 0:
 				return &v.state
@@ -10180,7 +10287,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[96].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[97].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Runner_Config); i {
 			case 0:
 				return &v.state
@@ -10192,7 +10299,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[98].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[99].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Terraform_Runner_Config_Flags); i {
 			case 0:
 				return &v.state
@@ -10204,7 +10311,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[99].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[100].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Matrix_Vector); i {
 			case 0:
 				return &v.state
@@ -10216,7 +10323,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[100].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[101].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Matrix_Element); i {
 			case 0:
 				return &v.state
@@ -10228,7 +10335,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[101].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[102].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Matrix_Exclude); i {
 			case 0:
 				return &v.state
@@ -10240,7 +10347,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[102].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[103].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_ID); i {
 			case 0:
 				return &v.state
@@ -10252,7 +10359,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[103].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[104].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_Subset); i {
 			case 0:
 				return &v.state
@@ -10264,7 +10371,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[104].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[105].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_Filter); i {
 			case 0:
 				return &v.state
@@ -10276,7 +10383,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[105].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[106].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_Element); i {
 			case 0:
 				return &v.state
@@ -10288,7 +10395,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[106].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[107].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_Observation); i {
 			case 0:
 				return &v.state
@@ -10300,7 +10407,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[107].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[108].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_Attribute); i {
 			case 0:
 				return &v.state
@@ -10312,7 +10419,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[108].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[109].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Sample_Subset_ID); i {
 			case 0:
 				return &v.state
@@ -10324,7 +10431,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[109].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[110].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Ref_Scenario); i {
 			case 0:
 				return &v.state
@@ -10336,7 +10443,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[110].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[111].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Ref_Operation); i {
 			case 0:
 				return &v.state
@@ -10348,7 +10455,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[111].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[112].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Ref_Sample); i {
 			case 0:
 				return &v.state
@@ -10360,7 +10467,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[112].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[113].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Ref_Sample_Subset); i {
 			case 0:
 				return &v.state
@@ -10372,7 +10479,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[113].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[114].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*FormatRequest_File); i {
 			case 0:
 				return &v.state
@@ -10384,7 +10491,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[114].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[115].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*FormatRequest_Config); i {
 			case 0:
 				return &v.state
@@ -10396,7 +10503,7 @@ func file_enos_proto_init() {
 				return nil
 			}
 		}
-		file_enos_proto_msgTypes[115].Exporter = func(v interface{}, i int) interface{} {
+		file_enos_proto_msgTypes[116].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*FormatResponse_Response); i {
 			case 0:
 				return &v.state
@@ -10409,7 +10516,11 @@ func file_enos_proto_init() {
 			}
 		}
 	}
-	file_enos_proto_msgTypes[59].OneofWrappers = []interface{}{
+	file_enos_proto_msgTypes[19].OneofWrappers = []interface{}{
+		(*EnosServiceListScenariosResponse_Scenario)(nil),
+		(*EnosServiceListScenariosResponse_Decode)(nil),
+	}
+	file_enos_proto_msgTypes[60].OneofWrappers = []interface{}{
 		(*Operation_Request_Generate_)(nil),
 		(*Operation_Request_Check_)(nil),
 		(*Operation_Request_Launch_)(nil),
@@ -10418,7 +10529,7 @@ func file_enos_proto_init() {
 		(*Operation_Request_Exec_)(nil),
 		(*Operation_Request_Output_)(nil),
 	}
-	file_enos_proto_msgTypes[60].OneofWrappers = []interface{}{
+	file_enos_proto_msgTypes[61].OneofWrappers = []interface{}{
 		(*Operation_Response_Generate_)(nil),
 		(*Operation_Response_Check_)(nil),
 		(*Operation_Response_Launch_)(nil),
@@ -10427,7 +10538,7 @@ func file_enos_proto_init() {
 		(*Operation_Response_Exec_)(nil),
 		(*Operation_Response_Output_)(nil),
 	}
-	file_enos_proto_msgTypes[61].OneofWrappers = []interface{}{
+	file_enos_proto_msgTypes[62].OneofWrappers = []interface{}{
 		(*Operation_Event_Decode)(nil),
 		(*Operation_Event_Generate)(nil),
 		(*Operation_Event_Init)(nil),
@@ -10445,7 +10556,7 @@ func file_enos_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_enos_proto_rawDesc,
 			NumEnums:      5,
-			NumMessages:   116,
+			NumMessages:   117,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

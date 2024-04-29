@@ -338,6 +338,10 @@ func (d *ScenarioDecoder) DecodeScenario(
 // or we're not fully decoding the scenario this can be a faster option than decoding concurrently
 // and requiring the overhead of goroutines.
 func (d *ScenarioDecoder) decodeScenariosSerial(sb *DecodedScenarioBlock) {
+	if sb == nil {
+		return
+	}
+
 	// Decode the scenario without a matrix
 	if sb.Matrix() == nil || len(sb.Matrix().GetVectors()) < 1 {
 		keep, scenario, diags := d.DecodeScenario(nil, sb.Block)
@@ -356,6 +360,9 @@ func (d *ScenarioDecoder) decodeScenariosSerial(sb *DecodedScenarioBlock) {
 		if keep {
 			sb.Scenarios = append(sb.Scenarios, scenario)
 		}
+		if sb.Diagnostics != nil && sb.Diagnostics.HasErrors() {
+			return
+		}
 	}
 }
 
@@ -368,8 +375,11 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 		return
 	}
 
-	collectCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	decodeCtx, cancelDecode := context.WithCancel(ctx)
+	defer cancelDecode()
+
+	diagCtx, cancelDiag := context.WithCancel(ctx)
+	defer cancelDiag()
 
 	scenarioC := make(chan *Scenario)
 	vectorC := make(chan *Vector)
@@ -389,17 +399,23 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 			select {
 			case diag := <-diagC:
 				diags = diags.Extend(diag)
+				if diags != nil && diags.HasErrors() {
+					cancelDecode()
+				}
 
 				continue
 			default:
 			}
 
 			select {
-			case <-collectCtx.Done():
+			case <-diagCtx.Done():
 				workerWg.Done()
 				return
 			case diag := <-diagC:
 				diags = diags.Extend(diag)
+				if diags != nil && diags.HasErrors() {
+					cancelDecode()
+				}
 			}
 		}
 	}
@@ -418,7 +434,7 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 			}
 
 			select {
-			case <-collectCtx.Done():
+			case <-decodeCtx.Done():
 				workerWg.Done()
 				return
 			case scenario := <-scenarioC:
@@ -447,7 +463,7 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 			}
 
 			select {
-			case <-collectCtx.Done():
+			case <-decodeCtx.Done():
 				workerWg.Done()
 				return
 			case vec := <-vectorC:
@@ -467,13 +483,20 @@ func (d *ScenarioDecoder) decodeScenariosConcurrent(ctx context.Context, sb *Dec
 		go decodeScenario()
 	}
 
-	decodeWg.Add(len(sb.Matrix().GetVectors()))
+OUTER:
 	for i := range sb.Matrix().GetVectors() {
-		vectorC <- sb.Matrix().GetVectors()[i]
+		select {
+		case <-decodeCtx.Done():
+			break OUTER
+		default:
+			decodeWg.Add(1)
+			vectorC <- sb.Matrix().GetVectors()[i]
+		}
 	}
 
 	decodeWg.Wait()
-	cancel()
+	cancelDecode()
+	cancelDiag()
 	workerWg.Wait()
 	sb.Scenarios = append(sb.Scenarios, scenarios...)
 	sb.Diagnostics = sb.Diagnostics.Extend(diags)

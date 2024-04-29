@@ -6,7 +6,7 @@ BUILD_BINARY_PATH=${CURRENT_DIRECTORY}/dist/${BINARY}
 REPO=github.com/hashicorp/enos
 GO_BUILD_TAGS=-tags osusergo,netgo
 GO_LD_FLAGS=-ldflags="-extldflags=-static -X ${REPO}/internal/version.Version=${VERSION} -X ${REPO}/internal/version.GitSHA=${GIT_SHA}"
-GO_GC_FLAGS=
+GO_GC_FLAGS?=
 LINT_OUT_FORMAT?=colored-line-number
 BUF_LINT_OUT_FORMAT?=github-actions
 GORACE=GORACE=log_path=/tmp/enos-gorace.log

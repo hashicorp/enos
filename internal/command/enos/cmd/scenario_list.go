@@ -4,6 +4,8 @@
 package cmd
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -34,7 +36,7 @@ func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	res, err := rootState.enosConnection.Client.ListScenarios(
+	stream, err := rootState.enosConnection.Client.ListScenarios(
 		ctx, &pb.ListScenariosRequest{
 			Workspace: &pb.Workspace{
 				Flightplan: scenarioState.protoFp,
@@ -44,6 +46,26 @@ func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	res := &pb.ListScenariosResponse{}
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		switch val := msg.GetResponse().(type) {
+		case *pb.EnosServiceListScenariosResponse_Decode:
+			res.Decode = val.Decode
+			res.Diagnostics = val.Decode.GetDiagnostics()
+		case *pb.EnosServiceListScenariosResponse_Scenario:
+			res.Scenarios = append(res.Scenarios, val.Scenario)
+		default:
+		}
 	}
 
 	return ui.ShowScenarioList(res)

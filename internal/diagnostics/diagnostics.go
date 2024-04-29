@@ -92,6 +92,18 @@ func FromErr(err error) []*pb.Diagnostic {
 	}}
 }
 
+// ToError takes a slice of diagnostics and returns an wrapper error chain.
+func ToError(diags ...*pb.Diagnostic) error {
+	if len(diags) < 1 {
+		return nil
+	}
+
+	err := NewError()
+	err.Diags = diags
+
+	return err
+}
+
 // FromTFJSON takes terraform-json Diagnostics and returns them as proto diagnostics.
 func FromTFJSON(in []tfjson.Diagnostic) []*pb.Diagnostic {
 	if len(in) < 1 {

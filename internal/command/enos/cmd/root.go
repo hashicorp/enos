@@ -19,6 +19,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/hashicorp/enos/internal/client"
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/server"
 	uipkg "github.com/hashicorp/enos/internal/ui"
 	"github.com/hashicorp/enos/internal/ui/status"
@@ -84,7 +85,7 @@ func Execute() {
 
 		if ui != nil {
 			var err2 error
-			var diagErr *status.ErrDiagnostic
+			var diagErr *diagnostics.Error
 			if errors.As(err, &diagErr) {
 				err2 = ui.ShowDiagnostics(diagErr.Diags)
 			} else {

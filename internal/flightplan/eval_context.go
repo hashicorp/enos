@@ -27,15 +27,8 @@ func (e *errNotDefinedInCtx) Unwrap() error {
 func findEvalContextVariable(name string, baseCtx *hcl.EvalContext) (cty.Value, error) {
 	var val cty.Value
 
-	// Search through the eval context chain until we find a variable that
-	// matches our name
+	// Search through the eval context chain until we find a variable that matches our name
 	for ctx := baseCtx; ctx != nil; ctx = ctx.Parent() {
-		if ctx == nil {
-			// We've run out of eval contexts to search so we'll break out and
-			// return an error
-			break
-		}
-
 		var ok bool
 		val, ok = ctx.Variables[name]
 		if ok {

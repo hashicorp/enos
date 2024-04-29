@@ -14,7 +14,7 @@ option go_package = "github.com/hashicorp/enos/internal/pb;pb";
 service EnosService {
   rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {}
   rpc ValidateScenariosConfiguration(ValidateScenariosConfigurationRequest) returns (ValidateScenariosConfigurationResponse) {}
-  rpc ListScenarios(ListScenariosRequest) returns (ListScenariosResponse) {}
+  rpc ListScenarios(ListScenariosRequest) returns (stream EnosServiceListScenariosResponse) {}
   rpc CheckScenarios(CheckScenariosRequest) returns (CheckScenariosResponse) {}
   rpc GenerateScenarios(GenerateScenariosRequest) returns (GenerateScenariosResponse) {}
   rpc LaunchScenarios(LaunchScenariosRequest) returns (LaunchScenariosResponse) {}
@@ -600,6 +600,13 @@ message ListScenariosResponse {
   repeated Diagnostic diagnostics = 1;
   DecodeResponse decode = 2;
   repeated Ref.Scenario scenarios = 3;
+}
+
+message EnosServiceListScenariosResponse {
+  oneof response {
+    Ref.Scenario scenario = 1;
+    DecodeResponse decode = 3;
+  }
 }
 
 message GenerateScenariosRequest {

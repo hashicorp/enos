@@ -56,7 +56,7 @@ func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) 
 	sampleVals := map[string]cty.Value{}
 	subsetVals := map[string]cty.Value{}
 
-	if s != nil && s.Sample != nil {
+	if s.Sample != nil {
 		sampleVals, err = sampleAttrVals(s.Sample.Attributes)
 		if err != nil {
 			return nil, err

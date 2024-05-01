@@ -5,6 +5,7 @@ package flightplan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/zclconf/go-cty/cty"
@@ -217,4 +218,90 @@ func decodeAndValidateSampleAttrs(attr *hcl.Attribute, ctx *hcl.EvalContext) (ct
 	}
 
 	return val, diags
+}
+
+// decodeSamples decodes the samples from the flightplan.
+func decodeSamples(
+	ctx context.Context,
+	ws *pb.Workspace,
+	filter *pb.Sample_Filter,
+) (*FlightPlan, *pb.DecodeResponse) {
+	decRes := &pb.DecodeResponse{}
+
+	if ws == nil {
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured workspace"))
+
+		return nil, decRes
+	}
+
+	if filter == nil {
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured filter"))
+
+		return nil, decRes
+	}
+
+	efp := ws.GetFlightplan()
+	if efp == nil {
+		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured flightplan"))
+
+		return nil, decRes
+	}
+
+	// Try and locate the sample we're trying to observe.
+	sampleFP, decRes := DecodeProto(
+		ctx,
+		ws.GetFlightplan(),
+		DecodeTargetSamples,
+		nil,
+	)
+	if diagnostics.HasFailed(
+		ws.GetTfExecCfg().GetFailOnWarnings(),
+		decRes.GetDiagnostics(),
+	) {
+		return nil, decRes
+	}
+
+	return sampleFP, decRes
+}
+
+func findSampleByRef(fp *FlightPlan, ref *pb.Ref_Sample) (*Sample, []*pb.Diagnostic) {
+	if fp == nil {
+		return nil, diagnostics.FromErr(errors.New("cannot find samples in non-existent FlightPlan"))
+	}
+
+	if len(fp.Samples) < 1 {
+		return nil, diagnostics.FromErr(errors.New("no samples found"))
+	}
+
+	if ref == nil || ref.GetId().GetName() == "" {
+		return nil, diagnostics.FromErr(errors.New("no sample name was included in the filter"))
+	}
+
+	for i := range fp.Samples {
+		if fp.Samples[i].Ref().GetId().GetName() == ref.GetId().GetName() {
+			return fp.Samples[i], nil
+		}
+	}
+
+	return nil, diagnostics.FromErr(fmt.Errorf("no sample found with name %s", ref.GetId().GetName()))
+}
+
+// decodeAndFindSample decodes the samples from the flightplan and selects the sample from the filter.
+func decodeAndFindSample(
+	ctx context.Context,
+	ws *pb.Workspace,
+	filter *pb.Sample_Filter,
+) (*Sample, *pb.DecodeResponse) {
+	fp, decRes := decodeSamples(ctx, ws, filter)
+	if diagnostics.HasFailed(
+		ws.GetTfExecCfg().GetFailOnWarnings(),
+		decRes.GetDiagnostics(),
+	) {
+		return nil, decRes
+	}
+
+	sample, diags := findSampleByRef(fp, filter.GetSample())
+	decRes.Diagnostics = append(decRes.GetDiagnostics(), diags...)
+
+	return sample, decRes
 }

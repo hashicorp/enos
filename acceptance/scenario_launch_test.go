@@ -79,7 +79,7 @@ func TestAcc_Cmd_Scenario_Launch(t *testing.T) {
 			}
 
 			cmd := fmt.Sprintf("scenario launch --chdir %s --out %s --format json %s", path, outDir, filter)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			expected := &pb.OperationResponses{

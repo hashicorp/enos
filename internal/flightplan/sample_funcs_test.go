@@ -46,6 +46,7 @@ func Test_SampleFuncAll(t *testing.T) {
 				},
 				SubsetObservations: SampleSubsetObservations{},
 			},
+			shouldFail: true,
 		},
 		"frames with no matrix": {
 			in: &SampleFrame{
@@ -54,8 +55,17 @@ func Test_SampleFuncAll(t *testing.T) {
 					MaxElements: 10,
 				},
 				SubsetFrames: SampleSubsetFrames{
-					"foo":       {},
-					"foo_alias": {},
+					"foo": {
+						SampleSubset: &SampleSubset{
+							Name: "foo",
+						},
+					},
+					"foo_alias": {
+						SampleSubset: &SampleSubset{
+							Name:         "alias",
+							ScenarioName: "foo",
+						},
+					},
 				},
 			},
 			expected: &SampleObservation{
@@ -281,6 +291,7 @@ func Test_SampleFuncStratified(t *testing.T) {
 				},
 				SubsetObservations: SampleSubsetObservations{},
 			},
+			shouldFail: true,
 		},
 		"frames with no matrix max": {
 			in: &SampleFrame{

@@ -98,7 +98,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 
 				// Lets try one more time to destroy resources that might have been
 				// created
-				out, err := enos.run(context.Background(), fmt.Sprintf("scenario destroy --chdir %s --out %s", path, outDir))
+				out, _, err := enos.run(context.Background(), fmt.Sprintf("scenario destroy --chdir %s --out %s", path, outDir))
 				require.NoErrorf(t, err, string(out))
 			})
 
@@ -154,7 +154,7 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 			}
 
 			cmd := fmt.Sprintf("scenario run --chdir %s --out %s --format json", path, outDir)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			if err != nil {
 				failed = true
 			}

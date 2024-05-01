@@ -130,7 +130,7 @@ func TestAcc_Cmd_Scenario_Outline(t *testing.T) {
 			path, err := filepath.Abs(filepath.Join("./", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario outline --chdir %s --format json", path)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			if test.fail {
 				require.Error(t, err)
 

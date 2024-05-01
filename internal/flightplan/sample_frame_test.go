@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
@@ -843,6 +844,124 @@ func Test_SampleFrame_Size(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.expected, test.in.Size())
+		})
+	}
+}
+
+func Test_SampleFrame_Validate(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in         func() *SampleFrame
+		shouldFail bool
+	}{
+		"no subset frames": {
+			in:         func() *SampleFrame { return &SampleFrame{} },
+			shouldFail: true,
+		},
+		"missing subset in subset frame": {
+			in:         func() *SampleFrame { return &SampleFrame{} },
+			shouldFail: true,
+		},
+		"invalid because subset matrix excludes all": {
+			in: func() *SampleFrame {
+				sub := &SampleSubset{
+					SampleName: "my_sample",
+					Name:       "smoke",
+					Attributes: cty.ObjectVal(map[string]cty.Value{
+						"foo":   cty.StringVal("bar"),
+						"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+					}),
+					Matrix: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+						NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+						NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+					}},
+				}
+
+				return &SampleFrame{
+					SubsetFrames: SampleSubsetFrames{
+						"foo": {
+							SampleSubset: sub,
+							ScenarioFilter: &pb.Scenario_Filter{
+								Name: "smoke",
+								Include: &pb.Matrix_Vector{
+									Elements: []*pb.Matrix_Element{
+										{Key: "arch", Value: "arm64"},
+										{Key: "primary_backend", Value: "postgres"}, // this excludes it since it doesn't exist in the sample frame
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			shouldFail: true,
+		},
+		"valid no matrix": {
+			in: func() *SampleFrame {
+				sub := &SampleSubset{
+					Name: "foo",
+					Attributes: cty.ObjectVal(map[string]cty.Value{
+						"foo":   cty.StringVal("bar"),
+						"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+					}),
+				}
+
+				return &SampleFrame{
+					SubsetFrames: SampleSubsetFrames{
+						"foo": {
+							SampleSubset: sub,
+						},
+					},
+				}
+			},
+		},
+		"valid matching matrices": {
+			in: func() *SampleFrame {
+				sub := &SampleSubset{
+					Name: "foo",
+					Attributes: cty.ObjectVal(map[string]cty.Value{
+						"foo":   cty.StringVal("bar"),
+						"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+					}),
+					Matrix: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+						NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+						NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+					}},
+				}
+
+				return &SampleFrame{
+					SubsetFrames: SampleSubsetFrames{
+						"foo": {
+							SampleSubset: sub,
+							Matrix: &Matrix{Vectors: []*Vector{
+								NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+								NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							}},
+						},
+						"bar": {
+							SampleSubset: sub,
+							Matrix: &Matrix{Vectors: []*Vector{
+								NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+								NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "raft")),
+							}},
+						},
+					},
+				}
+			},
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+			if test.shouldFail {
+				require.Error(t, test.in().Validate())
+			} else {
+				require.NoError(t, test.in().Validate())
+			}
 		})
 	}
 }

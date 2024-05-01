@@ -31,6 +31,10 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			dir:  "invalid_scenarios/scenario_list_fail_malformed",
 			fail: true,
 		},
+		{
+			dir:  "invalid_scenarios/sample_empty_frame",
+			fail: true,
+		},
 	} {
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
@@ -39,7 +43,7 @@ func TestAcc_Cmd_Scenario_Validate(t *testing.T) {
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario validate --chdir %s --format json", path)
 			fmt.Println(path)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			if test.fail {
 				require.Error(t, err)
 
@@ -77,7 +81,7 @@ func TestAcc_Cmd_Scenario_Validate_filtered(t *testing.T) {
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario validate %s --chdir %s --format json", filter, path)
 			fmt.Println(path)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			if test.fail {
 				require.Error(t, err)
 

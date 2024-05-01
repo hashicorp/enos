@@ -71,12 +71,12 @@ func TestAcc_Cmd_Scenario_Destroy(t *testing.T) {
 			// Test destroying a scenario with it launched or not
 			if test.launch {
 				cmd := fmt.Sprintf("scenario launch --chdir %s --out %s %s", path, outDir, filter)
-				out, err := enos.run(context.Background(), cmd)
+				out, _, err := enos.run(context.Background(), cmd)
 				require.NoError(t, err, string(out))
 			}
 
 			cmd := fmt.Sprintf("scenario destroy --chdir %s --out %s --format json %s", path, outDir, filter)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			scenarioRef := &pb.Ref_Scenario{

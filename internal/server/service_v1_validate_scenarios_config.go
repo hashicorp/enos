@@ -5,6 +5,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -22,26 +23,55 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 ) {
 	res := &pb.ValidateScenariosConfigurationResponse{}
 
-	fp, decRes := flightplan.DecodeProto(
-		ctx,
-		req.GetWorkspace().GetFlightplan(),
-		flightplan.DecodeTargetAll,
-		req.GetFilter(),
-	)
-	res.Decode = decRes
+	if req.GetNoValidateSamples() && req.GetNoValidateScenarios() {
+		res.Diagnostics = diagnostics.FromErr(errors.New("cannot validate when given both no_validate_scenarios and no_validate_samples"))
+		return res, nil
+	}
 
-	scenarios := fp.Scenarios()
-	if len(scenarios) == 0 {
-		filter, err := flightplan.NewScenarioFilter(
-			flightplan.WithScenarioFilterDecode(req.GetFilter()),
+	var decRes *pb.DecodeResponse
+	var fp *flightplan.FlightPlan
+	if !req.GetNoValidateScenarios() {
+		fp, decRes = flightplan.DecodeProto(
+			ctx,
+			req.GetWorkspace().GetFlightplan(),
+			flightplan.DecodeTargetAll,
+			req.GetFilter(),
+		)
+		res.Decode = decRes
+		if diagnostics.HasFailed(
+			req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
+			res.GetDiagnostics(),
+		) {
+			return res, nil
+		}
+
+		scenarios := fp.Scenarios()
+		if len(scenarios) == 0 {
+			filter, err := flightplan.NewScenarioFilter(
+				flightplan.WithScenarioFilterDecode(req.GetFilter()),
+			)
+			if err != nil {
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+			} else {
+				res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(fmt.Errorf(
+					"no scenarios found matching filter '%s'", filter.String(),
+				))...)
+			}
+		}
+	}
+
+	if !req.GetNoValidateSamples() {
+		sampleReq, err := flightplan.NewSampleValidationReq(
+			flightplan.WithSampleValidationReqWorkSpace(req.GetWorkspace()),
+			flightplan.WithSampleValidationReqFilter(req.GetSampleFilter()),
 		)
 		if err != nil {
-			res.Diagnostics = diagnostics.FromErr(err)
-		} else {
-			res.Diagnostics = diagnostics.FromErr(fmt.Errorf(
-				"no scenarios found matching filter '%s'", filter.String(),
-			))
+			res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromErr(err)...)
+
+			return res, nil
 		}
+
+		res.SampleDecode = sampleReq.Validate(ctx)
 	}
 
 	return res, nil

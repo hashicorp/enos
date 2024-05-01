@@ -32,7 +32,7 @@ func TestAcc_Cmd_Version(t *testing.T) {
 			t.Parallel()
 
 			enos := newAcceptanceRunner(t)
-			out, err := enos.run(context.Background(), test.cmd)
+			out, _, err := enos.run(context.Background(), test.cmd)
 			require.NoError(t, err)
 			require.True(t, test.out.Match(out))
 		})

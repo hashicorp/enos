@@ -80,7 +80,7 @@ func TestAcc_Cmd_Scenario_Run(t *testing.T) {
 			}
 
 			cmd := fmt.Sprintf("scenario run --chdir %s --out %s --format json %s", path, outDir, filter)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			expected := &pb.OperationResponses{
@@ -150,7 +150,7 @@ func TestAcc_Cmd_Scenario_Run_Timeout(t *testing.T) {
 			require.NoError(t, err)
 
 			cmd := fmt.Sprintf("scenario run --chdir %s --out %s --format json --timeout 1s %s", path, outDir, test.name)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			require.Error(t, err, string(out))
 		})
 	}

@@ -5,6 +5,7 @@ package acceptance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -196,10 +197,10 @@ type acceptanceRunner struct {
 }
 
 // run runs an Enos sub-command.
-func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, error) {
+func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, []byte, error) {
 	path, err := filepath.Abs(r.enosBinPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	cmdParts := strings.Split(subCommand, " ")
@@ -209,7 +210,14 @@ func (r *acceptanceRunner) run(ctx context.Context, subCommand string) ([]byte, 
 	cmd := exec.CommandContext(ctx, path, cmdParts...)
 	cmd.Env = os.Environ()
 
-	return cmd.CombinedOutput()
+	stdout, err := cmd.Output()
+	var stderr []byte
+	var exitErr *exec.ExitError
+	if err != nil && errors.As(err, &exitErr) {
+		stderr = exitErr.Stderr
+	}
+
+	return stdout, stderr, err
 }
 
 func (r *acceptanceRunner) validate(t *testing.T) {

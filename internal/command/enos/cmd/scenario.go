@@ -21,14 +21,16 @@ import (
 
 // scenarioConfig is the 'scenario' sub-command configuration type.
 type scenarioStateType struct {
-	baseDir        string
-	outDir         string
-	protoFp        *pb.FlightPlan
-	timeout        time.Duration
-	tfConfig       *terraform.Config
-	lockTimeout    time.Duration
-	varsFilesPaths []string
-	sampleFilter   *sampleObserveFilter
+	baseDir             string
+	outDir              string
+	protoFp             *pb.FlightPlan
+	timeout             time.Duration
+	tfConfig            *terraform.Config
+	lockTimeout         time.Duration
+	varsFilesPaths      []string
+	sampleFilter        *sampleObserveFilter
+	noValidateSamples   bool
+	noValidateScenarios bool
 }
 
 // scenarioState is the 'scenario' sub-command configuration.

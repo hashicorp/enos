@@ -4,15 +4,15 @@
 package basic
 
 import (
-	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // ShowScenariosValidateConfig shows the flight plan validation response.
 func (v *View) ShowScenariosValidateConfig(res *pb.ValidateScenariosConfigurationResponse) error {
-	diags := diagnostics.Concat(res.GetDecode().GetDiagnostics(), res.GetDiagnostics())
-	v.WriteDiagnostics(diags)
+	v.WriteDiagnostics(res.GetDiagnostics())
+	v.WriteDiagnostics(res.GetDecode().GetDiagnostics())
+	v.WriteDiagnostics(res.GetSampleDecode().GetDiagnostics())
 
 	return status.ScenariosValidateConfig(v.settings.GetFailOnWarnings(), res)
 }

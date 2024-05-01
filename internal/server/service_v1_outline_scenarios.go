@@ -47,7 +47,7 @@ func (s *ServiceV1) OutlineScenarios(
 		if out == nil {
 			continue
 		}
-		out.Matrix = sb.DecodedMatrices.Original.Proto()
+		out.Matrix = sb.DecodedMatrices.GetOriginal().Proto()
 
 		res.Outlines = append(res.GetOutlines(), out)
 		for _, qual := range out.GetVerifies() {

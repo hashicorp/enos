@@ -63,7 +63,7 @@ func newScenarioCmd() *cobra.Command {
 		PersistentPostRun: scenarioCmdPostRun,
 	}
 
-	scenarioCmd.PersistentFlags().DurationVar(&scenarioState.timeout, "timeout", 15*time.Minute, "The command timeout")
+	scenarioCmd.PersistentFlags().DurationVar(&scenarioState.timeout, "timeout", 1*time.Hour, "The command timeout")
 	scenarioCmd.PersistentFlags().BoolVar(&scenarioState.tfConfig.FailOnWarnings, "fail-on-warnings", false, "Fail immediately if warning diagnostics are created")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.baseDir, "chdir", "d", "", "Use the given directory as the working directory")
 	scenarioCmd.PersistentFlags().StringVarP(&scenarioState.outDir, "out", "o", "", "Configure the base directory where generated modules will be created")

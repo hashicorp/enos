@@ -266,6 +266,8 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 }
 
 // Decode decodes the HCL into a flight plan.
+//
+//nolint:gocyclop,cyclop // it's a complex func
 func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	diags := hcl.Diagnostics{}
 
@@ -338,21 +340,33 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 		if d.target >= DecodeTargetVariables {
 			// Decode and validate our variables and add them to the eval context.
 			diags = diags.Extend(fp.decodeVariables(evalCtx, varsFiles, d.varEnvVars))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target >= DecodeTargetGlobals {
 			// Decode our globals and add them to the eval context.
 			diags = diags.Extend(fp.decodeGlobals(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target >= DecodeTargetSamples {
 			// Decode to only our samples but does not verify correctness or an intersection with scenarios.
 			diags = diags.Extend(fp.decodeSamples(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target >= DecodeTargetQualities {
 			// Decode out qualities and add them to the eval context.
 			diags = diags.Extend(fp.decodeQualities(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		switch d.target {
@@ -372,18 +386,30 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 
 		if d.target >= DecodeTargetTerraformSettings {
 			diags = diags.Extend(fp.decodeTerraformSettings(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target >= DecodeTargetTerraformCLIs {
 			diags = diags.Extend(fp.decodeTerraformCLIs(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target >= DecodeTargetProviders {
 			diags = diags.Extend(fp.decodeProviders(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target >= DecodeTargetModules {
 			diags = diags.Extend(fp.decodeModules(evalCtx))
+			if diags != nil && diags.HasErrors() {
+				return diags
+			}
 		}
 
 		// Decode the fewest scenarios possible to generate an outline and return.
@@ -394,6 +420,9 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 		if d.target >= DecodeTargetScenariosComplete {
 			// Decode scenarios and fully validate them.
 			diags = diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+			if diags.HasErrors() {
+				return diags
+			}
 		}
 
 		if d.target > DecodeTargetAll {

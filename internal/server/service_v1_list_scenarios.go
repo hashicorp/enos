@@ -4,44 +4,47 @@
 package server
 
 import (
-	"context"
-
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
 // ListScenarios returns a list of scenarios and their variants.
-func (s *ServiceV1) ListScenarios(
-	ctx context.Context,
-	req *pb.ListScenariosRequest,
-) (
-	*pb.ListScenariosResponse,
-	error,
-) {
-	res := &pb.ListScenariosResponse{}
-
+func (s *ServiceV1) ListScenarios(req *pb.ListScenariosRequest, stream pb.EnosService_ListScenariosServer) error {
 	fp, decRes := flightplan.DecodeProto(
-		ctx,
+		stream.Context(),
 		req.GetWorkspace().GetFlightplan(),
 		flightplan.DecodeTargetScenariosNamesExpandVariants,
 		req.GetFilter(),
 	)
-	res.Decode = decRes
+
+	err := stream.Send(&pb.EnosServiceListScenariosResponse{
+		Response: &pb.EnosServiceListScenariosResponse_Decode{
+			Decode: decRes,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	if diagnostics.HasFailed(
 		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
 		decRes.GetDiagnostics(),
 	) {
-		return res, nil
+		// Short circuit if we've got a failure
+		return nil
 	}
 
-	scenarios := fp.Scenarios()
-	if len(scenarios) > 0 {
-		res.Scenarios = []*pb.Ref_Scenario{}
-		for _, s := range scenarios {
-			res.Scenarios = append(res.GetScenarios(), s.Ref())
+	for _, scenario := range fp.Scenarios() {
+		err := stream.Send(&pb.EnosServiceListScenariosResponse{
+			Response: &pb.EnosServiceListScenariosResponse_Scenario{
+				Scenario: scenario.Ref(),
+			},
+		})
+		if err != nil {
+			return err
 		}
 	}
 
-	return res, nil
+	return nil
 }

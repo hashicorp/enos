@@ -35,7 +35,7 @@ module "foo" {
 scenario "foo" {
   matrix {
     length = ["fl1", "fl2", "fl3"]
-	width  = ["fw1", "fw2", "fw3"]
+    width  = ["fw1", "fw2", "fw3"]
   }
 
   step "foo" {
@@ -46,7 +46,7 @@ scenario "foo" {
 scenario "bar" {
   matrix {
     length = ["bl1", "bl2", "bl3"]
-	width  = ["bw1", "bw2", "bw3"]
+    width  = ["bw1", "bw2", "bw3"]
   }
 
   step "foo" {
@@ -67,14 +67,14 @@ sample "foodle" {
       width  = ["fw1", "fw3"]
     }
 
-	attributes = {
-	  foo = "bar"
-	  hello = ["ohai", "howdy"]
-	}
+    attributes = {
+      foo = "bar"
+      hello = ["ohai", "howdy"]
+    }
   }
 
   subset "barf" {
-	scenario_filter = "bar length:bl1"
+    scenario_filter = "bar length:bl1"
   }
 
   subset "simple" { }
@@ -134,7 +134,7 @@ module "foo" {
 scenario "foo" {
   matrix {
     length = ["fl1", "fl2", "fl3"]
-	width  = ["fw1", "fw2", "fw3"]
+    width  = ["fw1", "fw2", "fw3"]
   }
 
   step "foo" {
@@ -254,7 +254,7 @@ sample "foo" {
 			if test.expected == nil {
 				for i := range samp.Subsets {
 					frame, decRes := samp.Subsets[i].Frame(context.Background(), test.ws)
-					require.Empty(t, decRes.GetDiagnostics())
+					require.NotEmpty(t, decRes.GetDiagnostics())
 					testRequireEqualSampleSubsetFrame(t, nil, frame)
 				}
 
@@ -302,4 +302,160 @@ func testRequireEqualSampleSubsetFrame(t *testing.T, expected, got *SampleSubset
 		got.Matrix.String(),
 		expected.Matrix.SymmetricDifferenceUnordered(got.Matrix).String(),
 	))
+}
+
+func Test_SampleSubsetFrame_Size(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in       func() *SampleSubsetFrame
+		expected int32
+	}{
+		"nil": {
+			in:       func() *SampleSubsetFrame { return nil },
+			expected: 0,
+		},
+		"no subset and no matrix": {
+			in:       func() *SampleSubsetFrame { return &SampleSubsetFrame{} },
+			expected: 0,
+		},
+		"no matrices": {
+			in: func() *SampleSubsetFrame {
+				return &SampleSubsetFrame{
+					SampleSubset: &SampleSubset{
+						SampleName: "my_sample",
+						Name:       "smoke",
+						Attributes: cty.ObjectVal(map[string]cty.Value{
+							"foo":   cty.StringVal("bar"),
+							"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+						}),
+					},
+				}
+			},
+			expected: 1,
+		},
+		"subset frame matrix": {
+			in: func() *SampleSubsetFrame {
+				return &SampleSubsetFrame{
+					Matrix: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+					}},
+				}
+			},
+			expected: 2,
+		},
+		"subset has matrix but subset frame has no matrix": {
+			in: func() *SampleSubsetFrame {
+				return &SampleSubsetFrame{
+					SampleSubset: &SampleSubset{
+						SampleName: "my_sample",
+						Name:       "smoke",
+						Attributes: cty.ObjectVal(map[string]cty.Value{
+							"foo":   cty.StringVal("bar"),
+							"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+						}),
+						Matrix: &Matrix{Vectors: []*Vector{
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+						}},
+					},
+				}
+			},
+			expected: 0,
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, test.expected, test.in().Size())
+		})
+	}
+}
+
+func Test_SampleSubsetFrame_Validate(t *testing.T) {
+	t.Parallel()
+
+	for desc, test := range map[string]struct {
+		in         func() *SampleSubsetFrame
+		shouldFail bool
+	}{
+		"nil": {
+			in:         func() *SampleSubsetFrame { return nil },
+			shouldFail: true,
+		},
+		"no subset and no matrix": {
+			in:         func() *SampleSubsetFrame { return &SampleSubsetFrame{} },
+			shouldFail: true,
+		},
+		"no matrices": {
+			in: func() *SampleSubsetFrame {
+				return &SampleSubsetFrame{
+					SampleSubset: &SampleSubset{
+						SampleName: "my_sample",
+						Name:       "smoke",
+						Attributes: cty.ObjectVal(map[string]cty.Value{
+							"foo":   cty.StringVal("bar"),
+							"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+						}),
+					},
+				}
+			},
+		},
+		"subset frame matrix": {
+			in: func() *SampleSubsetFrame {
+				return &SampleSubsetFrame{
+					SampleSubset: &SampleSubset{
+						SampleName: "my_sample",
+						Name:       "smoke",
+						Attributes: cty.ObjectVal(map[string]cty.Value{
+							"foo":   cty.StringVal("bar"),
+							"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+						}),
+						Matrix: &Matrix{Vectors: []*Vector{
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+						}},
+					},
+					Matrix: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+						NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+					}},
+				}
+			},
+		},
+		"subset has matrix but subset frame has no matrix": {
+			in: func() *SampleSubsetFrame {
+				return &SampleSubsetFrame{
+					SampleSubset: &SampleSubset{
+						SampleName: "my_sample",
+						Name:       "smoke",
+						Attributes: cty.ObjectVal(map[string]cty.Value{
+							"foo":   cty.StringVal("bar"),
+							"hello": cty.TupleVal([]cty.Value{cty.StringVal("ohai"), cty.StringVal("howdy")}),
+						}),
+						Matrix: &Matrix{Vectors: []*Vector{
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "amd64"), NewElement("primary_backend", "consul")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+							NewVector(NewElement("arch", "arm64"), NewElement("primary_backend", "raft")),
+						}},
+					},
+				}
+			},
+			shouldFail: true,
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+			if test.shouldFail {
+				require.Error(t, test.in().Validate())
+			} else {
+				require.NoError(t, test.in().Validate())
+			}
+		})
+	}
 }

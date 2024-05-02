@@ -5,6 +5,7 @@ package acceptance
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/hashicorp/enos/internal/ui/machine"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
 
@@ -26,7 +28,31 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 		fail   bool
 	}{
 		{
-			dir: "sample_observe",
+			dir: "invalid_scenarios/sample_empty_frame",
+			filter: &pb.Sample_Filter{
+				Sample: &pb.Ref_Sample{
+					Id: &pb.Sample_ID{
+						Name: "smoke_empty_frame",
+					},
+				},
+				Seed:        1234,
+				MaxElements: 1,
+				MinElements: 1,
+			},
+			out: &pb.ObserveSampleResponse{
+				Diagnostics: []*pb.Diagnostic{},
+				Decode: &pb.DecodeResponse{
+					Diagnostics: []*pb.Diagnostic{
+						{
+							Summary: "the sampling frame for smoke_empty_frame/smoke is invalid: perhaps the matrix variants specified in the subset matrix exclude all possible combinations:\n[arch:not_a_variant]",
+						},
+					},
+				},
+			},
+			fail: true,
+		},
+		{
+			dir: "scenarios/sample_observe",
 			filter: &pb.Sample_Filter{
 				Sample: &pb.Ref_Sample{
 					Id: &pb.Sample_ID{
@@ -144,7 +170,7 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)
 
-			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
+			path, err := filepath.Abs(filepath.Join(".", test.dir))
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario sample observe %s --chdir %s --format json --min %d --max %d --seed %d",
 				test.filter.GetSample().GetId().GetName(),
@@ -154,16 +180,30 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 				test.filter.GetSeed(),
 			)
 			fmt.Println(path)
-			out, err := enos.run(context.Background(), cmd)
+			stdout, stderr, err := enos.run(context.Background(), cmd)
 			if test.fail {
 				require.Error(t, err)
+
+				got := &pb.ObserveSampleResponse{}
+				require.NoErrorf(t, protojson.Unmarshal(stdout, got), string(stdout))
+				require.Len(t, got.GetDiagnostics(), len(test.out.GetDiagnostics()))
+				require.Len(t, got.GetDecode().GetDiagnostics(), len(test.out.GetDecode().GetDiagnostics()))
+				for i, d := range test.out.GetDiagnostics() {
+					require.Equal(t, got.GetDiagnostics()[i].GetSummary(), d.GetSummary())
+				}
+				for i, d := range test.out.GetDecode().GetDiagnostics() {
+					require.Equal(t, got.GetDecode().GetDiagnostics()[i].GetSummary(), d.GetSummary())
+				}
+				errMsg := &machine.ErrJSON{}
+				require.NoError(t, json.Unmarshal(stderr, errMsg))
+				require.Len(t, errMsg.Errors, 1)
 
 				return
 			}
 
 			require.NoError(t, err)
 			got := &pb.ObserveSampleResponse{}
-			require.NoError(t, protojson.Unmarshal(out, got))
+			require.NoError(t, protojson.Unmarshal(stdout, got))
 			require.Len(t, got.GetObservation().GetElements(), len(test.out.GetObservation().GetElements()))
 			for i := range test.out.GetObservation().GetElements() {
 				require.Equal(t, test.out.GetObservation().GetElements()[i].String(), got.GetObservation().GetElements()[i].String())

@@ -584,11 +584,15 @@ message GetVersionResponse {
 message ValidateScenariosConfigurationRequest {
   Workspace workspace = 1;
   Scenario.Filter filter = 2;
+  Sample.Filter sample_filter = 3;
+  bool no_validate_scenarios = 4;
+  bool no_validate_samples = 5;
 }
 
 message ValidateScenariosConfigurationResponse {
   repeated Diagnostic diagnostics = 1;
   DecodeResponse decode = 2;
+  DecodeResponse sample_decode = 3;
 }
 
 message ListScenariosRequest {

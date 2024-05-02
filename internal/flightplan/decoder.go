@@ -267,7 +267,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 
 // Decode decodes the HCL into a flight plan.
 //
-//nolint:gocyclop,cyclop // it's a complex func
+//nolint:cyclop // it's a complex func
 func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	diags := hcl.Diagnostics{}
 

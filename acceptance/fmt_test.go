@@ -26,7 +26,7 @@ func TestAcc_Cmd_Fmt(t *testing.T) {
 	require.NoError(t, err)
 
 	cmd := fmt.Sprintf("fmt %s -d -c --format json", path)
-	out, err := enos.run(context.Background(), cmd)
+	out, _, err := enos.run(context.Background(), cmd)
 	target := &exec.ExitError{}
 	require.Error(t, err)
 	if errors.As(err, &target) {

@@ -4,6 +4,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 
@@ -80,8 +81,45 @@ func (s *SampleSubsetFrame) Size() int32 {
 		return int32(len(s.Matrix.GetVectors()))
 	}
 
-	// We don't have a matrix so our size can only be a singular scenario
+	// If our sample subset has been configured with a matrix but we don't, that means that our
+	// filter did not match any variants in subset frame. The most likely reason for this is that
+	// we've configured our sample subset with invalid variants. Since there's not matching variants
+	// our frame size is zero.
+	if s.SampleSubset.Matrix != nil && len(s.SampleSubset.Matrix.Vectors) > 0 {
+		return 0
+	}
+
+	// We don't have a matrix and neither does our subset so our size can only be a singular scenario
+	// that doesn't include vaiants.
 	return int32(1)
+}
+
+// Validate that a sample frame is capable of being used to sample from.
+func (s *SampleSubsetFrame) Validate() error {
+	if s == nil {
+		return errors.New("sample subset frame has not been initialized")
+	}
+
+	if s.SampleSubset == nil {
+		return errors.New("sample subset frame is missing reference to sample subset")
+	}
+
+	if s.Size() < 1 {
+		msg := fmt.Sprintf("the sampling frame for %s/%s is invalid",
+			s.SampleSubset.SampleName,
+			s.SampleSubset.Name,
+		)
+
+		if s.SampleSubset != nil && s.SampleSubset.Matrix != nil && len(s.SampleSubset.Matrix.Vectors) > 0 {
+			msg = fmt.Sprintf("%s: perhaps the matrix variants specified in the subset matrix exclude all possible combinations:\n%s",
+				msg, s.SampleSubset.Matrix.String(),
+			)
+		}
+
+		return errors.New(msg)
+	}
+
+	return nil
 }
 
 // Size returns the total size of elements in the frame.

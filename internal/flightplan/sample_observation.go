@@ -128,7 +128,7 @@ func (s *SampleObservationReq) Observe(ctx context.Context) (*pb.Sample_Observat
 	}
 
 	// Get the sample frame.
-	frame, decRes := s.Frame(ctx, s.Rand)
+	frame, decRes := s.Frame(ctx)
 	if diagnostics.HasFailed(
 		s.Ws.GetTfExecCfg().GetFailOnWarnings(),
 		decRes.GetDiagnostics(),
@@ -154,98 +154,9 @@ func (s *SampleObservationReq) Observe(ctx context.Context) (*pb.Sample_Observat
 	return res, decRes
 }
 
-// getSample decodes the samples from the flightplan and selects the sample from the filter.
-func (s *SampleObservationReq) getSample(ctx context.Context) (*Sample, *pb.DecodeResponse) {
-	decRes := &pb.DecodeResponse{}
-
-	if s.Ws == nil {
-		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured workspace"))
-
-		return nil, decRes
-	}
-
-	if s.Filter == nil {
-		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured filter"))
-
-		return nil, decRes
-	}
-
-	sampleName := s.Filter.GetSample().GetId().GetName()
-	if sampleName == "" {
-		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a sample name in the filter"))
-
-		return nil, decRes
-	}
-
-	efp := s.Ws.GetFlightplan()
-	if efp == nil {
-		decRes.Diagnostics = diagnostics.FromErr(errors.New("cannot sample without a configured flightplan"))
-
-		return nil, decRes
-	}
-
-	// Try and locate the sample we're trying to observe.
-	sampleFP, decRes := DecodeProto(
-		ctx,
-		s.Ws.GetFlightplan(),
-		DecodeTargetSamples,
-		nil,
-	)
-	if diagnostics.HasFailed(
-		s.Ws.GetTfExecCfg().GetFailOnWarnings(),
-		decRes.GetDiagnostics(),
-	) {
-		return nil, decRes
-	}
-
-	if sampleFP == nil || len(sampleFP.Samples) < 1 {
-		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("no sample found with name %s", sampleName))
-
-		return nil, decRes
-	}
-
-	var sample *Sample
-	for i := range sampleFP.Samples {
-		if sampleFP.Samples[i].Ref().GetId().GetName() == sampleName {
-			sample = sampleFP.Samples[i]
-			break
-		}
-	}
-
-	if sample == nil {
-		decRes.Diagnostics = diagnostics.FromErr(fmt.Errorf("no sample found with name %s", sampleName))
-
-		return nil, decRes
-	}
-
-	return sample, nil
-}
-
 // Frame returns the valid sample Frame.
-func (s *SampleObservationReq) Frame(ctx context.Context, r *rand.Rand) (*SampleFrame, *pb.DecodeResponse) {
-	f := &SampleFrame{}
-
-	sample, decRes := s.getSample(ctx)
-	if decRes == nil {
-		decRes = &pb.DecodeResponse{}
-	}
-	if diagnostics.HasFailed(
-		s.Ws.GetTfExecCfg().GetFailOnWarnings(),
-		decRes.GetDiagnostics(),
-	) {
-		return f, decRes
-	}
-
-	if sample == nil {
-		return f, decRes // getSample handles adding diagnostics if we don't get a sample
-	}
-
-	frame, decRes2 := sample.Frame(ctx, s.Ws, s.Filter)
-	if decRes2 != nil {
-		decRes.Diagnostics = append(decRes.GetDiagnostics(), decRes2.GetDiagnostics()...)
-	}
-
-	return frame, decRes
+func (s *SampleObservationReq) Frame(ctx context.Context) (*SampleFrame, *pb.DecodeResponse) {
+	return decodeAndGetSampleFrame(ctx, s.Ws, s.Filter)
 }
 
 // Size is the length of the our SubsetObservations.

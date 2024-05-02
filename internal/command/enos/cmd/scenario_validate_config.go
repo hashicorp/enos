@@ -12,13 +12,21 @@ import (
 )
 
 func newScenarioValidateConfigCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:               "validate [FILTER]",
+	scenarioValidateCmd := &cobra.Command{
+		Use:               "validate [SCENARIO FILTER] <args>",
 		Short:             "Validate configuration",
-		Long:              "Validate all scenario and variant configurations",
+		Long:              "Validate enos flightplan configuration",
 		RunE:              runScenarioValidateCfgCmd,
 		ValidArgsFunction: scenarioNameCompletion,
 	}
+
+	scenarioValidateCmd.PersistentFlags().StringSliceVarP(&scenarioState.sampleFilter.OnlySubsets, "include", "i", nil, "Limit the sample frame to the given subset(s)")
+	scenarioValidateCmd.PersistentFlags().StringSliceVarP(&scenarioState.sampleFilter.ExcludeSubsets, "exclude", "e", nil, "Exclude the given subset(s) from the sample frame")
+	scenarioValidateCmd.PersistentFlags().StringVarP(&scenarioState.sampleFilter.SampleName, "sample-name", "s", "", "Focus on a sample by name")
+	scenarioValidateCmd.PersistentFlags().BoolVar(&scenarioState.noValidateScenarios, "no-scenarios", false, "Do not validate scenarios")
+	scenarioValidateCmd.PersistentFlags().BoolVar(&scenarioState.noValidateSamples, "no-samples", false, "Do not validate scenario samples")
+
+	return scenarioValidateCmd
 }
 
 // runScenarioValidateCfgCmd is the function that validates all flight plan configuration.
@@ -38,7 +46,10 @@ func runScenarioValidateCfgCmd(cmd *cobra.Command, args []string) error {
 			Workspace: &pb.Workspace{
 				Flightplan: scenarioState.protoFp,
 			},
-			Filter: sf.Proto(),
+			Filter:              sf.Proto(),
+			SampleFilter:        scenarioState.sampleFilter.Proto(),
+			NoValidateSamples:   scenarioState.noValidateSamples,
+			NoValidateScenarios: scenarioState.noValidateScenarios,
 		},
 	)
 	if err != nil {

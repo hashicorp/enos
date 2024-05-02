@@ -40,15 +40,15 @@ build-race:
 
 .PHONY: test
 test:
-	${GORACE} go test -race ./... -v $(TESTARGS) -timeout=5m -parallel=4
+	${GORACE} go test -race ./... $(TESTARGS) -timeout=5m -parallel=4
 
 .PHONY: test-acc
 test-acc: build-race
-	${TEST_ACC} ${GORACE} ENOS_BINARY_PATH=${BUILD_BINARY_PATH} go test -race ./... -v $(TESTARGS) -timeout 120m
+	${TEST_ACC} ${GORACE} ENOS_BINARY_PATH=${BUILD_BINARY_PATH} go test -race ./... $(TESTARGS) -timeout 120m
 
 .PHONY: test-acc-ext
 test-acc-ext: build-race
-	${TEST_ACC_EXT} ${GORACE} ENOS_BINARY_PATH=${BUILD_BINARY_PATH} go test -race ./... -v $(TESTARGS) -timeout 120m
+	${TEST_ACC_EXT} ${GORACE} ENOS_BINARY_PATH=${BUILD_BINARY_PATH} go test -race ./... $(TESTARGS) -timeout 120m
 
 .PHONY: lint
 lint: lint-golang lint-proto

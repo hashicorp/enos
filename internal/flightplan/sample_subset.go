@@ -77,7 +77,11 @@ func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubs
 
 	// We we didn't find any scenarios matching the filter we don't have a frame.
 	if fp == nil || fp.ScenarioBlocks == nil || len(fp.ScenarioBlocks) < 1 {
-		return nil, nil
+		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(
+			fmt.Errorf("no scenarios found matching scenario %s", sf.Name),
+		)...)
+
+		return nil, decRes
 	}
 
 	// Make sure we only found one scenario block with our filter.

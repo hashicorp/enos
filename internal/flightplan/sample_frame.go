@@ -5,6 +5,7 @@ package flightplan
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/random"
 	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
 )
@@ -314,10 +316,33 @@ func (s *SampleFrame) Keys() []string {
 	return keys
 }
 
+// Validate validates the sample frame by ensuring that at least one subset frame exists and is
+// valid.
+func (s *SampleFrame) Validate() error {
+	if s == nil {
+		return errors.New("sample frame has not been initialized")
+	}
+
+	if s.SubsetFrames == nil || len(s.SubsetFrames) < 1 {
+		return errors.New("sample frame does not have any subsets")
+	}
+
+	var err error
+	for _, sframe := range s.SubsetFrames {
+		err = errors.Join(err, sframe.Validate())
+	}
+
+	return err
+}
+
 // FilterValidate compares the sample frame with our filter configuration settings. It returns a
 // boolean if we should return the entire frame. It will raise an error if our frame is unable to
 // meet out filter configuration.
 func (s *SampleFrame) FilterValidate() (bool, error) {
+	if err := s.Validate(); err != nil {
+		return false, err
+	}
+
 	min, max, err := s.FilterMinMax()
 	if err != nil {
 		return false, err
@@ -423,4 +448,35 @@ func sampleElementsFor(
 	}
 
 	return res
+}
+
+// decodeAndGetSampleFrame decodes the samples from the flightplan and gets the frame from the sample.
+func decodeAndGetSampleFrame(
+	ctx context.Context,
+	ws *pb.Workspace,
+	filter *pb.Sample_Filter,
+) (*SampleFrame, *pb.DecodeResponse) {
+	f := &SampleFrame{}
+
+	sample, decRes := decodeAndFindSample(ctx, ws, filter)
+	if decRes == nil {
+		decRes = &pb.DecodeResponse{}
+	}
+	if diagnostics.HasFailed(
+		ws.GetTfExecCfg().GetFailOnWarnings(),
+		decRes.GetDiagnostics(),
+	) {
+		return f, decRes
+	}
+
+	if sample == nil {
+		return f, decRes // getSample handles adding diagnostics if we don't get a sample
+	}
+
+	frame, decRes2 := sample.Frame(ctx, ws, filter)
+	if decRes2 != nil {
+		decRes.Diagnostics = append(decRes.GetDiagnostics(), decRes2.GetDiagnostics()...)
+	}
+
+	return frame, decRes
 }

@@ -52,7 +52,7 @@ func TestAcc_Cmd_Scenario_Sample_List(t *testing.T) {
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario sample list --chdir %s --format json", path)
 			fmt.Println(path)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			if test.fail {
 				require.Error(t, err)
 

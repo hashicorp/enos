@@ -27,7 +27,7 @@ type View struct {
 	ui       *terminal.UI
 }
 
-type errJSON struct {
+type ErrJSON struct {
 	Errors []string `json:"errors"`
 }
 
@@ -253,7 +253,7 @@ func (v *View) ShowOperationResponses(res *pb.OperationResponses) error {
 // writeError does our best to write the given error to our stderr.
 func (v *View) writeError(err error) error {
 	tryJSON := func(err error) error {
-		msg := &errJSON{
+		msg := &ErrJSON{
 			Errors: []string{err.Error()},
 		}
 

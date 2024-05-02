@@ -114,7 +114,7 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 			}
 
 			cmd := fmt.Sprintf("scenario generate --chdir %s --out %s %s --format json", path, outDir, filter)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			require.NoErrorf(t, err, string(out))
 
 			expected := &pb.OperationResponses{

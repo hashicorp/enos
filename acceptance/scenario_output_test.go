@@ -74,16 +74,16 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 
 			t.Cleanup(func() {
 				cmd := fmt.Sprintf("scenario destroy --chdir %s --out %s %s", path, outDir, filter)
-				out, err := enos.run(context.Background(), cmd)
+				out, _, err := enos.run(context.Background(), cmd)
 				require.NoError(t, err, string(out))
 			})
 
 			cmd := fmt.Sprintf("scenario launch --chdir %s --out %s %s", path, outDir, filter)
-			out, err := enos.run(context.Background(), cmd)
+			out, _, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			cmd = fmt.Sprintf(`scenario output --name step_reference_unknown --chdir %s --out %s --format json %s`, path, outDir, filter)
-			out, err = enos.run(context.Background(), cmd)
+			out, _, err = enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
 			expected := &pb.OperationResponses{

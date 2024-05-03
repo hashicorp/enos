@@ -108,6 +108,7 @@ linters:
     - maintidx
     - maligned
     - musttag
+    - mnd
     - nakedret
     - nestif
     - nonamedreturns

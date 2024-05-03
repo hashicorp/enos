@@ -27,6 +27,8 @@ class Enos < Formula
 
   def install
     bin.install "enos"
+
+    generate_completions_from_executable(bin/"enos", "completion")
   end
 
   test do

@@ -56,7 +56,7 @@ jobs:
       GH_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
       TARGET_REPO: hashicorp/homebrew-tap
       TARGET_REPO_FILEPATH: homebrew-tap-checkout
-      BASE_BRANCH: main
+      BASE_BRANCH: master
       PR_BRANCH: enos_homebrew_formula_update_v${{ inputs.version }}
       PR_TITLE: "Homebrew formula update for Enos version v${{ inputs.version }}"
       PR_BODY: "This is an automatically generated PR to update the Homebrew formula for Enos after a release has been completed. It must be manually approved and merged by a reviewer."

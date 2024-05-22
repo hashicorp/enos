@@ -239,6 +239,7 @@ func (md *matrixDecoder) decodeAndVerifyMatrixBlock(
 	if ctx.Variables == nil {
 		ctx.Variables = map[string]cty.Value{}
 	}
+	vecs := map[string]*Vector{}
 	for _, attr := range md.sortAttributesByStartByte(attrs) {
 		val, vec, moreDiags := md.decodeMatrixAttribute(ctx, attr)
 		diags = diags.Extend(moreDiags)
@@ -248,9 +249,17 @@ func (md *matrixDecoder) decodeAndVerifyMatrixBlock(
 
 		variants[attr.Name] = val
 		ctx.Variables["matrix"] = cty.ObjectVal(variants)
+		vecs[attr.Name] = vec
+	}
 
-		vec.Sort()
-		nm.AddVector(vec)
+	// Make sure sort the variants by name
+	names := []string{}
+	for name := range vecs {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		nm.AddVector(vecs[name])
 	}
 
 	return nm, diags

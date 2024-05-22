@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // terraformExec executes any Terraform sub-command within the context of a generated

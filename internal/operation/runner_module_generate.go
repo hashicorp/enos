@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/generate"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // moduleGenerate takes a context, request and event sender and generates a Terraform

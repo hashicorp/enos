@@ -4,7 +4,7 @@
 package status
 
 import (
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ListSamples returns the status response for a sample list.

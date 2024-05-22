@@ -6,7 +6,7 @@ package status
 import (
 	"fmt"
 
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // Format returns the format status.

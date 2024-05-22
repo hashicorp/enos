@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ShowVersion shows the version information.

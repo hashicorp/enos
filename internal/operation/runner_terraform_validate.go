@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // terraformValidate validates a Terraform module.

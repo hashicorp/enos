@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // SampleObservationReq is a request to take an observation of a sample set.

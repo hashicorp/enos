@@ -12,7 +12,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 	hcl "github.com/hashicorp/hcl/v2"
 )
 

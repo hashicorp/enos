@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/enos/internal/ui/basic"
 	"github.com/hashicorp/enos/internal/ui/html"
 	"github.com/hashicorp/enos/internal/ui/machine"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 var (

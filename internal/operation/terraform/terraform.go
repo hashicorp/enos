@@ -15,7 +15,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/operation/command"
 	"github.com/hashicorp/enos/internal/ui/terminal"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 

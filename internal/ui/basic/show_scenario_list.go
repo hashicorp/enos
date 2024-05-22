@@ -6,7 +6,7 @@ package basic
 import (
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ShowScenarioList shows the a list of scenarios.

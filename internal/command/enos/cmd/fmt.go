@@ -15,7 +15,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 var fmtCfg = &pb.FormatRequest_Config{}

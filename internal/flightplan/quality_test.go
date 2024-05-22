@@ -7,10 +7,10 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
-
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
+
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // Test_Decode_Quality tests module decoding.

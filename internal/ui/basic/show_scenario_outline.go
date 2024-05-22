@@ -11,7 +11,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func indent(width int, in string) string {

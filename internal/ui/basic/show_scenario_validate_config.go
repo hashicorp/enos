@@ -5,7 +5,7 @@ package basic
 
 import (
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ShowScenariosValidateConfig shows the flight plan validation response.

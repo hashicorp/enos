@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/ui/status"
 	"github.com/hashicorp/enos/internal/ui/terminal"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // View is our basic terminal CLI view.

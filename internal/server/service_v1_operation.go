@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // Operation takes an operation request with an operation ID and returns

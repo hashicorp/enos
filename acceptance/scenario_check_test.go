@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // TestAcc_Cmd_Scenario_Check tests that a scenario can be checked with Terraform.

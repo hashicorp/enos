@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func TestAcc_Cmd_Scenario_List(t *testing.T) {

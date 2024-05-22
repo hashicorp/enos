@@ -14,7 +14,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func Test_SampleFrame_Ref(t *testing.T) {

@@ -19,7 +19,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/random"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // A sample field is a collection of subset fields one-or-more subsets.

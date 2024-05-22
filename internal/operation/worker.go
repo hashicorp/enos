@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 	"github.com/hashicorp/go-hclog"
 )
 

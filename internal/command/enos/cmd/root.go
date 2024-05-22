@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/enos/internal/server"
 	uipkg "github.com/hashicorp/enos/internal/ui"
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 var rootCmd = &cobra.Command{

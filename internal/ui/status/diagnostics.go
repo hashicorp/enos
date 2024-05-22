@@ -5,7 +5,7 @@ package status
 
 import (
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ResWithDiags is an interface of a response that has diagnostics.

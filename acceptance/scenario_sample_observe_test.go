@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/hashicorp/enos/internal/ui/machine"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {

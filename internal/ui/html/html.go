@@ -12,7 +12,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/ui/basic"
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 //go:embed template/*

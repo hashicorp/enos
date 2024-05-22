@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ShowOperationEvent shows the human friendly view on an operation event.

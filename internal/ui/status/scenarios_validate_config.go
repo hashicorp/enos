@@ -3,7 +3,7 @@
 
 package status
 
-import "github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+import "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 
 // ScenariosValidateConfig returns the status response for a flight plan validation.
 func ScenariosValidateConfig(failOnWarn bool, res *pb.ValidateScenariosConfigurationResponse) error {

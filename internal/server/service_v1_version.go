@@ -6,7 +6,7 @@ package server
 import (
 	"context"
 
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 	"github.com/hashicorp/enos/version"
 )
 

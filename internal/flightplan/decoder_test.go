@@ -17,7 +17,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"golang.org/x/net/context"
 
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 	hcl "github.com/hashicorp/hcl/v2"
 )
 

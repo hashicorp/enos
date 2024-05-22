@@ -9,7 +9,7 @@ import (
 	"math/rand"
 
 	"github.com/hashicorp/enos/internal/random"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // SampleSubsetFrame is filtered frame of a subset.

@@ -4,7 +4,7 @@
 package diagnostics
 
 import (
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func Status(failOnWarn bool, diags ...*pb.Diagnostic) pb.Operation_Status {

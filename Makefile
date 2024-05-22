@@ -24,7 +24,7 @@ generate: generate-proto
 
 .PHONY: generate-proto
 generate-proto:
-	pushd proto/hashicorp/enos/v1 && buf generate
+	buf generate
 
 .PHONY: build
 build:

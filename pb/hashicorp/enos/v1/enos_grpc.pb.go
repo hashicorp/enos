@@ -5,7 +5,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: enos.proto
+// source: hashicorp/enos/v1/enos.proto
 
 package pb
 
@@ -716,5 +716,5 @@ var EnosService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "enos.proto",
+	Metadata: "hashicorp/enos/v1/enos.proto",
 }

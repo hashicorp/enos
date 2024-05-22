@@ -6,7 +6,7 @@ package operation
 import (
 	"path/filepath"
 
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	"github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func isAbs(path string) (string, error) {

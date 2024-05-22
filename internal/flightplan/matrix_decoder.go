@@ -111,9 +111,15 @@ func (md *matrixDecoder) decodeMatrix(
 	// Let's decode our matrix block into a matrix
 	block = mBlocks[0]
 
+	// We'll use our own copy of the eval context so that we can be sure our 'matrix' eval context
+	// doesn't leak out.
+	evalCtx := ctx.NewChild()
+	evalCtx.Variables = ctx.Variables
+	evalCtx.Functions = ctx.Functions
+
 	// Each attribute in the matrix should be a variant name whose value must
 	// be a list of strings. Convert the value into a matrix vector and add it.
-	matrix, moreDiags := md.decodeMatrixAttributes(ctx, block.Body, false)
+	matrix, moreDiags := md.decodeAndVerifyMatrixBlock(evalCtx, block.Body, false)
 	diags = diags.Extend(moreDiags)
 	if moreDiags != nil && moreDiags.HasErrors() {
 		return nil, diags
@@ -144,7 +150,7 @@ func (md *matrixDecoder) decodeMatrix(
 	for _, mBlock := range blockC.Blocks {
 		switch mBlock.Type {
 		case "include":
-			iMatrix, moreDiags := md.decodeMatrixAttributes(ctx, mBlock.Body, true)
+			iMatrix, moreDiags := md.decodeAndVerifyMatrixBlock(evalCtx, mBlock.Body, true)
 			diags = diags.Extend(moreDiags)
 			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
@@ -155,10 +161,10 @@ func (md *matrixDecoder) decodeMatrix(
 			res.IncludeProducts = append(res.IncludeProducts, iMatrixProduct)
 
 			for _, vec := range iMatrixProduct.GetVectors() {
-				res.FinalProduct.AddVector(vec)
+				res.FinalProduct.AddVectorSorted(vec)
 			}
 		case "exclude":
-			eMatrix, moreDiags := md.decodeMatrixAttributes(ctx, mBlock.Body, true)
+			eMatrix, moreDiags := md.decodeAndVerifyMatrixBlock(evalCtx, mBlock.Body, true)
 			diags = diags.Extend(moreDiags)
 			if moreDiags != nil && moreDiags.HasErrors() {
 				continue
@@ -175,6 +181,8 @@ func (md *matrixDecoder) decodeMatrix(
 						Subject:  hcl.RangeBetween(mBlock.LabelRanges[0], mBlock.LabelRanges[1]).Ptr(),
 						Context:  mBlock.DefRange.Ptr(),
 					})
+
+					continue
 				}
 				excludes = append(excludes, ex)
 			}
@@ -202,11 +210,12 @@ func (md *matrixDecoder) decodeMatrix(
 	return res, diags
 }
 
-// decodeMatrixAttributes takes an HCL EvalContext, an HCL Block, and a boolean that determines whether
-// or not the block must include attributes only. It then decodes the blocks attributes as if they
-// are matrix vectors and returns a new matrix and any diagnostics. Only the initial decoding is
-// performed. Additional sub-block, includes, excludes, products, etc. are up to the caller.
-func (md *matrixDecoder) decodeMatrixAttributes(
+// decodeAndVerifyMatrixBlock takes an HCL EvalContext, an HCL Block, and a boolean that determines
+// whether or not the block must include attributes only. It then decodes the blocks attributes as
+// if they are matrix vectors and returns a new matrix and any diagnostics. Only the initial
+// decoding is performed. Additional sub-block, includes, excludes, products, etc. are up to the
+// caller.
+func (md *matrixDecoder) decodeAndVerifyMatrixBlock(
 	ctx *hcl.EvalContext,
 	body hcl.Body,
 	attrOnlyBlock bool,
@@ -224,29 +233,39 @@ func (md *matrixDecoder) decodeMatrixAttributes(
 		}
 	}
 
-	for _, attr := range md.sortAttributes(attrs) {
-		vec, moreDiags := md.decodeMatrixAttribute(ctx, attr)
+	// Make the values of each attribute available in the eval context as we decode. This allows
+	// subsequent values to refer to prior values.
+	variants := map[string]cty.Value{}
+	if ctx.Variables == nil {
+		ctx.Variables = map[string]cty.Value{}
+	}
+	for _, attr := range md.sortAttributesByStartByte(attrs) {
+		val, vec, moreDiags := md.decodeMatrixAttribute(ctx, attr)
 		diags = diags.Extend(moreDiags)
 		if moreDiags != nil && moreDiags.HasErrors() {
 			continue
 		}
 
+		variants[attr.Name] = val
+		ctx.Variables["matrix"] = cty.ObjectVal(variants)
+
+		vec.Sort()
 		nm.AddVector(vec)
 	}
 
 	return nm, diags
 }
 
-// Go maps are intentionally unordered. We need to sort our attributes
-// so that our variants elements are deterministic every time we
-// decode our flightplan.
-func (md *matrixDecoder) sortAttributes(attrs map[string]*hcl.Attribute) []*hcl.Attribute {
+// Go maps are intentionally unordered. We need to sort our attributes by start byte so that we can
+// continue evaluate them in the order in which they were defined as that will allow us to populate
+// attribute values in the eval context as we do for variables, locals, and globals.
+func (md *matrixDecoder) sortAttributesByStartByte(attrs map[string]*hcl.Attribute) []*hcl.Attribute {
 	sorted := []*hcl.Attribute{}
 	for _, attr := range attrs {
 		sorted = append(sorted, attr)
 	}
 	slices.SortStableFunc(sorted, func(a, b *hcl.Attribute) int {
-		return cmp.Compare(a.Name, b.Name)
+		return cmp.Compare(a.Range.Start.Byte, b.Range.Start.Byte)
 	})
 
 	return sorted
@@ -255,18 +274,18 @@ func (md *matrixDecoder) sortAttributes(attrs map[string]*hcl.Attribute) []*hcl.
 func (md *matrixDecoder) decodeMatrixAttribute(
 	ctx *hcl.EvalContext,
 	attr *hcl.Attribute,
-) (*Vector, hcl.Diagnostics) {
+) (cty.Value, *Vector, hcl.Diagnostics) {
 	diags := hcl.Diagnostics{}
 	vec := NewVector()
 
 	val, moreDiags := attr.Expr.Value(ctx)
 	diags = diags.Extend(moreDiags)
 	if moreDiags != nil && moreDiags.HasErrors() {
-		return vec, diags
+		return val, vec, diags
 	}
 
 	if !val.CanIterateElements() {
-		return vec, diags.Append(&hcl.Diagnostic{
+		return val, vec, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "matrix attribute value must be a list of strings",
 			Detail:   fmt.Sprintf("expected value for %s to be a list of strings, found %s", attr.Name, val.Type().GoString()),
@@ -276,7 +295,7 @@ func (md *matrixDecoder) decodeMatrixAttribute(
 	}
 
 	if len(val.AsValueSlice()) == 0 {
-		return vec, diags.Append(&hcl.Diagnostic{
+		return val, vec, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "matrix attribute values cannot be empty lists",
 			Subject:  attr.NameRange.Ptr(),
@@ -286,7 +305,7 @@ func (md *matrixDecoder) decodeMatrixAttribute(
 
 	for _, elm := range val.AsValueSlice() {
 		if !elm.Type().Equals(cty.String) {
-			return vec, diags.Append(&hcl.Diagnostic{
+			return val, vec, diags.Append(&hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "matrix attribute value must be a list of strings",
 				Detail:   "found element with type " + elm.GoString(),
@@ -298,5 +317,5 @@ func (md *matrixDecoder) decodeMatrixAttribute(
 		vec.Add(NewElement(attr.Name, elm.AsString()))
 	}
 
-	return vec, diags
+	return val, vec, diags
 }

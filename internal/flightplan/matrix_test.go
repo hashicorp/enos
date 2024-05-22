@@ -190,7 +190,7 @@ scenario "nighttime" {
     onefish = ["redfish", "bluefish"]
 
     include {
-      cathat  = ["sally", "conrad"]
+      cathat  = [for p in matrix.cathat : p if p == "thing1"]
       onefish = ["twofish"]
     }
 
@@ -225,7 +225,7 @@ scenario "nighttime" {
 						Scenarios: []*Scenario{
 							{
 								Name:         "nighttime",
-								Variants:     NewVector(NewElement("cathat", "conrad"), NewElement("onefish", "twofish")),
+								Variants:     NewVector(NewElement("cathat", "thing1"), NewElement("onefish", "twofish")),
 								TerraformCLI: DefaultTerraformCLI(),
 								Steps: []*ScenarioStep{
 									{
@@ -234,25 +234,7 @@ scenario "nighttime" {
 											Name:   "books",
 											Source: modulePath,
 											Attrs: map[string]cty.Value{
-												"cathat":  testMakeStepVarValue(cty.StringVal("conrad")),
-												"onefish": testMakeStepVarValue(cty.StringVal("twofish")),
-											},
-										},
-									},
-								},
-							},
-							{
-								Name:         "nighttime",
-								Variants:     NewVector(NewElement("cathat", "sally"), NewElement("onefish", "twofish")),
-								TerraformCLI: DefaultTerraformCLI(),
-								Steps: []*ScenarioStep{
-									{
-										Name: "read",
-										Module: &Module{
-											Name:   "books",
-											Source: modulePath,
-											Attrs: map[string]cty.Value{
-												"cathat":  testMakeStepVarValue(cty.StringVal("sally")),
+												"cathat":  testMakeStepVarValue(cty.StringVal("thing1")),
 												"onefish": testMakeStepVarValue(cty.StringVal("twofish")),
 											},
 										},

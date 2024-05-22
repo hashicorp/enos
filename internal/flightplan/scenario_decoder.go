@@ -181,8 +181,10 @@ func (d *ScenarioDecoder) decodeScenarioOutline(sb *DecodedScenarioBlock) {
 
 	var vec *Vector
 	m := sb.Matrix()
-	if m != nil || len(m.GetVectors()) > 1 {
-		vec = m.GetVectors()[0]
+	if m != nil {
+		if vecs := m.GetVectors(); len(vecs) > 0 {
+			vec = vecs[0]
+		}
 	}
 
 	oldTargetLevel := d.DecodeTarget

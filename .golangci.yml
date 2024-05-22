@@ -93,7 +93,7 @@ linters:
     - gocyclo
     # disabled for now
     - godox
-    - goerr113
+    - err113
     - gofmt
     - goheader
     - golint

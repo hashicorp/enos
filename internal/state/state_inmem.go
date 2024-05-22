@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/proto"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 var _ State = (*InMemoryState)(nil)

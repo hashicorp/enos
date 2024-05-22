@@ -6,7 +6,7 @@ package server
 import (
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/operation"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // OperationEventStream takes an operation request with an operation ID and streams

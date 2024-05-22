@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/enos/internal/operation/terraform/format"
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 func (v *View) writeInitResponse(init *pb.Terraform_Command_Init_Response) {

@@ -4,7 +4,7 @@
 package status
 
 import (
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // GetVersion returns the get version response.

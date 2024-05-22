@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // terraformApply applys a Terraform module.

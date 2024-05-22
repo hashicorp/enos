@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/enos/internal/ui/terminal"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // View is our basic terminal CLI view.

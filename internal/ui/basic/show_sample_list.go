@@ -5,7 +5,7 @@ package basic
 
 import (
 	"github.com/hashicorp/enos/internal/ui/status"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // ShowSampleList shows the a list of samples.

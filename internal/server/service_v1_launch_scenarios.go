@@ -6,7 +6,7 @@ package server
 import (
 	"context"
 
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // LaunchScenarios generates scenario terraform modules for each scenario

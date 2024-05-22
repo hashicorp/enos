@@ -5,7 +5,7 @@ package status
 
 import (
 	"github.com/hashicorp/enos/internal/diagnostics"
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // Decode returns the status for a fligth plan decode.

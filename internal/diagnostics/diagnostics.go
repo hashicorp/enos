@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	tfjson "github.com/hashicorp/terraform-json"
 
-	"github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
 // HasErrors returns true if any diagnostic has an error severity.

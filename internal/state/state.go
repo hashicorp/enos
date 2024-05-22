@@ -3,7 +3,7 @@
 
 package state
 
-import "github.com/hashicorp/enos/proto/hashicorp/enos/v1/pb"
+import pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 
 // State is our server state.
 type State interface {

@@ -29,8 +29,8 @@
                     {{ scenarioName $outline }}
                   </h4>
                   <!-- Description -->
-                  <p class="lead">
-                    {{scenarioDescription $outline}}
+                  <p class="text-wrap text-break">
+                    <span style="white-space:pre">{{ scenarioDescription $outline}}</span>
                   </p>
                   <!-- Variants -->
                   {{ if scenarioVariants $outline}}
@@ -68,7 +68,7 @@
                       <dl class="row">
                         {{with scenarioVerifies $outline}}{{range $i, $quality := .}}
                         <dt class="col-sm-4">{{$quality.Name}}</dt>
-                        <dd class="col-sm-8">{{$quality.Description}}</dd>
+                        <dd class="col-sm-8"><span style="white-space:pre">{{$quality.Description}}</span></dd>
                         {{end}}
                         {{end}}
                       </dl>
@@ -83,7 +83,11 @@
                       {{with scenarioSteps $outline}}{{range $i, $step := .}}
                       <dl class="row">
                         <dt class="col-sm-4">{{$step.Name}}</dt>
-                        <dd class="col-sm-8">{{$step.Description}}</dd>
+                        <dd class="col-sm-8">
+                          <p class="text-wrap text-break">
+                            <span style="white-space:pre">{{$step.Description}}</span>
+                          </p>
+                        </dd>
                         {{ if scenarioStepVerifies $step }}
                           <dt class="col-sm-4"></dt>
                           <dd class="col-sm-8">
@@ -91,7 +95,7 @@
                             <dl class="row">
                               {{with scenarioStepVerifies $step}}{{range $i, $quality := .}}
                               <dt class="col-sm-5">{{$quality.Name}}</dt>
-                              <dd class="col-sm-7">{{$quality.Description}}</dd>
+                              <dd class="col-sm-7"><span style="white-space:pre">{{$quality.Description}}</span></dd>
                               {{end}}
                               {{end}}
                             </dl>

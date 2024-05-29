@@ -12,8 +12,8 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.20.1
-	github.com/hashicorp/terraform-exec v0.20.0
-	github.com/hashicorp/terraform-json v0.21.0
+	github.com/hashicorp/terraform-exec v0.21.0
+	github.com/hashicorp/terraform-json v0.22.1
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/mitchellh/cli v1.1.5
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db
@@ -22,10 +22,11 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/zclconf/go-cty v1.14.4
+	github.com/zclconf/go-cty-yaml v1.0.3
 	golang.org/x/net v0.25.0
 	golang.org/x/term v0.20.0
 	golang.org/x/text v0.15.0
-	google.golang.org/grpc v1.63.2
+	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
 )
 
@@ -48,10 +49,10 @@ require (
 	github.com/aws/smithy-go v1.14.2 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/color v1.16.0 // indirect
+	github.com/fatih/color v1.17.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-version v1.6.0 // indirect
+	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -71,6 +72,6 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240509183442-62759503f434 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

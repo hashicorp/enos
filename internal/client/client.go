@@ -104,7 +104,6 @@ func (c *Connection) Trace(msg string, args ...any) {
 func Connect(ctx context.Context, opts ...Opt) (*Connection, error) {
 	c := &Connection{
 		DialOpts: []grpc.DialOption{
-			grpc.WithBlock(),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithKeepaliveParams(
 				keepalive.ClientParameters{
@@ -129,7 +128,7 @@ func Connect(ctx context.Context, opts ...Opt) (*Connection, error) {
 	}
 
 	c.Trace("connecting to server", "addr", c.Addr.String())
-	conn, err := grpc.DialContext(ctx, c.Addr.String(), c.DialOpts...)
+	conn, err := grpc.NewClient(c.Addr.String(), c.DialOpts...)
 	if err != nil {
 		return nil, err
 	}

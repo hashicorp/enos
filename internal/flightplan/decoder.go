@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	yaml "github.com/zclconf/go-cty-yaml"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/function/stdlib"
@@ -176,10 +177,16 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			}),
 		},
 		Functions: map[string]function.Function{
+			"abs":                    stdlib.AbsoluteFunc,
 			"absolute":               stdlib.AbsoluteFunc,
 			"abspath":                funcs.AbsPathFunc(d.dir),
 			"add":                    stdlib.AddFunc,
+			"alltrue":                funcs.AllTrueFunc,
 			"and":                    stdlib.AndFunc,
+			"anytrue":                funcs.AnyTrueFunc,
+			"base64decode":           funcs.Base64DecodeFunc,
+			"base64encode":           funcs.Base64EncodeFunc,
+			"base64gzip":             funcs.Base64GzipFunc,
 			"byteslen":               stdlib.BytesLenFunc,
 			"bytessclice":            stdlib.BytesSliceFunc,
 			"can":                    tryfunc.CanFunc,
@@ -196,6 +203,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"divide":                 stdlib.DivideFunc,
 			"element":                stdlib.ElementFunc,
 			"equal":                  stdlib.EqualFunc,
+			"endswith":               funcs.EndsWithFunc,
 			"file":                   funcs.FileFunc,
 			"flatten":                stdlib.FlattenFunc,
 			"floor":                  stdlib.FloorFunc,
@@ -219,6 +227,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"log":                    stdlib.LogFunc,
 			"lookup":                 stdlib.LookupFunc,
 			"lower":                  stdlib.LowerFunc,
+			"matchkeys":              funcs.MatchkeysFunc,
 			"max":                    stdlib.MaxFunc,
 			"merge":                  stdlib.MergeFunc,
 			"min":                    stdlib.MinFunc,
@@ -228,6 +237,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"not":                    stdlib.NotFunc,
 			"notequal":               stdlib.NotEqualFunc,
 			"or":                     stdlib.OrFunc,
+			"one":                    funcs.OneFunc,
 			"parseint":               stdlib.ParseIntFunc,
 			"pow":                    stdlib.PowFunc,
 			"range":                  stdlib.RangeFunc,
@@ -248,18 +258,29 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"slice":                  stdlib.SliceFunc,
 			"sort":                   stdlib.SortFunc,
 			"split":                  stdlib.SplitFunc,
+			"startswith":             funcs.StartsWithFunc,
+			"strcontains":            funcs.StrContainsFunc,
 			"strlen":                 stdlib.StrlenFunc,
 			"substr":                 stdlib.SubstrFunc,
 			"subtract":               stdlib.SubtractFunc,
+			"sum":                    funcs.SumFunc,
+			"textdecodebase64":       funcs.TextDecodeBase64Func,
+			"textencodebase64":       funcs.TextEncodeBase64Func,
 			"timeadd":                stdlib.TimeAddFunc,
+			"timestamp":              funcs.TimestampFunc,
+			"timecmp":                funcs.TimeCmpFunc,
 			"title":                  stdlib.TitleFunc,
+			"transpose":              funcs.TransposeFunc,
 			"trim":                   stdlib.TrimFunc,
 			"trimprefix":             stdlib.TrimPrefixFunc,
 			"trimspace":              stdlib.TrimSpaceFunc,
 			"trimsuffix":             stdlib.TrimSuffixFunc,
 			"try":                    tryfunc.TryFunc,
 			"upper":                  stdlib.UpperFunc,
+			"urlencode":              funcs.URLEncodeFunc,
 			"values":                 stdlib.ValuesFunc,
+			"yamldecode":             yaml.YAMLDecodeFunc,
+			"yamlencode":             yaml.YAMLEncodeFunc,
 			"zipmap":                 stdlib.ZipmapFunc,
 		},
 	}

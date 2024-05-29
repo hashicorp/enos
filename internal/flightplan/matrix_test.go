@@ -195,7 +195,7 @@ scenario "nighttime" {
     }
 
     exclude {
-      cathat  = ["thing1"]
+      cathat  = [for p in matrix.cathat : p if p == "thing1"]
       onefish = ["redfish", "bluefish"]
     }
   }

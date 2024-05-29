@@ -214,7 +214,8 @@ func (md *matrixDecoder) decodeMatrix(
 // whether or not the block must include attributes only. It then decodes the blocks attributes as
 // if they are matrix vectors and returns a new matrix and any diagnostics. Only the initial
 // decoding is performed. Additional sub-block, includes, excludes, products, etc. are up to the
-// caller.
+// caller. Also note that in attr only blocks the 'matrix' eval context will not be created or
+// overwritten from the caller eval context.
 func (md *matrixDecoder) decodeAndVerifyMatrixBlock(
 	ctx *hcl.EvalContext,
 	body hcl.Body,
@@ -236,8 +237,11 @@ func (md *matrixDecoder) decodeAndVerifyMatrixBlock(
 	// Make the values of each attribute available in the eval context as we decode. This allows
 	// subsequent values to refer to prior values.
 	variants := map[string]cty.Value{}
-	if ctx.Variables == nil {
-		ctx.Variables = map[string]cty.Value{}
+	if !attrOnlyBlock {
+		// We might be decoding blocks so we'll create a new matrix eval context with our attributes.
+		if ctx.Variables == nil {
+			ctx.Variables = map[string]cty.Value{}
+		}
 	}
 	vecs := map[string]*Vector{}
 	for _, attr := range md.sortAttributesByStartByte(attrs) {
@@ -247,9 +251,13 @@ func (md *matrixDecoder) decodeAndVerifyMatrixBlock(
 			continue
 		}
 
-		variants[attr.Name] = val
-		ctx.Variables["matrix"] = cty.ObjectVal(variants)
 		vecs[attr.Name] = vec
+
+		if !attrOnlyBlock {
+			// Update our attr eval context if necessary
+			variants[attr.Name] = val
+			ctx.Variables["matrix"] = cty.ObjectVal(variants)
+		}
 	}
 
 	// Make sure sort the variants by name

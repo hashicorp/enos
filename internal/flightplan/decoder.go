@@ -204,7 +204,7 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 			"element":                stdlib.ElementFunc,
 			"equal":                  stdlib.EqualFunc,
 			"endswith":               funcs.EndsWithFunc,
-			"file":                   funcs.FileFunc,
+			"file":                   funcs.FileFunc(d.dir),
 			"flatten":                stdlib.FlattenFunc,
 			"floor":                  stdlib.FloorFunc,
 			"format":                 stdlib.FormatFunc,

@@ -4,7 +4,6 @@
 package flightplan
 
 import (
-	"context"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -68,7 +67,7 @@ func NewFlightPlan(opts ...Opt) (*FlightPlan, error) {
 		TerraformSettings: []*TerraformSetting{},
 		TerraformCLIs:     []*TerraformCLI{},
 		Providers:         []*Provider{},
-		ScenarioBlocks:    DecodedScenarioBlocks{},
+		ScenarioBlocks:    ScenarioBlocks{},
 		Modules:           []*Module{},
 	}
 
@@ -107,7 +106,7 @@ type FlightPlan struct {
 	TerraformSettings []*TerraformSetting
 	TerraformCLIs     []*TerraformCLI
 	Samples           []*Sample
-	ScenarioBlocks    DecodedScenarioBlocks
+	ScenarioBlocks    ScenarioBlocks
 }
 
 func (fp *FlightPlan) Scenarios() []*Scenario {
@@ -502,42 +501,10 @@ func (fp *FlightPlan) decodeModules(ctx *hcl.EvalContext) hcl.Diagnostics {
 	return diags
 }
 
-// decodeScenarios decodes the "scenario" blocks that are defined in the top-level schema.
-func (fp *FlightPlan) decodeScenarios(
-	ctx context.Context,
-	evalCtx *hcl.EvalContext,
-	target DecodeTarget,
-	filter *ScenarioFilter,
-) hcl.Diagnostics {
-	diags := hcl.Diagnostics{}
-	blocks := fp.BodyContent.Blocks.OfType(blockTypeScenario)
-	if len(blocks) < 1 {
-		return nil
-	}
-
-	scenarioDecoder, err := NewScenarioDecoder(
-		WithScenarioDecoderEvalContext(evalCtx),
-		WithScenarioDecoderDecodeTarget(target),
-		WithScenarioDecoderScenarioFilter(filter),
-	)
-	if err != nil {
-		return diags.Append(&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  "unable to initialize scenario decoder",
-			Detail:   err.Error(),
-			Subject:  fp.BodyContent.MissingItemRange.Ptr(),
-		})
-	}
-
-	fp.ScenarioBlocks = scenarioDecoder.DecodeScenarioBlocks(ctx, blocks)
-
-	return diags.Extend(fp.ScenarioBlocks.Diagnostics())
-}
-
 // decodeMatrix takes an eval context and scenario blocks and decodes only the
 // matrix block. It returns a unique matrix with vectors for all unique variant
 // value combinations.
-func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*DecodedMatrices, hcl.Diagnostics) {
+func decodeMatrix(ctx *hcl.EvalContext, block *hcl.Block) (*MatrixBlock, hcl.Diagnostics) {
 	decoder := newMatrixDecoder()
 	return decoder.decodeMatrix(ctx, block)
 }

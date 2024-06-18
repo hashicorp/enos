@@ -23,7 +23,7 @@ func (s *ServiceV1) ListSamples(
 ) {
 	res := &pb.ListSamplesResponse{}
 
-	fp, decRes := flightplan.DecodeProto(
+	fp, _, decRes := flightplan.DecodeProto(
 		ctx,
 		req.GetWorkspace().GetFlightplan(),
 		flightplan.DecodeTargetSamples,

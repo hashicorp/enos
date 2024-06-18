@@ -41,11 +41,9 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 			t.Parallel()
 
 			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
-			tmpDir, err := os.MkdirTemp("/tmp", "enos.check")
-			require.NoError(t, err)
-			t.Cleanup(func() { os.RemoveAll(tmpDir) })
+			tmpDir := t.TempDir()
 			outDir := filepath.Join(tmpDir, test.dir)
-			err = os.MkdirAll(outDir, 0o755)
+			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)
@@ -123,14 +121,11 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 		skipUnlessExtEnabled(), // since we need the random provider
 	)
 
-	tmpDir, err := os.MkdirTemp("/tmp", "enos.validate")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
-
+	tmpDir := t.TempDir()
 	for _, failOnWarnings := range []bool{true, false} {
 		t.Run(fmt.Sprintf("fail_on_warnings_%t", failOnWarnings), func(t *testing.T) {
 			t.Parallel()
-			outDir := filepath.Join(tmpDir, "scenario_generate_has_warnings")
+			outDir := filepath.Join(tmpDir, fmt.Sprintf("scenario_generate_has_warnings_%t", failOnWarnings))
 			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)

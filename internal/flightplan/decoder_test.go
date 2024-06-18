@@ -21,6 +21,119 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 )
 
+// Test_Decode_FlightPlan tests decoding a flight plan.
+func Test_Decode_FlightPlan(t *testing.T) {
+	t.Helper()
+	t.Parallel()
+
+	modulePath, err := filepath.Abs("./tests/simple_module")
+	require.NoError(t, err)
+
+	for _, test := range []struct {
+		desc     string
+		hcl      string
+		expected *FlightPlan
+		fail     bool
+	}{
+		{
+			desc: "minimal viable flight plan",
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+scenario "basic" {
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "backend",
+						Source: modulePath,
+					},
+				},
+				ScenarioBlocks: ScenarioBlocks{
+					{
+						Name: "basic",
+						Scenarios: []*Scenario{
+							{
+								Name:         "basic",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name: "first",
+										Module: &Module{
+											Name:   "backend",
+											Source: modulePath,
+											Attrs:  map[string]cty.Value{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "invalid block",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+notablock "something" {
+  something = "else"
+}
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+		},
+		{
+			desc: "invalid attr",
+			fail: true,
+			hcl: fmt.Sprintf(`
+module "backend" {
+  source = "%s"
+}
+
+notanattr = "foo"
+
+scenario "backend" {
+  step "first" {
+    module = module.backend
+  }
+}
+`, modulePath),
+		},
+	} {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
+			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
+			if test.fail {
+				require.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			testRequireEqualFP(t, fp, test.expected)
+		})
+	}
+}
+
 func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 	if diags == nil || !diags.HasErrors() {
 		return nil
@@ -35,7 +148,6 @@ func testDiagsToError(files map[string]*hcl.File, diags hcl.Diagnostics) error {
 	return errors.New(msg.String())
 }
 
-//nolint:unparam // our decode target configurable to simplify some of our decode tests.
 func testDecodeHCL(t *testing.T, hcl []byte, dt DecodeTarget, env ...string) (*FlightPlan, error) {
 	t.Helper()
 
@@ -53,7 +165,11 @@ func testDecodeHCL(t *testing.T, hcl []byte, dt DecodeTarget, env ...string) (*F
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	fp, diags := decoder.Decode(ctx)
+	fp, scenarioDecoder, moreDiags := decoder.Decode(ctx)
+	diags = diags.Extend(moreDiags)
+	if dt >= DecodeTargetScenariosNamesExpandVariants {
+		diags = diags.Extend(scenarioDecoder.DecodeAll(ctx, fp))
+	}
 
 	return fp, testDiagsToError(decoder.ParserFiles(), diags)
 }
@@ -96,9 +212,9 @@ func testCreateWireWorkspace(t *testing.T, opts ...testCreateWireWorkspaceOpt) *
 func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	t.Helper()
 
-	require.Len(t, expected.Modules, len(fp.Modules))
-	require.Len(t, expected.ScenarioBlocks, len(fp.ScenarioBlocks))
-	require.Len(t, expected.Providers, len(fp.Providers))
+	require.Len(t, fp.Modules, len(expected.Modules))
+	require.Len(t, fp.ScenarioBlocks, len(expected.ScenarioBlocks))
+	require.Len(t, fp.Providers, len(expected.Providers))
 
 	if expected.Samples != nil {
 		require.Len(t, fp.Samples, len(expected.Samples))
@@ -137,7 +253,7 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 	}
 
 	if expected.TerraformCLIs != nil {
-		require.Len(t, expected.TerraformCLIs, len(fp.TerraformCLIs))
+		require.Len(t, fp.TerraformCLIs, len(expected.TerraformCLIs))
 		for i := range expected.TerraformCLIs {
 			require.EqualValues(t, expected.TerraformCLIs[i], fp.TerraformCLIs[i])
 		}
@@ -269,117 +385,5 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 		aAttr, ok := aVal.Traversal[i].(hcl.TraverseAttr)
 		require.True(t, ok)
 		require.EqualValues(t, eAttr.Name, aAttr.Name)
-	}
-}
-
-// Test_Decode_FlightPlan tests decoding a flight plan.
-func Test_Decode_FlightPlan(t *testing.T) {
-	t.Helper()
-	t.Parallel()
-
-	modulePath, err := filepath.Abs("./tests/simple_module")
-	require.NoError(t, err)
-
-	for _, test := range []struct {
-		desc     string
-		hcl      string
-		expected *FlightPlan
-		fail     bool
-	}{
-		{
-			desc: "minimal viable flight plan",
-			hcl: fmt.Sprintf(`
-module "backend" {
-  source = "%s"
-}
-
-scenario "basic" {
-  step "first" {
-    module = module.backend
-  }
-}
-`, modulePath),
-			expected: &FlightPlan{
-				TerraformCLIs: []*TerraformCLI{
-					DefaultTerraformCLI(),
-				},
-				Modules: []*Module{
-					{
-						Name:   "backend",
-						Source: modulePath,
-					},
-				},
-				ScenarioBlocks: DecodedScenarioBlocks{
-					{
-						Name: "basic",
-						Scenarios: []*Scenario{
-							{
-								Name:         "basic",
-								TerraformCLI: DefaultTerraformCLI(),
-								Steps: []*ScenarioStep{
-									{
-										Name: "first",
-										Module: &Module{
-											Name:   "backend",
-											Source: modulePath,
-											Attrs:  map[string]cty.Value{},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			desc: "invalid block",
-			fail: true,
-			hcl: fmt.Sprintf(`
-module "backend" {
-  source = "%s"
-}
-
-notablock "something" {
-  something = "else"
-}
-
-scenario "backend" {
-  step "first" {
-    module = module.backend
-  }
-}
-`, modulePath),
-		},
-		{
-			desc: "invalid attr",
-			fail: true,
-			hcl: fmt.Sprintf(`
-module "backend" {
-  source = "%s"
-}
-
-notanattr = "foo"
-
-scenario "backend" {
-  step "first" {
-    module = module.backend
-  }
-}
-`, modulePath),
-		},
-	} {
-		t.Run(test.desc, func(t *testing.T) {
-			t.Parallel()
-
-			fp, err := testDecodeHCL(t, []byte(test.hcl), DecodeTargetAll)
-			if test.fail {
-				require.Error(t, err)
-
-				return
-			}
-			require.NoError(t, err)
-			testRequireEqualFP(t, fp, test.expected)
-		})
 	}
 }

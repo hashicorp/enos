@@ -110,7 +110,7 @@ scenario "backend" {
 						Attrs:  map[string]cty.Value{},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "backend",
 						Scenarios: []*Scenario{
@@ -175,7 +175,7 @@ scenario "backend" {
 						Attrs:  map[string]cty.Value{},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "backend",
 						Scenarios: []*Scenario{

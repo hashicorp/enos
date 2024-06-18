@@ -81,7 +81,7 @@ func (s *SampleValidationReq) Validate(ctx context.Context) *pb.DecodeResponse {
 	return decRes
 }
 
-// decodeScenariosConcurrent decodes scenario variants concurrently. This is for improved speeds
+// validateSamplesConcurrent decodes scenario variants concurrently. This is for improved speeds
 // when fully decoding lots of scenarios.
 func (s *SampleValidationReq) validateSamplesConcurrent(ctx context.Context, samples []*Sample) *pb.DecodeResponse {
 	res := &pb.DecodeResponse{}

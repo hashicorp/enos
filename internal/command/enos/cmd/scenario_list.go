@@ -61,7 +61,6 @@ func runScenarioListCmd(cmd *cobra.Command, args []string) error {
 		switch val := msg.GetResponse().(type) {
 		case *pb.EnosServiceListScenariosResponse_Decode:
 			res.Decode = val.Decode
-			res.Diagnostics = val.Decode.GetDiagnostics()
 		case *pb.EnosServiceListScenariosResponse_Scenario:
 			res.Scenarios = append(res.Scenarios, val.Scenario)
 		default:

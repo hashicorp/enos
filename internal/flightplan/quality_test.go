@@ -66,7 +66,7 @@ scenario "basic" {
 						Description: "The state is durable",
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "basic",
 						Scenarios: []*Scenario{

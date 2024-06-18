@@ -16,7 +16,8 @@ import (
 
 type matrixDecoder struct{}
 
-type DecodedMatrices struct {
+// MatrixBlock represent a full "matrix" block at various stages.
+type MatrixBlock struct {
 	Original        *Matrix
 	IncludeProducts []*Matrix
 	Excludes        []*Exclude
@@ -27,7 +28,7 @@ func newMatrixDecoder() *matrixDecoder {
 	return &matrixDecoder{}
 }
 
-func (d *DecodedMatrices) Matrix() *Matrix {
+func (d *MatrixBlock) Matrix() *Matrix {
 	if d == nil {
 		return nil
 	}
@@ -35,7 +36,7 @@ func (d *DecodedMatrices) Matrix() *Matrix {
 	return d.FinalProduct
 }
 
-func (d *DecodedMatrices) GetOriginal() *Matrix {
+func (d *MatrixBlock) GetOriginal() *Matrix {
 	if d == nil {
 		return nil
 	}
@@ -43,7 +44,7 @@ func (d *DecodedMatrices) GetOriginal() *Matrix {
 	return d.Original
 }
 
-func (d *DecodedMatrices) GetIncludeProducts() []*Matrix {
+func (d *MatrixBlock) GetIncludeProducts() []*Matrix {
 	if d == nil {
 		return nil
 	}
@@ -51,7 +52,7 @@ func (d *DecodedMatrices) GetIncludeProducts() []*Matrix {
 	return d.IncludeProducts
 }
 
-func (d *DecodedMatrices) GetExcludes() []*Exclude {
+func (d *MatrixBlock) GetExcludes() []*Exclude {
 	if d == nil {
 		return nil
 	}
@@ -59,15 +60,28 @@ func (d *DecodedMatrices) GetExcludes() []*Exclude {
 	return d.Excludes
 }
 
-func (d *DecodedMatrices) Filter(f *ScenarioFilter) *Matrix {
+func (d *MatrixBlock) Filter(f *ScenarioFilter) *Matrix {
 	if d == nil || d.FinalProduct == nil {
 		return nil
 	}
 
-	return d.FinalProduct.Filter(f)
+	d.FinalProduct = d.FinalProduct.Filter(f)
+	d.FinalProduct.Sort()
+
+	return d.FinalProduct
 }
 
-func (d *DecodedMatrices) Set(m *Matrix) {
+func (d *MatrixBlock) Sort() *Matrix {
+	if d == nil || d.FinalProduct == nil {
+		return nil
+	}
+
+	d.FinalProduct.Sort()
+
+	return d.FinalProduct
+}
+
+func (d *MatrixBlock) Set(m *Matrix) {
 	if d == nil {
 		return
 	}
@@ -82,7 +96,7 @@ func (d *DecodedMatrices) Set(m *Matrix) {
 func (md *matrixDecoder) decodeMatrix(
 	ctx *hcl.EvalContext,
 	block *hcl.Block,
-) (*DecodedMatrices, hcl.Diagnostics) {
+) (*MatrixBlock, hcl.Diagnostics) {
 	diags := hcl.Diagnostics{}
 	mContent, _, moreDiags := block.Body.PartialContent(matrixSchema)
 	diags = diags.Extend(moreDiags)
@@ -124,7 +138,7 @@ func (md *matrixDecoder) decodeMatrix(
 	if moreDiags != nil && moreDiags.HasErrors() {
 		return nil, diags
 	}
-	res := &DecodedMatrices{Original: matrix}
+	res := &MatrixBlock{Original: matrix}
 
 	// Now that we have our basic variant vectors in our matrix, we need to combine
 	// all vectors into a product that matches all possible unique value combinations.
@@ -206,6 +220,7 @@ func (md *matrixDecoder) decodeMatrix(
 	// Return our matrix but do one final pass removing any duplicates that might
 	// have been introduced during our inclusions.
 	res.FinalProduct = res.FinalProduct.UniqueValues()
+	res.FinalProduct.Sort()
 
 	return res, diags
 }

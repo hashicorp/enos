@@ -23,8 +23,8 @@ func TestAcc_Cmd_Scenario_List(t *testing.T) {
 		fail bool
 	}{
 		{
-			dir: "scenarios/scenario_list_pass_0",
-			out: &pb.ListScenariosResponse{},
+			dir:  "invalid_scenarios/scenario_list_no_scenarios",
+			fail: true,
 		},
 		{
 			dir: "scenarios/scenario_list_pass_1",

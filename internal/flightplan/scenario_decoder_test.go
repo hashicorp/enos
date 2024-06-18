@@ -54,72 +54,11 @@ func Test_NewScenarioDecoder(t *testing.T) {
 	}
 }
 
-func Test_DecodedScenarioBlocks_Diagnostics(t *testing.T) {
+func Test_ScenarioBlocks_Scenarios(t *testing.T) {
 	t.Parallel()
 
 	for desc, test := range map[string]struct {
-		in       DecodedScenarioBlocks
-		expected hcl.Diagnostics
-	}{
-		"nil": {
-			in:       nil,
-			expected: nil,
-		},
-		"none": {
-			in:       DecodedScenarioBlocks{},
-			expected: nil,
-		},
-		"one": {
-			in: DecodedScenarioBlocks{
-				{
-					Diagnostics: hcl.Diagnostics{
-						{
-							Summary: "one",
-						},
-					},
-				},
-			},
-			expected: hcl.Diagnostics{
-				{
-					Summary: "one",
-				},
-			},
-		},
-		"multiple": {
-			in: DecodedScenarioBlocks{
-				{
-					Diagnostics: hcl.Diagnostics{
-						{
-							Summary: "one",
-						},
-						{
-							Summary: "two",
-						},
-					},
-				},
-			},
-			expected: hcl.Diagnostics{
-				{
-					Summary: "one",
-				},
-				{
-					Summary: "two",
-				},
-			},
-		},
-	} {
-		t.Run(desc, func(t *testing.T) {
-			t.Parallel()
-			require.EqualValues(t, test.expected, test.in.Diagnostics())
-		})
-	}
-}
-
-func Test_DecodedScenarioBlocks_Scenarios(t *testing.T) {
-	t.Parallel()
-
-	for desc, test := range map[string]struct {
-		in       DecodedScenarioBlocks
+		in       ScenarioBlocks
 		expected []*Scenario
 	}{
 		"nil": {
@@ -127,11 +66,11 @@ func Test_DecodedScenarioBlocks_Scenarios(t *testing.T) {
 			expected: nil,
 		},
 		"none": {
-			in:       DecodedScenarioBlocks{},
+			in:       ScenarioBlocks{},
 			expected: nil,
 		},
 		"one": {
-			in: DecodedScenarioBlocks{
+			in: ScenarioBlocks{
 				{
 					Scenarios: []*Scenario{
 						{
@@ -153,7 +92,7 @@ func Test_DecodedScenarioBlocks_Scenarios(t *testing.T) {
 			},
 		},
 		"multiple": {
-			in: DecodedScenarioBlocks{
+			in: ScenarioBlocks{
 				{
 					Scenarios: []*Scenario{
 						{
@@ -198,11 +137,11 @@ func Test_DecodedScenarioBlocks_Scenarios(t *testing.T) {
 	}
 }
 
-func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
+func Test_ScenarioBlocks_CombinedMatrix(t *testing.T) {
 	t.Parallel()
 
 	for desc, test := range map[string]struct {
-		in       DecodedScenarioBlocks
+		in       ScenarioBlocks
 		expected *Matrix
 	}{
 		"nil": {
@@ -210,13 +149,13 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 			expected: nil,
 		},
 		"none": {
-			in:       DecodedScenarioBlocks{},
+			in:       ScenarioBlocks{},
 			expected: nil,
 		},
 		"one": {
-			in: DecodedScenarioBlocks{
+			in: ScenarioBlocks{
 				{
-					DecodedMatrices: &DecodedMatrices{
+					MatrixBlock: &MatrixBlock{
 						FinalProduct: &Matrix{Vectors: []*Vector{
 							NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
 							NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
@@ -234,9 +173,9 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 			}},
 		},
 		"multiple": {
-			in: DecodedScenarioBlocks{
+			in: ScenarioBlocks{
 				{
-					DecodedMatrices: &DecodedMatrices{
+					MatrixBlock: &MatrixBlock{
 						FinalProduct: &Matrix{Vectors: []*Vector{
 							NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
 							NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
@@ -246,7 +185,7 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 					},
 				},
 				{
-					DecodedMatrices: &DecodedMatrices{
+					MatrixBlock: &MatrixBlock{
 						FinalProduct: &Matrix{Vectors: []*Vector{
 							NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
 							NewVector(NewElement("backend", "consul"), NewElement("arch", "amd64")),
@@ -277,7 +216,7 @@ func Test_DecodedScenarioBlocks_CombinedMatrix(t *testing.T) {
 	}
 }
 
-func Test_ScenarioDecoder_filterScenarioBlocks(t *testing.T) {
+func Test_ScenarioDecoderIterator_filterHCLBlocks(t *testing.T) {
 	t.Parallel()
 
 	rng := hcl.Range{
@@ -288,13 +227,11 @@ func Test_ScenarioDecoder_filterScenarioBlocks(t *testing.T) {
 
 	for desc, test := range map[string]struct {
 		decoder    *ScenarioDecoder
-		blocks     []*hcl.Block
-		expected   DecodedScenarioBlocks
+		expected   ScenarioBlocks
 		shouldFail bool
 	}{
 		"no blocks": {
 			decoder:  &ScenarioDecoder{},
-			blocks:   nil,
 			expected: nil,
 		},
 		"no filter": {
@@ -302,20 +239,20 @@ func Test_ScenarioDecoder_filterScenarioBlocks(t *testing.T) {
 				EvalContext:    &hcl.EvalContext{},
 				DecodeTarget:   DecodeTargetScenariosComplete,
 				ScenarioFilter: nil,
-			},
-			blocks: []*hcl.Block{
-				{
-					Type:        "scenario",
-					Labels:      []string{"foo"},
-					LabelRanges: []hcl.Range{rng, rng},
+				Blocks: []*hcl.Block{
+					{
+						Type:        "scenario",
+						Labels:      []string{"foo"},
+						LabelRanges: []hcl.Range{rng, rng},
+					},
+					{
+						Type:        "scenario",
+						Labels:      []string{"bar"},
+						LabelRanges: []hcl.Range{rng, rng},
+					},
 				},
-				{
-					Type:        "scenario",
-					Labels:      []string{"bar"},
-					LabelRanges: []hcl.Range{rng, rng},
-				},
 			},
-			expected: DecodedScenarioBlocks{
+			expected: ScenarioBlocks{
 				{
 					Name:         "foo",
 					DecodeTarget: DecodeTargetScenariosComplete,
@@ -343,20 +280,20 @@ func Test_ScenarioDecoder_filterScenarioBlocks(t *testing.T) {
 				ScenarioFilter: &ScenarioFilter{
 					Name: "foo",
 				},
-			},
-			blocks: []*hcl.Block{
-				{
-					Type:        "scenario",
-					Labels:      []string{"foo"},
-					LabelRanges: []hcl.Range{rng, rng},
+				Blocks: []*hcl.Block{
+					{
+						Type:        "scenario",
+						Labels:      []string{"foo"},
+						LabelRanges: []hcl.Range{rng, rng},
+					},
+					{
+						Type:        "scenario",
+						Labels:      []string{"bar"},
+						LabelRanges: []hcl.Range{rng, rng},
+					},
 				},
-				{
-					Type:        "scenario",
-					Labels:      []string{"bar"},
-					LabelRanges: []hcl.Range{rng, rng},
-				},
 			},
-			expected: DecodedScenarioBlocks{
+			expected: ScenarioBlocks{
 				{
 					Name:         "foo",
 					DecodeTarget: DecodeTargetScenariosComplete,
@@ -372,64 +309,42 @@ func Test_ScenarioDecoder_filterScenarioBlocks(t *testing.T) {
 			decoder: &ScenarioDecoder{
 				EvalContext:  &hcl.EvalContext{},
 				DecodeTarget: DecodeTargetScenariosComplete,
-			},
-			blocks: []*hcl.Block{
-				{
-					Type:        "scenario",
-					Labels:      []string{""},
-					LabelRanges: []hcl.Range{rng, rng},
-				},
-			},
-			expected: DecodedScenarioBlocks{
-				{
-					Name:         "",
-					DecodeTarget: DecodeTargetScenariosComplete,
-					Diagnostics:  hcl.Diagnostics{{Severity: hcl.DiagError}},
-					Block: &hcl.Block{
+				Blocks: []*hcl.Block{
+					{
 						Type:        "scenario",
 						Labels:      []string{""},
 						LabelRanges: []hcl.Range{rng, rng},
 					},
 				},
 			},
+			expected: nil,
 		},
 		"too many labels": {
 			decoder: &ScenarioDecoder{
 				EvalContext:  &hcl.EvalContext{},
 				DecodeTarget: DecodeTargetScenariosComplete,
-			},
-			blocks: []*hcl.Block{
-				{
-					Type:        "scenario",
-					Labels:      []string{"foo", "bar"},
-					LabelRanges: []hcl.Range{rng, rng},
-				},
-			},
-			expected: DecodedScenarioBlocks{
-				{
-					Name:         "foo",
-					DecodeTarget: DecodeTargetScenariosComplete,
-					Diagnostics:  hcl.Diagnostics{{Severity: hcl.DiagError}},
-					Block: &hcl.Block{
+				Blocks: []*hcl.Block{
+					{
 						Type:        "scenario",
 						Labels:      []string{"foo", "bar"},
 						LabelRanges: []hcl.Range{rng, rng},
 					},
 				},
 			},
+			expected: nil,
 		},
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-
-			res := test.decoder.filterScenarioBlocks(test.blocks)
+			iter := test.decoder.Iterator()
+			diags := iter.filterHCLBlocks()
 			if test.shouldFail {
-				require.GreaterOrEqual(t, 1, len(res.Diagnostics()), "expected result to have diagnostics")
+				require.GreaterOrEqual(t, 1, len(diags), "expected result to have diagnostics")
 			} else {
-				require.Len(t, test.expected, len(res))
+				require.Len(t, iter.scenarioBlocks, len(test.expected))
 				for i := range test.expected {
-					require.Equal(t, test.expected[i].Name, res[i].Name)
-					require.Equal(t, test.expected[i].Block, res[i].Block)
+					require.Equal(t, test.expected[i].Name, iter.scenarioBlocks[i].Name)
+					require.Equal(t, test.expected[i].Block, iter.scenarioBlocks[i].Block)
 				}
 			}
 		})

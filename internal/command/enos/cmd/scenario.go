@@ -187,7 +187,11 @@ func scenarioNameCompletion(cmd *cobra.Command, args []string, toComplete string
 		return nil, cobra.ShellCompDirectiveError
 	}
 
-	fp, diags := decoder.Decode(ctx)
+	fp, scenarioDecoder, diags := decoder.Decode(ctx)
+	if diags.HasErrors() {
+		return nil, cobra.ShellCompDirectiveError
+	}
+	diags = diags.Extend(scenarioDecoder.DecodeAll(ctx, fp))
 	if diags.HasErrors() {
 		return nil, cobra.ShellCompDirectiveError
 	}

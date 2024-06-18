@@ -68,15 +68,32 @@ func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubs
 
 	// Decode our flightplan to matrix level using our filter from our subset. This should result
 	// in a combined matrix that we can use as the frame matrix.
-	fp, decRes := DecodeProto(
+	fp, scenarioDecoder, decRes := DecodeProto(
 		ctx, ws.GetFlightplan(), DecodeTargetScenariosMatrixOnly, sf.Proto(),
 	)
 	if diagnostics.HasFailed(ws.GetTfExecCfg().GetFailOnWarnings(), decRes.GetDiagnostics()) {
 		return nil, decRes
 	}
 
-	// We we didn't find any scenarios matching the filter we don't have a frame.
-	if fp == nil || fp.ScenarioBlocks == nil || len(fp.ScenarioBlocks) < 1 {
+	// We didn't find any scenarios matching the filter so we don't have a frame.
+	if fp == nil || scenarioDecoder == nil {
+		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(
+			errors.New("failed to initialize scenario decoder"),
+		)...)
+
+		return nil, decRes
+	}
+
+	// Decode our scenario blocks to the matrix level so we can verify that our frame matches
+	// scenarios.
+	hclDiags := scenarioDecoder.DecodeAll(ctx, fp)
+	if len(hclDiags) > 0 {
+		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, hclDiags)...)
+
+		return nil, decRes
+	}
+
+	if fp.ScenarioBlocks == nil || len(fp.ScenarioBlocks) < 1 {
 		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(
 			fmt.Errorf("no scenarios found matching scenario %s", sf.Name),
 		)...)

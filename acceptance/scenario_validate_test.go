@@ -88,7 +88,7 @@ func TestAcc_Cmd_Scenario_Validate_filtered(t *testing.T) {
 				return
 			}
 
-			require.NoError(t, err)
+			require.NoErrorf(t, err, string(out))
 			got := &pb.ValidateScenariosConfigurationResponse{}
 			require.NoError(t, protojson.Unmarshal(out, got))
 		})

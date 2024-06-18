@@ -128,12 +128,18 @@ func scenarioAndModuleGeneratorForReq(ctx context.Context, req *pb.Operation_Req
 		return nil, nil, diagnostics.FromErr(err)
 	}
 
-	fp, decRes := flightplan.DecodeProto(
+	fp, scenarioDecoder, decRes := flightplan.DecodeProto(
 		ctx,
 		req.GetWorkspace().GetFlightplan(),
 		flightplan.DecodeTargetAll,
 		filter.Proto(),
 	)
+	if scenarioDecoder != nil {
+		moreDiags := scenarioDecoder.DecodeAll(ctx, fp)
+		if len(moreDiags) > 0 {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, moreDiags)...)
+		}
+	}
 
 	if diagnostics.HasFailed(
 		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
@@ -150,8 +156,9 @@ func scenarioAndModuleGeneratorForReq(ctx context.Context, req *pb.Operation_Req
 	case 1:
 	default:
 		return nil, nil, diagnostics.FromErr(
-			fmt.Errorf("found more than one scenario matching scenario reference: %s",
-				scenarios[0].String(),
+			fmt.Errorf("found more than one scenario matching scenario for filter %s: %+v",
+				filter.String(),
+				scenarios,
 			))
 	}
 

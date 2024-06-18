@@ -286,15 +286,43 @@ func (d *Decoder) baseEvalContext() *hcl.EvalContext {
 	}
 }
 
-// Decode decodes the HCL into a flight plan.
+// decodeScenarios decodes the "scenario" blocks that are defined in the top-level schema.
+func (d *Decoder) scenarioDecoder(
+	evalCtx *hcl.EvalContext,
+	fp *FlightPlan,
+	target DecodeTarget,
+	filter *ScenarioFilter,
+) (*ScenarioDecoder, hcl.Diagnostics) {
+	diags := hcl.Diagnostics{}
+
+	scenarioDecoder, err := NewScenarioDecoder(
+		WithScenarioDecoderEvalContext(evalCtx),
+		WithScenarioDecoderDecodeTarget(target),
+		WithScenarioDecoderScenarioFilter(filter),
+		WithScenarioDecoderBlocks(fp.BodyContent.Blocks.OfType(blockTypeScenario)),
+	)
+	if err != nil {
+		return nil, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "unable to initialize scenario decoder",
+			Detail:   err.Error(),
+			Subject:  fp.BodyContent.MissingItemRange.Ptr(),
+		})
+	}
+
+	return scenarioDecoder, nil
+}
+
+// Decode decodes the HCL into a flightplan and a scenario decoder. Use the scenario decoder to
+// decode individual scenarios.
 //
 //nolint:cyclop // it's a complex func
-func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
+func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, *ScenarioDecoder, hcl.Diagnostics) {
 	diags := hcl.Diagnostics{}
 
 	fp, err := NewFlightPlan(WithFlightPlanBaseDirectory(d.dir))
 	if err != nil {
-		return fp, diags.Append(&hcl.Diagnostic{
+		return fp, nil, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to create new flight plan",
 			Detail:   "unable to create new flight plan: " + err.Error(),
@@ -302,7 +330,7 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	}
 
 	if fp.BaseDir == "" {
-		return fp, diags.Append(&hcl.Diagnostic{
+		return fp, nil, diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "unable to decode flight plan without a base directory",
 		})
@@ -331,7 +359,7 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 	fp.BodyContent, moreDiags = body.Content(flightPlanSchema)
 	diags = diags.Extend(moreDiags)
 	if diags.HasErrors() {
-		return fp, diags
+		return fp, nil, diags
 	}
 
 	// Decode to our desired target level. Start with the lowest level and continue until we've
@@ -401,7 +429,7 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 			// Decode to only our scenario names and variants. Useful for listing all scenarios
 			// and variant combinations.
 			DecodeTargetScenariosNamesExpandVariants:
-			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
+			return diags // The caller will need to DecodeAll() if they want scenarios
 		default:
 		}
 
@@ -433,44 +461,39 @@ func (d *Decoder) Decode(ctx context.Context) (*FlightPlan, hcl.Diagnostics) {
 			}
 		}
 
-		// Decode the fewest scenarios possible to generate an outline and return.
-		if d.target == DecodeTargetScenariosOutlines {
-			return diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
-		}
-
-		if d.target >= DecodeTargetScenariosComplete {
-			// Decode scenarios and fully validate them.
-			diags = diags.Extend(fp.decodeScenarios(ctx, evalCtx, d.target, d.filter))
-			if diags.HasErrors() {
-				return diags
-			}
-		}
-
-		if d.target > DecodeTargetAll {
-			return diags.Append(&hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Unsupported flight plan decode target level",
-				Detail:   fmt.Sprintf("The configured target decode level was greater than maximum allowed. Expected a level <= %d, Received level: %d", DecodeTargetAll, d.target),
-				Subject:  body.MissingItemRange().Ptr(),
-			})
-		}
-
 		return diags
 	}
 
 	diags = diags.Extend(decodeToLevel())
+	if diags.HasErrors() {
+		return fp, nil, diags
+	}
 
-	return fp, diags
+	if d.target > DecodeTargetAll {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Unsupported flight plan decode target level",
+			Detail:   fmt.Sprintf("The configured target decode level was greater than maximum allowed. Expected a level <= %d, Received level: %d", DecodeTargetAll, d.target),
+			Subject:  body.MissingItemRange().Ptr(),
+		})
+	}
+
+	// Handle decoding our scenarios as an interator to allow callers more control of them.
+	scenarioDecoder, moreDiags := d.scenarioDecoder(evalCtx, fp, d.target, d.filter)
+	diags = diags.Extend(moreDiags)
+
+	return fp, scenarioDecoder, diags
 }
 
 // DecodeProto takes a wire request of a FlightPlan and returns a new flight plan and a wire encodable
-// decode response.
+// decode response. It's up to the caller to utilize the ScenarioDecoder to decode individual
+// scenarios.
 func DecodeProto(
 	ctx context.Context,
 	pfp *pb.FlightPlan,
 	target DecodeTarget,
 	f *pb.Scenario_Filter,
-) (*FlightPlan, *pb.DecodeResponse) {
+) (*FlightPlan, *ScenarioDecoder, *pb.DecodeResponse) {
 	res := &pb.DecodeResponse{
 		Diagnostics: []*pb.Diagnostic{},
 	}
@@ -494,7 +517,7 @@ func DecodeProto(
 	if err != nil {
 		res.Diagnostics = diagnostics.FromErr(err)
 
-		return nil, res
+		return nil, nil, res
 	}
 
 	hclDiags := dec.Parse()
@@ -503,13 +526,13 @@ func DecodeProto(
 	}
 
 	if diagnostics.HasErrors(res.GetDiagnostics()) {
-		return nil, res
+		return nil, nil, res
 	}
 
-	fp, hclDiags := dec.Decode(ctx)
+	fp, scenarioDecoder, hclDiags := dec.Decode(ctx)
 	if len(hclDiags) > 0 {
 		res.Diagnostics = append(res.GetDiagnostics(), diagnostics.FromHCL(dec.ParserFiles(), hclDiags)...)
 	}
 
-	return fp, res
+	return fp, scenarioDecoder, res
 }

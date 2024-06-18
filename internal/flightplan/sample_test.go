@@ -31,9 +31,6 @@ sample "foo" {
   subset "bar" { }
 }`,
 			expected: &FlightPlan{
-				TerraformCLIs: []*TerraformCLI{
-					DefaultTerraformCLI(),
-				},
 				Samples: []*Sample{
 					{
 						Name: "foo",
@@ -108,9 +105,6 @@ variable "input" {}
 `,
 			env: []string{`ENOS_VAR_input={something="thing",another_thing="another"}`},
 			expected: &FlightPlan{
-				TerraformCLIs: []*TerraformCLI{
-					DefaultTerraformCLI(),
-				},
 				Samples: []*Sample{
 					{
 						Name: "valid_name",
@@ -325,7 +319,7 @@ sample "foo" {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
 
-			fp, err := testDecodeHCL(t, []byte(test.body), DecodeTargetAll, test.env...)
+			fp, err := testDecodeHCL(t, []byte(test.body), DecodeTargetSamples, test.env...)
 			if test.fail {
 				require.Error(t, err)
 
@@ -647,6 +641,7 @@ sample "foodle" {
 			require.Len(t, fp.Samples, 1)
 			samp := fp.Samples[0]
 			frame, decRes := samp.Frame(context.Background(), test.ws, test.filter)
+			require.NotNil(t, frame)
 			require.EqualValues(t, samp, frame.Sample)
 
 			// Handle cases where we don't expect to get a valid frame

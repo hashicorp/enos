@@ -29,24 +29,70 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 	}
 
 	var decRes *pb.DecodeResponse
-	var fp *flightplan.FlightPlan
+	var scenarioDecoder *flightplan.ScenarioDecoder
 	if !req.GetNoValidateScenarios() {
-		fp, decRes = flightplan.DecodeProto(
+		_, scenarioDecoder, decRes = flightplan.DecodeProto(
 			ctx,
 			req.GetWorkspace().GetFlightplan(),
 			flightplan.DecodeTargetAll,
 			req.GetFilter(),
 		)
 		res.Decode = decRes
+
 		if diagnostics.HasFailed(
 			req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
-			res.GetDiagnostics(),
+			decRes.GetDiagnostics(),
 		) {
 			return res, nil
 		}
 
-		scenarios := fp.Scenarios()
-		if len(scenarios) == 0 {
+		if scenarioDecoder == nil {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(errors.New(
+				"failed to decode scenarios",
+			))...)
+
+			return res, nil
+		}
+
+		iter := scenarioDecoder.Iterator()
+		if iter == nil {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(errors.New(
+				"failed to decode scenarios",
+			))...)
+
+			return res, nil
+		}
+
+		if moreDiags := iter.Start(ctx); moreDiags.HasErrors() {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, moreDiags)...)
+			return res, nil
+		}
+		defer iter.Stop()
+
+		for iter.Next(ctx) {
+			if moreDiags := iter.Diagnostics(); moreDiags.HasErrors() {
+				decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, moreDiags)...)
+
+				return res, nil
+			}
+
+			scenarioResponse := iter.Scenario()
+			if scenarioResponse == nil {
+				decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(errors.New(
+					"unable to retrieve scenario from decoder",
+				))...)
+
+				return res, nil
+			}
+
+			if moreDiags := scenarioResponse.Diagnostics; moreDiags.HasErrors() {
+				decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, moreDiags)...)
+
+				return res, nil
+			}
+		}
+
+		if iter.Count() == 0 {
 			filter, err := flightplan.NewScenarioFilter(
 				flightplan.WithScenarioFilterDecode(req.GetFilter()),
 			)
@@ -57,6 +103,14 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 					"no scenarios found matching filter '%s'", filter.String(),
 				))...)
 			}
+
+			return res, nil
+		}
+
+		if moreDiags := iter.Diagnostics(); len(moreDiags) > 0 {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, moreDiags)...)
+
+			return res, nil
 		}
 	}
 

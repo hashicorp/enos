@@ -248,7 +248,7 @@ func decodeSamples(
 	}
 
 	// Try and locate the sample we're trying to observe.
-	sampleFP, decRes := DecodeProto(
+	sampleFP, _, decRes := DecodeProto(
 		ctx,
 		ws.GetFlightplan(),
 		DecodeTargetSamples,

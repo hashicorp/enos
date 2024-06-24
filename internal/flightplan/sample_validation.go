@@ -6,6 +6,7 @@ package flightplan
 import (
 	"context"
 	"errors"
+	"math"
 	"runtime"
 	"sync"
 
@@ -28,7 +29,8 @@ type SampleValidationOpt func(*SampleValidationReq)
 // the observation request is executed.
 func NewSampleValidationReq(opts ...SampleValidationOpt) (*SampleValidationReq, error) {
 	req := &SampleValidationReq{
-		WorkerCount: runtime.NumCPU(),
+		// This is naive but the caller can do something more clever.
+		WorkerCount: int(math.Max(float64(2), float64(runtime.NumCPU()/2))),
 	}
 
 	for i := range opts {
@@ -70,12 +72,7 @@ func (s *SampleValidationReq) Validate(ctx context.Context) *pb.DecodeResponse {
 		samples = []*Sample{sample}
 	}
 
-	var fDecRes *pb.DecodeResponse
-	if s.WorkerCount < 2 || len(samples) < 4 {
-		fDecRes = s.validateSamplesSerial(ctx, samples)
-	} else {
-		fDecRes = s.validateSamplesConcurrent(ctx, samples)
-	}
+	fDecRes := s.validateSamplesConcurrent(ctx, samples)
 	decRes.Diagnostics = append(decRes.GetDiagnostics(), fDecRes.GetDiagnostics()...)
 
 	return decRes
@@ -84,6 +81,9 @@ func (s *SampleValidationReq) Validate(ctx context.Context) *pb.DecodeResponse {
 // validateSamplesConcurrent decodes scenario variants concurrently. This is for improved speeds
 // when fully decoding lots of scenarios.
 func (s *SampleValidationReq) validateSamplesConcurrent(ctx context.Context, samples []*Sample) *pb.DecodeResponse {
+	if s.WorkerCount < 2 || len(samples) < 3 {
+		return s.validateSamplesSerial(ctx, samples)
+	}
 	res := &pb.DecodeResponse{}
 
 	bossCtx, cancelBoss := context.WithCancel(ctx)
@@ -151,7 +151,9 @@ func (s *SampleValidationReq) validateSamplesConcurrent(ctx context.Context, sam
 				return
 			case sample := <-jobsC:
 				frame, decRes := sample.Frame(ctx, s.Ws, s.Filter)
-				if diagnostics.HasFailed(
+				if decRes == nil {
+					decRes = &pb.DecodeResponse{}
+				} else if diagnostics.HasFailed(
 					s.Ws.GetTfExecCfg().GetFailOnWarnings(),
 					decRes.GetDiagnostics(),
 				) {

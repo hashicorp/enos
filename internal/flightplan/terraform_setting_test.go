@@ -298,7 +298,7 @@ scenario "debug" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "debug",
 						Scenarios: []*Scenario{
@@ -514,7 +514,7 @@ scenario "debug" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "debug",
 						Scenarios: []*Scenario{
@@ -730,7 +730,7 @@ scenario "experiments" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "default",
 						Scenarios: []*Scenario{
@@ -887,7 +887,7 @@ scenario "default" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "default",
 						Scenarios: []*Scenario{

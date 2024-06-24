@@ -112,12 +112,12 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 							Scenario: &pb.Ref_Scenario{
 								Id: &pb.Scenario_ID{
 									Name:   "smoke",
-									Uid:    "21610357b0083126896a0072a429e677fd6381fa98e94b15ac2101f697100b42",
-									Filter: "smoke arch:s390x distro:ubuntu",
+									Uid:    "bdc1d6d8a1d8332d0ee5ea09e1cb6ad06d47953f8e225de8dc1f0ec3be5eb6a0",
+									Filter: "smoke arch:s390x distro:amz",
 									Variants: &pb.Matrix_Vector{
 										Elements: []*pb.Matrix_Element{
 											{Key: "arch", Value: "s390x"},
-											{Key: "distro", Value: "ubuntu"},
+											{Key: "distro", Value: "amz"},
 										},
 									},
 								},
@@ -144,12 +144,12 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 							Scenario: &pb.Ref_Scenario{
 								Id: &pb.Scenario_ID{
 									Name:   "upgrade",
-									Uid:    "f662b9deac220ad5bc22f2618098925b47d06fc342d8c0d0e6240bb67547b9e8",
-									Filter: "upgrade arch:arm64 distro:ubuntu",
+									Uid:    "3f481b933e5406b3ccafc1a6bbe9fbf18f7f407bbb8546b89dab69345a39dc1b",
+									Filter: "upgrade arch:amd64 distro:amz",
 									Variants: &pb.Matrix_Vector{
 										Elements: []*pb.Matrix_Element{
-											{Key: "arch", Value: "arm64"},
-											{Key: "distro", Value: "ubuntu"},
+											{Key: "arch", Value: "amd64"},
+											{Key: "distro", Value: "amz"},
 										},
 									},
 								},

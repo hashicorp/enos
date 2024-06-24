@@ -343,12 +343,16 @@ func (s *ServiceV1) dispatch(
 		diags = append(diags, diagnostics.FromErr(errors.New("unable to dispatch operations for requests without the required workspace"))...)
 	}
 
-	fp, decRes := flightplan.DecodeProto(
+	fp, scenarioDecoder, decRes := flightplan.DecodeProto(
 		ctx,
 		ws.GetFlightplan(),
 		flightplan.DecodeTargetAll,
 		f,
 	)
+	hclDiags := scenarioDecoder.DecodeAll(ctx, fp)
+	if len(hclDiags) > 0 {
+		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, hclDiags)...)
+	}
 
 	if baseReq.GetValue() == nil {
 		diags = append(diags, diagnostics.FromErr(errors.New("failed to dispatch operation because operation request value has not been set"))...)

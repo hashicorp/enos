@@ -100,7 +100,7 @@ scenario "basic" {
 						Version: "3.11.0",
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "basic",
 						Scenarios: []*Scenario{

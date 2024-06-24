@@ -5,6 +5,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"slices"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
@@ -22,13 +23,25 @@ func (s *ServiceV1) OutlineScenarios(
 ) {
 	res := &pb.OutlineScenariosResponse{}
 
-	fp, decRes := flightplan.DecodeProto(
+	fp, scenarioDecoder, decRes := flightplan.DecodeProto(
 		ctx,
 		req.GetWorkspace().GetFlightplan(),
 		flightplan.DecodeTargetScenariosOutlines,
 		req.GetFilter(),
 	)
 	res.Decode = decRes
+
+	if scenarioDecoder != nil {
+		hclDiags := scenarioDecoder.DecodeAll(ctx, fp)
+		if hclDiags.HasErrors() {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, hclDiags)...)
+		}
+	} else {
+		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(errors.New(
+			"unable to decode scenarios",
+		))...)
+	}
+
 	if diagnostics.HasFailed(
 		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
 		decRes.GetDiagnostics(),
@@ -47,7 +60,7 @@ func (s *ServiceV1) OutlineScenarios(
 		if out == nil {
 			continue
 		}
-		out.Matrix = sb.DecodedMatrices.GetOriginal().Proto()
+		out.Matrix = sb.MatrixBlock.GetOriginal().Proto()
 
 		res.Outlines = append(res.GetOutlines(), out)
 		for _, qual := range out.GetVerifies() {

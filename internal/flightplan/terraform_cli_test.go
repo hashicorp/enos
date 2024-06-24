@@ -294,7 +294,7 @@ scenario "ref" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "debug",
 						Scenarios: []*Scenario{

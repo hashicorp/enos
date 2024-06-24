@@ -117,7 +117,7 @@ scenario "basic" {
 						Source:  "hashicorp/qti/frontend-aws",
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "basic",
 						Scenarios: []*Scenario{
@@ -338,7 +338,7 @@ scenario "skipper" {
 						Source: modulePath,
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "skipper",
 						Scenarios: []*Scenario{
@@ -514,7 +514,7 @@ scenario "test_verifies" {
 						Description: "the data is durable",
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "test_verifies",
 						Scenarios: []*Scenario{
@@ -595,7 +595,7 @@ scenario "depends_on" {
 						Source: modulePath,
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "depends_on",
 						Scenarios: []*Scenario{
@@ -666,7 +666,7 @@ scenario "depends_on" {
 						Source: modulePath,
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "depends_on",
 						Scenarios: []*Scenario{
@@ -774,7 +774,7 @@ scenario "step_vars" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "step_vars",
 						Scenarios: []*Scenario{
@@ -876,7 +876,7 @@ scenario "boundary" {
 						Source: modulePath,
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "boundary",
 						Scenarios: []*Scenario{

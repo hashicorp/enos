@@ -18,9 +18,10 @@ mv cpu.pprof cpu.pprof.sample.observe
 dist/enos scenario validate --chdir ./acceptance/scenarios/build_pgo/ --profile
 mv cpu.pprof cpu.pprof.validate
 
-go tool pprof -proto cpu.pprof.scenario.list cpu.pprof.sample.observe cpu.pprof.validate > default.pgo
+go tool pprof -proto cpu.pprof.scenario.list cpu.pprof.sample.observe cpu.pprof.validate > default.pprof
 if test -f default.pgo; then
-  cp default.pgo default.pprof
-  go tool pprof -proto cpu.pprof.scenario.list cpu.pprof.sample.observe cpu.pprof.validate default.pprof > default.pgo
-  exit 0
+  go tool pprof -proto default.pgo default.pprof > combined.pgo
+  mv combined.pgo default.pgo
+else
+  mv default.pprof default.pgo
 fi

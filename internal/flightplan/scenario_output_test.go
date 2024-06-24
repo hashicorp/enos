@@ -70,7 +70,7 @@ scenario "basic" {
 						Attrs:  map[string]cty.Value{},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "basic",
 						Scenarios: []*Scenario{

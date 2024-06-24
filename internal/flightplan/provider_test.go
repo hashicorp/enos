@@ -152,7 +152,7 @@ scenario "test" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "test",
 						Scenarios: []*Scenario{
@@ -389,7 +389,7 @@ scenario "k8s" {
 						},
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "copy_to_east",
 						Scenarios: []*Scenario{

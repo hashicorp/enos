@@ -237,7 +237,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 			t.Parallel()
 
 			fp := &FlightPlan{
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Scenarios: test.scenarios,
 					},

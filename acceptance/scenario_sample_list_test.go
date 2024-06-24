@@ -18,16 +18,15 @@ import (
 func TestAcc_Cmd_Scenario_Sample_List(t *testing.T) {
 	t.Parallel()
 	for _, test := range []struct {
-		dir  string
-		out  *pb.ListSamplesResponse
-		fail bool
+		dir string
+		out *pb.ListSamplesResponse
 	}{
 		{
-			dir: "scenario_list_pass_0",
+			dir: "./invalid_scenarios/scenario_list_no_scenarios",
 			out: &pb.ListSamplesResponse{},
 		},
 		{
-			dir: "sample_list",
+			dir: "./scenarios/sample_list",
 			out: &pb.ListSamplesResponse{
 				Samples: []*pb.Ref_Sample{
 					{
@@ -48,17 +47,11 @@ func TestAcc_Cmd_Scenario_Sample_List(t *testing.T) {
 			t.Parallel()
 			enos := newAcceptanceRunner(t)
 
-			path, err := filepath.Abs(filepath.Join("./scenarios", test.dir))
+			path, err := filepath.Abs(test.dir)
 			require.NoError(t, err)
 			cmd := fmt.Sprintf("scenario sample list --chdir %s --format json", path)
 			fmt.Println(path)
 			out, _, err := enos.run(context.Background(), cmd)
-			if test.fail {
-				require.Error(t, err)
-
-				return
-			}
-
 			require.NoError(t, err)
 			got := &pb.ListSamplesResponse{}
 			require.NoError(t, protojson.Unmarshal(out, got))

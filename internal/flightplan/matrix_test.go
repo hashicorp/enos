@@ -219,7 +219,7 @@ scenario "nighttime" {
 						Source: modulePath,
 					},
 				},
-				ScenarioBlocks: DecodedScenarioBlocks{
+				ScenarioBlocks: ScenarioBlocks{
 					{
 						Name: "nighttime",
 						Scenarios: []*Scenario{

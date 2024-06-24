@@ -7,9 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"runtime"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	"github.com/hashicorp/enos/internal/flightplan"
+	"github.com/hashicorp/enos/internal/memory"
 	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 )
 
@@ -115,7 +118,28 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 	}
 
 	if !req.GetNoValidateSamples() {
+		stat, err := memory.Stat(ctx, memory.WithGC())
+		if err != nil {
+			decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(err)...)
+
+			return res, nil
+		}
+
 		sampleReq, err := flightplan.NewSampleValidationReq(
+			// Validating samples can be very memory intensive since we're creating lots of matrix
+			// products for each sample and subset frame. Set our worker count to either the number of
+			// CPUs, or a worker for 1 GiB of available memory, whichever is lower. Make sure we always
+			// provision at least one worker.
+			flightplan.WithSampleValidationWorkerCount(
+				int(
+					math.Max(
+						float64(1),
+						math.Min(
+							float64(runtime.NumCPU()),
+							float64(stat.Available())/math.Pow(2, 30)),
+					),
+				),
+			),
 			flightplan.WithSampleValidationReqWorkSpace(req.GetWorkspace()),
 			flightplan.WithSampleValidationReqFilter(req.GetSampleFilter()),
 		)

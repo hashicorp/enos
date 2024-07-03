@@ -349,6 +349,7 @@ func (s *ServiceV1) dispatch(
 		flightplan.DecodeTargetAll,
 		f,
 	)
+
 	hclDiags := scenarioDecoder.DecodeAll(ctx, fp)
 	if len(hclDiags) > 0 {
 		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, hclDiags)...)
@@ -381,11 +382,32 @@ func (s *ServiceV1) dispatch(
 
 	for _, scenario := range scenarios {
 		req := &pb.Operation_Request{}
+
+		// Most of our Terraform configuration comes in the form of CLI flags that get populated in
+		// the workspace. However, there are some that can be defined in the "terraform_cli" blocks that
+		// are then set per scenario. Handle setting those here if they exist.
+		if cli := scenario.TerraformCLI; cli != nil {
+			if baseReq.GetWorkspace().GetTfExecCfg() == nil {
+				baseReq.Workspace.TfExecCfg = &pb.Terraform_Runner_Config{}
+			}
+
+			if cli.Path != "" {
+				baseReq.Workspace.TfExecCfg.BinPath = cli.Path
+			}
+
+			if baseReq.GetWorkspace().GetTfExecCfg().GetEnv() == nil && len(cli.Env) > 0 {
+				baseReq.Workspace.TfExecCfg.Env = map[string]string{}
+			}
+
+			for k, v := range cli.Env {
+				baseReq.Workspace.TfExecCfg.Env[k] = v
+			}
+		}
+
 		err := proto.Copy(baseReq, req)
 		if err != nil {
 			diags = append(diags, diagnostics.FromErr(err)...)
-
-			continue
+			break
 		}
 
 		req.Scenario = scenario.Ref()

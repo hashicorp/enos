@@ -51,8 +51,8 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 			require.NoError(t, err)
 
 			cmd := fmt.Sprintf("scenario check --chdir %s --out %s --format json", path, outDir)
-			out, _, err := enos.run(context.Background(), cmd)
-			require.NoError(t, err, string(out))
+			out, stderr, err := enos.run(context.Background(), cmd)
+			require.NoError(t, err, "enos "+cmd+": "+string(out)+string(stderr))
 
 			expected := &pb.OperationResponses{
 				Responses: []*pb.Operation_Response{},
@@ -137,13 +137,13 @@ func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 			if failOnWarnings {
 				cmd = cmd + " --fail-on-warnings"
 			}
-			out, _, err := enos.run(context.Background(), cmd)
+			out, stderr, err := enos.run(context.Background(), cmd)
 			if failOnWarnings {
-				require.Error(t, err, string(out))
+				require.Error(t, err, "enos "+cmd+": "+string(out)+string(stderr))
 
 				return
 			}
-			require.NoError(t, err, string(out))
+			require.NoError(t, err, "enos "+cmd+": "+string(out)+string(stderr))
 
 			expected := &pb.OperationResponses{
 				Responses: []*pb.Operation_Response{},

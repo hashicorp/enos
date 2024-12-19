@@ -439,6 +439,69 @@ scenario "depends_on" {
 `, modulePath),
 		},
 		{
+			desc: "step depends_on skipped step",
+			hcl: fmt.Sprintf(`
+module "one" {
+  source = "%s"
+}
+
+scenario "depends_on_skipped" {
+  step "one" {
+	skip_step = true
+    module = module.one
+  }
+
+  step "two" {
+    module = module.one
+  }
+
+  step "three" {
+    depends_on = [step.one, step.two]
+    module = module.one
+  }
+}
+`, modulePath),
+			expected: &FlightPlan{
+				TerraformCLIs: []*TerraformCLI{
+					DefaultTerraformCLI(),
+				},
+				Modules: []*Module{
+					{
+						Name:   "one",
+						Source: modulePath,
+					},
+				},
+				ScenarioBlocks: ScenarioBlocks{
+					{
+						Name: "depends_on_skipped",
+						Scenarios: []*Scenario{
+							{
+								Name:         "depends_on_skipped",
+								TerraformCLI: DefaultTerraformCLI(),
+								Steps: []*ScenarioStep{
+									{
+										Name:   "one",
+										Skip:   true,
+										Module: NewModule(),
+									},
+									{
+										Name:   "two",
+										Module: &Module{Name: "one", Source: modulePath},
+									},
+									{
+										Name:      "three",
+										DependsOn: []string{"two"},
+										Module:    &Module{Name: "one", Source: modulePath},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
 			desc: "step depends_on valid string and ref mixed",
 			fail: true,
 			hcl: fmt.Sprintf(`

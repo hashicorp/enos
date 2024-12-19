@@ -485,7 +485,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 			depName := depV.AsString()
 			// We've been given a string value for our dep so it must be
 			// an address to a step. Make sure it's defined.
-			_, ok := definedSteps.AsValueMap()[depName]
+			step, ok := definedSteps.AsValueMap()[depName]
 			if !ok {
 				diags = diags.Append(&hcl.Diagnostic{
 					Severity: hcl.DiagError,
@@ -495,6 +495,18 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 					Context:  depends.Range.Ptr(),
 				})
 
+				continue
+			}
+
+			skipStep, ok := step.AsValueMap()["skip_step"]
+			if ok && skipStep.True() {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagWarning,
+					Summary:  "dependent on skipped step",
+					Detail:   fmt.Sprintf("cannot depend_on step %s as it is skipped, continuing without this step", depName),
+					Subject:  depends.Expr.Range().Ptr(),
+					Context:  depends.Range.Ptr(),
+				})
 				continue
 			}
 
@@ -529,6 +541,20 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 			})
 
 			continue
+		}
+		if definedStep, ok := definedSteps.AsValueMap()[step.Name]; ok {
+			skipStep, ok := definedStep.AsValueMap()["skip_step"]
+			if ok && skipStep.True() {
+				diags = diags.Append(&hcl.Diagnostic{
+					Severity: hcl.DiagWarning,
+					Summary:  "dependent on skipped step",
+					Detail:   fmt.Sprintf("cannot depend_on step %s as it is skipped, continuing without this step", step.Name),
+					Subject:  depends.Expr.Range().Ptr(),
+					Context:  depends.Range.Ptr(),
+				})
+				continue
+			}
+
 		}
 
 		if _, exists := dependsOnSet[step.Name]; exists {
@@ -959,6 +985,7 @@ func (ss *ScenarioStep) insertIntoCtx(ctx *hcl.EvalContext) hcl.Diagnostics {
 		"source":    cty.StringVal(ss.Module.Source),
 		"name":      cty.StringVal(ss.Name),
 		"variables": cty.ObjectVal(ss.Module.Attrs),
+		"skip_step": cty.BoolVal(ss.Skip),
 	}
 	if ss.Module.Version != "" {
 		vals["version"] = cty.StringVal(ss.Module.Version)

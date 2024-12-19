@@ -507,6 +507,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 					Subject:  depends.Expr.Range().Ptr(),
 					Context:  depends.Range.Ptr(),
 				})
+				
 				continue
 			}
 
@@ -552,6 +553,7 @@ func (ss *ScenarioStep) decodeAndValidateDependsOn(content *hcl.BodyContent, ctx
 					Subject:  depends.Expr.Range().Ptr(),
 					Context:  depends.Range.Ptr(),
 				})
+				
 				continue
 			}
 

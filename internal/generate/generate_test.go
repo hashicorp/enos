@@ -19,12 +19,7 @@ import (
 func Test_MaybeUpdateRelativeSourcePaths(t *testing.T) {
 	t.Parallel()
 
-	tmpDir, err := os.MkdirTemp("", "update_source_paths")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		defer os.RemoveAll(tmpDir)
-	})
-
+	tmpDir := t.TempDir()
 	baseDir := filepath.Join(tmpDir, "scenarios/test")
 	moduleDir := filepath.Join(baseDir, "modules/foo")
 	outDir := filepath.Join(tmpDir, "generated/out")

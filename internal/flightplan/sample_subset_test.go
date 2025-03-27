@@ -287,21 +287,16 @@ func testRequireEqualSampleSubsetFrame(t *testing.T, expected, got *SampleSubset
 		return
 	}
 
-	require.EqualValues(t, expected.SampleSubset.SampleName, got.SampleSubset.SampleName)
-	require.EqualValues(t, expected.SampleSubset.Name, got.SampleSubset.Name)
-	require.EqualValues(t, expected.SampleSubset.ScenarioName, got.SampleSubset.ScenarioName)
-	require.EqualValues(t, expected.SampleSubset.ScenarioFilter, got.SampleSubset.ScenarioFilter)
-	require.EqualValues(t, expected.SampleSubset.Attributes, got.SampleSubset.Attributes)
-	require.EqualValues(t, expected.ScenarioFilter.GetName(), got.ScenarioFilter.GetName())
-	require.EqualValues(t, expected.ScenarioFilter.GetExclude(), got.ScenarioFilter.GetExclude())
-	require.EqualValues(t, expected.ScenarioFilter.GetInclude(), got.ScenarioFilter.GetInclude())
-	require.EqualValues(t, expected.ScenarioFilter.GetSelectAll(), got.ScenarioFilter.GetSelectAll())
-	require.Truef(t, expected.Matrix.EqualUnordered(got.Matrix), fmt.Sprintf(
-		"expected matrix vectors: \n%s\ngot matrix vectors: \n%s\ndifference: \n%s\n",
-		expected.Matrix.String(),
-		got.Matrix.String(),
-		expected.Matrix.SymmetricDifferenceUnordered(got.Matrix).String(),
-	))
+	require.Equal(t, expected.SampleSubset.SampleName, got.SampleSubset.SampleName)
+	require.Equal(t, expected.SampleSubset.Name, got.SampleSubset.Name)
+	require.Equal(t, expected.SampleSubset.ScenarioName, got.SampleSubset.ScenarioName)
+	require.Equal(t, expected.SampleSubset.ScenarioFilter, got.SampleSubset.ScenarioFilter)
+	require.Equal(t, expected.SampleSubset.Attributes, got.SampleSubset.Attributes)
+	require.Equal(t, expected.ScenarioFilter.GetName(), got.ScenarioFilter.GetName())
+	require.Equal(t, expected.ScenarioFilter.GetExclude(), got.ScenarioFilter.GetExclude())
+	require.Equal(t, expected.ScenarioFilter.GetInclude(), got.ScenarioFilter.GetInclude())
+	require.Equal(t, expected.ScenarioFilter.GetSelectAll(), got.ScenarioFilter.GetSelectAll())
+	require.Truef(t, expected.Matrix.EqualUnordered(got.Matrix), "expected matrix vectors: \n%s\ngot matrix vectors: \n%s\ndifference: \n%s\n", expected.Matrix.String(), got.Matrix.String(), expected.Matrix.SymmetricDifferenceUnordered(got.Matrix).String())
 }
 
 func Test_SampleSubsetFrame_Size(t *testing.T) {

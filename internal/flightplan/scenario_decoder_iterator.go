@@ -473,7 +473,7 @@ func (d *ScenarioDecoderIterator) startDecodingScenariosSerially(
 
 	defer d.decodeWorkerWg.Done()
 
-	if d.scenarioBlocks == nil || len(d.scenarioBlocks) < 1 {
+	if len(d.scenarioBlocks) < 1 {
 		return
 	}
 

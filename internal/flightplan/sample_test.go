@@ -642,7 +642,7 @@ sample "foodle" {
 			samp := fp.Samples[0]
 			frame, decRes := samp.Frame(context.Background(), test.ws, test.filter)
 			require.NotNil(t, frame)
-			require.EqualValues(t, samp, frame.Sample)
+			require.Equal(t, samp, frame.Sample)
 
 			// Handle cases where we don't expect to get a valid frame
 			if test.expected == nil {
@@ -1334,7 +1334,7 @@ func Test_Sample_filterSubsets(t *testing.T) {
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-			require.EqualValues(t, test.expected, test.in.filterSubsets(test.filter))
+			require.Equal(t, test.expected, test.in.filterSubsets(test.filter))
 		})
 	}
 }

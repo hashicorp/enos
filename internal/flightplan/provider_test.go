@@ -686,7 +686,7 @@ func Test_Provider_Cty_RoundTrip(t *testing.T) {
 
 			clone := NewProvider()
 			require.NoError(t, clone.FromCtyValue(p.provider.ToCtyValue()))
-			require.EqualValues(t, p.provider, clone)
+			require.Equal(t, p.provider, clone)
 		})
 	}
 }

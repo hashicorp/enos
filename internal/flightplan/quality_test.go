@@ -204,8 +204,8 @@ func TestCompareQualityProto(t *testing.T) {
 
 			slices.SortStableFunc(qualities, CompareQualityProto)
 			for i := range expected {
-				require.EqualValues(t, expected[i].GetName(), qualities[i].GetName())
-				require.EqualValues(t, expected[i].GetDescription(), qualities[i].GetDescription())
+				require.Equal(t, expected[i].GetName(), qualities[i].GetName())
+				require.Equal(t, expected[i].GetDescription(), qualities[i].GetDescription())
 			}
 		})
 	}

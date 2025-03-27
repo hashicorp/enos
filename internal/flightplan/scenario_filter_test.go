@@ -120,7 +120,7 @@ func Test_ScenarioFilter_WithScenarioFilterFromSampleSubset(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.EqualValues(t, test.expected, sf)
+				require.Equal(t, test.expected, sf)
 			}
 		})
 	}
@@ -147,7 +147,7 @@ func Test_ScenarioFilter_Proto_RoundTrip(t *testing.T) {
 	}
 	got := &ScenarioFilter{}
 	got.FromProto(expected.Proto())
-	require.EqualValues(t, expected, got)
+	require.Equal(t, expected, got)
 }
 
 // Test_ScenarioFilter_ScenariosSelect tests that a flight plan returns the
@@ -243,7 +243,7 @@ func Test_ScenarioFilter_ScenariosSelect(t *testing.T) {
 					},
 				},
 			}
-			require.EqualValues(t, test.expected, fp.ScenariosSelect(test.filter))
+			require.Equal(t, test.expected, fp.ScenariosSelect(test.filter))
 		})
 	}
 }
@@ -299,7 +299,7 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 
 			filter, err := NewScenarioFilter(WithScenarioFilterParse(test.filterArg))
 			require.NoError(t, err)
-			require.EqualValues(t, test.expected, filter)
+			require.Equal(t, test.expected, filter)
 		})
 	}
 }

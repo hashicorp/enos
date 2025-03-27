@@ -238,7 +238,7 @@ func (d ScenarioBlocks) FindByName(name string) (*ScenarioBlock, bool) {
 
 // Scenarios returns all of the scenarios that were decoded.
 func (d ScenarioBlocks) Scenarios() []*Scenario {
-	if d == nil || len(d) < 1 {
+	if len(d) < 1 {
 		return nil
 	}
 
@@ -252,7 +252,7 @@ func (d ScenarioBlocks) Scenarios() []*Scenario {
 
 // CombinedMatrix returns a combined matrix of all scenario blocks matrices. Uniqueness is by values.
 func (d ScenarioBlocks) CombinedMatrix() *Matrix {
-	if d == nil || len(d) < 1 {
+	if len(d) < 1 {
 		return nil
 	}
 

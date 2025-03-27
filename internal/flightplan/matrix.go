@@ -189,7 +189,7 @@ func (v *Vector) Copy() *Vector {
 
 	vecC := NewVector()
 
-	if v.elements == nil || len(v.elements) == 0 {
+	if len(v.elements) == 0 {
 		return vecC
 	}
 
@@ -637,7 +637,7 @@ func (m *Matrix) Filter(filter *ScenarioFilter) *Matrix {
 		nm = m.Copy()
 	}
 
-	if filter.Exclude != nil && len(filter.Exclude) > 0 {
+	if len(filter.Exclude) > 0 {
 		nm = nm.Exclude(filter.Exclude...)
 	}
 

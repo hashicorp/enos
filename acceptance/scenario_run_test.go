@@ -46,12 +46,9 @@ func TestAcc_Cmd_Scenario_Run(t *testing.T) {
 
 			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
 
-			tmpDir, err := os.MkdirTemp("/tmp", "enos.run")
-			require.NoError(t, err)
-			t.Cleanup(func() { os.RemoveAll(tmpDir) })
-
+			tmpDir := t.TempDir()
 			outDir := filepath.Join(tmpDir, test.dir)
-			err = os.MkdirAll(outDir, 0o755)
+			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)
@@ -137,12 +134,9 @@ func TestAcc_Cmd_Scenario_Run_Timeout(t *testing.T) {
 
 			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
 
-			tmpDir, err := os.MkdirTemp("/tmp", "enos.run")
-			require.NoError(t, err)
-			t.Cleanup(func() { os.RemoveAll(tmpDir) })
-
+			tmpDir := t.TempDir()
 			outDir := filepath.Join(tmpDir, test.dir)
-			err = os.MkdirAll(outDir, 0o755)
+			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)

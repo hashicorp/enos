@@ -328,7 +328,7 @@ func (g *Generator) maybeWriteTerraformSettings(rootBody *hclwrite.Body) {
 		body.AppendNewline()
 	}
 
-	if s.RequiredProviders != nil && len(s.RequiredProviders) > 0 {
+	if len(s.RequiredProviders) > 0 {
 		rpBlock := body.AppendNewBlock("required_providers", []string{})
 		rpBody := rpBlock.Body()
 

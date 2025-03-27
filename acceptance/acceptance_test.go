@@ -6,7 +6,6 @@ package acceptance
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -262,7 +261,7 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 	sortResponses(gotResponses)
 
 	require.Lenf(t, gotResponses, len(expectedResponses),
-		fmt.Sprintf("expected %d responses, got %d", len(expectedResponses), len(gotResponses)),
+		"expected %d responses, got %d", len(expectedResponses), len(gotResponses),
 	)
 	for i := range expectedResponses {
 		require.NotNil(t, gotResponses)

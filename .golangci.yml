@@ -1,108 +1,44 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
----
+version: "2"
 run:
-  timeout: 5m
   issues-exit-code: 1
   tests: true
-
-# output configuration options
 output:
-  # colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
-  # default is "colored-line-number"
   formats:
-    - format: colored-line-number
-  # print lines of code with issue, default is true
-  print-issued-lines: true
-  # print linter name in the end of issue text, default is true
-  print-linter-name: true
-  # make issues output unique by line, default is true
-  uniq-by-line: true
-  # add a prefix to the output file references; default is no prefix
-  # path-prefix: ""
-  # sorts results by: filepath, line and column
-  sort-results: false
-
-# all available settings of specific linters
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: false
-
-  cyclop:
-    max-complexity: 30
-    package-average: 0.0
-    skip-tests: false
-
-  goimports:
-    # put imports beginning with prefix after 3rd-party packages;
-    # it's a comma-separated list of prefixes
-    local-prefixes: github.com/hashicorp
-
-  gofumpt:
-    extra-rules: false
-
-  gosec:
-    excludes:
-      # Don't worry about decompression bombs, not relevant for our usage of zip
-      - G110
-      # Don't worry about zip file traversals
-      - G305
-    config:
-      G306:
-        # allow creating files with 0755 permissions
-        "0755"
-
-  interfacebloat:
-    max: 12
-
-  nlreturn:
-    # Size of the block (including return statement that is still "OK")
-    block-size: 2
-
-  revive:
-    # see https://github.com/mgechev/revive#available-rules for details.
-    ignore-generated-header: true
-    severity: warning
-
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
 linters:
-  enable-all: true
+  default: all
   disable:
     - containedctx
     - depguard
     - dogsled
     - dupl
+    - err113
     - errname
     - errorlint
-    - execinquery
     - exhaustruct
     - forbidigo
     - forcetypeassert
     - funlen
-    - gci
     - ginkgolinter
     - gochecknoglobals
     - gochecknoinits
     - gocognit
     - goconst
-    # disabled for now
     - gocritic
     - gocyclo
-    # disabled for now
     - godox
-    - err113
-    - gofmt
     - goheader
-    - gomnd
-    - gomoddirectives # until we remove our go-cty fork
+    - gomoddirectives
     - importas
     - ireturn
     - lll
     - loggercheck
     - maintidx
-    - musttag
     - mnd
+    - musttag
     - nakedret
     - nestif
     - nonamedreturns
@@ -113,12 +49,58 @@ linters:
     - tagliatelle
     - testableexamples
     - testpackage
-    # disabled because it's not friendly with the terraform test helper
     - tparallel
     - varnamelen
     - wrapcheck
     - wsl
-  fast: false
-
-severity:
-  case-sensitive: false
+  settings:
+    cyclop:
+      max-complexity: 30
+      package-average: 0
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+    gosec:
+      excludes:
+        - G110
+        - G115
+        - G305
+      config:
+        G306: "0755"
+    interfacebloat:
+      max: 12
+    nlreturn:
+      block-size: 2
+    revive:
+      severity: warning
+    staticcheck:
+      checks:
+        - all
+        - -QF1008
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      extra-rules: false
+    goimports:
+      local-prefixes:
+        - github.com/hashicorp
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

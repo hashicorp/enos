@@ -176,8 +176,8 @@ sample "foo" {
 			}
 
 			require.NoError(t, err)
-			require.EqualValues(t, test.expected.Ws.GetFlightplan(), req.Ws.GetFlightplan())
-			require.EqualValues(t, test.expected.Filter, req.Filter)
+			require.Equal(t, test.expected.Ws.GetFlightplan(), req.Ws.GetFlightplan())
+			require.Equal(t, test.expected.Filter, req.Filter)
 		})
 	}
 }

@@ -188,7 +188,7 @@ func Test_StepVariableType_Decode(t *testing.T) {
 			}
 
 			if test.expectValue {
-				require.EqualValues(t, test.value, val)
+				require.Equal(t, test.value, val)
 			}
 
 			if test.expectTraversal {

@@ -509,7 +509,7 @@ func Test_Matrix_UniqueValues(t *testing.T) {
 		require.NotNil(t, uniqVecs)
 		uniqVec := uniqVecs[i]
 		require.NotNil(t, uniqVec)
-		require.EqualValues(t, m2Vec.Elements(), uniqVec.Elements())
+		require.Equal(t, m2Vec.Elements(), uniqVec.Elements())
 	}
 }
 
@@ -567,7 +567,7 @@ func Test_Matrix_Proto_RoundTrip(t *testing.T) {
 
 	got := NewMatrix()
 	got.FromProto(expected.Copy().Proto())
-	require.EqualValues(t, expected, got)
+	require.Equal(t, expected, got)
 }
 
 func Test_Matrix_Unique(t *testing.T) {

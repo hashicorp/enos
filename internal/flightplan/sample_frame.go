@@ -110,7 +110,7 @@ func (s *SampleFrame) Elements(subsetFrameName string, r *rand.Rand, m *Matrix) 
 // value we'll randomly distribute the values across all elements. As with all sample functions
 // that perform random actions we'll do it determinisitically.
 func expandElementAttrs(elements []*pb.Sample_Element, vals map[string]cty.Value, r *rand.Rand) error {
-	if vals == nil || len(vals) < 1 || len(elements) < 1 {
+	if len(vals) < 1 || len(elements) < 1 {
 		return nil
 	}
 
@@ -239,12 +239,12 @@ func (s *SampleFrame) FilterPercentage() (float32, error) {
 }
 
 func (s *SampleFrame) FilterMinMax() (int32, int32, error) {
-	min, err := s.FilterMin()
+	minimum, err := s.FilterMin()
 	if err != nil {
 		return 0, 0, err
 	}
 
-	max, err := s.FilterMax()
+	maximum, err := s.FilterMax()
 	if err != nil {
 		return 0, 0, err
 	}
@@ -255,18 +255,18 @@ func (s *SampleFrame) FilterMinMax() (int32, int32, error) {
 	}
 
 	size := s.Size()
-	if min > size {
-		return 0, 0, fmt.Errorf("minimum requested frame size %d is less that total frame size %d", min, size)
+	if minimum > size {
+		return 0, 0, fmt.Errorf("minimum requested frame size %d is less that total frame size %d", minimum, size)
 	}
 
 	// Handle a cases where we don't have a percentage or max set.
-	if max < 0 && pct < 0 {
-		return min, size, nil
+	if maximum < 0 && pct < 0 {
+		return minimum, size, nil
 	}
 
 	// Get out actual maximum from our max setting
-	if max < 0 || max > size {
-		max = size
+	if maximum < 0 || maximum > size {
+		maximum = size
 	}
 
 	// Handle cases where percentage rule has been set.
@@ -274,10 +274,10 @@ func (s *SampleFrame) FilterMinMax() (int32, int32, error) {
 		pctMax := math.Round(float64(pct/100) * float64(size))
 
 		// We have configured both a max upper bound and a percentage. Go with whatever is smaller.
-		max = int32(math.Min(float64(max), pctMax))
+		maximum = int32(math.Min(float64(maximum), pctMax))
 	}
 
-	return min, max, nil
+	return minimum, maximum, nil
 }
 
 func (s *SampleFrame) Size() int32 {
@@ -285,7 +285,7 @@ func (s *SampleFrame) Size() int32 {
 		return 0
 	}
 
-	if s.SubsetFrames == nil || len(s.SubsetFrames) < 1 {
+	if len(s.SubsetFrames) < 1 {
 		return 0
 	}
 
@@ -323,7 +323,7 @@ func (s *SampleFrame) Validate() error {
 		return errors.New("sample frame has not been initialized")
 	}
 
-	if s.SubsetFrames == nil || len(s.SubsetFrames) < 1 {
+	if len(s.SubsetFrames) < 1 {
 		return errors.New("sample frame does not have any subsets")
 	}
 
@@ -343,18 +343,18 @@ func (s *SampleFrame) FilterValidate() (bool, error) {
 		return false, err
 	}
 
-	min, max, err := s.FilterMinMax()
+	minimum, maximum, err := s.FilterMinMax()
 	if err != nil {
 		return false, err
 	}
 
 	size := s.Size()
 	// Make sure our field is large enough to sample our minimum
-	if max > size {
-		return false, fmt.Errorf("sample frame size %d was less than sample filter minimum %d", size, min)
+	if maximum > size {
+		return false, fmt.Errorf("sample frame size %d was less than sample filter minimum %d", size, minimum)
 	}
 
-	if max == size {
+	if maximum == size {
 		return true, nil
 	}
 

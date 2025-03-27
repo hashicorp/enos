@@ -124,7 +124,7 @@ func (s *SampleSubsetFrame) Validate() error {
 
 // Size returns the total size of elements in the frame.
 func (s SampleSubsetFrames) Size() int32 {
-	if s == nil || len(s) < 1 {
+	if len(s) < 1 {
 		return 0
 	}
 

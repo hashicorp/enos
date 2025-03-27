@@ -996,5 +996,5 @@ func Test_TerraformSettings_Cty_RoundTrip(t *testing.T) {
 
 	clone := NewTerraformSetting()
 	require.NoError(t, clone.FromCtyValue(setting.ToCtyValue()))
-	require.EqualValues(t, setting, clone)
+	require.Equal(t, setting, clone)
 }

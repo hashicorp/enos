@@ -142,22 +142,22 @@ func TestAcc_Cmd_Scenario_Outline(t *testing.T) {
 			require.NoError(t, protojson.Unmarshal(out, got))
 			require.Len(t, got.GetOutlines(), len(test.out.GetOutlines()))
 			for i := range test.out.GetOutlines() {
-				require.EqualValues(t, test.out.GetOutlines()[i].GetScenario().GetId().GetName(), got.GetOutlines()[i].GetScenario().GetId().GetName())
-				require.EqualValues(t, test.out.GetOutlines()[i].GetScenario().GetId().GetDescription(), got.GetOutlines()[i].GetScenario().GetId().GetDescription())
-				require.EqualValues(t, test.out.GetOutlines()[i].GetScenario().GetId().GetFilter(), got.GetOutlines()[i].GetScenario().GetId().GetFilter())
-				require.EqualValues(t, test.out.GetOutlines()[i].GetScenario().GetId().GetUid(), got.GetOutlines()[i].GetScenario().GetId().GetUid())
-				require.EqualValues(t, test.out.GetOutlines()[i].GetMatrix().String(), got.GetOutlines()[i].GetMatrix().String())
+				require.Equal(t, test.out.GetOutlines()[i].GetScenario().GetId().GetName(), got.GetOutlines()[i].GetScenario().GetId().GetName())
+				require.Equal(t, test.out.GetOutlines()[i].GetScenario().GetId().GetDescription(), got.GetOutlines()[i].GetScenario().GetId().GetDescription())
+				require.Equal(t, test.out.GetOutlines()[i].GetScenario().GetId().GetFilter(), got.GetOutlines()[i].GetScenario().GetId().GetFilter())
+				require.Equal(t, test.out.GetOutlines()[i].GetScenario().GetId().GetUid(), got.GetOutlines()[i].GetScenario().GetId().GetUid())
+				require.Equal(t, test.out.GetOutlines()[i].GetMatrix().String(), got.GetOutlines()[i].GetMatrix().String())
 				require.Len(t, got.GetOutlines()[i].GetVerifies(), len(test.out.GetOutlines()[i].GetVerifies()))
 				for q := range test.out.GetOutlines()[i].GetVerifies() {
-					require.EqualValues(t, test.out.GetOutlines()[i].GetVerifies()[q].GetName(), got.GetOutlines()[i].GetVerifies()[q].GetName())
-					require.EqualValues(t, test.out.GetOutlines()[i].GetVerifies()[q].GetDescription(), got.GetOutlines()[i].GetVerifies()[q].GetDescription())
+					require.Equal(t, test.out.GetOutlines()[i].GetVerifies()[q].GetName(), got.GetOutlines()[i].GetVerifies()[q].GetName())
+					require.Equal(t, test.out.GetOutlines()[i].GetVerifies()[q].GetDescription(), got.GetOutlines()[i].GetVerifies()[q].GetDescription())
 				}
 				for s := range test.out.GetOutlines()[i].GetSteps() {
-					require.EqualValues(t, test.out.GetOutlines()[i].GetSteps()[s].GetName(), got.GetOutlines()[i].GetSteps()[s].GetName())
-					require.EqualValues(t, test.out.GetOutlines()[i].GetSteps()[s].GetDescription(), got.GetOutlines()[i].GetSteps()[s].GetDescription())
+					require.Equal(t, test.out.GetOutlines()[i].GetSteps()[s].GetName(), got.GetOutlines()[i].GetSteps()[s].GetName())
+					require.Equal(t, test.out.GetOutlines()[i].GetSteps()[s].GetDescription(), got.GetOutlines()[i].GetSteps()[s].GetDescription())
 					for q := range test.out.GetOutlines()[i].GetSteps()[s].GetVerifies() {
-						require.EqualValues(t, test.out.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetName(), got.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetName())
-						require.EqualValues(t, test.out.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetDescription(), got.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetDescription())
+						require.Equal(t, test.out.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetName(), got.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetName())
+						require.Equal(t, test.out.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetDescription(), got.GetOutlines()[i].GetSteps()[s].GetVerifies()[q].GetDescription())
 					}
 				}
 			}

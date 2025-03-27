@@ -482,7 +482,7 @@ func (t *TerraformSetting) ToCtyValue() cty.Value {
 		"cloud":            t.Cloud,
 	}
 
-	if t.RequiredProviders == nil || len(t.RequiredProviders) == 0 {
+	if len(t.RequiredProviders) == 0 {
 		vals["required_providers"] = cty.NullVal(cty.Object(map[string]cty.Type{
 			"source":  cty.String,
 			"version": cty.String,
@@ -491,7 +491,7 @@ func (t *TerraformSetting) ToCtyValue() cty.Value {
 		vals["required_providers"] = cty.ObjectVal(t.RequiredProviders)
 	}
 
-	if t.ProviderMetas == nil || len(t.ProviderMetas) == 0 {
+	if len(t.ProviderMetas) == 0 {
 		vals["provider_meta"] = cty.NullVal(cty.EmptyObject)
 	} else {
 		metas := map[string]cty.Value{}

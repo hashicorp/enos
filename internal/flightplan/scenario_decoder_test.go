@@ -132,7 +132,7 @@ func Test_ScenarioBlocks_Scenarios(t *testing.T) {
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-			require.EqualValues(t, test.expected, test.in.Scenarios())
+			require.Equal(t, test.expected, test.in.Scenarios())
 		})
 	}
 }

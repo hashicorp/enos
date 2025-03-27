@@ -45,7 +45,7 @@ func Test_SampleFrame_Ref(t *testing.T) {
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-			require.EqualValues(t, test.expected, test.in.Ref())
+			require.Equal(t, test.expected, test.in.Ref())
 		})
 	}
 }
@@ -413,14 +413,14 @@ sample "all" {
 
 			for i := range test.expected {
 				test.expected[i].Sample = samp.Ref()
-				require.EqualValues(t, test.expected[i].GetSample(), elements[i].GetSample())
-				require.EqualValues(t, test.expected[i].GetSubset(), elements[i].GetSubset())
-				require.EqualValues(t, test.expected[i].GetScenario(), elements[i].GetScenario())
+				require.Equal(t, test.expected[i].GetSample(), elements[i].GetSample())
+				require.Equal(t, test.expected[i].GetSubset(), elements[i].GetSubset())
+				require.Equal(t, test.expected[i].GetScenario(), elements[i].GetScenario())
 				gotAttrs := elements[i].GetAttributes().AsMap()
 				for name, val := range test.expected[i].GetAttributes().AsMap() {
 					attr, ok := gotAttrs[name]
 					require.True(t, ok, "did not find expected attribute %s", name)
-					require.EqualValues(t, val, attr)
+					require.Equal(t, val, attr)
 				}
 			}
 		})
@@ -454,12 +454,12 @@ func Test_SampleFrame_FilterMin(t *testing.T) {
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-			min, err := test.in.FilterMin()
+			minimum, err := test.in.FilterMin()
 			if test.shouldFail {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, test.expected, min)
+				require.Equal(t, test.expected, minimum)
 			}
 		})
 	}
@@ -492,12 +492,12 @@ func Test_SampleFrame_FilterMax(t *testing.T) {
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-			max, err := test.in.FilterMax()
+			maximum, err := test.in.FilterMax()
 			if test.shouldFail {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, test.expected, max)
+				require.Equal(t, test.expected, maximum)
 			}
 		})
 	}
@@ -746,13 +746,13 @@ func Test_SampleFrame_FilterMinMax(t *testing.T) {
 	} {
 		t.Run(desc, func(t *testing.T) {
 			t.Parallel()
-			min, max, err := test.in.FilterMinMax()
+			minimum, maximum, err := test.in.FilterMinMax()
 			if test.shouldFail {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, test.min, min)
-				require.Equal(t, test.max, max)
+				require.Equal(t, test.min, minimum)
+				require.Equal(t, test.max, maximum)
 			}
 		})
 	}

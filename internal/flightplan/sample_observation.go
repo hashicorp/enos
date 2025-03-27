@@ -227,7 +227,7 @@ func (s *SampleSubsetObservation) Size() int32 {
 
 // Size is the size of all sample subset observations.
 func (s SampleSubsetObservations) Size() int32 {
-	if s == nil || len(s) < 1 {
+	if len(s) < 1 {
 		return 0
 	}
 
@@ -241,7 +241,7 @@ func (s SampleSubsetObservations) Size() int32 {
 
 // Keys are sorted keys of the subset obserservation.
 func (s SampleSubsetObservations) Keys() []string {
-	if s == nil || len(s) < 1 {
+	if len(s) < 1 {
 		return nil
 	}
 

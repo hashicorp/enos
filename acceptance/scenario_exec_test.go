@@ -46,12 +46,9 @@ func TestAcc_Cmd_Scenario_Exec(t *testing.T) {
 
 			enos := newAcceptanceRunner(t, skipUnlessTerraformCLI())
 
-			tmpDir, err := os.MkdirTemp("/tmp", "enos.exec")
-			require.NoError(t, err)
-			t.Cleanup(func() { os.RemoveAll(tmpDir) })
-
+			tmpDir := t.TempDir()
 			outDir := filepath.Join(tmpDir, test.dir)
-			err = os.MkdirAll(outDir, 0o755)
+			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)

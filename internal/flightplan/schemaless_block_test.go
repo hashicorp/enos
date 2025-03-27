@@ -117,7 +117,7 @@ provider "is" "anything" {
 				err := testDiagsToError(files, diags)
 				require.NoError(t, err)
 			}
-			require.EqualValues(t, test.expected, csb)
+			require.Equal(t, test.expected, csb)
 		})
 	}
 }
@@ -192,7 +192,7 @@ func Test_SchemalessBlock_Roundtrip(t *testing.T) {
 			val := test.expected.ToCtyValue()
 			got := NewSchemalessBlock()
 			require.NoError(t, got.FromCtyValue(val))
-			require.EqualValues(t, test.expected, got)
+			require.Equal(t, test.expected, got)
 		})
 	}
 }

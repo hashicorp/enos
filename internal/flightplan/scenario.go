@@ -134,7 +134,7 @@ func (s *Scenario) Match(filter *ScenarioFilter) bool {
 			return false
 		}
 
-		if filter.Exclude != nil && len(filter.Exclude) > 0 {
+		if len(filter.Exclude) > 0 {
 			return false
 		}
 	}

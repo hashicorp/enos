@@ -93,7 +93,7 @@ func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubs
 		return nil, decRes
 	}
 
-	if fp.ScenarioBlocks == nil || len(fp.ScenarioBlocks) < 1 {
+	if len(fp.ScenarioBlocks) < 1 {
 		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromErr(
 			fmt.Errorf("no scenarios found matching scenario %s", sf.Name),
 		)...)

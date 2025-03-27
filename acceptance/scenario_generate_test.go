@@ -76,11 +76,9 @@ func TestAcc_Cmd_Scenario_Generate(t *testing.T) {
 
 			enos := newAcceptanceRunner(t)
 
-			tmpDir, err := os.MkdirTemp("", "enos.generate.out")
-			require.NoError(t, err)
-			t.Cleanup(func() { os.RemoveAll(tmpDir) })
+			tmpDir := t.TempDir()
 			outDir := filepath.Join(tmpDir, test.dir)
-			err = os.MkdirAll(outDir, 0o755)
+			err := os.MkdirAll(outDir, 0o755)
 			require.NoError(t, err)
 			outDir, err = filepath.EvalSymlinks(outDir)
 			require.NoError(t, err)

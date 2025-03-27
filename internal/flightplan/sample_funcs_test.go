@@ -5,7 +5,6 @@ package flightplan
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -243,7 +242,7 @@ func Test_SampleFuncAll(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.EqualValues(t, test.in, obs.SampleFrame)
+				require.Equal(t, test.in, obs.SampleFrame)
 				require.Equal(t, test.expected.SubsetObservations.Size(), obs.SubsetObservations.Size())
 				for name, subObs := range test.expected.SubsetObservations {
 					if subObs.Matrix != nil {
@@ -639,19 +638,13 @@ func Test_SampleFuncStratified(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.EqualValues(t, test.in, obs.SampleFrame)
+				require.Equal(t, test.in, obs.SampleFrame)
 				require.Equal(t, test.expected.SubsetObservations.Size(), obs.SubsetObservations.Size())
 				for name, expObs := range test.expected.SubsetObservations {
 					if expObs.Matrix != nil {
 						gotObs, ok := obs.SubsetObservations[name]
 						require.Truef(t, ok, "expected subset observation %s, got %v", name, obs.SubsetObservations)
-						require.Truef(t, expObs.Matrix.Equal(gotObs.Matrix), fmt.Sprintf(
-							"expected matrix vectors for %s: \n%s\ngot matrix vectors: \n%s\ndifference: \n%s\n",
-							name,
-							expObs.Matrix.String(),
-							gotObs.Matrix.String(),
-							expObs.Matrix.SymmetricDifferenceUnordered(gotObs.Matrix).String(),
-						))
+						require.Truef(t, expObs.Matrix.Equal(gotObs.Matrix), "expected matrix vectors for %s: \n%s\ngot matrix vectors: \n%s\ndifference: \n%s\n", name, expObs.Matrix.String(), gotObs.Matrix.String(), expObs.Matrix.SymmetricDifferenceUnordered(gotObs.Matrix).String())
 					}
 				}
 			}

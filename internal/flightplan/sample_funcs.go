@@ -73,7 +73,7 @@ func SampleFuncPurposiveStratified(ctx context.Context, frame *SampleFrame, r *r
 	}
 
 	// Determine our sample boundaries.
-	min, max, err := frame.FilterMinMax()
+	minimum, maximum, err := frame.FilterMinMax()
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func SampleFuncPurposiveStratified(ctx context.Context, frame *SampleFrame, r *r
 	// Create our sample specifications for each subset. We'll do this by converting our frame subsets
 	// into specifications and then allocating elements using the our purposive stratfied algorithm.
 	subsetSpecs := sampleFrameToSubsetSpecs(frame)
-	err = sampleAllocatePurposiveStratified(subsetSpecs, max, r)
+	err = sampleAllocatePurposiveStratified(subsetSpecs, maximum, r)
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +97,9 @@ func SampleFuncPurposiveStratified(ctx context.Context, frame *SampleFrame, r *r
 		return nil, err
 	}
 
-	if res.Size() < min {
+	if res.Size() < minimum {
 		return nil, fmt.Errorf("sample observation size of %d does not satisfy minimum requirement: %d",
-			res.Size(), min,
+			res.Size(), minimum,
 		)
 	}
 

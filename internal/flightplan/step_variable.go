@@ -44,7 +44,15 @@ func StepVariableFromVal(v cty.Value) (*StepVariable, hcl.Diagnostics) {
 		})
 	}
 
-	return v.EncapsulatedValue().(*StepVariable), diags
+	sv, ok := v.EncapsulatedValue().(*StepVariable)
+	if !ok {
+		return stepVar, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "invalid value",
+		})
+	}
+
+	return sv, diags
 }
 
 // absTraversalForExpr is similar to hcl.AbsTraversalForExpr() in that it returns

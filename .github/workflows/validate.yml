@@ -44,7 +44,7 @@ jobs:
       - name: fmt-check
         run: make fmt-check
       - name: lint
-        run: golangci-lint run -v -c .golangci.yml --out-format=github-actions --timeout=5m0s
+        run: make lint
 
   test:
     name: Go tests

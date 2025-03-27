@@ -7,7 +7,6 @@ REPO=github.com/hashicorp/enos
 GO_BUILD_TAGS=-tags osusergo,netgo
 GO_LD_FLAGS=-ldflags="-extldflags=-static -X ${REPO}/internal/version.Version=${VERSION} -X ${REPO}/internal/version.GitSHA=${GIT_SHA}"
 GO_GC_FLAGS?=
-LINT_OUT_FORMAT?=colored-line-number
 BUF_LINT_OUT_FORMAT?=github-actions
 GORACE=GORACE=log_path=/tmp/enos-gorace.log
 TEST_ACC=ENOS_ACC=1
@@ -55,14 +54,14 @@ lint: lint-golang lint-proto
 
 .PHONY: lint-golang
 lint-golang:
-	golangci-lint run -v
+	golangci-lint run
 
 .PHONY: lint-fix
 lint-fix: lint-fix-golang
 
 .PHONY: lint-fix-golang
 lint-fix-golang:
-	golangci-lint run -v --out-format=$(LINT_OUT_FORMAT) --fix
+	golangci-lint run --fix
 
 .PHONY: lint-proto
 lint-proto:

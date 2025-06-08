@@ -13,9 +13,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var force bool
-var keypairName string
-var sshDir string
+var (
+	force       bool
+	keypairName string
+	sshDir      string
+)
 
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",

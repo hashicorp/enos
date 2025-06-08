@@ -47,13 +47,13 @@ func Run(client describeKeyPairsAPI, keypairName, sshDir string, force bool) err
 		return fmt.Errorf("failed to create key pair: %w", err)
 	}
 
-	err = os.MkdirAll(sshDir, 0700)
+	err = os.MkdirAll(sshDir, 0o700)
 	if err != nil {
 		return fmt.Errorf("failed to create ssh directory: %w", err)
 	}
 
 	expandedPath := filepath.Join(sshDir, fmt.Sprintf("%s.pem", keypairName))
-	err = os.WriteFile(expandedPath, []byte(*out.KeyMaterial), 0600)
+	err = os.WriteFile(expandedPath, []byte(*out.KeyMaterial), 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to write private key: %w", err)
 	}

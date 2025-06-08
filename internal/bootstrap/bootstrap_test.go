@@ -92,7 +92,7 @@ func TestKeyPairExists(t *testing.T) {
 func TestRunScenarios(t *testing.T) {
 	tempHome := t.TempDir()
 	sshPath := filepath.Join(tempHome, ".ssh")
-	err := os.MkdirAll(sshPath, 0700)
+	err := os.MkdirAll(sshPath, 0o700)
 	if err != nil {
 		t.Fatalf("failed to create temp ssh dir: %v", err)
 	}

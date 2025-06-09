@@ -37,18 +37,21 @@ func (m *mockKeyManager) DescribeKeyPairs(ctx context.Context, input *ec2.Descri
 			},
 		}, nil
 	}
+
 	return nil, &mockAPIError{code: "InvalidKeyPair.NotFound"}
 }
 
 func (m *mockKeyManager) DeleteKeyPair(ctx context.Context, input *ec2.DeleteKeyPairInput, optFns ...func(*ec2.Options)) (*ec2.DeleteKeyPairOutput, error) {
 	m.deleteCalled = true
 	m.keyExists = false
+
 	return &ec2.DeleteKeyPairOutput{}, nil
 }
 
 func (m *mockKeyManager) CreateKeyPair(ctx context.Context, input *ec2.CreateKeyPairInput, optFns ...func(*ec2.Options)) (*ec2.CreateKeyPairOutput, error) {
 	m.createCalled = true
 	key := "mock-private-key"
+
 	return &ec2.CreateKeyPairOutput{
 		KeyName:     input.KeyName,
 		KeyMaterial: &key,
@@ -56,6 +59,7 @@ func (m *mockKeyManager) CreateKeyPair(ctx context.Context, input *ec2.CreateKey
 }
 
 func TestKeyPairExists(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		client    describeKeyPairsAPI
@@ -77,7 +81,9 @@ func TestKeyPairExists(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := keyPairExists(tt.client, "enos-ec2-key")
 			if (err != nil) != tt.expectErr {
 				t.Fatalf("expected error: %v, got: %v", tt.expectErr, err)
@@ -90,13 +96,14 @@ func TestKeyPairExists(t *testing.T) {
 }
 
 func TestRunScenarios(t *testing.T) {
+	t.Parallel()
 	tempHome := t.TempDir()
 	sshPath := filepath.Join(tempHome, ".ssh")
 	err := os.MkdirAll(sshPath, 0o700)
 	if err != nil {
 		t.Fatalf("failed to create temp ssh dir: %v", err)
 	}
-	os.Setenv("HOME", tempHome)
+	t.Setenv("HOME", tempHome)
 
 	tests := []struct {
 		name        string
@@ -110,7 +117,9 @@ func TestRunScenarios(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			client := &mockKeyManager{keyExists: tt.keyExists}
 			err := Run(client, "enos-ec2-key", sshPath, tt.force)
 			if err != nil && tt.expectWrite {

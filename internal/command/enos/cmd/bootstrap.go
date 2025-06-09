@@ -28,6 +28,7 @@ var bootstrapCmd = &cobra.Command{
 			return err
 		}
 		client := ec2.NewFromConfig(cfg)
+
 		return bootstrap.Run(client, keypairName, sshDir, force)
 	},
 }

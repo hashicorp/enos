@@ -81,7 +81,6 @@ func TestKeyPairExists(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := keyPairExists(tt.client, "enos-ec2-key")
@@ -96,7 +95,6 @@ func TestKeyPairExists(t *testing.T) {
 }
 
 func TestRunScenarios(t *testing.T) {
-	t.Parallel()
 	tempHome := t.TempDir()
 	sshPath := filepath.Join(tempHome, ".ssh")
 	err := os.MkdirAll(sshPath, 0o700)
@@ -117,7 +115,6 @@ func TestRunScenarios(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			client := &mockKeyManager{keyExists: tt.keyExists}

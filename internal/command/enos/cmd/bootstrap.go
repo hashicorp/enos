@@ -9,8 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/hashicorp/enos/internal/bootstrap"
 	"github.com/spf13/cobra"
+
+	"github.com/hashicorp/enos/internal/bootstrap"
 )
 
 var (

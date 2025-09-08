@@ -18,12 +18,14 @@ linters:
     - depguard
     - dogsled
     - dupl
+    - embeddedstructfieldcheck
     - err113
     - errname
     - errorlint
     - exhaustruct
     - forbidigo
     - forcetypeassert
+    - funcorder
     - funlen
     - ginkgolinter
     - gochecknoglobals
@@ -44,6 +46,7 @@ linters:
     - musttag
     - nakedret
     - nestif
+    - noinlineerr
     - nonamedreturns
     - nosprintfhostport
     - promlinter
@@ -56,6 +59,7 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl
+    - wsl_v5
   settings:
     cyclop:
       max-complexity: 30

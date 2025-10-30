@@ -81,6 +81,9 @@ jobs:
       matrix:
         goos: [linux, darwin]
         goarch: [amd64, arm64]
+        include:
+          - goos: linux
+            goarch: s390x
       fail-fast: true
     name: Go ${{ matrix.goos }} ${{ matrix.goarch }} build
     env:

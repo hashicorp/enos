@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package funcs
@@ -35,6 +35,7 @@ var SemverConstraint = function.New(&function.Spec{
 		if err != nil {
 			return cty.NullVal(cty.Bool), err
 		}
+		c.IncludePrerelease = true
 
 		return cty.BoolVal(c.Check(v)), nil
 	},

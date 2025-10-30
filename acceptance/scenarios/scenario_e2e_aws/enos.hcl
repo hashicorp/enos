@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2021, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 variable "tags" {
@@ -8,17 +8,6 @@ variable "tags" {
 }
 
 terraform_cli "default" {
-  provider_installation {
-    network_mirror {
-      url     = "https://enos-provider-current.s3.amazonaws.com/"
-      include = ["hashicorp.com/qti/enos"]
-    }
-    direct {
-      exclude = [
-        "hashicorp.com/qti/enos"
-      ]
-    }
-  }
 }
 
 terraform "default" {
@@ -26,8 +15,8 @@ terraform "default" {
 
   required_providers {
     enos = {
-      version = ">= 0.1.13"
-      source  = "hashicorp.com/qti/enos"
+      source  = "hashicorp-forge/enos"
+      version = "0.6.2"
     }
 
     aws = {

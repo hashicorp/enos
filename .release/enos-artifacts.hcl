@@ -8,6 +8,7 @@ artifacts {
     "enos_${version}_darwin_arm64.zip",
     "enos_${version}_linux_amd64.zip",
     "enos_${version}_linux_arm64.zip",
+    "enos_${version}_linux_s390x.zip",
   ]
   rpm = [
     "enos-${version_linux}-1.aarch64.rpm",
@@ -20,5 +21,6 @@ artifacts {
   container = [
     "enos_default_linux_amd64_${version}_${commit_sha}.docker.tar",
     "enos_default_linux_arm64_${version}_${commit_sha}.docker.tar",
+    "enos_default_linux_s390x_${version}_${commit_sha}.docker.tar",
   ]
 }

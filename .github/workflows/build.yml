@@ -125,19 +125,19 @@ jobs:
           deb_depends: "openssl"
           rpm_depends: "openssl"
       - name: Set Package Names
-        if: ${{ matrix.goos == 'linux' }}
+        if: ${{ matrix.goos == 'linux' && matrix.goarch != 's390x' }}
         run: |
           echo "RPM_PACKAGE=$(basename out/*.rpm)" >> "$GITHUB_ENV"
           echo "DEB_PACKAGE=$(basename out/*.deb)" >> "$GITHUB_ENV"
       - name: Upload RHEL Packages
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
-        if: ${{ matrix.goos == 'linux' }}
+        if: ${{ matrix.goos == 'linux' && matrix.goarch != 's390x' }}
         with:
           name: ${{ env.RPM_PACKAGE }}
           path: out/${{ env.RPM_PACKAGE }}
       - name: Upload Debian Packages
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
-        if: ${{ matrix.goos == 'linux' }}
+        if: ${{ matrix.goos == 'linux' && matrix.goarch != 's390x' }}
         with:
           name: ${{ env.DEB_PACKAGE }}
           path: out/${{ env.DEB_PACKAGE }}
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ["arm64", "amd64"]
+        arch: ["arm64", "amd64", "s390x"]
     env:
       repo: ${{github.event.repository.name}}
       version: ${{needs.product-metadata.outputs.product-version}}

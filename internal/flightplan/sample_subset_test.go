@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -266,11 +267,12 @@ sample "foo" {
 			for i := range test.expected {
 				sub := samp.Subsets[i]
 				frame, decRes := sub.Frame(context.Background(), test.ws)
-				msg := "expected an equal frame"
+				msg := strings.Builder{}
+				msg.WriteString("expected an equal frame")
 				for _, d := range decRes.GetDiagnostics() {
-					msg += " " + diagnostics.String(d)
+					msg.WriteString(" " + diagnostics.String(d))
 				}
-				require.Emptyf(t, decRes.GetDiagnostics(), msg)
+				require.Emptyf(t, decRes.GetDiagnostics(), msg.String())
 
 				testRequireEqualSampleSubsetFrame(t, test.expected[i], frame)
 			}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package funcs
@@ -268,7 +268,7 @@ var SumFunc = function.New(&function.Spec{
 		ty := args[0].Type()
 
 		if !ty.IsListType() && !ty.IsSetType() && !ty.IsTupleType() {
-			return cty.NilVal, function.NewArgErrorf(0, "argument must be list, set, or tuple. Received "+ty.FriendlyName())
+			return cty.NilVal, function.NewArgErrorf(0, "argument must be list, set, or tuple. Received %s", ty.FriendlyName())
 		}
 
 		if !args[0].IsWhollyKnown() {

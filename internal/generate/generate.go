@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package generate
@@ -10,8 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/cli"
 	"github.com/zclconf/go-cty/cty"
+
+	"github.com/hashicorp/cli"
 
 	"github.com/hashicorp/enos/internal/flightplan"
 	"github.com/hashicorp/hcl/v2"

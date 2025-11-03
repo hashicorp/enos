@@ -68,15 +68,15 @@ jobs:
       # Checkout Enos repo and place it in the specified relative path within the runner's main directory,
       # in order to accommodate checking out multiple repos.
       - name: Checkout enos repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           path: enos-checkout
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version-file: enos-checkout/go.mod
       # Set up bob CLI
       - name: Setup bob CLI
-        uses: hashicorp/action-setup-bob@v1
+        uses: hashicorp/action-setup-bob@01076d9cc869139ac97693d0869f0e80a666cb3b # v2.1.1
         with:
           github-token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
       # Use bob to download SHA256SUMS file from Artifactory
@@ -100,7 +100,7 @@ jobs:
       # in order to accommodate checking out multiple repos.
       # A token with sufficient permissions for the target repo is required.
       - name: Checkout homebrew-tap
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           repository: ${{ env.TARGET_REPO }}
           path: ${{ env.TARGET_REPO_FILEPATH }}

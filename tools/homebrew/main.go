@@ -127,6 +127,8 @@ func readMetadata(path string) (*metadata, error) {
 					metadata.LinuxARM64SHA = tempSha
 				case "amd64.zip":
 					metadata.LinuxAMD64SHA = tempSha
+				case "s390x.zip":
+					// Ignore our linux/s390x artifact
 				default:
 					return metadata, &errInvalidFilename{errInvalidFilenameReasonArch}
 				}

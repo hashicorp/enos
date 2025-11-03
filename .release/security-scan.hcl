@@ -15,4 +15,12 @@ container {
   secrets {
     all = true
   }
+
+  triage {
+    suppress {
+      vulnerabilities = [
+        "CVE-2025-46394", // busybox in the latest alpine container
+      ]
+    }
+  }
 }

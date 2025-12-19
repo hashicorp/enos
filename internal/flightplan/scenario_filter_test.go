@@ -303,3 +303,70 @@ func Test_ScenarioFilter_Parse(t *testing.T) {
 		})
 	}
 }
+
+func Test_ScenarioFilter_RequiresVariants(t *testing.T) {
+	t.Parallel()
+	for name, test := range map[string]struct {
+		f        *ScenarioFilter
+		expected bool
+	}{
+		"nil": {nil, false},
+		"name only": {
+			&ScenarioFilter{
+				Name: "foo",
+			}, false,
+		},
+		"name includes": {
+			&ScenarioFilter{
+				Name:    "foo",
+				Include: NewVector(NewElement("backend", "consul")),
+			},
+			true,
+		},
+		"name excludes": {
+			&ScenarioFilter{
+				Name: "foo",
+				Exclude: []*Exclude{
+					{pb.Matrix_Exclude_MODE_CONTAINS, NewVector(NewElement("arch", "amd64"))},
+				},
+			},
+			true,
+		},
+		"includes": {
+			&ScenarioFilter{
+				Include: NewVector(NewElement("backend", "consul")),
+			},
+			true,
+		},
+		"excludes": {
+			&ScenarioFilter{
+				Exclude: []*Exclude{
+					{pb.Matrix_Exclude_MODE_CONTAINS, NewVector(NewElement("arch", "amd64"))},
+				},
+			},
+			true,
+		},
+		"name intersection matrix includes": {
+			&ScenarioFilter{
+				Name: "foo",
+				IntersectionMatrix: &Matrix{Vectors: []*Vector{
+					NewVector(NewElement("backend", "raft"), NewElement("backend", "consul")),
+				}},
+			},
+			true,
+		},
+		"intersection matrix includes": {
+			&ScenarioFilter{
+				IntersectionMatrix: &Matrix{Vectors: []*Vector{
+					NewVector(NewElement("backend", "raft"), NewElement("backend", "consul")),
+				}},
+			},
+			true,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, test.expected, test.f.RequiresVariants())
+		})
+	}
+}

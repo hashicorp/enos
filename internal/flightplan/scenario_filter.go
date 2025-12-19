@@ -45,6 +45,32 @@ func (sf *ScenarioFilter) String() string {
 	return str
 }
 
+// RequiresVariants returns a boolean describing whether or not the filter
+// includes any variants: include, exclude, and intersections.
+func (sf *ScenarioFilter) RequiresVariants() bool {
+	if sf == nil {
+		return false
+	}
+
+	if sf.Include != nil && len(sf.Include.elements) > 0 {
+		return true
+	}
+
+	if len(sf.Exclude) > 0 {
+		return true
+	}
+
+	if sf.IntersectionMatrix == nil {
+		return false
+	}
+
+	if len(sf.IntersectionMatrix.Vectors) > 0 {
+		return true
+	}
+
+	return false
+}
+
 // ScenarioFilterOpt is a scenario filter constructor functional option.
 type ScenarioFilterOpt func(*ScenarioFilter) error
 

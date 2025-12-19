@@ -257,9 +257,7 @@ func (d *ScenarioDecoderIterator) decodeScenarioBlocksMatrix(ctx context.Context
 	wgDecode := sync.WaitGroup{}
 
 	// Start the diagnostics collector
-	wgDiag.Add(1)
-	go func() {
-		defer wgDiag.Done()
+	wgDiag.Go(func() {
 		for {
 			select {
 			case <-ctx.Done():
@@ -278,23 +276,36 @@ func (d *ScenarioDecoderIterator) decodeScenarioBlocksMatrix(ctx context.Context
 				diags = diags.Extend(moreDiags)
 			}
 		}
-	}()
+	})
 
-	// Decode and filter each matrix in parallel
+	// Decode any matrix blocks embedded in the scenario blocks. The resulting
+	// elements in the scenario blocks matrix product will only include those that
+	// intersect with the filter product (if defined).
 	for _, scenarioBlock := range d.scenarioBlocks {
-		wgDecode.Add(1)
-		go func() {
-			defer wgDecode.Done()
+		wgDecode.Go(func() {
 			d.decodeMatrix(ctx, scenarioBlock, diagC)
-		}()
+		})
 	}
 
-	// Wait for the diagnostics collector to finish
+	// Wait for the parallel matrix decode and filters and collect any diagnostics.
 	wgDecode.Wait()
 	close(diagCloseC)
 	wgDiag.Wait()
 
-	// Calculate our expected decode range
+	if diags.HasErrors() {
+		return diags
+	}
+
+	// Perform our final filtering pass while we're decoding. At this point we
+	// should have already excluded scenario blocks which don't match our filter
+	// name (if specified, in filterHCLBlocks()), and we'll only have a matrix
+	// that intersects with our filter (if specified, decodeMatrix()). We still
+	// have to account for filters that don't include a scenario name and none
+	// of the scenarios matrix variants match (or there are no matrix variants
+	// at all.)
+	d.filterScenarioBlocksWithMatrixBlocks()
+
+	// Calculate our expected number of scenario(s)
 	for _, scenarioBlock := range d.scenarioBlocks {
 		if scenarioBlock.Matrix() == nil {
 			d.mustDispatch++
@@ -304,6 +315,25 @@ func (d *ScenarioDecoderIterator) decodeScenarioBlocksMatrix(ctx context.Context
 	}
 
 	return diags
+}
+
+// filterScenarioBlocksWithMatrixBlocks filters the scenario blocks after the
+// the matrix decode happens. At this point we should have already filtered out
+// blocks that don't match our scenario name (if specified) and decoded only
+// matrix variants that match the filter (if specified). What we have yet to
+// account for is filters that do not include a name but include variants. If we
+// have either a scenario block with either no matrix block or no matching
+// vectors we should skip it.
+func (d *ScenarioDecoderIterator) filterScenarioBlocksWithMatrixBlocks() {
+	n := 0
+	for _, scenarioBlock := range d.scenarioBlocks {
+		if d.filter != nil && d.filter.RequiresVariants() && (scenarioBlock.Matrix() == nil || len(scenarioBlock.Matrix().GetVectors()) < 1) {
+			continue
+		}
+		d.scenarioBlocks[n] = scenarioBlock
+		n++
+	}
+	d.scenarioBlocks = d.scenarioBlocks[:n]
 }
 
 // startDecoder starts a scenario decoder which decodes the scenario blocks, expands and filters

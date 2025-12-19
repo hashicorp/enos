@@ -350,3 +350,81 @@ func Test_ScenarioDecoderIterator_filterHCLBlocks(t *testing.T) {
 		})
 	}
 }
+
+func Test_ScenarioDecoderIterator_filterScenarioBlocksWithMatrixBlocks(t *testing.T) {
+	t.Parallel()
+
+	// NOTE: This test assumes that the input set has already been filtered by
+	// name during scenario block decode and that the matrix vectors have already
+	// been decoded by filterHCLBlocks() and decodeMatrix(). As such we just verify
+	// that when given a filter without a name but with variants we exclude blocks
+	// whose matrices don't intersect with our filter.
+	for desc, test := range map[string]struct {
+		in       ScenarioBlocks
+		expected ScenarioBlocks
+		filter   *ScenarioFilter
+	}{
+		"filter without name but variants": {
+			ScenarioBlocks{
+				{
+					Name: "foo",
+					MatrixBlock: &MatrixBlock{FinalProduct: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm32")),
+					}}},
+				},
+				{
+					Name: "bar",
+					MatrixBlock: &MatrixBlock{FinalProduct: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm32")),
+					}}},
+				},
+				{
+					Name:        "baz",
+					MatrixBlock: nil,
+				},
+			},
+			ScenarioBlocks{
+				{
+					Name: "foo",
+					MatrixBlock: &MatrixBlock{FinalProduct: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm32")),
+					}}},
+				},
+				{
+					Name: "bar",
+					MatrixBlock: &MatrixBlock{FinalProduct: &Matrix{Vectors: []*Vector{
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "amd64")),
+						NewVector(NewElement("backend", "raft"), NewElement("arch", "arm32")),
+					}}},
+				},
+			},
+			&ScenarioFilter{
+				Name:    "test",
+				Include: NewVector(NewElement("arch", "amd64")),
+			},
+		},
+	} {
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+
+			iter := &ScenarioDecoderIterator{
+				filter:         test.filter,
+				scenarioBlocks: test.in,
+			}
+
+			iter.filterScenarioBlocksWithMatrixBlocks()
+			require.Len(t, iter.scenarioBlocks, len(test.expected))
+			for i := range test.expected {
+				require.Equal(t, test.expected[i].Name, iter.scenarioBlocks[i].Name)
+				if test.expected[i].Matrix() == nil {
+					require.Nilf(t, iter.scenarioBlocks[i].Matrix(), "expected nil, got: %s", iter.scenarioBlocks[i].Matrix().String())
+				} else {
+					require.True(t, test.expected[i].Matrix().EqualUnordered(iter.scenarioBlocks[i].Matrix()))
+				}
+			}
+		})
+	}
+}

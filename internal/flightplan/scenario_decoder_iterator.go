@@ -318,7 +318,7 @@ func (d *ScenarioDecoderIterator) decodeScenarioBlocksMatrix(ctx context.Context
 }
 
 // filterScenarioBlocksWithMatrixBlocks filters the scenario blocks after the
-// the matrix decode happens. At this point we should have already filtered out
+// matrix decode happens. At this point we should have already filtered out
 // blocks that don't match our scenario name (if specified) and decoded only
 // matrix variants that match the filter (if specified). What we have yet to
 // account for is filters that do not include a name but include variants. If we

@@ -88,6 +88,11 @@ func (s *SampleSubset) Frame(ctx context.Context, ws *pb.Workspace) (*SampleSubs
 	// scenarios.
 	hclDiags := scenarioDecoder.DecodeAll(ctx, fp)
 	if len(hclDiags) > 0 {
+		hclDiags = hclDiags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "failed to decode a sample",
+			Detail:   "ensure that sample subset refers to a scenario and that all specified subset variants exist in the scenario matrix",
+		})
 		decRes.Diagnostics = append(decRes.GetDiagnostics(), diagnostics.FromHCL(nil, hclDiags)...)
 
 		return nil, decRes

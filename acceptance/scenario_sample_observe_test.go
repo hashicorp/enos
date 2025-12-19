@@ -47,7 +47,7 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 							Summary: "no scenarios matched filter criteria: smoke",
 						},
 						{
-							Summary: "failed to decode a sample",
+							Summary: "failed to decode a sample subset frame: ensure that sample subset refers to a scenario and that all specified subset variants exist in the scenario matrix",
 						},
 					},
 				},
@@ -196,6 +196,7 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 				}
 				for i, d := range test.out.GetDecode().GetDiagnostics() {
 					require.Equal(t, d.GetSummary(), got.GetDecode().GetDiagnostics()[i].GetSummary())
+					require.Equal(t, d.GetDetail(), got.GetDecode().GetDiagnostics()[i].GetDetail())
 				}
 				errMsg := &machine.ErrJSON{}
 				require.NoError(t, json.Unmarshal(stderr, errMsg))

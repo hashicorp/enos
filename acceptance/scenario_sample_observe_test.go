@@ -48,6 +48,7 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 						},
 						{
 							Summary: "failed to decode a sample subset frame: ensure that sample subset refers to a scenario and that all specified subset variants exist in the scenario matrix",
+							Detail:  "subset: smoke, variants: [arch:not_a_variant]",
 						},
 					},
 				},

@@ -44,7 +44,11 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 				Decode: &pb.DecodeResponse{
 					Diagnostics: []*pb.Diagnostic{
 						{
-							Summary: "the sampling frame for smoke_empty_frame/smoke is invalid: perhaps the matrix variants specified in the subset matrix exclude all possible combinations:\n[arch:not_a_variant]",
+							Summary: "no scenarios matched filter criteria: smoke",
+						},
+						{
+							Summary: "failed to decode a sample subset frame: ensure that sample subset refers to a scenario and that all specified subset variants exist in the scenario matrix",
+							Detail:  "subset: smoke, variants: [arch:not_a_variant]",
 						},
 					},
 				},
@@ -192,7 +196,8 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 					require.Equal(t, got.GetDiagnostics()[i].GetSummary(), d.GetSummary())
 				}
 				for i, d := range test.out.GetDecode().GetDiagnostics() {
-					require.Equal(t, got.GetDecode().GetDiagnostics()[i].GetSummary(), d.GetSummary())
+					require.Equal(t, d.GetSummary(), got.GetDecode().GetDiagnostics()[i].GetSummary())
+					require.Equal(t, d.GetDetail(), got.GetDecode().GetDiagnostics()[i].GetDetail())
 				}
 				errMsg := &machine.ErrJSON{}
 				require.NoError(t, json.Unmarshal(stderr, errMsg))

@@ -4,6 +4,7 @@
 package flightplan
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
-	"golang.org/x/net/context"
 
 	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
 	hcl "github.com/hashicorp/hcl/v2"

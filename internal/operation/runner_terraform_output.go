@@ -6,6 +6,7 @@ package operation
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/hashicorp/enos/internal/diagnostics"
 	pb "github.com/hashicorp/enos/pb/hashicorp/enos/v1"
@@ -102,7 +103,16 @@ func (r *Runner) terraformOutput(
 			Stderr:    outText.Stderr.String(),
 		})
 	} else {
-		for name, meta := range metas {
+		// Sort the output keys alphabetically
+		keys := make([]string, 0, len(metas))
+		for name := range metas {
+			keys = append(keys, name)
+		}
+		sort.Strings(keys)
+
+		// Iterate over sorted keys
+		for _, name := range keys {
+			meta := metas[name]
 			res.Meta = append(res.GetMeta(), &pb.Terraform_Command_Output_Response_Meta{
 				Name:      name,
 				Type:      []byte(meta.Type),

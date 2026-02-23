@@ -79,6 +79,7 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 			out, _, err := enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
 
+			// Test single output with --name flag
 			cmd = fmt.Sprintf(`scenario output --name step_reference_unknown --chdir %s --out %s --format json %s`, path, outDir, filter)
 			out, _, err = enos.run(context.Background(), cmd)
 			require.NoError(t, err, string(out))
@@ -111,6 +112,43 @@ func TestAcc_Cmd_Scenario_Output(t *testing.T) {
 			}
 
 			requireEqualOperationResponses(t, expected, out)
+
+			// Test all outputs without --name flag to verify alphabetical sorting
+			cmd = fmt.Sprintf(`scenario output --chdir %s --out %s --format json %s`, path, outDir, filter)
+			out, _, err = enos.run(context.Background(), cmd)
+			require.NoError(t, err, string(out))
+
+			expectedAllOutputs := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{
+					{
+						Op: &pb.Ref_Operation{
+							Scenario: scenarioRef,
+						},
+						Status: pb.Operation_STATUS_COMPLETED,
+						Value: &pb.Operation_Response_Output_{
+							Output: &pb.Operation_Response_Output{
+								TerraformModule: &pb.Terraform_Module{
+									ModulePath:  filepath.Join(outDir, test.uid, "scenario.tf"),
+									RcPath:      filepath.Join(outDir, test.uid, "terraform.rc"),
+									ScenarioRef: scenarioRef,
+								},
+								Output: &pb.Terraform_Command_Output_Response{
+									Meta: []*pb.Terraform_Command_Output_Response_Meta{
+										{Name: "absolute", Sensitive: true},
+										{Name: "from_variables", Sensitive: false},
+										{Name: "module_default", Sensitive: false},
+										{Name: "step_known", Sensitive: false},
+										{Name: "step_reference_output_ref", Sensitive: false},
+										{Name: "step_reference_unknown", Sensitive: false},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			requireEqualOperationResponses(t, expectedAllOutputs, out)
 		})
 	}
 }

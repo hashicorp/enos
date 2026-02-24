@@ -51,6 +51,7 @@ linters:
     - noinlineerr
     - nonamedreturns
     - nosprintfhostport
+    - prealloc
     - promlinter
     - rowserrcheck
     - sqlclosecheck

@@ -22,27 +22,27 @@ func (v *View) writeEventDecode(e *pb.Operation_Event, w *strings.Builder) {
 			extra := strings.Builder{}
 
 			if bd := fp.GetBaseDir(); bd != "" {
-				extra.WriteString(fmt.Sprintf("  Base directory: %s\n", bd))
+				fmt.Fprintf(&extra, "  Base directory: %s\n", bd)
 			}
 			hclFiles := fp.GetEnosHcl()
 			if len(hclFiles) > 0 {
 				extra.WriteString("   With files:\n")
 				for path := range hclFiles {
-					extra.WriteString(fmt.Sprintf("     %s\n", path))
+					fmt.Fprintf(&extra, "     %s\n", path)
 				}
 			}
 			varsFiles := fp.GetEnosVarsHcl()
 			if len(varsFiles) > 0 {
 				extra.WriteString("   With variable files:\n")
 				for path := range varsFiles {
-					extra.WriteString(fmt.Sprintf("     %s\n", path))
+					fmt.Fprintf(&extra, "     %s\n", path)
 				}
 			}
 			envVars := fp.GetEnosVarsEnv()
 			if len(envVars) > 0 {
 				extra.WriteString("   With environment variables:\n")
 				for _, env := range envVars {
-					extra.WriteString(fmt.Sprintf("     %s\n", env))
+					fmt.Fprintf(&extra, "     %s\n", env)
 				}
 			}
 
@@ -67,10 +67,10 @@ func (v *View) writeEventGenerate(e *pb.Operation_Event, w *strings.Builder) {
 		extra := strings.Builder{}
 
 		if mp := g.GetTerraformModule().GetModulePath(); mp != "" {
-			extra.WriteString(fmt.Sprintf("  Module path: %s\n", mp))
+			fmt.Fprintf(&extra, "  Module path: %s\n", mp)
 		}
 		if rcp := g.GetTerraformModule().GetRcPath(); rcp != "" {
-			extra.WriteString(fmt.Sprintf("  Module rc path: %s\n", rcp))
+			fmt.Fprintf(&extra, "  Module rc path: %s\n", rcp)
 		}
 
 		if xi := extra.String(); xi != "" {
@@ -107,18 +107,18 @@ func (v *View) writeEventValidate(e *pb.Operation_Event, w *strings.Builder) {
 
 	extra := strings.Builder{}
 	if ec := vl.GetErrorCount(); ec > 0 {
-		extra.WriteString(fmt.Sprintf("  Validation errors: %d\n", ec))
+		fmt.Fprintf(&extra, "  Validation errors: %d\n", ec)
 	}
 
 	if v.settings.GetLevel() >= pb.UI_Settings_LEVEL_WARN {
 		if wc := vl.GetWarningCount(); wc > 0 {
-			extra.WriteString(fmt.Sprintf("  Validation warnings: %d\n", wc))
+			fmt.Fprintf(&extra, "  Validation warnings: %d\n", wc)
 		}
 	}
 
 	if v.settings.GetLevel() >= pb.UI_Settings_LEVEL_DEBUG {
 		if f := vl.GetFormatVersion(); f != "" {
-			extra.WriteString(fmt.Sprintf("  Validation format: %s\n", f))
+			fmt.Fprintf(&extra, "  Validation format: %s\n", f)
 		}
 	}
 
@@ -188,17 +188,17 @@ func (v *View) writeEventExec(e *pb.Operation_Event, w *strings.Builder) {
 	extra := strings.Builder{}
 	if cmd := ex.GetSubCommand(); cmd != "" &&
 		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
-		extra.WriteString(fmt.Sprintf("  Sub-command: %s\n", cmd))
+		fmt.Fprintf(&extra, "  Sub-command: %s\n", cmd)
 	}
 
 	if stderr := ex.GetStderr(); stderr != "" &&
 		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
-		extra.WriteString(fmt.Sprintf("  Stderr: %s\n", stderr))
+		fmt.Fprintf(&extra, "  Stderr: %s\n", stderr)
 	}
 
 	if stdout := ex.GetStdout(); stdout != "" &&
 		v.settings.GetLevel() == pb.UI_Settings_LEVEL_DEBUG {
-		extra.WriteString(fmt.Sprintf("  Stdout: %s\n", stdout))
+		fmt.Fprintf(&extra, "  Stdout: %s\n", stdout)
 	}
 
 	if xi := extra.String(); xi != "" {

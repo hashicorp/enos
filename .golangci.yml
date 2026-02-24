@@ -51,6 +51,7 @@ linters:
     - noinlineerr
     - nonamedreturns
     - nosprintfhostport
+    - prealloc
     - promlinter
     - rowserrcheck
     - sqlclosecheck
@@ -74,6 +75,7 @@ linters:
         - G110
         - G115
         - G305
+        - G705
       config:
         G306: "0755"
     interfacebloat:

@@ -37,7 +37,7 @@ Now lets consider a complex on-premises software product that we ship via binari
 
 This is by no means an apples to apples comparison with our SaaS example, but that's the point. Our software delivery method has changed our quality requirements and our methods of quality verification. Instead of primarily focusing on the functional requirements of the system and velocity, we now have a larger responsibility of verification before the product is released. And on top of it, we also have so many other deployments variables like edition, version, platform, architecture, runtime, storage, network, cluster size, CPUs, memory, integrations, auditing, logging, HA, DR, etc., that we have to consider and ought to verify. In effect, we are now responsible for all functional, non-functional, and lifecycle quality, and since we no longer control most of the environmental variables we have to figure out how to verify our software in all sorts of environmental combinations.
 
-How do we ensure that our software behaves as expected under so many unique circumstances? What tools do we have for this? 
+How do we ensure that our software behaves as expected under so many unique circumstances? What tools do we have for this?
 
   - *Unit tests*
     Unit tests are really good at what they're supposed to do: verify the correctness of a routine. They're fast, easy, and relatively cheap, but they're isolated. Our application doesn't run in isolation, it runs integrated with everything else. We cannot rely on unit tests for reliability, efficiency, or non-functional quality requirements.
@@ -101,7 +101,7 @@ We want to be clear that **Enos and the Enos provider exist solely for HashiCorp
 
 ## How can I get started with Enos?
 
-If you're a HashiCorp developer you can follow the Enos tutorials in the Engineering Handbook.
+If you're a HashiCorp developer you can follow the Enos tutorials in [the Wiki](https://hashicorp.atlassian.net/wiki/x/H4Ao_/).
 
 If you're not, sorry, but we don't currently have any examples or tutorials published yet. You can install [Binaries](https://github.com/hashicorp/enos/releases/) and read about the various components below. There is also plenty of advanced Enos prior art in the Vault or Boundary repositories.
 
@@ -370,7 +370,7 @@ scenario "test" {
 ```
 
 Scenarios can also pass information from one step to the next, as one might do
-in Terraform. A step variable must reference a known value or an output from 
+in Terraform. A step variable must reference a known value or an output from
 a `step` module. Step variables must reference a variable in the `step`'s module.
 
 Example:
@@ -594,7 +594,7 @@ Of course, as our matrices grow, so does the total number of possible combinatio
 
 Samples allow us to handle all of those challenges by defining named sample groups. Within hese sample groups you to define subsets with different scenario filters, matrices, and attributes that describe the total allowed sample field, which can be tailored anywhere from all scenarios and variant combinations to a single scenario variant.
 
-The Enos CLI is then able to interact with the Enos server to "observe" a given sample, that is, to choose scenario specimens that we can test. All you need to do is provide the sample boundaries, i.e. minimum number of elements, maximum number of elements, or a percentage of total elements in the frame, and then Enos handles 
+The Enos CLI is then able to interact with the Enos server to "observe" a given sample, that is, to choose scenario specimens that we can test. All you need to do is provide the sample boundaries, i.e. minimum number of elements, maximum number of elements, or a percentage of total elements in the frame, and then Enos handles
 shaping the sample frame and selecting which scenario variants to test using its sampling algorithm.
 
 To ensure that we get coverage over all scenarios, Enos uses its own purposive stratified sampling algorithm. Depending on our sample size limitations, it favors breadth across all samples before dividing the subsets by size and sampling based on overall proportions.

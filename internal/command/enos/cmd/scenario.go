@@ -232,14 +232,19 @@ func readFlightPlanConfig(dir string, varFilePaths []string) (*pb.FlightPlan, er
 		EnosVarsEnv: os.Environ(),
 	}
 
-	cfgFiles, err := flightplan.FindRawFiles(dir, flightplan.FlightPlanFileNamePattern)
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	cfgFiles, err := flightplan.FindRawFiles(root, dir, flightplan.FlightPlanFileNamePattern)
 	if err != nil {
 		return nil, err
 	}
 
 	var varsFiles flightplan.RawFiles
 	if len(varFilePaths) == 0 {
-		varsFiles, err = flightplan.FindRawFiles(dir, flightplan.VariablesNamePattern)
+		varsFiles, err = flightplan.FindRawFiles(root, dir, flightplan.VariablesNamePattern)
 	} else {
 		varsFiles, err = flightplan.LoadRawFiles(varFilePaths)
 	}

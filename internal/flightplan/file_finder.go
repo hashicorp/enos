@@ -4,6 +4,7 @@
 package flightplan
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -23,9 +24,13 @@ type RawFiles map[string][]byte
 
 // FindRawFiles scans a directory for files matching the given pattern and
 // returns the loaded raw files.
-func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
+func FindRawFiles(root *os.Root, dir string, pattern *regexp.Regexp) (RawFiles, error) {
 	var err error
 	files := RawFiles{}
+
+	if root == nil {
+		return nil, errors.New("no root directory provided")
+	}
 
 	err = filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -44,9 +49,14 @@ func FindRawFiles(dir string, pattern *regexp.Regexp) (RawFiles, error) {
 			return nil
 		}
 
-		f, err := os.Open(path)
+		rel, err := filepath.Rel(root.Name(), path)
 		if err != nil {
-			return err
+			return fmt.Errorf("getting relative path for %s in root %s, error: %w", path, root.Name(), err)
+		}
+
+		f, err := root.Open(rel)
+		if err != nil {
+			return fmt.Errorf("opening %s in %s: %w", info.Name(), root.Name(), err)
 		}
 		defer f.Close()
 

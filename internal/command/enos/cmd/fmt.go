@@ -85,13 +85,19 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 			}, nil
 		}
 
+		root, err := os.OpenRoot(path)
+		if err != nil {
+			return nil, diagnostics.FromErr(err)
+		}
+		defer root.Close()
+
 		files := []*pb.FormatRequest_File{}
 		readRawFiles := func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 
-			fpFiles, err := flightplan.FindRawFiles(path, flightplan.FlightPlanFileNamePattern)
+			fpFiles, err := flightplan.FindRawFiles(root, path, flightplan.FlightPlanFileNamePattern)
 			if err != nil {
 				return err
 			}
@@ -102,7 +108,7 @@ func runFmtCmd(cmd *cobra.Command, args []string) error {
 				})
 			}
 
-			varsFiles, err := flightplan.FindRawFiles(path, flightplan.VariablesNamePattern)
+			varsFiles, err := flightplan.FindRawFiles(root, path, flightplan.VariablesNamePattern)
 			if err != nil {
 				return err
 			}

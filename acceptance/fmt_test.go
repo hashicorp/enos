@@ -30,7 +30,7 @@ func TestAcc_Cmd_Fmt(t *testing.T) {
 	target := &exec.ExitError{}
 	require.Error(t, err)
 	if errors.As(err, &target) {
-		require.Equal(t, 3, target.ProcessState.ExitCode())
+		require.Equalf(t, 3, target.ProcessState.ExitCode(), "expected error code 3, got %d, error: %s", target.ExitCode(), err.Error())
 	} else {
 		t.Fatal("fmt did not return exit code 3 on changed")
 	}

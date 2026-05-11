@@ -176,7 +176,8 @@ func TestAcc_Cmd_Scenario_Sample_Observe(t *testing.T) {
 
 			path, err := filepath.Abs(filepath.Join(".", test.dir))
 			require.NoError(t, err)
-			cmd := fmt.Sprintf("scenario sample observe %s --chdir %s --format json --min %d --max %d --seed %d",
+			cmd := fmt.Sprintf(
+				"scenario sample observe %s --chdir %s --format json --min %d --max %d --seed %d",
 				test.filter.GetSample().GetId().GetName(),
 				path,
 				test.filter.GetMinElements(),

@@ -260,7 +260,8 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 	sortResponses(expectedResponses)
 	sortResponses(gotResponses)
 
-	require.Lenf(t, gotResponses, len(expectedResponses),
+	require.Lenf(
+		t, gotResponses, len(expectedResponses),
 		"expected %d responses, got %d", len(expectedResponses), len(gotResponses),
 	)
 	for i := range expectedResponses {
@@ -272,7 +273,8 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 		require.Equal(t, expected.GetOp().GetScenario().String(), got.GetOp().GetScenario().String())
 
 		// Status
-		require.Equalf(t,
+		require.Equalf(
+			t,
 			expected.GetStatus(), got.GetStatus(),
 			"expected status %s, got %s",
 			pb.Operation_Status_name[int32(expected.GetStatus())],
@@ -319,16 +321,19 @@ func requireEqualGenerateResponse(t *testing.T, expected, got *pb.Operation_Resp
 	t.Helper()
 
 	if expected.GetTerraformModule().GetModulePath() != "" {
-		require.Equal(t, expected.GetTerraformModule().GetModulePath(),
+		require.Equal(
+			t, expected.GetTerraformModule().GetModulePath(),
 			got.GetTerraformModule().GetModulePath(),
 		)
 	}
 	if expected.GetTerraformModule().GetRcPath() != "" {
-		require.Equal(t, expected.GetTerraformModule().GetRcPath(),
+		require.Equal(
+			t, expected.GetTerraformModule().GetRcPath(),
 			got.GetTerraformModule().GetRcPath(),
 		)
 	}
-	require.Equal(t, expected.GetTerraformModule().GetScenarioRef().String(),
+	require.Equal(
+		t, expected.GetTerraformModule().GetScenarioRef().String(),
 		got.GetTerraformModule().GetScenarioRef().String(),
 	)
 }

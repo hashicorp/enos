@@ -265,7 +265,8 @@ func (v *View) writeEventHeader(
 	scenario := flightplan.NewScenario()
 	scenario.FromRef(event.GetOp().GetScenario())
 
-	fmt.Fprintf(w, "%s %s: %s",
+	fmt.Fprintf(
+		w, "%s %s: %s",
 		scenario.String(),
 		action,
 		v.opStatusString(event.GetStatus()),

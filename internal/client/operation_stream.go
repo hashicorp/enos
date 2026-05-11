@@ -34,7 +34,8 @@ func (c *Connection) StreamOperations(
 		Responses:   []*pb.Operation_Response{},
 	}
 
-	if status.HasFailed(ui.Settings().GetFailOnWarnings(),
+	if status.HasFailed(
+		ui.Settings().GetFailOnWarnings(),
 		res,
 		res.GetDecode(),
 	) {
@@ -152,7 +153,8 @@ func (c *Connection) streamResponses(
 				},
 			)
 			if err != nil {
-				c.Log.Error("failed to start event stream",
+				c.Log.Error(
+					"failed to start event stream",
 					"operation_id", ref.GetId(),
 					"error", err,
 				)
@@ -199,7 +201,8 @@ func (c *Connection) streamResponses(
 					if err != nil && err != io.EOF {
 						err2 := ui.ShowError(err)
 						if err2 != nil {
-							c.Log.Error("failed to show error",
+							c.Log.Error(
+								"failed to show error",
 								"operation_id", ref.GetId(),
 								"parent_error", err,
 								"child_error", err2,
@@ -214,7 +217,8 @@ func (c *Connection) streamResponses(
 						ui.ShowOperationEvent(lastEvent)
 					}
 				case event := <-eventC:
-					c.Trace("received event",
+					c.Trace(
+						"received event",
 						"operation_id", ref.GetId(),
 						"published_at", event.GetPublishedAt(),
 					)

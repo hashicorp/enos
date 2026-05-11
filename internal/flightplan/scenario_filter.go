@@ -331,7 +331,8 @@ func (sf *ScenarioFilter) FromSampleSubset(subset *SampleSubset) error {
 
 		// Make sure we didn't set both a scenario_filter and scenario_name with conflicting names.
 		if subset.ScenarioName != "" && psf.Name != "" && subset.ScenarioName != psf.Name {
-			return fmt.Errorf("scenario_name '%s' and the scenario name in scenario_filter '%s' must match",
+			return fmt.Errorf(
+				"scenario_name '%s' and the scenario name in scenario_filter '%s' must match",
 				subset.ScenarioName, psf.Name,
 			)
 		}

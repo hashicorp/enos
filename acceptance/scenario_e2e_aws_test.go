@@ -53,7 +53,8 @@ func TestAcc_Cmd_Scenario_E2E_AWS(t *testing.T) {
 		t.Run(test.dir, func(t *testing.T) {
 			t.Parallel()
 
-			enos := newAcceptanceRunner(t,
+			enos := newAcceptanceRunner(
+				t,
 				skipUnlessTerraformCLI(),
 				skipUnlessAWSCredentials(),
 				skipUnlessEnosPrivateKey(),

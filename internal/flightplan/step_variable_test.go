@@ -180,7 +180,8 @@ func Test_StepVariableType_Decode(t *testing.T) {
 
 			val, diags := hcldec.Decode(file.Body, spec, test.ctx)
 			if diags.HasErrors() != test.fail {
-				t.Fatalf("expected: %t, got: %t, err: %s",
+				t.Fatalf(
+					"expected: %t, got: %t, err: %s",
 					test.fail, diags.HasErrors(), testDiagsToError(
 						map[string]*hcl.File{"in.hcl": file}, diags,
 					),

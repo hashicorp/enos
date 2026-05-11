@@ -81,7 +81,8 @@ func logStreamInterceptor(logger hclog.Logger) grpc.StreamServerInterceptor {
 		})
 
 		// Log the response.
-		logger.Info(info.FullMethod+" response",
+		logger.Info(
+			info.FullMethod+" response",
 			"error", err,
 			"duration", time.Since(start).String(),
 		)

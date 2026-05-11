@@ -136,7 +136,8 @@ func (s *ServiceV1) ValidateScenariosConfiguration(
 						float64(1),
 						math.Min(
 							float64(runtime.NumCPU()),
-							float64(stat.Available())/math.Pow(2, 30)),
+							float64(stat.Available())/math.Pow(2, 30),
+						),
 					),
 				),
 			),

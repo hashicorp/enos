@@ -98,7 +98,8 @@ func SampleFuncPurposiveStratified(ctx context.Context, frame *SampleFrame, r *r
 	}
 
 	if res.Size() < minimum {
-		return nil, fmt.Errorf("sample observation size of %d does not satisfy minimum requirement: %d",
+		return nil, fmt.Errorf(
+			"sample observation size of %d does not satisfy minimum requirement: %d",
 			res.Size(), minimum,
 		)
 	}

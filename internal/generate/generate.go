@@ -670,7 +670,8 @@ func stepProviderTokens(providers map[string]*flightplan.Provider) hclwrite.Toke
 	i := 0
 	for importName, provider := range providers {
 		if i > 0 {
-			tokens = append(tokens,
+			tokens = append(
+				tokens,
 				&hclwrite.Token{
 					Type:  hclsyntax.TokenNewline,
 					Bytes: []byte{'\n'},
@@ -679,7 +680,8 @@ func stepProviderTokens(providers map[string]*flightplan.Provider) hclwrite.Toke
 		}
 		i++
 
-		tokens = append(tokens,
+		tokens = append(
+			tokens,
 			&hclwrite.Token{
 				Type:  hclsyntax.TokenIdent,
 				Bytes: []byte(importName),
@@ -695,7 +697,8 @@ func stepProviderTokens(providers map[string]*flightplan.Provider) hclwrite.Toke
 		)
 	}
 
-	tokens = append(tokens,
+	tokens = append(
+		tokens,
 		&hclwrite.Token{
 			Type:  hclsyntax.TokenNewline,
 			Bytes: []byte{'\n'},
@@ -752,7 +755,8 @@ func dependsOnTokens(names []string) hclwrite.Tokens {
 			Bytes: []byte{']'},
 		})
 	default:
-		tokens = append(tokens,
+		tokens = append(
+			tokens,
 			&hclwrite.Token{
 				Type:  hclsyntax.TokenOBrack,
 				Bytes: []byte{'['},
@@ -767,7 +771,8 @@ func dependsOnTokens(names []string) hclwrite.Tokens {
 		for i, name := range names {
 			tokens = append(tokens, moduleRef(name)...)
 			if i != last {
-				tokens = append(tokens,
+				tokens = append(
+					tokens,
 					&hclwrite.Token{
 						Type:  hclsyntax.TokenIdent,
 						Bytes: []byte(","),
@@ -781,7 +786,8 @@ func dependsOnTokens(names []string) hclwrite.Tokens {
 			})
 		}
 
-		return append(tokens,
+		return append(
+			tokens,
 			&hclwrite.Token{
 				Type:  hclsyntax.TokenOBrack,
 				Bytes: []byte{']'},

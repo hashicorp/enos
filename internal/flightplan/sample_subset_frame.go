@@ -105,13 +105,15 @@ func (s *SampleSubsetFrame) Validate() error {
 	}
 
 	if s.Size() < 1 {
-		msg := fmt.Sprintf("the sampling frame for %s/%s is invalid",
+		msg := fmt.Sprintf(
+			"the sampling frame for %s/%s is invalid",
 			s.SampleSubset.SampleName,
 			s.SampleSubset.Name,
 		)
 
 		if s.SampleSubset != nil && s.SampleSubset.Matrix != nil && len(s.SampleSubset.Matrix.Vectors) > 0 {
-			msg = fmt.Sprintf("%s: perhaps the matrix variants specified in the subset matrix exclude all possible combinations:\n%s",
+			msg = fmt.Sprintf(
+				"%s: perhaps the matrix variants specified in the subset matrix exclude all possible combinations:\n%s",
 				msg, s.SampleSubset.Matrix.String(),
 			)
 		}

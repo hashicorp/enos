@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2021, 2025
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package basic
@@ -265,7 +265,8 @@ func (v *View) writeEventHeader(
 	scenario := flightplan.NewScenario()
 	scenario.FromRef(event.GetOp().GetScenario())
 
-	fmt.Fprintf(w, "%s %s: %s",
+	fmt.Fprintf(
+		w, "%s %s: %s",
 		scenario.String(),
 		action,
 		v.opStatusString(event.GetStatus()),

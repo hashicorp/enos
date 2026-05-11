@@ -82,8 +82,9 @@ func (s *Subscriber) Send(event *pb.Operation_Event) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.active {
-		s.log.Debug("sending event", append(EventDebugArgs(event),
-			"subscriber_id", s.ID)...,
+		s.log.Debug(
+			"sending event", append(EventDebugArgs(event),
+				"subscriber_id", s.ID)...,
 		)
 		s.Events <- event
 	}

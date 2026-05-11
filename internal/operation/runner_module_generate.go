@@ -77,7 +77,8 @@ func (r *Runner) moduleGenerate(
 	gen, scenario, diags := scenarioAndModuleGeneratorForReq(ctx, req)
 	if diagnostics.HasFailed(
 		req.GetWorkspace().GetTfExecCfg().GetFailOnWarnings(),
-		diags) {
+		diags,
+	) {
 		notifyFail(diags)
 
 		return resVal
@@ -156,10 +157,12 @@ func scenarioAndModuleGeneratorForReq(ctx context.Context, req *pb.Operation_Req
 	case 1:
 	default:
 		return nil, nil, diagnostics.FromErr(
-			fmt.Errorf("found more than one scenario matching scenario for filter %s: %+v",
+			fmt.Errorf(
+				"found more than one scenario matching scenario for filter %s: %+v",
 				filter.String(),
 				scenarios,
-			))
+			),
+		)
 	}
 
 	baseDir, err := isAbs(ws.GetFlightplan().GetBaseDir())

@@ -98,7 +98,8 @@ func startServer(
 			)
 			defer cancel()
 			var enosConnection *client.Connection
-			enosConnection, err = client.Connect(connCtx,
+			enosConnection, err = client.Connect(
+				connCtx,
 				client.WithGRPCDialOpts(
 					grpc.WithDefaultCallOptions(
 						grpc.MaxCallRecvMsgSize(rootState.grpcMaxRecv),

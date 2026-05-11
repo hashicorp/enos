@@ -57,7 +57,8 @@ func (p *Publisher) Subscribe(s *Subscriber) Unsubscriber {
 	}
 	p.subscribers[s.ref.GetId()][s.ID] = s
 
-	p.log.Debug("added subscriber",
+	p.log.Debug(
+		"added subscriber",
 		"operation_id", s.ref.GetId(),
 		"subscriber_id", s.ID,
 	)
@@ -79,7 +80,8 @@ func (p *Publisher) Unsubscribe(s *Subscriber) {
 		}
 	}
 
-	p.log.Debug("removed subscriber",
+	p.log.Debug(
+		"removed subscriber",
 		"operation_id", s.ref.GetId(),
 		"subscriber_id", s.ID,
 	)
@@ -116,9 +118,9 @@ func (p *Publisher) Publish(event *pb.Operation_Event) error {
 			return err
 		}
 
-		go (func(s *Subscriber) {
+		go func(s *Subscriber) {
 			s.Send(newEvent)
-		})(s)
+		}(s)
 	}
 
 	return nil

@@ -225,7 +225,8 @@ func (o *LocalOperator) Dispatch(
 // function is called the operators event handler will stop publishing events to
 // the subscriber.
 func (o *LocalOperator) Stream(op *pb.Ref_Operation) (*Subscriber, Unsubscriber, error) {
-	sub, err := NewSubscriber(op,
+	sub, err := NewSubscriber(
+		op,
 		WithSubscriberLog(o.log.Named("subscriber").Named(op.GetId())),
 	)
 	if err != nil {
@@ -244,7 +245,8 @@ func (o *LocalOperator) Stream(op *pb.Ref_Operation) (*Subscriber, Unsubscriber,
 	go func() {
 		var err error
 		for _, event := range events {
-			o.log.Debug("publishing historical event to stream",
+			o.log.Debug(
+				"publishing historical event to stream",
 				EventDebugArgs(event)...,
 			)
 			err = o.publisher.Publish(event)

@@ -142,7 +142,8 @@ func (s *ServiceV1) Start(ctx context.Context) (*ServiceConfig, error) {
 		return nil, errors.New("unable to start gRPC service: you must provider a listen address")
 	}
 
-	s.log.Info("starting gRPC server",
+	s.log.Info(
+		"starting gRPC server",
 		"listen_grpc", s.configuredURL.String(),
 	)
 
@@ -204,7 +205,8 @@ func (s *ServiceV1) startListener(ctx context.Context) error {
 	// Register ourselves with the instance of the gRPC server
 	pb.RegisterEnosServiceServer(s.grpcServer, s)
 
-	s.log.Debug("starting gRPC server listener",
+	s.log.Debug(
+		"starting gRPC server listener",
 		"listen_grpc", s.configuredURL.String(),
 	)
 
@@ -224,7 +226,8 @@ func (s *ServiceV1) startListener(ctx context.Context) error {
 	}
 
 	if err != nil {
-		s.log.Error("failed to resolve gRPC server listener",
+		s.log.Error(
+			"failed to resolve gRPC server listener",
 			"listen_grpc", s.configuredURL.String(),
 			"error", err,
 		)
@@ -235,7 +238,8 @@ func (s *ServiceV1) startListener(ctx context.Context) error {
 	lc := &net.ListenConfig{}
 	s.grpcListener, err = lc.Listen(ctx, addr.Network(), addr.String())
 	if err != nil {
-		s.log.Error("failed to start gRPC server listener",
+		s.log.Error(
+			"failed to start gRPC server listener",
 			"listen_grpc", s.configuredURL.String(),
 			"error", err,
 		)
@@ -243,7 +247,8 @@ func (s *ServiceV1) startListener(ctx context.Context) error {
 		return fmt.Errorf("starting gRPC server listener %w", err)
 	}
 
-	s.log.Debug("gRPC server listener is listening",
+	s.log.Debug(
+		"gRPC server listener is listening",
 		"host", s.configuredURL.Host,
 		"port", s.configuredURL.Host,
 		"requested_addr", addr,
@@ -260,7 +265,8 @@ func (s *ServiceV1) startOperator(ctx context.Context) error {
 
 	err := s.operator.Start(ctx)
 	if err != nil {
-		s.log.Error("failed to start service operator",
+		s.log.Error(
+			"failed to start service operator",
 			"error", err,
 		)
 
@@ -274,7 +280,8 @@ func (s *ServiceV1) startOperator(ctx context.Context) error {
 
 // serve services requests. It will block until an error is encountered.
 func (s *ServiceV1) serve() error {
-	s.log.Debug("serving gRPC requests",
+	s.log.Debug(
+		"serving gRPC requests",
 		"listen_grpc", s.configuredURL.String(),
 		"network", s.grpcListener.Addr().Network(),
 		"addr", s.grpcListener.Addr(),

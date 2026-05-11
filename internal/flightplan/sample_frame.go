@@ -371,7 +371,8 @@ func sampleAttrToProto(attrVals map[string]cty.Value) (*structpb.Struct, error) 
 		ctyEncoder := &ctyjson.SimpleJSONValue{Value: v}
 		encoded, err := ctyEncoder.MarshalJSON()
 		if err != nil {
-			return nil, fmt.Errorf("unable to marshal sample attribute wire value %s: %w",
+			return nil, fmt.Errorf(
+				"unable to marshal sample attribute wire value %s: %w",
 				v.GoString(), err,
 			)
 		}

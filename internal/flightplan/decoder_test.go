@@ -228,7 +228,8 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 				require.Equal(t, expected.Samples[i].Subsets[si].ScenarioFilter, fp.Samples[i].Subsets[si].ScenarioFilter)
 				require.Equal(t, expected.Samples[i].Subsets[si].Attributes, fp.Samples[i].Subsets[si].Attributes)
 				if expected.Samples[i].Subsets[si].Matrix != nil {
-					require.Truef(t,
+					require.Truef(
+						t,
 						expected.Samples[i].Subsets[si].Matrix.EqualUnordered(fp.Samples[i].Subsets[si].Matrix),
 						"expected equal unordered matrices: expected: \n%v\n, got: \n%v",
 						expected.Samples[i].Subsets[si].Matrix, fp.Samples[i].Subsets[si].Matrix,
@@ -302,7 +303,8 @@ func testRequireEqualFP(t *testing.T, fp, expected *FlightPlan) {
 					eVal := expected.ScenarioBlocks[i].Scenarios[j].Outputs[oi].Value
 					aVal := gotBlock.Scenarios[j].Outputs[oi].Value
 
-					require.True(t, eVal.Type().Equals(aVal.Type()),
+					require.True(
+						t, eVal.Type().Equals(aVal.Type()),
 						"expected type %s, got %s", eVal.Type().FriendlyName(), aVal.Type().FriendlyName(),
 					)
 					if !eVal.IsNull() {
@@ -358,7 +360,8 @@ func testMostlyEqualStepVar(t *testing.T, expected cty.Value, got cty.Value) {
 	require.NotNil(t, aVal)
 	require.False(t, diags.HasErrors(), diags.Error())
 	require.Equal(t, eVal.Value, aVal.Value)
-	require.Lenf(t, eVal.Traversal, len(aVal.Traversal),
+	require.Lenf(
+		t, eVal.Traversal, len(aVal.Traversal),
 		"expected %s to have a traversal of: %+v, got: %+v", eVal.Value.GoString(),
 		eVal.Traversal, aVal.Traversal,
 	)

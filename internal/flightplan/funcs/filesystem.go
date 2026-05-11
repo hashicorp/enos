@@ -46,8 +46,10 @@ var JoinPathFunc = function.New(&function.Spec{
 	},
 	Type: function.StaticReturnType(cty.String),
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-		return cty.StringVal(filepath.ToSlash(filepath.Join(
-			args[0].AsString(), args[1].AsString()),
+		return cty.StringVal(filepath.ToSlash(
+			filepath.Join(
+				args[0].AsString(), args[1].AsString(),
+			),
 		)), nil
 	},
 })

@@ -116,7 +116,8 @@ func TestAcc_Cmd_Scenario_Check(t *testing.T) {
 func TestAcc_Cmd_Scenario_Check_WithWarnings(t *testing.T) {
 	t.Parallel()
 
-	enos := newAcceptanceRunner(t,
+	enos := newAcceptanceRunner(
+		t,
 		skipUnlessTerraformCLI(),
 		skipUnlessExtEnabled(), // since we need the random provider
 	)

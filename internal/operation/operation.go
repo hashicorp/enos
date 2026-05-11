@@ -72,7 +72,8 @@ func EventDebugArgs(event *pb.Operation_Event) []any {
 
 	if diags := event.GetDiagnostics(); diags != nil {
 		for _, d := range diags {
-			args = append(args, "diagnostic", diagnostics.String(d,
+			args = append(args, "diagnostic", diagnostics.String(
+				d,
 				diagnostics.WithStringSnippetEnabled(false),
 			))
 		}
@@ -111,7 +112,8 @@ func ResponseDebugArgs(res *pb.Operation_Response) []any {
 
 	if diags := res.GetDiagnostics(); diags != nil {
 		for _, d := range diags {
-			args = append(args, "diagnostic", diagnostics.String(d,
+			args = append(args, "diagnostic", diagnostics.String(
+				d,
 				diagnostics.WithStringSnippetEnabled(false),
 			))
 		}

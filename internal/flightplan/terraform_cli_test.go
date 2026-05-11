@@ -257,9 +257,10 @@ scenario "ref" {
 							"credentials": cty.MapValEmpty(cty.Object(
 								map[string]cty.Type{"token": cty.String},
 							)),
-							"credentials_helper": cty.MapValEmpty(cty.Object(map[string]cty.Type{
-								"args": cty.List(cty.String),
-							}),
+							"credentials_helper": cty.MapValEmpty(
+								cty.Object(map[string]cty.Type{
+									"args": cty.List(cty.String),
+								}),
 							),
 							"disable_checkpoint":           cty.NullVal(cty.Bool),
 							"disable_checkpoint_signature": cty.NullVal(cty.Bool),
@@ -405,9 +406,10 @@ scenario "ref" {
 										"credentials": cty.MapValEmpty(cty.Object(
 											map[string]cty.Type{"token": cty.String},
 										)),
-										"credentials_helper": cty.MapValEmpty(cty.Object(map[string]cty.Type{
-											"args": cty.List(cty.String),
-										}),
+										"credentials_helper": cty.MapValEmpty(
+											cty.Object(map[string]cty.Type{
+												"args": cty.List(cty.String),
+											}),
 										),
 										"disable_checkpoint":           cty.NullVal(cty.Bool),
 										"disable_checkpoint_signature": cty.NullVal(cty.Bool),

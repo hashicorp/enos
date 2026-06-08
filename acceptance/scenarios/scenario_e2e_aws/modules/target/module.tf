@@ -4,8 +4,7 @@
 terraform {
   required_providers {
     enos = {
-      source  = "hashicorp-forge/enos"
-      version = "0.6.2"
+      source = "hashicorp-forge/enos"
     }
 
     aws = {
@@ -19,7 +18,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-*-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-*-server-*"]
   }
 
   filter {
@@ -40,7 +39,7 @@ data "aws_ami" "rhel" {
 
   filter {
     name   = "name"
-    values = ["RHEL-10.0*HVM-20*"]
+    values = ["RHEL-10.1*HVM_GA-20*"]
   }
 
   filter {
@@ -166,7 +165,9 @@ module "target_sg" {
   vpc_id      = aws_vpc.vpc.id
   tags        = local.tags
 
-  ingress_cidr_blocks = ["${data.enos_environment.localhost.public_ipv4_addresses[0]}/32"]
+  ingress_cidr_ipv4 = {
+    target = "${data.enos_environment.localhost.public_ipv4_addresses[0]}/32",
+  }
 }
 
 resource "aws_instance" "target" {
@@ -175,7 +176,7 @@ resource "aws_instance" "target" {
   key_name                    = "enos-ci-ssh-key"
   associate_public_ip_address = true
   tags                        = local.tags
-  vpc_security_group_ids      = [module.target_sg.security_group_id]
+  vpc_security_group_ids      = [module.target_sg.id]
   subnet_id                   = aws_subnet.subnet[0].id
 }
 

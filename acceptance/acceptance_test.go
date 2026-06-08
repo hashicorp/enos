@@ -254,7 +254,11 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 
 	got := &pb.OperationResponses{}
 	require.NoErrorf(t, protojson.Unmarshal(out, got), string(out))
-	require.Len(t, expected.GetResponses(), len(got.GetResponses()))
+	require.Lenf(
+		t, got.GetResponses(), len(expected.GetResponses()),
+		"expected %d operation responses, got %d, raw response %s",
+		len(expected.GetResponses()), len(got.GetResponses()), string(out),
+	)
 	expectedResponses := expected.GetResponses()
 	gotResponses := got.GetResponses()
 	sortResponses(expectedResponses)
@@ -319,6 +323,8 @@ func requireEqualOperationResponses(t *testing.T, expected *pb.OperationResponse
 
 func requireEqualGenerateResponse(t *testing.T, expected, got *pb.Operation_Response_Generate) {
 	t.Helper()
+
+	require.Len(t, expected.GetDiagnostics(), len(got.GetDiagnostics()), "expected equal generate diagnostics")
 
 	if expected.GetTerraformModule().GetModulePath() != "" {
 		require.Equal(

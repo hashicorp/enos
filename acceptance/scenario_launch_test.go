@@ -113,3 +113,68 @@ func TestAcc_Cmd_Scenario_Launch(t *testing.T) {
 		})
 	}
 }
+
+func TestAcc_Cmd_Scenario_Launch_InvalidScenario(t *testing.T) {
+	t.Parallel()
+
+	for dir, test := range map[string]struct {
+		name string
+		uid  string
+	}{
+		"scenario_step_missing_module": {
+			"test",
+			fmt.Sprintf("%x", sha256.Sum256([]byte("test"))),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s %s", dir, test.name), func(t *testing.T) {
+			t.Parallel()
+
+			enos := newAcceptanceRunner(t)
+
+			tmpDir := t.TempDir()
+			outDir := filepath.Join(tmpDir, dir)
+			err := os.MkdirAll(outDir, 0o755)
+			require.NoError(t, err)
+			outDir, err = filepath.EvalSymlinks(outDir)
+			require.NoError(t, err)
+			path, err := filepath.Abs(filepath.Join("./invalid_scenarios", dir))
+			require.NoError(t, err)
+
+			filter := test.name
+			scenarioRef := &pb.Ref_Scenario{
+				Id: &pb.Scenario_ID{
+					Name:   test.name,
+					Filter: filter,
+					Uid:    test.uid,
+				},
+			}
+
+			cmd := fmt.Sprintf("scenario launch --chdir %s --out %s %s --format json", path, outDir, filter)
+			out, _, err := enos.run(context.Background(), cmd)
+			require.Error(t, err)
+			expected := &pb.OperationResponses{
+				Responses: []*pb.Operation_Response{
+					{
+						Op: &pb.Ref_Operation{
+							Scenario: scenarioRef,
+						},
+						Status: pb.Operation_STATUS_FAILED,
+						Value: &pb.Operation_Response_Launch_{
+							Launch: &pb.Operation_Response_Launch{
+								Generate: &pb.Operation_Response_Generate{
+									Diagnostics: []*pb.Diagnostic{
+										{
+											Summary: fmt.Sprintf("lstat %s/modules/does_not_exist: no such file or directory", path),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			requireEqualOperationResponses(t, expected, out)
+		})
+	}
+}

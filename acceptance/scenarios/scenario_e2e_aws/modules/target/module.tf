@@ -178,6 +178,15 @@ resource "aws_instance" "target" {
   tags                        = local.tags
   vpc_security_group_ids      = [module.target_sg.id]
   subnet_id                   = aws_subnet.subnet[0].id
+
+  root_block_device {
+    encrypted = true
+  }
+
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
 }
 
 resource "enos_file" "from_source" {

@@ -39,7 +39,7 @@ data "aws_ami" "rhel" {
 
   filter {
     name   = "name"
-    values = ["RHEL-10.1*HVM_GA-20*"]
+    values = ["RHEL-10.2*HVM_GA-20*"]
   }
 
   filter {

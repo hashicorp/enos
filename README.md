@@ -101,7 +101,7 @@ We want to be clear that **Enos and the Enos provider exist solely for HashiCorp
 
 ## How can I get started with Enos?
 
-If you're a HashiCorp developer you can follow the Enos tutorials in [the Wiki](https://hashicorp.atlassian.net/wiki/x/H4Ao_/).
+If you're a HashiCorp developer you can follow the Enos tutorials in [the Wiki](https://hashicorp.atlassian.net/wiki/x/GQCKOwE).
 
 If you're not, sorry, but we don't currently have any examples or tutorials published yet. You can install [Binaries](https://github.com/hashicorp/enos/releases/) and read about the various components below. There is also plenty of advanced Enos prior art in the Vault or Boundary repositories.
 

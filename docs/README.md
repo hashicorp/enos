@@ -2,6 +2,8 @@
 
 Explore the following docs to learn about the purpose, concepts, components, and workflows of Enos. 
 
+**[Updated Docs](https://hashicorp.atlassian.net/wiki/x/GQCKOwE):**
+
 * **[Introduction](./introduction.md):** Explains what Enos is and what problems it helps solve.
 * **[Getting started](./getting-started.md):** Explains how to get started with Enos, including installation and credential setup.
 * **[Scenarios and configurations](./scenarios-and-configurations.md):** Explains the basic concepts and components of Enos scenarios and configurations.
